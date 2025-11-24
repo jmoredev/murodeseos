@@ -2,19 +2,61 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function SignupPage() {
+    const router = useRouter()
     const [email, setEmail] = useState('')
+    const [confirmEmail, setConfirmEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault()
+        setError('')
+
+        // Validar que los correos coincidan
+        if (email !== confirmEmail) {
+            setError('Los correos electrónicos no coinciden')
+            return
+        }
+
         setLoading(true)
-        // TODO: Implement signup logic
-        console.log('Signup attempt:', email)
-        setTimeout(() => setLoading(false), 1000)
+
+        try {
+            // Intentar registrar al usuario
+            const { data, error: signupError } = await supabase.auth.signUp({
+                email,
+                password,
+            })
+
+            if (signupError) {
+                // Verificar si el error es porque el usuario ya existe
+                if (signupError.message.includes('already registered') ||
+                    signupError.message.includes('User already registered')) {
+                    setError('Este correo electrónico ya está registrado en el sistema')
+                } else if (signupError.message.includes('Password')) {
+                    setError('La contraseña debe tener al menos 6 caracteres')
+                } else {
+                    setError(signupError.message)
+                }
+                setLoading(false)
+                return
+            }
+
+            // Registro exitoso
+            console.log('Usuario registrado exitosamente:', data)
+
+            // Redirigir al login con mensaje de éxito
+            router.push('/login?registered=true')
+
+        } catch (err) {
+            console.error('Error durante el registro:', err)
+            setError('Ocurrió un error inesperado. Por favor, intenta de nuevo.')
+            setLoading(false)
+        }
     }
 
     return (
@@ -59,6 +101,25 @@ export default function SignupPage() {
                                     placeholder="tu@ejemplo.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="confirm-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Confirmar correo electrónico
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="confirm-email"
+                                    name="confirm-email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                                    placeholder="tu@ejemplo.com"
+                                    value={confirmEmail}
+                                    onChange={(e) => setConfirmEmail(e.target.value)}
                                 />
                             </div>
                         </div>
