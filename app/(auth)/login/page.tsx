@@ -78,8 +78,21 @@ export default function LoginPage() {
             // Login exitoso
             console.log('Usuario autenticado exitosamente:', data)
 
-            // Redirigir a la página principal
-            router.push('/')
+            if (data.user) {
+                // Verificar si el perfil está completo
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('display_name')
+                    .eq('id', data.user.id)
+                    .single()
+
+                // Si no hay perfil o no tiene display_name, redirigir a configuración
+                if (!profile || !profile.display_name) {
+                    router.push('/profile/setup')
+                } else {
+                    router.push('/')
+                }
+            }
 
         } catch (err) {
             console.error('Error durante el inicio de sesión:', err)
