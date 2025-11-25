@@ -46,15 +46,11 @@ export default function ProfileSetupPage() {
     }
 
     const handleCreateGroup = () => {
-        // TODO: Implementar lógica de creación
-        console.log('Crear grupo')
-        router.push('/groups/create') // Placeholder route
+        router.push('/groups/create')
     }
 
     const handleJoinGroup = () => {
-        // TODO: Implementar lógica de unión
-        console.log('Unirme a grupo')
-        router.push('/groups/join') // Placeholder route
+        router.push('/groups/join')
     }
 
     const isFormValid = displayName.trim().length >= 3

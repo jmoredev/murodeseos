@@ -1,0 +1,58 @@
+-- Tabla de grupos
+CREATE TABLE groups (
+  id TEXT PRIMARY KEY, -- Código corto (ej: "X7K9P2")
+  name TEXT NOT NULL,
+  icon TEXT DEFAULT '🎁',
+  creator_id UUID REFERENCES auth.users NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabla de miembros de grupos
+CREATE TABLE group_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id TEXT REFERENCES groups(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  role TEXT DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(group_id, user_id)
+);
+
+-- Índices para mejorar rendimiento
+CREATE INDEX idx_group_members_group_id ON group_members(group_id);
+CREATE INDEX idx_group_members_user_id ON group_members(user_id);
+
+-- Row Level Security (RLS)
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para groups
+-- Permitir que cualquier usuario autenticado vea grupos (la restricción real está en group_members)
+CREATE POLICY "Los grupos son visibles para usuarios autenticados"
+  ON groups FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Cualquier usuario autenticado puede crear grupos"
+  ON groups FOR INSERT
+  WITH CHECK (auth.uid() = creator_id);
+
+CREATE POLICY "Solo el creador puede actualizar el grupo"
+  ON groups FOR UPDATE
+  USING (creator_id = auth.uid());
+
+CREATE POLICY "Solo el creador puede eliminar el grupo"
+  ON groups FOR DELETE
+  USING (creator_id = auth.uid());
+
+-- Políticas para group_members (sin recursión)
+CREATE POLICY "Los miembros pueden ver su propia membresía"
+  ON group_members FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Los usuarios pueden unirse a grupos"
+  ON group_members FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Los usuarios pueden salir de grupos"
+  ON group_members FOR DELETE
+  USING (user_id = auth.uid());
