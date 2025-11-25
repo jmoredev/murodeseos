@@ -100,6 +100,68 @@ export async function createGroup(params: {
 }
 
 /**
+ * Une a un usuario a un grupo existente
+ */
+export async function joinGroup(params: {
+    groupCode: string
+    userId: string
+}) {
+    const { groupCode, userId } = params
+
+    // Normalizar el código a mayúsculas
+    const normalizedCode = groupCode.trim().toUpperCase()
+
+    // Verificar que el grupo existe
+    const { data: group, error: groupError } = await supabase
+        .from('groups')
+        .select('id, name, icon')
+        .eq('id', normalizedCode)
+        .single()
+
+    if (groupError || !group) {
+        throw new Error('Código incorrecto o grupo no encontrado')
+    }
+
+    // Verificar si el usuario ya es miembro
+    const { data: existingMember } = await supabase
+        .from('group_members')
+        .select('id')
+        .eq('group_id', normalizedCode)
+        .eq('user_id', userId)
+        .single()
+
+    // Si ya es miembro, devolver el grupo sin error
+    if (existingMember) {
+        return {
+            group,
+            alreadyMember: true
+        }
+    }
+
+    // Añadir al usuario como miembro
+    const { error: joinError } = await supabase
+        .from('group_members')
+        .insert({
+            group_id: normalizedCode,
+            user_id: userId,
+            role: 'member',
+            joined_at: new Date().toISOString(),
+        })
+
+    if (joinError) {
+        console.error('Error al unirse al grupo:', joinError)
+        throw new Error('No se pudo unir al grupo. Por favor, intenta de nuevo.')
+    }
+
+    console.log(`✅ Usuario ${userId} se unió al grupo ${normalizedCode}`)
+
+    return {
+        group,
+        alreadyMember: false
+    }
+}
+
+/**
  * Genera el mensaje de invitación para compartir
  */
 export function generateShareMessage(groupName: string, groupCode: string): string {
