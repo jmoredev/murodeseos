@@ -79,6 +79,10 @@ export default function LoginPage() {
             console.log('Usuario autenticado exitosamente:', data)
 
             if (data.user) {
+                // Forzar actualización del estado de autenticación
+                await supabase.auth.refreshSession()
+                router.refresh()
+
                 // Verificar si el perfil está completo
                 const { data: profile } = await supabase
                     .from('profiles')
@@ -88,9 +92,16 @@ export default function LoginPage() {
 
                 // Si no hay perfil o no tiene display_name, redirigir a configuración
                 if (!profile || !profile.display_name) {
-                    router.push('/profile/setup')
+                    console.log('Redirigiendo a setup de perfil...')
+                    // Pequeña pausa para asegurar que la sesión se guarde
+                    setTimeout(() => {
+                        window.location.href = '/profile/setup'
+                    }, 500)
                 } else {
-                    router.push('/')
+                    console.log('Redirigiendo a home...')
+                    setTimeout(() => {
+                        window.location.href = '/'
+                    }, 500)
                 }
             }
 
