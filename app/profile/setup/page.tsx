@@ -8,6 +8,8 @@ export default function ProfileSetupPage() {
     const router = useRouter()
     const [step, setStep] = useState(1)
     const [displayName, setDisplayName] = useState('')
+    const [selectedAvatar, setSelectedAvatar] = useState('👤')
+    const [showAvatarModal, setShowAvatarModal] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -30,6 +32,7 @@ export default function ProfileSetupPage() {
                 .upsert({
                     id: user.id,
                     display_name: displayName,
+                    avatar_url: selectedAvatar,
                     updated_at: new Date().toISOString(),
                 })
 
@@ -63,11 +66,6 @@ export default function ProfileSetupPage() {
                     // PASO 1: Configuración de Perfil
                     <>
                         <div className="text-center mb-8">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-deseo-acento/20 mb-4">
-                                <svg className="h-6 w-6 text-muro-principal dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
                             <h1 className="text-3xl font-extrabold text-muro-principal dark:text-white">
                                 ¡Casi terminamos!
                             </h1>
@@ -82,6 +80,21 @@ export default function ProfileSetupPage() {
                                     <p className="text-sm text-urgencia-coral font-medium text-center">{error}</p>
                                 </div>
                             )}
+
+                            {/* Avatar clickeable */}
+                            <div className="flex flex-col items-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAvatarModal(true)}
+                                    className="mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-deseo-acento/20 text-4xl hover:bg-deseo-acento/30 transition-all duration-200 hover:scale-110 cursor-pointer border-2 border-transparent hover:border-deseo-acento"
+                                    title="Cambiar avatar"
+                                >
+                                    {selectedAvatar}
+                                </button>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                    Toca para cambiar tu avatar
+                                </p>
+                            </div>
 
                             <div>
                                 <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -119,6 +132,42 @@ export default function ProfileSetupPage() {
                                 ) : 'Continuar'}
                             </button>
                         </form>
+
+                        {/* Modal de Selección de Avatar */}
+                        {showAvatarModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowAvatarModal(false)}>
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full m-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
+                                    <h3 className="text-xl font-bold text-muro-principal dark:text-white mb-4 text-center">
+                                        Elige tu Avatar
+                                    </h3>
+                                    <div className="grid grid-cols-5 gap-3 mb-6">
+                                        {['👤', '😊', '😎', '🤓', '🥳', '😇', '🤩', '🦸', '🧙', '👨‍💻', '👩‍💻', '🎨', '🎭', '🎪', '⭐'].map((emoji) => (
+                                            <button
+                                                key={emoji}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedAvatar(emoji)
+                                                    setShowAvatarModal(false)
+                                                }}
+                                                className={`p-3 text-3xl rounded-xl border-2 transition-all duration-200 hover:scale-110 flex items-center justify-center ${selectedAvatar === emoji
+                                                        ? 'border-deseo-acento bg-deseo-acento/20 scale-110'
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-deseo-acento/50'
+                                                    }`}
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAvatarModal(false)}
+                                        className="w-full rounded-lg bg-gray-200 dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </>
                 ) : (
                     // PASO 2: Selección de Grupo
