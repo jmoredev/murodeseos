@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { GroupCard, Group, GroupMember } from '@/components/GroupCard';
+import { updateGroupName, deleteGroup } from '@/lib/group-utils';
 
 export default function Home() {
   const router = useRouter()
@@ -14,12 +15,24 @@ export default function Home() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 
+  // Rename Modal State
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [groupToRename, setGroupToRename] = useState<{ id: string, name: string } | null>(null);
+  const [newName, setNewName] = useState('');
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<{ id: string, name: string } | null>(null);
+
+  // Map to store user roles: groupId -> role
+  const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+
   const fetchUserGroups = async (userId: string) => {
     try {
       // 1. Get my memberships to find my groups
       const { data: myMemberships, error: membershipError } = await supabase
         .from('group_members')
-        .select('group_id')
+        .select('group_id, role')
         .eq('user_id', userId)
 
       if (membershipError) {
@@ -35,6 +48,13 @@ export default function Home() {
 
       console.log('Found memberships:', myMemberships)
       const groupIds = myMemberships.map(m => m.group_id)
+
+      // Store roles
+      const rolesMap = new Map();
+      myMemberships.forEach(m => {
+        rolesMap.set(m.group_id, m.role);
+      });
+      setUserRoles(rolesMap);
 
       // 2. Get group details
       const { data: groupsData, error: groupsError } = await supabase
@@ -199,6 +219,56 @@ export default function Home() {
     }
   };
 
+  // Rename Handlers
+  const openRenameModal = (groupId: string, currentName: string) => {
+    setGroupToRename({ id: groupId, name: currentName });
+    setNewName(currentName);
+    setRenameModalOpen(true);
+  };
+
+  const handleRenameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupToRename || !newName.trim()) return;
+
+    try {
+      await updateGroupName(groupToRename.id, newName.trim());
+
+      // Update local state
+      setGroups(groups.map(g =>
+        g.id === groupToRename.id ? { ...g, name: newName.trim() } : g
+      ));
+
+      setRenameModalOpen(false);
+      setGroupToRename(null);
+    } catch (error) {
+      console.error('Error renaming group:', error);
+      alert('Error al renombrar el grupo');
+    }
+  };
+
+  // Delete Handlers
+  const openDeleteModal = (groupId: string, currentName: string) => {
+    setGroupToDelete({ id: groupId, name: currentName });
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!groupToDelete) return;
+
+    try {
+      await deleteGroup(groupToDelete.id);
+
+      // Update local state
+      setGroups(groups.filter(g => g.id !== groupToDelete.id));
+
+      setDeleteModalOpen(false);
+      setGroupToDelete(null);
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      alert('Error al eliminar el grupo');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-fondo-base dark:bg-gray-900">
@@ -271,7 +341,14 @@ export default function Home() {
         {groups.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.map(group => (
-              <GroupCard key={group.id} group={group} onShare={handleShare} />
+              <GroupCard
+                key={group.id}
+                group={group}
+                isAdmin={userRoles.get(group.id) === 'admin'}
+                onShare={handleShare}
+                onRename={openRenameModal}
+                onDelete={openDeleteModal}
+              />
             ))}
           </div>
         ) : (
@@ -345,6 +422,72 @@ export default function Home() {
             >
               Cerrar
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      {renameModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-4">Cambiar nombre del grupo</h3>
+            <form onSubmit={handleRenameSubmit}>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all mb-6"
+                placeholder="Nuevo nombre"
+                autoFocus
+                required
+                minLength={3}
+              />
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setRenameModalOpen(false)}
+                  className="px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-lg shadow-indigo-600/20 transition-all"
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+            </div>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">¿Eliminar grupo?</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+              Estás a punto de eliminar el grupo <span className="font-bold text-zinc-900 dark:text-white">"{groupToDelete?.name}"</span>. Esta acción no se puede deshacer y se eliminarán todos los datos asociados.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium shadow-lg shadow-red-600/20 transition-all"
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}

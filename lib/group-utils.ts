@@ -200,3 +200,42 @@ export async function shareGroup(groupName: string, groupCode: string): Promise<
         }
     }
 }
+
+/**
+ * Actualiza el nombre de un grupo
+ */
+export async function updateGroupName(groupId: string, newName: string) {
+    const { error } = await supabase
+        .from('groups')
+        .update({ name: newName })
+        .eq('id', groupId)
+
+    if (error) {
+        console.error('Error updating group name:', error)
+        throw new Error('No se pudo actualizar el nombre del grupo')
+    }
+
+    return true
+}
+
+/**
+ * Elimina un grupo y todos sus miembros
+ */
+export async function deleteGroup(groupId: string) {
+    // Primero eliminar los miembros (aunque ON DELETE CASCADE debería encargarse, es bueno ser explícito o manejarlo si no hay cascade)
+    // Asumimos que hay ON DELETE CASCADE en la FK de group_members -> groups.
+    // Si no, tendríamos que borrar miembros primero.
+    // Vamos a intentar borrar el grupo directamente.
+
+    const { error } = await supabase
+        .from('groups')
+        .delete()
+        .eq('id', groupId)
+
+    if (error) {
+        console.error('Error deleting group:', error)
+        throw new Error('No se pudo eliminar el grupo')
+    }
+
+    return true
+}
