@@ -14,6 +14,40 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'wishlist' | 'groups'>('wishlist')
   const [isDesktop, setIsDesktop] = useState(false)
 
+  // Función para verificar sesión
+  const verifySession = async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error || !session?.user) {
+        console.log('No valid session found, redirecting to login')
+        setUser(null)
+        router.push('/login')
+        return false
+      }
+
+      // Verificar perfil
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!profile || !profile.display_name) {
+        router.push('/profile/setup')
+        return false
+      }
+
+      setUser(session.user)
+      return true
+    } catch (error) {
+      console.error('Error verifying session:', error)
+      setUser(null)
+      router.push('/login')
+      return false
+    }
+  }
+
   useEffect(() => {
     const checkUser = async () => {
       try {
@@ -33,9 +67,12 @@ export default function Home() {
             router.push('/profile/setup')
             return
           }
+        } else {
+          setUser(null)
         }
       } catch (error) {
         console.error('Error checking user:', error)
+        setUser(null)
       } finally {
         setLoading(false)
       }
@@ -47,7 +84,9 @@ export default function Home() {
       if (session?.user) {
         setUser(session.user)
       } else {
+        // Sesión perdida - redirigir a login
         setUser(null)
+        router.push('/login')
       }
     })
 
@@ -55,6 +94,16 @@ export default function Home() {
       subscription.unsubscribe()
     }
   }, [router])
+
+  // Verificar sesión al cambiar de pestaña
+  const handleTabChange = async (tab: 'wishlist' | 'groups') => {
+    if (user) {
+      const isValid = await verifySession()
+      if (isValid) {
+        setActiveTab(tab)
+      }
+    }
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 768px)')
@@ -124,19 +173,19 @@ export default function Home() {
               {/* Desktop Tab Navigation */}
               <nav className="flex gap-1">
                 <button
-                  onClick={() => setActiveTab('wishlist')}
+                  onClick={() => handleTabChange('wishlist')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'wishlist'
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                 >
                   Mi Lista
                 </button>
                 <button
-                  onClick={() => setActiveTab('groups')}
+                  onClick={() => handleTabChange('groups')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'groups'
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                 >
                   Mis Grupos
@@ -188,10 +237,10 @@ export default function Home() {
         <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 z-20">
           <div className="max-w-5xl mx-auto px-4 flex justify-around">
             <button
-              onClick={() => setActiveTab('wishlist')}
+              onClick={() => handleTabChange('wishlist')}
               className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'wishlist'
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -200,10 +249,10 @@ export default function Home() {
               <span className="text-xs font-medium">Mi Lista</span>
             </button>
             <button
-              onClick={() => setActiveTab('groups')}
+              onClick={() => handleTabChange('groups')}
               className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'groups'
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
+                ? 'text-indigo-600 dark:text-indigo-400'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
