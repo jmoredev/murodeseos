@@ -226,7 +226,7 @@ export default function Home() {
       {/* Tab Content */}
       <div className={isDesktop ? 'pb-0' : 'pb-20'}>
         {activeTab === 'wishlist' ? (
-          <WishListTab />
+          <WishListTab userId={user.id} />
         ) : (
           <GroupsTab userId={user.id} />
         )}
