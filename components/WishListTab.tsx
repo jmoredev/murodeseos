@@ -92,6 +92,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<GiftItem | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
 
     // Form State
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
@@ -106,7 +107,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     .from('wishlist_items')
                     .select('*')
                     .eq('user_id', userId)
-                    .order('created_at', { ascending: false });
+                    .order('title', { ascending: true }); // Ordenar por nombre por defecto
 
                 if (error) throw error;
 
@@ -132,6 +133,18 @@ export function WishListTab({ userId }: WishListTabProps) {
 
         fetchItems();
     }, [userId]);
+
+    // Ordenar items según la opción seleccionada
+    const sortedItems = [...items].sort((a, b) => {
+        if (sortBy === 'name') {
+            return a.title.localeCompare(b.title);
+        } else {
+            // Ordenar por precio
+            const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
+            const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
+            return priceA - priceB;
+        }
+    });
 
     const openForm = (item?: GiftItem) => {
         if (item) {
@@ -248,24 +261,50 @@ export function WishListTab({ userId }: WishListTabProps) {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-black p-4 pb-24">
             {/* Header */}
-            <header className="flex justify-between items-center mb-8 pt-4 max-w-5xl mx-auto">
-                <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi Lista de Deseos</h1>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">¿Qué te gustaría recibir?</p>
+            <header className="mb-8 pt-4 max-w-5xl mx-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi Lista de Deseos</h1>
+                        <p className="text-zinc-500 dark:text-zinc-400 text-sm">¿Qué te gustaría recibir?</p>
+                    </div>
+                    <button
+                        onClick={() => openForm()}
+                        className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
+                    >
+                        <Icons.Plus />
+                    </button>
                 </div>
-                <button
-                    onClick={() => openForm()}
-                    className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
-                >
-                    <Icons.Plus />
-                </button>
+
+                {/* Sorting controls */}
+                {items.length > 0 && (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setSortBy('name')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por nombre
+                        </button>
+                        <button
+                            onClick={() => setSortBy('price')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por precio
+                        </button>
+                    </div>
+                )}
             </header>
 
             {/* Grid de Tarjetas */}
             <div className="max-w-5xl mx-auto">
-                {items.length > 0 ? (
+                {sortedItems.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {items.map(item => (
+                        {sortedItems.map(item => (
                             <WishlistCard
                                 key={item.id}
                                 item={item}

@@ -14,6 +14,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
     const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
 
     useEffect(() => {
         const init = async () => {
@@ -38,7 +39,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                 .from('wishlist_items')
                 .select('*')
                 .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+                .order('title', { ascending: true }); // Ordenar por nombre por defecto
 
             if (error) throw error;
 
@@ -50,7 +51,6 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                 price: item.price,
                 notes: item.notes,
                 priority: item.priority as Priority,
-                isReserved: item.is_reserved,
                 reservedBy: item.reserved_by
             }));
 
@@ -116,6 +116,18 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
         }
     };
 
+    // Ordenar items según la opción seleccionada
+    const sortedItems = [...items].sort((a, b) => {
+        if (sortBy === 'name') {
+            return a.title.localeCompare(b.title);
+        } else {
+            // Ordenar por precio
+            const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
+            const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
+            return priceA - priceB;
+        }
+    });
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center p-4">
@@ -144,12 +156,36 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                         </h1>
                     </div>
                 </div>
+
+                {/* Sorting controls */}
+                {items.length > 0 && (
+                    <div className="max-w-5xl mx-auto px-4 pb-4 flex gap-2">
+                        <button
+                            onClick={() => setSortBy('name')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por nombre
+                        </button>
+                        <button
+                            onClick={() => setSortBy('price')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por precio
+                        </button>
+                    </div>
+                )}
             </header>
 
             <main className="max-w-5xl mx-auto px-4 py-6">
-                {items.length > 0 ? (
+                {sortedItems.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {items.map(item => (
+                        {sortedItems.map(item => (
                             <WishlistCard
                                 key={item.id}
                                 item={item}
