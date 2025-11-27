@@ -115,6 +115,9 @@ async function seedWishlists() {
 
     console.log(`👥 Se encontraron ${users.users.length} usuarios.`);
 
+    // Crear un array de todos los user IDs para posibles reservas
+    const allUserIds = users.users.map(u => u.id);
+
     // 2. Para cada usuario, generar entre 2 y 5 deseos
     for (const user of users.users) {
         // Saltar si no es un usuario de prueba (opcional, pero seguro)
@@ -127,6 +130,18 @@ async function seedWishlists() {
 
         for (let i = 0; i < numberOfItems; i++) {
             const item = getRandomItem();
+
+            // Decidir si este regalo será reservado por alguien
+            // 30% de probabilidad de estar reservado
+            let reservedBy = null;
+            if (Math.random() < 0.3) {
+                // Reservar por otro usuario aleatorio (que no sea el dueño)
+                const otherUsers = allUserIds.filter(id => id !== user.id);
+                if (otherUsers.length > 0) {
+                    reservedBy = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+                }
+            }
+
             itemsToInsert.push({
                 user_id: user.id,
                 title: item.title,
@@ -135,7 +150,7 @@ async function seedWishlists() {
                 links: item.links,
                 notes: item.notes,
                 priority: item.priority,
-                is_reserved: Math.random() > 0.8 // 20% de probabilidad de estar reservado
+                reserved_by: reservedBy
             });
         }
 
@@ -146,11 +161,13 @@ async function seedWishlists() {
         if (insertError) {
             console.error(`   ❌ Error insertando items para ${user.email}:`, insertError.message);
         } else {
-            console.log(`   ✅ ${numberOfItems} deseos creados exitosamente.`);
+            const reservedCount = itemsToInsert.filter(item => item.reserved_by).length;
+            console.log(`   ✅ ${numberOfItems} deseos creados (${reservedCount} ya reservados por amigos).`);
         }
     }
 
     console.log('\n✨ ¡Proceso completado!');
+    console.log('\n💡 Algunos regalos ya han sido "reservados" por otros usuarios para que puedas probar la funcionalidad.');
 }
 
 seedWishlists().catch(console.error);

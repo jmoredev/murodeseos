@@ -2,20 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-
-// --- 1. Modelo de Datos Actualizado ---
-export type Priority = 'low' | 'medium' | 'high';
-
-export interface GiftItem {
-    id: string;
-    title: string;
-    links: string[];
-    imageUrl?: string;
-    price?: string | number;
-    notes?: string;
-    priority: Priority;
-    isReserved?: boolean;
-}
+import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 
 // --- Componentes Auxiliares (Iconos) ---
 const Icons = {
@@ -94,85 +81,6 @@ function DynamicLinkInput({ links, onChange }: DynamicLinkInputProps) {
     );
 }
 
-// --- 3. Componente: Tarjeta de Lista de Deseos ---
-interface WishlistCardProps {
-    item: GiftItem;
-    onClick: (item: GiftItem) => void;
-}
-
-function WishlistCard({ item, onClick }: WishlistCardProps) {
-    const priorityColors = {
-        low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-        medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-        high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-    };
-
-    const priorityLabels = {
-        low: 'Baja',
-        medium: 'Media',
-        high: 'Alta'
-    };
-
-    return (
-        <div
-            onClick={() => onClick(item)}
-            className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700 transition-all cursor-pointer flex flex-col h-full"
-        >
-            {/* Imagen / Cover */}
-            <div className="aspect-square w-full bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
-                {item.imageUrl ? (
-                    <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-300 dark:text-zinc-700">
-                        <div className="transform scale-150 opacity-50">
-                            <Icons.Gift />
-                        </div>
-                    </div>
-                )}
-
-                {/* Badges superpuestos */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md ${priorityColors[item.priority]}`}>
-                        {priorityLabels[item.priority]}
-                    </span>
-                </div>
-            </div>
-
-            {/* Contenido */}
-            <div className="p-4 flex flex-col flex-1">
-                <div className="flex justify-between items-start gap-2 mb-2">
-                    <h3 className="font-semibold text-zinc-900 dark:text-white line-clamp-2 leading-tight">
-                        {item.title}
-                    </h3>
-                </div>
-
-                {item.notes && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3">
-                        {item.notes}
-                    </p>
-                )}
-
-                <div className="mt-auto pt-3 flex items-center justify-between text-sm">
-                    <div className="font-bold text-zinc-900 dark:text-white">
-                        {item.price ? (typeof item.price === 'number' ? `$${item.price}` : item.price) : <span className="text-zinc-400 font-normal italic">Sin precio</span>}
-                    </div>
-
-                    {item.links.length > 0 && (
-                        <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-md text-xs font-medium">
-                            <Icons.Link />
-                            <span>{item.links.length}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
-
 // --- Componente Principal ---
 interface WishListTabProps {
     userId: string;
@@ -211,7 +119,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     price: item.price,
                     notes: item.notes,
                     priority: item.priority as Priority,
-                    isReserved: item.is_reserved
+                    reservedBy: item.reserved_by
                 }));
 
                 setItems(mappedItems);
@@ -289,7 +197,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     price: data.price,
                     notes: data.notes,
                     priority: data.priority as Priority,
-                    isReserved: data.is_reserved
+                    reservedBy: data.reserved_by
                 };
                 setItems([newItem, ...items]);
             }
@@ -358,7 +266,12 @@ export function WishListTab({ userId }: WishListTabProps) {
                 {items.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {items.map(item => (
-                            <WishlistCard key={item.id} item={item} onClick={openForm} />
+                            <WishlistCard
+                                key={item.id}
+                                item={item}
+                                onClick={openForm}
+                                isOwner={true} // Always owner in this view
+                            />
                         ))}
                     </div>
                 ) : (

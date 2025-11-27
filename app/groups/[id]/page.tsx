@@ -57,7 +57,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 const profilesMap = new Map(profilesData.map(p => [p.id, p]));
 
                 // Transform members data
-                const members: GroupMember[] = membersData.map((m: any) => {
+                const members: GroupMember[] = membersData.map((m: { user_id: string; role: string }) => {
                     const profile = profilesMap.get(m.user_id);
                     return {
                         id: m.user_id,
@@ -74,7 +74,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 });
 
                 // Check admin status
-                const currentUserMember = membersData.find((m: any) => m.user_id === user.id);
+                const currentUserMember = membersData.find((m: { user_id: string; role: string }) => m.user_id === user.id);
                 setIsAdmin(currentUserMember?.role === 'admin');
 
             } catch (error) {
@@ -200,7 +200,18 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     ) : (
                         <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
                             {group.members.map((member) => (
-                                <div key={member.id} className="p-4 flex items-center justify-between group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                <div
+                                    key={member.id}
+                                    onClick={() => {
+                                        if (member.id !== currentUserId) {
+                                            router.push(`/wishlist/${member.id}?name=${encodeURIComponent(member.name)}`);
+                                        }
+                                    }}
+                                    className={`p-4 flex items-center justify-between group transition-colors ${member.id !== currentUserId
+                                        ? 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer'
+                                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+                                        }`}
+                                >
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
                                             {member.avatar && member.avatar.startsWith('http') ? (
@@ -215,7 +226,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
                                                 {member.name}
                                                 {member.id === currentUserId && (
@@ -224,12 +235,18 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                                                     </span>
                                                 )}
                                             </p>
+                                            {member.id !== currentUserId && (
+                                                <p className="text-xs text-zinc-400 mt-0.5">Ver lista de deseos →</p>
+                                            )}
                                         </div>
                                     </div>
 
                                     {isAdmin && member.id !== currentUserId && (
                                         <button
-                                            onClick={() => setMemberToDelete(member)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMemberToDelete(member);
+                                            }}
                                             className="p-2 rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                                             aria-label="Expulsar usuario"
                                         >
