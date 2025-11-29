@@ -80,7 +80,7 @@ export default function CreateGroupPage() {
                                 </svg>
                             </div>
                             <h1 className="text-3xl font-extrabold text-muro-principal dark:text-white">
-                                Crear Nuevo Grupo
+                                Crear nuevo grupo
                             </h1>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                 Configura tu grupo de regalos y compártelo con tus amigos
@@ -97,7 +97,7 @@ export default function CreateGroupPage() {
                             {/* Nombre del Grupo */}
                             <div>
                                 <label htmlFor="groupName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                                    Nombre del Grupo <span className="text-urgencia-coral">*</span>
+                                    Nombre del grupo <span className="text-urgencia-coral">*</span>
                                 </label>
                                 <input
                                     id="groupName"
@@ -118,7 +118,7 @@ export default function CreateGroupPage() {
                             {/* Selector de Icono */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                    Icono del Grupo
+                                    Icono del grupo
                                 </label>
                                 <div className="grid grid-cols-5 gap-2">
                                     {EMOJI_OPTIONS.map((emoji) => (
@@ -150,7 +150,7 @@ export default function CreateGroupPage() {
                                         </svg>
                                         Creando...
                                     </span>
-                                ) : 'Crear y Compartir'}
+                                ) : 'Crear y compartir'}
                             </button>
 
                             <div className="text-center">
@@ -175,7 +175,7 @@ export default function CreateGroupPage() {
 
                         <div>
                             <h2 className="text-2xl font-bold text-muro-principal dark:text-white">
-                                ¡Grupo Creado!
+                                ¡Grupo creado!
                             </h2>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                 Tu código de grupo es:

@@ -131,7 +131,7 @@ export default function Home() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-fondo-base dark:bg-gray-900 text-center px-4">
         <main className="max-w-4xl space-y-8">
           <h1 className="text-5xl font-extrabold tracking-tight text-muro-principal dark:text-white sm:text-6xl">
-            Muro de <span className="text-deseo-acento">Deseos</span>
+            Muro de <span className="text-deseo-acento">deseos</span>
           </h1>
           <p className="mx-auto max-w-2xl text-xl text-gray-600 dark:text-gray-300">
             Comparte tus sueños, organiza tus regalos y haz realidad los deseos de tus amigos.
@@ -167,7 +167,7 @@ export default function Home() {
             {/* Logo */}
             <div className="flex items-center gap-8">
               <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-                Muro de Deseos
+                Muro de deseos
               </h1>
 
               {/* Desktop Tab Navigation */}
@@ -179,7 +179,7 @@ export default function Home() {
                     : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                 >
-                  Mi Lista
+                  Mi lista
                 </button>
                 <button
                   onClick={() => handleTabChange('groups')}
@@ -188,7 +188,7 @@ export default function Home() {
                     : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
                 >
-                  Mis Grupos
+                  Mis grupos
                 </button>
               </nav>
             </div>
@@ -200,7 +200,7 @@ export default function Home() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                Cerrar Sesión
+                Cerrar sesión
               </button>
             </div>
           </div>
@@ -210,12 +210,12 @@ export default function Home() {
         <header className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
           <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-              Muro de Deseos
+              Muro de deseos
             </h1>
             <button
               onClick={() => supabase.auth.signOut()}
               className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
-              title="Cerrar Sesión"
+              title="Cerrar sesión"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
@@ -246,7 +246,7 @@ export default function Home() {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
-              <span className="text-xs font-medium">Mi Lista</span>
+              <span className="text-xs font-medium">Mi lista</span>
             </button>
             <button
               onClick={() => handleTabChange('groups')}

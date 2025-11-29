@@ -83,7 +83,7 @@ function JoinGroupContent() {
                         </svg>
                     </div>
                     <h1 className="text-3xl font-extrabold text-muro-principal dark:text-white">
-                        Unirse a un Grupo
+                        Unirse a un grupo
                     </h1>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         Introduce el código que te compartieron
@@ -106,7 +106,7 @@ function JoinGroupContent() {
                     {/* Campo de Código */}
                     <div>
                         <label htmlFor="groupCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Código del Grupo <span className="text-urgencia-coral">*</span>
+                            Código del grupo <span className="text-urgencia-coral">*</span>
                         </label>
                         <input
                             id="groupCode"

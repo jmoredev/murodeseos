@@ -110,7 +110,7 @@ export default function SignupPage() {
                         Crear una cuenta
                     </h2>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Únete a Muro de Deseos hoy
+                        Únete a Muro de deseos hoy
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSignup}>

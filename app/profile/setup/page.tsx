@@ -138,7 +138,7 @@ export default function ProfileSetupPage() {
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowAvatarModal(false)}>
                                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full m-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
                                     <h3 className="text-xl font-bold text-muro-principal dark:text-white mb-4 text-center">
-                                        Elige tu Avatar
+                                        Elige tu avatar
                                     </h3>
                                     <div className="grid grid-cols-5 gap-3 mb-6">
                                         {['👤', '😊', '😎', '🤓', '🥳', '😇', '🤩', '🦸', '🧙', '👨‍💻', '👩‍💻', '🎨', '🎭', '🎪', '⭐'].map((emoji) => (

@@ -261,14 +261,14 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             {/* Header */}
             <header className="flex justify-between items-center mb-8 pt-4 max-w-5xl mx-auto">
                 <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mis Grupos</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mis grupos</h1>
                     <p className="text-zinc-500 dark:text-zinc-400 text-sm">Gestiona tus intercambios</p>
                 </div>
                 <div className="flex gap-2">
                     <Link
                         href="/groups/create"
                         className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
-                        title="Crear Grupo"
+                        title="Crear grupo"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     </Link>

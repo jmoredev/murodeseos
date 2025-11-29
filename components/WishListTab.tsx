@@ -264,7 +264,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             <header className="mb-8 pt-4 max-w-5xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi Lista de Deseos</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi lista de deseos</h1>
                         <p className="text-zinc-500 dark:text-zinc-400 text-sm">¿Qué te gustaría recibir?</p>
                     </div>
                     <button
@@ -281,8 +281,8 @@ export function WishListTab({ userId }: WishListTabProps) {
                         <button
                             onClick={() => setSortBy('name')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
                         >
                             Por nombre
@@ -290,8 +290,8 @@ export function WishListTab({ userId }: WishListTabProps) {
                         <button
                             onClick={() => setSortBy('price')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
                         >
                             Por precio
@@ -336,7 +336,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         <form onSubmit={handleSave} className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-                                    {editingItem ? 'Editar Deseo' : 'Nuevo Deseo'}
+                                    {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
                                 </h2>
                                 <button
                                     type="button"
