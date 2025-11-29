@@ -156,7 +156,7 @@ export default function CreateGroupPage() {
                             <div className="text-center">
                                 <button
                                     type="button"
-                                    onClick={() => router.back()}
+                                    onClick={() => router.push('/?tab=groups')}
                                     className="text-sm text-gray-600 dark:text-gray-400 hover:text-muro-principal dark:hover:text-white transition-colors"
                                 >
                                     ← Volver

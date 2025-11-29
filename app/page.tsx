@@ -2,16 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import Link from "next/link";
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
 
 export default function Home() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'wishlist' | 'groups'>('wishlist')
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'groups') {
+      setActiveTab('groups')
+    } else if (tab === 'wishlist') {
+      setActiveTab('wishlist')
+    }
+  }, [searchParams])
   const [isDesktop, setIsDesktop] = useState(false)
 
   // Función para verificar sesión
