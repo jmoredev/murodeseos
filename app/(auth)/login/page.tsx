@@ -40,8 +40,11 @@ function LoginContent() {
     }
 
     // Validar email al perder el foco
-    const handleEmailBlur = () => {
-        if (email && !validateEmail(email)) {
+    const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        // CAMBIO CLAVE: Leer el valor del evento, NO del estado
+        const currentEmail = e.target.value;
+
+        if (currentEmail && !validateEmail(currentEmail)) {
             setEmailError('Por favor, introduce un correo electrónico válido')
         }
     }

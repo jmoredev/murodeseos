@@ -14,9 +14,16 @@ test.describe('Flujo de Inicio de Sesión', () => {
     })
 
     test('debería mostrar error de validación para correo inválido', async ({ page }) => {
+
+        
         // Ingresar un email inválido
         await page.getByLabel(/correo electrónico/i).fill('invalid-email')
-        await page.getByLabel(/correo electrónico/i).blur()
+
+        // Esto da tiempo a React para actualizar el estado 'email' antes de ejecutar el blur.
+        await expect(page.getByLabel(/correo electrónico/i)).toHaveValue('invalid-email')
+
+        // Presionar Tab para mover el foco al siguiente campo
+        await page.keyboard.press('Tab')
 
         // Verificar que aparece el mensaje de error
         await expect(page.getByText(/introduce un correo electrónico válido/i)).toBeVisible()
