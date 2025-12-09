@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { E2E_CONFIG } from './config'
 
+//Almacena pares de { ID_del_Test : ID_del_Dato_Creado }
+const createdIds = new Map<string, string>();
+
 test.describe('Flujo de Creación de Grupo', () => {
     test.setTimeout(60000)
     test.beforeEach(async ({ page }) => {
@@ -13,7 +16,32 @@ test.describe('Flujo de Creación de Grupo', () => {
         await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
     })
 
-    test('Un usuario puede crear un grupo exitosamente y volver al inicio', async ({ page }) => {
+    test.afterEach(async ({ request }, testInfo) => {
+        // RECUPERAR: Buscamos si ESTE test específico (identificado por testInfo.testId) guardó algo
+        const idToDelete = createdIds.get(testInfo.testId);
+
+        if (idToDelete) {
+            console.log(`🧹 [Limpieza] Test "${testInfo.title}" borrando ID: ${idToDelete}`);
+
+            // Llamada a la API para borrar
+            const response = await request.delete(`http://localhost:3000/api/groups/${idToDelete}`);
+
+            // --- BLOQUE DE DEPURACIÓN ---
+            if (!response.ok()) {
+                console.log(`🔴 ERROR AL BORRAR: Status ${response.status()}`);
+                console.log(`🔴 Respuesta del servidor: ${await response.text()}`);
+            }
+            // -----------------------------
+
+            // Verificamos que se borró bien (opcional pero recomendado)
+            expect(response.ok()).toBeTruthy();
+
+            // LIMPIAR EL MAPA: Borramos la entrada para no ocupar memoria
+            createdIds.delete(testInfo.testId);
+        }
+    });
+
+    test('Un usuario puede crear un grupo exitosamente y volver al inicio', async ({ page }, testInfo) => {
         // 1. Verificar que estamos en la Home y navegar a la pestaña de grupos
         await expect(page).toHaveURL('http://localhost:3000/')
         await page.goto('http://localhost:3000/?tab=groups')
@@ -47,6 +75,13 @@ test.describe('Flujo de Creación de Grupo', () => {
         await expect(submitButton).toBeVisible()
         await submitButton.click()
 
+        // Interceptar respuesta para sacar el ID
+        const response = await page.waitForResponse(r => r.request().method() === 'POST' && r.status() === 201);
+        const body = await response.json();
+
+        // GUARDAR: Asociamos el ID del nuevo cliente al ID único de ESTE test
+        console.log(`📝 Test "${testInfo.title}" creó el ID: ${body.id}`);
+        createdIds.set(testInfo.testId, body.id);
 
         // 7. Verificar pantalla de éxito (NO hay redirección automática)
         const successMessage = page.locator('text=¡Grupo creado!')
@@ -55,6 +90,7 @@ test.describe('Flujo de Creación de Grupo', () => {
         // Verificar que aparece el código del grupo
         const groupCodeElement = page.locator('text=/[A-Z0-9]{6,8}/') // Ajustar regex si el ID tiene otro formato
         await expect(groupCodeElement).toBeVisible()
+
 
         // 8. Hacer clic en "Continuar al inicio"
         const continueButton = page.locator('button:has-text("Continuar al inicio")')
