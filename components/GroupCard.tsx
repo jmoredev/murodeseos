@@ -1,11 +1,12 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export interface GroupMember {
     id: string;
     name: string;
+    originalName?: string; // Nombre original si tiene apodo
     avatar?: string;
 }
 
@@ -22,12 +23,17 @@ interface GroupCardProps {
     onShare: (groupId: string) => void;
     onRename?: (groupId: string, currentName: string) => void;
     onDelete?: (groupId: string, groupName: string) => void;
+    onMemberEdit?: (memberId: string, newAlias: string) => Promise<boolean>;
 }
 
-export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: GroupCardProps) {
+export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMemberEdit }: GroupCardProps) {
     const router = useRouter();
     const [menuOpen, setMenuOpen] = React.useState(false);
     const menuRef = React.useRef<HTMLDivElement>(null);
+
+    // Estado para edición en línea
+    const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+    const [aliasInput, setAliasInput] = useState("");
 
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -42,7 +48,9 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: Group
         };
     }, []);
 
-    const handleCardClick = () => {
+    const handleCardClick = (e: React.MouseEvent) => {
+        // No navegar si estamos editando o si se hizo clic en un elemento interactivo
+        if (editingMemberId) return;
         router.push(`/groups/${group.id}`);
     };
 
@@ -68,6 +76,31 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: Group
         if (onDelete) onDelete(group.id, group.name);
     };
 
+    // Alias handlers
+    const startEditing = (e: React.MouseEvent, member: GroupMember) => {
+        e.stopPropagation();
+        if (!onMemberEdit) return;
+        setEditingMemberId(member.id);
+        // Usar el alias actual (name) o el original si queremos editar sobre el base
+        setAliasInput(member.name);
+    };
+
+    const saveAlias = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!editingMemberId || !onMemberEdit) return;
+
+        const success = await onMemberEdit(editingMemberId, aliasInput);
+        if (success) {
+            setEditingMemberId(null);
+        }
+    };
+
+    const cancelEditing = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingMemberId(null);
+        setAliasInput("");
+    };
+
     // Logic for truncating members
     const displayMembers = group.members.slice(0, 3);
     const remainingCount = group.members.length - 3;
@@ -75,7 +108,7 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: Group
     return (
         <div
             onClick={handleCardClick}
-            className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 active:scale-[0.98] transition-all cursor-pointer hover:shadow-md relative overflow-visible group"
+            className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 active:scale-[0.98] transition-all cursor-pointer hover:shadow-md relative overflow-visible group-card"
         >
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
@@ -146,7 +179,7 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: Group
             {/* Members List */}
             <div className="space-y-2.5">
                 {displayMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3">
+                    <div key={member.id} className="flex items-center gap-3 group/member min-h-[2rem]">
                         <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
                             {/* Avatar: Check if it's a URL, emoji, or use initials */}
                             {member.avatar && member.avatar.startsWith('http') ? (
@@ -161,9 +194,55 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete }: Group
                                 </div>
                             )}
                         </div>
-                        <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300 truncate">
-                            {member.name}
-                        </span>
+
+                        {editingMemberId === member.id ? (
+                            <div className="flex items-center gap-1 flex-1 min-w-0" onClick={e => e.stopPropagation()}>
+                                <input
+                                    type="text"
+                                    value={aliasInput}
+                                    onChange={(e) => setAliasInput(e.target.value)}
+                                    className="w-full px-1.5 py-0.5 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') saveAlias(e as any);
+                                        if (e.key === 'Escape') cancelEditing(e as any);
+                                    }}
+                                    autoFocus
+                                    onClick={e => e.stopPropagation()}
+                                />
+                                <button
+                                    onClick={saveAlias}
+                                    className="p-0.5 text-green-600 hover:text-green-700"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </button>
+                                <button
+                                    onClick={cancelEditing}
+                                    className="p-0.5 text-red-600 hover:text-red-700"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300 truncate">
+                                    {member.name}
+                                    {member.originalName && (
+                                        <span className="ml-1.5 text-[10px] text-zinc-400 font-normal italic">
+                                            ({member.originalName})
+                                        </span>
+                                    )}
+                                </span>
+                                {onMemberEdit && (
+                                    <button
+                                        onClick={(e) => startEditing(e, member)}
+                                        className="opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5 text-zinc-400 hover:text-indigo-600"
+                                        title="Editar apodo"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ))}
                 {remainingCount > 0 && (

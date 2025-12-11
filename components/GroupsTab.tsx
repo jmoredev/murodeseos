@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from '@/lib/supabase'
 import { GroupCard, Group } from '@/components/GroupCard';
 import { updateGroupName, deleteGroup } from '@/lib/group-utils';
+import { getUserAliases, setUserAlias } from '@/lib/aliases';
 
 interface GroupsTabProps {
     userId: string;
@@ -21,6 +22,9 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [groupToDelete, setGroupToDelete] = useState<{ id: string, name: string } | null>(null);
     const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+
+    // Almacenamos aliases localmente para refresco rápido
+    const [aliases, setAliases] = useState<Record<string, string>>({});
 
     const fetchUserGroups = async (userId: string) => {
         try {
@@ -81,6 +85,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             const profilesMap = new Map(profilesData.map(p => [p.id, p]))
 
+            // Obtener apodos
+            const userAliases = await getUserAliases();
+            setAliases(userAliases);
+
             const formattedGroups: Group[] = groupsData.map(g => {
                 const allGroupMembers = membersData.filter(m => m.group_id === g.id)
 
@@ -88,9 +96,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     .filter(m => m.user_id !== userId)
                     .map(m => {
                         const profile = profilesMap.get(m.user_id)
+                        const alias = userAliases[m.user_id];
                         return {
                             id: m.user_id,
-                            name: profile?.display_name || 'Usuario',
+                            name: alias || profile?.display_name || 'Usuario',
+                            originalName: alias ? (profile?.display_name || 'Usuario') : undefined,
                             avatar: profile?.avatar_url
                         }
                     })
@@ -206,6 +216,41 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         }
     };
 
+    const handleMemberEdit = async (memberId: string, newAlias: string): Promise<boolean> => {
+        try {
+            const success = await setUserAlias(memberId, newAlias);
+            if (success) {
+                // Actualizar estado local
+                const updatedAliases = { ...aliases };
+                if (newAlias.trim()) {
+                    updatedAliases[memberId] = newAlias.trim();
+                } else {
+                    delete updatedAliases[memberId];
+                }
+                setAliases(updatedAliases);
+
+                // Actualizar grupos
+                setGroups(groups.map(g => ({
+                    ...g,
+                    members: g.members.map(m => {
+                        if (m.id === memberId) {
+                            return {
+                                ...m,
+                                name: newAlias.trim() || m.originalName || m.name,
+                                originalName: newAlias.trim() ? (m.originalName || m.name) : undefined
+                            };
+                        }
+                        return m;
+                    })
+                })));
+            }
+            return success;
+        } catch (error) {
+            console.error('Error setting alias:', error);
+            return false;
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center p-4">
@@ -255,6 +300,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                                 onShare={handleShare}
                                 onRename={openRenameModal}
                                 onDelete={openDeleteModal}
+                                onMemberEdit={handleMemberEdit}
                             />
                         ))}
                     </div>
