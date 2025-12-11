@@ -8,12 +8,12 @@ import { supabase } from '@/lib/supabase'
 export default function SignupPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
-    const [confirmEmail, setConfirmEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [emailError, setEmailError] = useState('')
-    const [confirmEmailError, setConfirmEmailError] = useState('')
+    const [confirmPasswordError, setConfirmPasswordError] = useState('')
 
     // Función para validar formato de email
     const validateEmail = (email: string): boolean => {
@@ -33,15 +33,15 @@ export default function SignupPage() {
         }
     }
 
-    // Validar email de confirmación cuando cambia
-    const handleConfirmEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newConfirmEmail = e.target.value
-        setConfirmEmail(newConfirmEmail)
+    // Validar contraseña de confirmación cuando cambia
+    const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newConfirmPassword = e.target.value
+        setConfirmPassword(newConfirmPassword)
 
-        if (newConfirmEmail && !validateEmail(newConfirmEmail)) {
-            setConfirmEmailError('Por favor, introduce un correo electrónico válido')
+        if (newConfirmPassword && password && newConfirmPassword !== password) {
+            setConfirmPasswordError('Las contraseñas no coinciden')
         } else {
-            setConfirmEmailError('')
+            setConfirmPasswordError('')
         }
     }
 
@@ -55,14 +55,9 @@ export default function SignupPage() {
             return
         }
 
-        if (!validateEmail(confirmEmail)) {
-            setConfirmEmailError('Por favor, introduce un correo electrónico válido')
-            return
-        }
-
-        // Validar que los correos coincidan
-        if (email !== confirmEmail) {
-            setError('Los correos electrónicos no coinciden')
+        // Validar que las contraseñas coincidan
+        if (password !== confirmPassword) {
+            setError('Las contraseñas no coinciden')
             return
         }
 
@@ -155,31 +150,6 @@ export default function SignupPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="confirm-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Confirmar correo electrónico
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="confirm-email"
-                                    name="confirm-email"
-                                    type="email"
-                                    autoComplete="email"
-                                    required
-                                    className={`block w-full rounded-lg border ${confirmEmailError
-                                        ? 'border-urgencia-coral focus:border-urgencia-coral focus:ring-urgencia-coral'
-                                        : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500'
-                                        } px-3 py-2 shadow-sm focus:outline-none sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors`}
-                                    placeholder="tu@ejemplo.com"
-                                    value={confirmEmail}
-                                    onChange={handleConfirmEmailChange}
-                                />
-                                {confirmEmailError && (
-                                    <p className="mt-1 text-sm text-urgencia-coral">{confirmEmailError}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Contraseña
                             </label>
@@ -195,6 +165,31 @@ export default function SignupPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Confirmar contraseña
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    id="confirm-password"
+                                    name="confirm-password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    required
+                                    className={`block w-full rounded-lg border ${confirmPasswordError
+                                        ? 'border-urgencia-coral focus:border-urgencia-coral focus:ring-urgencia-coral'
+                                        : 'border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500'
+                                        } px-3 py-2 shadow-sm focus:outline-none sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors`}
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={handleConfirmPasswordChange}
+                                />
+                                {confirmPasswordError && (
+                                    <p className="mt-1 text-sm text-urgencia-coral">{confirmPasswordError}</p>
+                                )}
                             </div>
                         </div>
                     </div>
