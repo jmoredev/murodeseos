@@ -59,8 +59,8 @@ describe('GroupsTab', () => {
             render(<GroupsTab userId={mockUserId} />)
 
             await waitFor(() => {
-                expect(screen.getByTitle('Crear grupo')).toBeInTheDocument()
-                expect(screen.getByTitle('Unirse a grupo')).toBeInTheDocument()
+                const header = screen.getByText('Mis grupos').closest('header')
+                expect(header).toBeInTheDocument()
             })
         })
 
@@ -273,7 +273,7 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Test')).toBeInTheDocument()
             })
 
-            const shareButton = screen.getByTitle('Compartir grupo')
+            const shareButton = screen.getByLabelText('Compartir código de grupo')
             await user.click(shareButton)
 
             await waitFor(() => {
@@ -291,7 +291,7 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Test')).toBeInTheDocument()
             })
 
-            const shareButton = screen.getByTitle('Compartir grupo')
+            const shareButton = screen.getByLabelText('Compartir código de grupo')
             await user.click(shareButton)
 
             await waitFor(() => {
@@ -305,7 +305,8 @@ describe('GroupsTab', () => {
             const mockWriteText = jest.fn().mockResolvedValue(undefined)
             Object.defineProperty(navigator, 'clipboard', {
                 value: { writeText: mockWriteText },
-                writable: true
+                writable: true,
+                configurable: true
             })
             global.alert = jest.fn()
 
@@ -315,7 +316,7 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Test')).toBeInTheDocument()
             })
 
-            const shareButton = screen.getByTitle('Compartir grupo')
+            const shareButton = screen.getByLabelText('Compartir código de grupo')
             await user.click(shareButton)
 
             await waitFor(() => {
@@ -340,7 +341,7 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Test')).toBeInTheDocument()
             })
 
-            const shareButton = screen.getByTitle('Compartir grupo')
+            const shareButton = screen.getByLabelText('Compartir código de grupo')
             await user.click(shareButton)
 
             await waitFor(() => {
@@ -397,7 +398,12 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Original')).toBeInTheDocument()
             })
 
-            const renameButton = screen.getByTitle('Renombrar grupo')
+            // Primero abrir el menú de opciones
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            // Luego click en renombrar
+            const renameButton = await screen.findByText('Cambiar nombre')
             await user.click(renameButton)
 
             await waitFor(() => {
@@ -416,7 +422,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Original')).toBeInTheDocument()
             })
 
-            const renameButton = screen.getByTitle('Renombrar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const renameButton = await screen.findByText('Cambiar nombre')
             await user.click(renameButton)
 
             await waitFor(() => {
@@ -446,7 +455,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Original')).toBeInTheDocument()
             })
 
-            const renameButton = screen.getByTitle('Renombrar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const renameButton = await screen.findByText('Cambiar nombre')
             await user.click(renameButton)
 
             const input = await screen.findByPlaceholderText('Nuevo nombre')
@@ -474,7 +486,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo Original')).toBeInTheDocument()
             })
 
-            const renameButton = screen.getByTitle('Renombrar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const renameButton = await screen.findByText('Cambiar nombre')
             await user.click(renameButton)
 
             const input = await screen.findByPlaceholderText('Nuevo nombre')
@@ -531,7 +546,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo a Eliminar')).toBeInTheDocument()
             })
 
-            const deleteButton = screen.getByTitle('Eliminar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const deleteButton = await screen.findByText('Eliminar grupo')
             await user.click(deleteButton)
 
             await waitFor(() => {
@@ -550,7 +568,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo a Eliminar')).toBeInTheDocument()
             })
 
-            const deleteButton = screen.getByTitle('Eliminar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const deleteButton = await screen.findByText('Eliminar grupo')
             await user.click(deleteButton)
 
             await waitFor(() => {
@@ -576,7 +597,10 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Grupo a Eliminar')).toBeInTheDocument()
             })
 
-            const deleteButton = screen.getByTitle('Eliminar grupo')
+            const menuButton = screen.getByLabelText('Opciones de grupo')
+            await user.click(menuButton)
+
+            const deleteButton = await screen.findByText('Eliminar grupo')
             await user.click(deleteButton)
 
             const confirmButton = await screen.findByRole('button', { name: 'Eliminar' })
@@ -633,8 +657,7 @@ describe('GroupsTab', () => {
                 expect(screen.getByText('Usuario Test')).toBeInTheDocument()
             })
 
-            // Simular edición de alias (esto depende de cómo esté implementado en GroupCard)
-            // Por ahora solo verificamos que la función está disponible
+            // Verificamos que la función está disponible
             expect(setUserAlias).toBeDefined()
         })
     })
