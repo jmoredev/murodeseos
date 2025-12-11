@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
+import WhatsNewModal from '@/components/WhatsNewModal'
 
 export default function Home() {
   return (
@@ -182,6 +183,7 @@ function HomeContent() {
   // Render Main Screen with Tabs if logged in
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
+      <WhatsNewModal />
       {/* Desktop Top Navbar */}
       {isDesktop ? (
         <header className="sticky top-0 z-10 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">

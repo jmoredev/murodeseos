@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Group, GroupMember } from '@/components/GroupCard';
 import { removeMemberFromGroup, shareGroup } from '@/lib/group-utils';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { getUserAliases, setUserAlias } from '@/lib/aliases';
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -15,6 +16,11 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [memberToDelete, setMemberToDelete] = useState<GroupMember | null>(null);
+
+    // Alias state
+    const [aliases, setAliases] = useState<Record<string, string>>({});
+    const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+    const [aliasInput, setAliasInput] = useState("");
 
     useEffect(() => {
         const fetchGroupDetails = async () => {
@@ -52,6 +58,10 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     .in('id', userIds);
 
                 if (profilesError) throw profilesError;
+
+                // Fetch aliases
+                const userAliases = await getUserAliases();
+                setAliases(userAliases);
 
                 // Create a map of user profiles
                 const profilesMap = new Map(profilesData.map(p => [p.id, p]));
@@ -114,6 +124,40 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         await shareGroup(group.name, group.id);
     };
 
+    // Alias handlers
+    const startEditingAlias = (memberId: string, currentName: string, currentAlias?: string) => {
+        setEditingMemberId(memberId);
+        setAliasInput(currentAlias || currentName);
+    };
+
+    const saveAlias = async () => {
+        if (!editingMemberId) return;
+
+        const newAlias = aliasInput.trim();
+        const oldAliases = { ...aliases };
+
+        // Optimistic update
+        const updatedAliases = { ...aliases };
+        if (newAlias) {
+            updatedAliases[editingMemberId] = newAlias;
+        } else {
+            delete updatedAliases[editingMemberId];
+        }
+        setAliases(updatedAliases);
+        setEditingMemberId(null);
+
+        const success = await setUserAlias(editingMemberId, newAlias);
+        if (!success) {
+            setAliases(oldAliases);
+            alert("No se pudo guardar el apodo");
+        }
+    };
+
+    const cancelEditingAlias = () => {
+        setEditingMemberId(null);
+        setAliasInput("");
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
@@ -127,7 +171,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
             <div className="min-h-screen bg-zinc-50 dark:bg-black flex flex-col items-center justify-center p-4">
                 <h1 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Grupo no encontrado</h1>
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => router.push('/?tab=groups')}
                     className="text-indigo-600 hover:text-indigo-500 font-medium"
                 >
                     Volver atrás
@@ -142,7 +186,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
             <header className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
                 <div className="max-w-2xl mx-auto px-4 h-16 flex items-center gap-4">
                     <button
-                        onClick={() => router.back()}
+                        onClick={() => router.push('/?tab=groups')}
                         className="p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -199,62 +243,119 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                         </div>
                     ) : (
                         <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                            {group.members.map((member) => (
-                                <div
-                                    key={member.id}
-                                    onClick={() => {
-                                        if (member.id !== currentUserId) {
-                                            router.push(`/wishlist/${member.id}?name=${encodeURIComponent(member.name)}`);
-                                        }
-                                    }}
-                                    className={`p-4 flex items-center justify-between group transition-colors ${member.id !== currentUserId
-                                        ? 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer'
-                                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-4 min-w-0">
-                                        <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
-                                            {member.avatar && member.avatar.startsWith('http') ? (
-                                                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                                            ) : member.avatar ? (
-                                                <div className="w-full h-full flex items-center justify-center text-lg">
-                                                    {member.avatar}
-                                                </div>
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800">
-                                                    {member.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                                                {member.name}
-                                                {member.id === currentUserId && (
-                                                    <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-medium">
-                                                        Tú
-                                                    </span>
-                                                )}
-                                            </p>
-                                            {member.id !== currentUserId && (
-                                                <p className="text-xs text-zinc-400 mt-0.5">Ver lista de deseos →</p>
-                                            )}
-                                        </div>
-                                    </div>
+                            {group.members.map((member) => {
+                                const alias = aliases[member.id];
+                                const displayName = alias || member.name;
+                                const isEditing = editingMemberId === member.id;
 
-                                    {isAdmin && member.id !== currentUserId && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setMemberToDelete(member);
-                                            }}
-                                            className="p-2 rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                            aria-label="Expulsar usuario"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
+                                return (
+                                    <div
+                                        key={member.id}
+                                        onClick={() => {
+                                            if (member.id !== currentUserId && !isEditing) {
+                                                router.push(`/wishlist/${member.id}?name=${encodeURIComponent(displayName)}`);
+                                            }
+                                        }}
+                                        className={`p-4 flex items-center justify-between group transition-colors ${member.id !== currentUserId && !isEditing
+                                            ? 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer'
+                                            : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                                            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
+                                                {member.avatar && member.avatar.startsWith('http') ? (
+                                                    <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                                                ) : member.avatar ? (
+                                                    <div className="w-full h-full flex items-center justify-center text-lg">
+                                                        {member.avatar}
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800">
+                                                        {member.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="min-w-0 flex-1 mr-4">
+                                                {isEditing ? (
+                                                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="text"
+                                                            value={aliasInput}
+                                                            onChange={(e) => setAliasInput(e.target.value)}
+                                                            className="w-full px-2 py-1 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') saveAlias();
+                                                                if (e.key === 'Escape') cancelEditingAlias();
+                                                            }}
+                                                            autoFocus
+                                                        />
+                                                        <button
+                                                            onClick={saveAlias}
+                                                            className="p-1 text-green-600 hover:text-green-700"
+                                                            title="Guardar"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEditingAlias}
+                                                            className="p-1 text-red-600 hover:text-red-700"
+                                                            title="Cancelar"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                                                            {displayName}
+                                                            {alias && (
+                                                                <span className="ml-2 text-[10px] text-zinc-400 italic font-normal">
+                                                                    ({member.name})
+                                                                </span>
+                                                            )}
+                                                            {member.id === currentUserId && (
+                                                                <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-medium">
+                                                                    Tú
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        {member.id !== currentUserId && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    startEditingAlias(member.id, member.name, alias);
+                                                                }}
+                                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-400 hover:text-indigo-600"
+                                                                title="Cambiar apodo"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {member.id !== currentUserId && !isEditing && (
+                                                    <p className="text-xs text-zinc-400 mt-0.5">Ver lista de deseos →</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {isAdmin && member.id !== currentUserId && !isEditing && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setMemberToDelete(member);
+                                                }}
+                                                className="p-2 rounded-full text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-2"
+                                                aria-label="Expulsar usuario"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
