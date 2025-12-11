@@ -30,7 +30,11 @@ setup('autenticar usuario', async ({ page }) => {
     await page.waitForURL('http://localhost:3000/')
     await expect(page.getByText('Cerrar sesión').first()).toBeVisible()
 
-    // 5. Guardar el estado
+    // 5. Guardar el estado (incluyendo lastSeenVersion para evitar el modal)
+    await page.evaluate((version) => {
+        localStorage.setItem('lastSeenVersion', version);
+    }, process.env.npm_package_version || '0.1.0');
+
     await page.context().storageState({ path: authFile })
     console.log('✅ Estado de autenticación guardado correctamente.')
 })

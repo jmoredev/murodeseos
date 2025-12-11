@@ -2,12 +2,11 @@ import { test, expect } from '@playwright/test';
 import packageJson from '../package.json';
 
 test.describe('Novedades (What\'s New Modal)', () => {
-    // Nota: La autenticación ya viene dada por el auth.setup.ts (global setup)
-    // El estado base (user.json) NO tiene 'lastSeenVersion' seteado.
-
     test('debería aparecer para un usuario nuevo (sin historial)', async ({ page }) => {
-        // Navegar a la home. Como no tenemos 'lastSeenVersion', el modal debe salir.
+        // Clear localStorage before navigating to ensure modal appears
         await page.goto('/');
+        await page.evaluate(() => localStorage.removeItem('lastSeenVersion'));
+        await page.reload();
 
         // Verificar que el modal aparece
         await expect(page.getByRole('dialog')).toBeVisible();
@@ -16,7 +15,10 @@ test.describe('Novedades (What\'s New Modal)', () => {
     });
 
     test('debería cerrarse y guardar la versión en localStorage', async ({ page }) => {
+        // Clear localStorage first
         await page.goto('/');
+        await page.evaluate(() => localStorage.removeItem('lastSeenVersion'));
+        await page.reload();
 
         // Verificar y cerrar
         const modal = page.getByRole('dialog');
@@ -35,22 +37,24 @@ test.describe('Novedades (What\'s New Modal)', () => {
     });
 
     test('no debería aparecer si ya se ha visto la versión actual', async ({ page }) => {
-        // Inyectamos el valor en localStorage ANTES de que cargue la página
-        await page.addInitScript((version) => {
-            window.localStorage.setItem('lastSeenVersion', version);
-        }, packageJson.version);
-
+        // Set the current version in localStorage
         await page.goto('/');
+        await page.evaluate((version) => {
+            localStorage.setItem('lastSeenVersion', version);
+        }, packageJson.version);
+        await page.reload();
+
         await expect(page.getByRole('dialog')).not.toBeVisible();
     });
 
     test('debería aparecer si la versión guardada es anterior', async ({ page }) => {
-        // Inyectamos una versión vieja
-        await page.addInitScript(() => {
-            window.localStorage.setItem('lastSeenVersion', '0.0.0');
-        });
-
+        // Set an old version in localStorage
         await page.goto('/');
+        await page.evaluate(() => {
+            localStorage.setItem('lastSeenVersion', '0.0.0');
+        });
+        await page.reload();
+
         await expect(page.getByRole('dialog')).toBeVisible();
     });
 });
