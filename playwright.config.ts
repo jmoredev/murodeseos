@@ -4,7 +4,8 @@ import { defineConfig, devices } from '@playwright/test'
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -40,8 +41,8 @@ export default defineConfig({
         // 2. TESTS: Corren después del setup
         {
             name: 'chromium',
-            use: { 
-                ...devices['Desktop Chrome'], 
+            use: {
+                ...devices['Desktop Chrome'],
                 storageState: 'playwright/.auth/user.json',
             },
             dependencies: ['setup'],
@@ -49,16 +50,16 @@ export default defineConfig({
 
         {
             name: 'firefox',
-            use: { 
+            use: {
                 ...devices['Desktop Firefox'],
-                storageState: 'playwright/.auth/user.json', 
+                storageState: 'playwright/.auth/user.json',
             },
             dependencies: ['setup'],
         },
 
         {
             name: 'webkit',
-            use: { 
+            use: {
                 ...devices['Desktop Safari'],
                 storageState: 'playwright/.auth/user.json',
             },
@@ -68,7 +69,8 @@ export default defineConfig({
         /* Test against mobile viewports. */
         {
             name: 'Mobile Chrome',
-            use: { ...devices['Pixel 5'],
+            use: {
+                ...devices['Pixel 5'],
                 storageState: 'playwright/.auth/user.json',
             },
             dependencies: ['setup'],
@@ -85,7 +87,7 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'npm run dev',
+        command: 'bun run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,

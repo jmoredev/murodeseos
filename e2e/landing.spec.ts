@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
 
+// Le dice a Playwright: "Para este archivo, usa un estado vacío (sin cookies)"
+test.use({ storageState: { cookies: [], origins: [] } });
+
+
 test.describe('Página de Inicio / Redirección de Login', () => {
     test('debería redirigir a la página de login cuando no está autenticado', async ({ page }) => {
         await page.goto('/')
