@@ -29,14 +29,18 @@ const USERS = [
     { email: 'juan@test.com', password: 'Test123!', displayName: 'Juan Pérez', avatar: '👨‍💻' },
     { email: 'maria@test.com', password: 'Test123!', displayName: 'María García', avatar: '👩‍💼' },
     { email: 'ana@test.com', password: 'Test123!', displayName: 'Ana López', avatar: '👩‍🎨' },
-    { email: 'carlos@test.com', password: 'Test123!', displayName: 'Carlos Ruiz', avatar: '👨‍🔧' }
+    { email: 'carlos@test.com', password: 'Test123!', displayName: 'Carlos Ruiz', avatar: '👨‍🔧' },
+    // Usuario E2E para tests automáticos
+    { email: 'e2e-test@test.com', password: 'E2ETest123!', displayName: 'E2E Test User', avatar: '🤖' }
 ]
 
 // Datos de grupos
 const GROUPS = [
     { id: 'FAM001', name: 'Familia García', icon: '👨‍👩‍👧‍👦', creatorEmail: 'maria@test.com' },
     { id: 'WORK01', name: 'Amigos del Trabajo', icon: '💼', creatorEmail: 'juan@test.com' },
-    { id: 'BOOK01', name: 'Club de Lectura', icon: '📚', creatorEmail: 'ana@test.com' }
+    { id: 'BOOK01', name: 'Club de Lectura', icon: '📚', creatorEmail: 'ana@test.com' },
+    // Grupo E2E para tests automáticos
+    { id: 'E2E001', name: 'E2E Test Group', icon: '🧪', creatorEmail: 'e2e-test@test.com' }
 ]
 
 // Datos de wishlist items
@@ -46,6 +50,13 @@ const WISHLIST_ITEMS = [
     { title: 'Zapatillas Nike Air Max', price: '120.00', image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=500', priority: 'high' },
     { title: 'Cafetera Italiana Bialetti', price: '35.00', image_url: 'https://images.unsplash.com/photo-1561882468-489833355708?auto=format&fit=crop&q=80&w=500', priority: 'low' },
     { title: 'Set de LEGO Star Wars', price: '89.99', image_url: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&q=80&w=500', priority: 'medium' }
+]
+
+// Wishlist items predecibles para usuario E2E
+const E2E_WISHLIST_ITEMS = [
+    { title: 'E2E Test Item 1', price: '100.00', image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=500', priority: 'high' },
+    { title: 'E2E Test Item 2', price: '50.00', image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=500', priority: 'medium' },
+    { title: 'E2E Test Item 3', price: '25.00', image_url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&q=80&w=500', priority: 'low' }
 ]
 
 async function cleanDatabase() {
@@ -198,6 +209,15 @@ async function createGroupMembers(userMap: Map<string, string>, groupMap: Map<st
         console.log('✅ Club de Lectura: Ana (admin), María, Juan')
     }
 
+    // Grupo E2E: Solo el usuario E2E (admin)
+    const e2eGroup = groupMap.get('E2E001')
+    if (e2eGroup) {
+        await supabase.from('group_members').insert([
+            { group_id: 'E2E001', user_id: e2eGroup.creatorId, role: 'admin', joined_at: new Date().toISOString() },
+        ])
+        console.log('✅ E2E Test Group: E2E Test User (admin)')
+    }
+
     console.log('')
 }
 
@@ -205,24 +225,14 @@ async function createWishlists(userMap: Map<string, string>) {
     console.log('🎁 Creando listas de deseos...\n')
 
     const allUserIds = Array.from(userMap.values())
+    const e2eUserId = userMap.get('e2e-test@test.com')
 
     for (const [email, userId] of userMap.entries()) {
-        const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items por usuario
-        const items = []
+        let items = []
 
-        for (let i = 0; i < numItems; i++) {
-            const item = WISHLIST_ITEMS[Math.floor(Math.random() * WISHLIST_ITEMS.length)]
-
-            // 30% probabilidad de estar reservado
-            let reservedBy = null
-            if (Math.random() < 0.3) {
-                const otherUsers = allUserIds.filter(id => id !== userId)
-                if (otherUsers.length > 0) {
-                    reservedBy = otherUsers[Math.floor(Math.random() * otherUsers.length)]
-                }
-            }
-
-            items.push({
+        // Usuario E2E: items predecibles y sin reservas
+        if (email === 'e2e-test@test.com') {
+            items = E2E_WISHLIST_ITEMS.map(item => ({
                 user_id: userId,
                 title: item.title,
                 price: item.price,
@@ -230,8 +240,35 @@ async function createWishlists(userMap: Map<string, string>) {
                 links: [],
                 notes: '',
                 priority: item.priority,
-                reserved_by: reservedBy
-            })
+                reserved_by: null // Nunca reservado para tests
+            }))
+        } else {
+            // Usuarios normales: items aleatorios
+            const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items por usuario
+
+            for (let i = 0; i < numItems; i++) {
+                const item = WISHLIST_ITEMS[Math.floor(Math.random() * WISHLIST_ITEMS.length)]
+
+                // 30% probabilidad de estar reservado
+                let reservedBy = null
+                if (Math.random() < 0.3) {
+                    const otherUsers = allUserIds.filter(id => id !== userId)
+                    if (otherUsers.length > 0) {
+                        reservedBy = otherUsers[Math.floor(Math.random() * otherUsers.length)]
+                    }
+                }
+
+                items.push({
+                    user_id: userId,
+                    title: item.title,
+                    price: item.price,
+                    image_url: item.image_url,
+                    links: [],
+                    notes: '',
+                    priority: item.priority,
+                    reserved_by: reservedBy
+                })
+            }
         }
 
         const { error } = await supabase.from('wishlist_items').insert(items)
@@ -240,7 +277,7 @@ async function createWishlists(userMap: Map<string, string>) {
             console.error(`❌ Error creando wishlist para ${email}:`, error.message)
         } else {
             const reserved = items.filter(i => i.reserved_by).length
-            console.log(`✅ ${email}: ${numItems} deseos (${reserved} reservados)`)
+            console.log(`✅ ${email}: ${items.length} deseos (${reserved} reservados)`)
         }
     }
 
