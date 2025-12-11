@@ -6,12 +6,14 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
-        version: '0.1.0',
+        version: '1.0.0',
         date: '2025-12-11',
         changes: [
-            '✨ Ahora puedes ver el historial de cambios de la aplicación.',
-            '🚀 Mejora en la velocidad de carga de los grupos.',
-            '🐛 Corregidos errores menores en la visualización de listas.',
+            '🎉 ¡Lanzamiento oficial de Muro de Deseos!',
+            '👥 Crea grupos y comparte con amigos y familia',
+            '✨ Asigna apodos personalizados a los miembros del grupo',
+            '🎁 Gestiona tu lista de deseos privada',
+            '🔄 Actualizaciones en tiempo real',
         ],
     },
 ];
