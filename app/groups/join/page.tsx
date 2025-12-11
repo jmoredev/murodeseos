@@ -56,6 +56,10 @@ function JoinGroupContent() {
                 }, 2000)
             } else {
                 setSuccessMessage(`¡Te has unido a "${result.group.name}" exitosamente!`)
+
+                // Invalidate groups cache
+                sessionStorage.removeItem(`groups_${user.id}`)
+
                 // Redirigir después de un breve delay
                 setTimeout(() => {
                     router.push('/')

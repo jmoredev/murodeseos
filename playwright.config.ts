@@ -32,29 +32,54 @@ export default defineConfig({
 
     /* Configure projects for major browsers */
     projects: [
+        // 1. SETUP: Este corre primero y crea el archivo user.json
+        {
+            name: 'setup',
+            testMatch: /auth\.setup\.ts/,
+        },
+        // 2. TESTS: Corren después del setup
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: { 
+                ...devices['Desktop Chrome'], 
+                storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
         },
 
         {
             name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
+            use: { 
+                ...devices['Desktop Firefox'],
+                storageState: 'playwright/.auth/user.json', 
+            },
+            dependencies: ['setup'],
         },
 
         {
             name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
+            use: { 
+                ...devices['Desktop Safari'],
+                storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
         },
 
         /* Test against mobile viewports. */
         {
             name: 'Mobile Chrome',
-            use: { ...devices['Pixel 5'] },
+            use: { ...devices['Pixel 5'],
+                storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
         },
         {
             name: 'Mobile Safari',
-            use: { ...devices['iPhone 12'] },
+            use: {
+                ...devices['iPhone 12'],
+                storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
         },
     ],
 

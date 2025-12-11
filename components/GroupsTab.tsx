@@ -22,26 +22,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [groupToDelete, setGroupToDelete] = useState<{ id: string, name: string } | null>(null);
     const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
 
-    const fetchUserGroups = async (userId: string, useCache: boolean = true) => {
-        // Check cache first
-        if (useCache) {
-            const cachedData = sessionStorage.getItem(`groups_${userId}`);
-            if (cachedData) {
-                try {
-                    const { groups: cachedGroups, roles: cachedRoles, timestamp } = JSON.parse(cachedData);
-                    // Cache válida por 5 minutos
-                    if (Date.now() - timestamp < 5 * 60 * 1000) {
-                        setGroups(cachedGroups);
-                        setUserRoles(new Map(cachedRoles));
-                        setLoading(false);
-                        return;
-                    }
-                } catch (e) {
-                    console.error('Error parsing cache:', e);
-                }
-            }
-        }
-
+    const fetchUserGroups = async (userId: string) => {
         try {
             const { data: myMemberships, error: membershipError } = await supabase
                 .from('group_members')
@@ -54,12 +35,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             }
 
             if (!myMemberships || myMemberships.length === 0) {
-
                 setGroups([])
                 setLoading(false)
                 return
             }
-
 
             const groupIds = myMemberships.map(m => m.group_id)
 
@@ -79,8 +58,6 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 throw groupsError
             }
 
-
-
             const { data: membersData, error: membersError } = await supabase
                 .from('group_members')
                 .select('group_id, user_id')
@@ -91,26 +68,21 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 throw membersError
             }
 
-
-
-            const userIds = [...new Set(membersData.map(m => m.user_id))]
+            const userIdsItems = [...new Set(membersData.map(m => m.user_id))]
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
                 .select('id, display_name, avatar_url')
-                .in('id', userIds)
+                .in('id', userIdsItems)
 
             if (profilesError) {
                 console.error('Error fetching profiles:', profilesError)
                 throw profilesError
             }
 
-
-
             const profilesMap = new Map(profilesData.map(p => [p.id, p]))
 
             const formattedGroups: Group[] = groupsData.map(g => {
                 const allGroupMembers = membersData.filter(m => m.group_id === g.id)
-
 
                 const groupMembers = allGroupMembers
                     .filter(m => m.user_id !== userId)
@@ -123,8 +95,6 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         }
                     })
 
-
-
                 return {
                     id: g.id,
                     name: g.name,
@@ -133,19 +103,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 }
             })
 
-
             setGroups(formattedGroups)
-
-            // Save to cache
-            sessionStorage.setItem(`groups_${userId}`, JSON.stringify({
-                groups: formattedGroups,
-                roles: Array.from(rolesMap.entries()),
-                timestamp: Date.now()
-            }));
 
         } catch (error) {
             console.error('Error fetching groups:', error)
-
         } finally {
             setLoading(false)
         }

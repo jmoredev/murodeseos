@@ -1,47 +1,56 @@
 import { test, expect } from '@playwright/test'
+import { E2E_CONFIG } from './config'
+
+//Almacena pares de { ID_del_Test : ID_del_Dato_Creado }
+const createdIds = new Map<string, string>();
 
 test.describe('Flujo de Creación de Grupo', () => {
     test.setTimeout(60000)
     test.beforeEach(async ({ page }) => {
-        console.log('Iniciando login...')
-        // 1. Ir a la página de login
-        await page.goto('http://localhost:3000/login')
-
-        // Esperar a que el formulario sea visible
-        await page.waitForSelector('form', { state: 'visible' })
-
-        // 2. Rellenar credenciales
-        console.log('Rellenando credenciales...')
-        await page.fill('input[name="email"]', 'juan@test.com')
-        await page.fill('input[name="password"]', 'Test123!')
-
-        // 3. Enviar formulario
-        console.log('Enviando formulario...')
-        await page.click('button[type="submit"]')
-
-        // 4. Esperar a ser redirigido a la home
-        console.log('Esperando redirección...')
-        try {
-            await page.waitForURL('http://localhost:3000/', { timeout: 15000 })
-        } catch (e) {
-            console.log('Timeout esperando redirección. URL actual:', page.url())
-            // Capturar texto de error si existe
-            const errorText = await page.locator('.text-urgencia-coral').textContent().catch(() => 'No error text found')
-            console.log('Mensaje de error en pantalla:', errorText)
-            throw e
-        }
+        // Como ya tienes cookies, el servidor te dejará entrar.
+        await page.goto('http://localhost:3000/');
 
         // Verificar que estamos logueados
-        console.log('Login exitoso, verificando URL...')
         await expect(page).toHaveURL('http://localhost:3000/')
+        // Verificar que aparece el botón de cerrar sesión para confirmar que el usuario está autenticado
+        await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
     })
 
-    test('Un usuario puede crear un grupo exitosamente y ser redirigido al detalle', async ({ page }) => {
-        // 1. Verificar que estamos en la Home
+    test.afterEach(async ({ request }, testInfo) => {
+        // RECUPERAR: Buscamos si ESTE test específico (identificado por testInfo.testId) guardó algo
+        const idToDelete = createdIds.get(testInfo.testId);
+
+        if (idToDelete) {
+            console.log(`🧹 [Limpieza] Test "${testInfo.title}" borrando ID: ${idToDelete}`);
+
+            // Llamada a la API para borrar
+            const response = await request.delete(`http://localhost:3000/api/groups/${idToDelete}`);
+
+            // --- BLOQUE DE DEPURACIÓN ---
+            if (!response.ok()) {
+                console.log(`🔴 ERROR AL BORRAR: Status ${response.status()}`);
+                console.log(`🔴 Respuesta del servidor: ${await response.text()}`);
+            }
+            // -----------------------------
+
+            // Verificamos que se borró bien (opcional pero recomendado)
+            expect(response.ok()).toBeTruthy();
+
+            // LIMPIAR EL MAPA: Borramos la entrada para no ocupar memoria
+            createdIds.delete(testInfo.testId);
+        }
+    });
+
+    test('Un usuario puede crear un grupo exitosamente y volver al inicio', async ({ page }, testInfo) => {
+        // 1. Verificar que estamos en la Home y navegar a la pestaña de grupos
         await expect(page).toHaveURL('http://localhost:3000/')
+        await page.goto('http://localhost:3000/?tab=groups')
+
+        // Esperar a que se cargue la pestaña de grupos
+        await expect(page.getByRole('heading', { name: 'Mis grupos' })).toBeVisible()
 
         // 2. Hacer clic en el botón "Crear Grupo"
-        const createGroupButton = page.locator('a[href*="/groups/create"], button:has-text("Crear Grupo"), a:has-text("Crear Nuevo Grupo")')
+        const createGroupButton = page.locator('a[title="Crear grupo"], a[href*="/groups/create"], button:has-text("Crear Grupo"), a:has-text("Crear Nuevo Grupo")')
         await expect(createGroupButton.first()).toBeVisible({ timeout: 10000 })
         await createGroupButton.first().click()
 
@@ -66,45 +75,49 @@ test.describe('Flujo de Creación de Grupo', () => {
         await expect(submitButton).toBeVisible()
         await submitButton.click()
 
-        // 7. Esperar a que se complete la creación
-        const successMessage = page.locator('text=/Grupo Creado|¡Éxito!|Creado con éxito/i')
+        // Interceptar respuesta para sacar el ID
+        const response = await page.waitForResponse(r => r.request().method() === 'POST' && r.status() === 201);
+        const body = await response.json();
 
-        // Intentar detectar éxito o redirección
-        try {
-            await Promise.race([
-                successMessage.waitFor({ state: 'visible', timeout: 5000 }),
-                page.waitForURL(/\/($|groups\/)/, { timeout: 10000 })
-            ])
-        } catch (e) {
-            console.log('No se detectó éxito inmediato, verificando estado actual...')
-        }
+        // GUARDAR: Asociamos el ID del nuevo cliente al ID único de ESTE test
+        console.log(`📝 Test "${testInfo.title}" creó el ID: ${body.id}`);
+        createdIds.set(testInfo.testId, body.id);
 
-        if (await successMessage.isVisible().catch(() => false)) {
-            // Si hay pantalla de éxito, verificar código y continuar
-            const groupCodeElement = page.locator('text=/[A-Z0-9]{6,8}/')
-            await expect(groupCodeElement).toBeVisible()
+        // 7. Verificar pantalla de éxito (NO hay redirección automática)
+        const successMessage = page.locator('text=¡Grupo creado!')
+        await expect(successMessage).toBeVisible({ timeout: 10000 })
 
-            const continueButton = page.locator('button:has-text("Continuar"), a:has-text("Ver grupo")')
-            if (await continueButton.isVisible().catch(() => false)) {
-                await continueButton.first().click()
-            }
-        }
+        // Verificar que aparece el código del grupo
+        const groupCodeElement = page.locator('text=/[A-Z0-9]{6,8}/') // Ajustar regex si el ID tiene otro formato
+        await expect(groupCodeElement).toBeVisible()
 
-        // 8. Verificar redirección final
-        await page.waitForURL(/\/($|groups\/)/, { timeout: 10000 })
-        await expect(page).not.toHaveURL(/\/groups\/create/)
 
-        // 9. Verificar que el grupo aparece
-        const currentUrl = page.url()
-        if (currentUrl.includes('/groups/') && !currentUrl.includes('/create')) {
-            await expect(page.locator('h1, h2, h3').first()).toBeVisible()
-        } else {
-            const groupCard = page.locator(`text="${groupName}"`)
-            await expect(groupCard).toBeVisible({ timeout: 5000 })
-        }
+        // 8. Hacer clic en "Continuar al inicio"
+        const continueButton = page.locator('button:has-text("Continuar al inicio")')
+        await expect(continueButton).toBeVisible()
+        await continueButton.click()
+
+        // 9. Verificar redirección a la home
+        await page.waitForURL('http://localhost:3000/', { timeout: 10000 })
+
+        // 10. Ir a la pestaña de grupos para verificar que el grupo aparece
+        // 10. Ir a la pestaña de grupos para verificar que el grupo aparece
+        // Usamos click en la UI en lugar de recarga para asegurar que la SPA maneje el estado correctamente
+        // y evitar problemas de caché en WebKit/Mobile Safari con page.goto
+        const groupsTabButton = page.getByRole('button', { name: /Mis grupos|Grupos/i }).first()
+        await expect(groupsTabButton).toBeVisible()
+        await groupsTabButton.click()
+
+        await expect(page.getByRole('heading', { name: 'Mis grupos' })).toBeVisible()
+
+        const groupCard = page.locator(`text="${groupName}"`)
+        await expect(groupCard).toBeVisible({ timeout: 10000 })
     })
 
     test('El formulario de creación valida el nombre mínimo', async ({ page }) => {
+        // Verificar que aparece el botón de cerrar sesión para confirmar que el usuario está autenticado
+        await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+
         await page.goto('http://localhost:3000/groups/create')
 
         const groupNameInput = page.locator('input#groupName, input[name="groupName"]')
@@ -128,6 +141,9 @@ test.describe('Flujo de Creación de Grupo', () => {
     })
 
     test('Permite seleccionar diferentes iconos para el grupo', async ({ page }) => {
+        // Verificar que aparece el botón de cerrar sesión para confirmar que el usuario está autenticado
+        await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+
         await page.goto('http://localhost:3000/groups/create')
 
         const emojiButtons = page.locator('button:has-text("🎁"), button:has-text("🎉")')

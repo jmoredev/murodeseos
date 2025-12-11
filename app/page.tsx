@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +8,18 @@ import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
 
 export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-fondo-base dark:bg-gray-900">
+        <div className="text-muro-principal dark:text-white">Cargando...</div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
+  )
+}
+
+function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)

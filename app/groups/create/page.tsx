@@ -38,6 +38,10 @@ export default function CreateGroupPage() {
 
             setCreatedGroup({ id: group.id, name: group.name })
 
+            // Invalidate groups cache
+            sessionStorage.removeItem(`groups_${user.id}`)
+
+
             // Intentar compartir inmediatamente
             const shared = await shareGroup(group.name, group.id)
 
