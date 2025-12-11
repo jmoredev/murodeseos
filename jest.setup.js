@@ -54,10 +54,49 @@ Object.defineProperty(global.navigator, 'share', {
   value: jest.fn(),
 })
 
-// Mock de Clipboard API
+// Mock de Clipboard API (configurable para userEvent)
 Object.defineProperty(global.navigator, 'clipboard', {
-  writable: true,
-  value: {
-    writeText: jest.fn(),
-  },
+    value: { writeText: jest.fn() },
+    writable: true,
+    configurable: true
 })
+
+// Mock de next/link
+jest.mock('next/link', () => {
+    return ({ children, href }) => {
+        return children
+    }
+})
+
+// Mock de sessionStorage
+const sessionStorageMock = (() => {
+    let store = {}
+    return {
+        getItem: (key) => store[key] || null,
+        setItem: (key, value) => { store[key] = value.toString() },
+        removeItem: (key) => { delete store[key] },
+        clear: () => { store = {} }
+    }
+})()
+Object.defineProperty(global, 'sessionStorage', { 
+    value: sessionStorageMock,
+    writable: true 
+})
+
+// Mock de lib/aliases
+jest.mock('@/lib/aliases', () => ({
+    getUserAliases: jest.fn(),
+    setUserAlias: jest.fn()
+}))
+
+// Mock de lib/group-utils
+jest.mock('@/lib/group-utils', () => ({
+    generateUniqueGroupCode: jest.fn(),
+    createGroup: jest.fn(),
+    joinGroup: jest.fn(),
+    updateGroupName: jest.fn(),
+    deleteGroup: jest.fn(),
+    removeMemberFromGroup: jest.fn(),
+    generateShareMessage: jest.fn(),
+    shareGroup: jest.fn()
+}))
