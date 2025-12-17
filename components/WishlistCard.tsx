@@ -130,8 +130,11 @@ export function WishlistCard({
                 )}
 
                 <div className="mt-auto pt-3 flex items-center justify-between text-sm">
-                    <div className="font-bold text-zinc-900 dark:text-white">
-                        {item.price ? (typeof item.price === 'number' ? `$${item.price}` : item.price) : <span className="text-zinc-400 font-normal italic">Sin precio</span>}
+                    <div className={item.price
+                        ? "font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/30 text-sm shadow-sm"
+                        : "text-zinc-400 text-sm font-normal italic pl-1"
+                    }>
+                        {item.price ? `${item.price} €` : 'Sin precio'}
                     </div>
 
                     {item.links.length > 0 && (

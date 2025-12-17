@@ -447,14 +447,19 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                                             Precio Aprox.
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={formData.price || ''}
-                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="Ej: 25.00"
-                                            disabled={isSaving}
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={formData.price || ''}
+                                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                className="w-full pl-4 pr-8 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                placeholder="Ej: 25.00"
+                                                disabled={isSaving}
+                                            />
+                                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-zinc-500">
+                                                €
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
