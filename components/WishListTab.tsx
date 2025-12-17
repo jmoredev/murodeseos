@@ -273,6 +273,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     <button
                         onClick={() => openForm()}
                         className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
+                        aria-label="Nuevo deseo"
                     >
                         <Icons.Plus />
                     </button>
@@ -507,6 +508,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         onClick={handleDelete}
                                         className="px-4 py-3 text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl font-medium transition-colors"
                                         disabled={isSaving}
+                                        aria-label="Eliminar deseo"
                                     >
                                         <Icons.Trash />
                                     </button>
