@@ -146,19 +146,8 @@ describe('WishListTab', () => {
             render(<WishListTab userId={userId} />);
         });
 
-        const addButton = screen.getByRole('button', { name: '' }); // Icon button usually has empty text if aria-label missing, targeting by class might be safer or adding aria-label
-        // Or finding by the icon svg if possible, but let's try finding the header add button
-        // The header has a button with the Plus icon.
-
-        // Simpler way: find the button in the header
-        const header = screen.getByRole('banner'); // header usually has banner role
-        const addBtn = header.querySelector('button');
-
-        // Since we don't have aria-labels, let's use a query selector or just find by role if distinct
-        // In the code, it's the only button in the header div structure
-        // Let's rely on the rendered plus icon inside it if needed, or better, assuming it's the button in the header.
-
-        fireEvent.click(addBtn!);
+        const addBtn = screen.getByLabelText('Nuevo deseo');
+        fireEvent.click(addBtn);
 
         expect(screen.getByText('Nuevo deseo')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('¿Qué deseas?')).toBeInTheDocument();
@@ -170,8 +159,7 @@ describe('WishListTab', () => {
         });
 
         // Open modal
-        const header = screen.getByRole('banner');
-        fireEvent.click(header.querySelector('button')!);
+        fireEvent.click(screen.getByLabelText('Nuevo deseo'));
 
         // Fill form
         fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'New Wish' } });
@@ -225,15 +213,11 @@ describe('WishListTab', () => {
         // Click to edit
         fireEvent.click(screen.getByText('Item 1'));
 
-        // Click delete - it's the button with the trash icon
-        // We can find it by title or svg, but easier to find the one next to Cancel
-        // Or adding a testid to the delete button in source would be better, but let's try finding the red button
-        // Class contains 'text-red-600'
-        const buttons = screen.getAllByRole('button');
-        const deleteBtn = buttons.find(b => b.className.includes('text-red-600'));
+        // Click delete
+        const deleteBtn = screen.getByLabelText('Eliminar deseo');
 
         await act(async () => {
-            fireEvent.click(deleteBtn!);
+            fireEvent.click(deleteBtn);
         });
 
         expect(window.confirm).toHaveBeenCalled();
@@ -247,8 +231,7 @@ describe('WishListTab', () => {
         });
 
         // Open modal
-        const header = screen.getByRole('banner');
-        fireEvent.click(header.querySelector('button')!);
+        fireEvent.click(screen.getByLabelText('Nuevo deseo'));
 
         // Find file input - it's hidden but we can target by type="file"
         // Since it's hidden `display: none` usually, fireEvent.change still works on the element if we can select it.
@@ -264,19 +247,54 @@ describe('WishListTab', () => {
         });
 
         // Verify upload called
-        // We need to check if our mock storage.upload was called
-        // Since we mocked it locally inside the factory, we need to access the spy if we assigned it to a variable
-        // In this file: `const mockUpload = jest.fn();`
-        // Validation:
-        // expect(mockUpload).toHaveBeenCalled(); 
-        // Logic: The component calls `supabase.storage.from(...).upload(...)`.
-        // Our mock implementation calls `mockUpload`.
-
-        // Wait for async operations
         await waitFor(() => {
-            // We can check if the image URL input value changed to the mocked public URL
             const urlInput = screen.getByPlaceholderText('Pegar URL de imagen...') as HTMLInputElement;
             expect(urlInput.value).toBe('https://example.com/image.jpg');
         });
+    });
+
+    it('should sort items by priority', async () => {
+        // Mock items with different priorities
+        (supabase.from as jest.Mock).mockImplementation((table) => {
+            if (table === 'wishlist_items') {
+                return {
+                    select: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            order: jest.fn().mockResolvedValue({
+                                data: [
+                                    { id: '1', title: 'A_Low', priority: 'low' },
+                                    { id: '2', title: 'B_High', priority: 'high' },
+                                    { id: '3', title: 'C_Medium', priority: 'medium' }
+                                ],
+                                error: null
+                            })
+                        })
+                    })
+                };
+            }
+            return { select: jest.fn() };
+        });
+
+        await act(async () => {
+            render(<WishListTab userId={userId} />);
+        });
+
+        // Initial render (by name A, B, C)
+        const items = screen.getAllByTestId('wishlist-card');
+        expect(items[0]).toHaveTextContent('A_Low');
+        expect(items[1]).toHaveTextContent('B_High');
+        expect(items[2]).toHaveTextContent('C_Medium');
+
+        // Click sort by priority
+        const sortBtn = screen.getByText('Por prioridad');
+        await act(async () => {
+            fireEvent.click(sortBtn);
+        });
+
+        // Expect High > Medium > Low
+        const sortedItems = screen.getAllByTestId('wishlist-card');
+        expect(sortedItems[0]).toHaveTextContent('B_High');
+        expect(sortedItems[1]).toHaveTextContent('C_Medium');
+        expect(sortedItems[2]).toHaveTextContent('A_Low');
     });
 });
