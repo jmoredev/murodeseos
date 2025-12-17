@@ -1,3 +1,5 @@
+jest.unmock('@/lib/group-utils')
+
 import {
     generateUniqueGroupCode,
     createGroup,
