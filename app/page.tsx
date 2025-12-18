@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
+import { ProfileTab } from '@/components/ProfileTab'
 import WhatsNewModal from '@/components/WhatsNewModal'
 
 export default function Home() {
@@ -25,7 +26,7 @@ function HomeContent() {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState<'wishlist' | 'groups'>('wishlist')
+  const [activeTab, setActiveTab] = useState<'wishlist' | 'groups' | 'profile'>('wishlist')
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -33,6 +34,8 @@ function HomeContent() {
       setActiveTab('groups')
     } else if (tab === 'wishlist') {
       setActiveTab('wishlist')
+    } else if (tab === 'profile') {
+      setActiveTab('profile')
     }
   }, [searchParams])
   const [isDesktop, setIsDesktop] = useState(false)
@@ -119,11 +122,13 @@ function HomeContent() {
   }, [router])
 
   // Verificar sesión al cambiar de pestaña
-  const handleTabChange = async (tab: 'wishlist' | 'groups') => {
+  const handleTabChange = async (tab: 'wishlist' | 'groups' | 'profile') => {
     if (user) {
       const isValid = await verifySession()
       if (isValid) {
         setActiveTab(tab)
+        // Actualizar la URL sin recargar la página para que persista al refrescar
+        router.replace(`/?tab=${tab}`, { scroll: false })
       }
     }
   }
@@ -220,8 +225,20 @@ function HomeContent() {
             {/* User Actions */}
             <div className="flex items-center gap-3">
               <button
+                onClick={() => handleTabChange('profile')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile'
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                title="Mi Perfil"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Perfil
+              </button>
+              <button
                 onClick={() => supabase.auth.signOut()}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                title="Cerrar sesión"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                 Cerrar sesión
@@ -236,13 +253,25 @@ function HomeContent() {
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
               Muro de deseos
             </h1>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
-              title="Cerrar sesión"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handleTabChange('profile')}
+                className={`p-2 rounded-full transition-colors ${activeTab === 'profile'
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                title="Mi Perfil"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </button>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
+                title="Cerrar sesión"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              </button>
+            </div>
           </div>
         </header>
       )}
@@ -251,8 +280,10 @@ function HomeContent() {
       <div className={isDesktop ? 'pb-0' : 'pb-20'}>
         {activeTab === 'wishlist' ? (
           <WishListTab userId={user.id} />
-        ) : (
+        ) : activeTab === 'groups' ? (
           <GroupsTab userId={user.id} />
+        ) : (
+          <ProfileTab userId={user.id} />
         )}
       </div>
 
