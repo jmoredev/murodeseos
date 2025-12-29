@@ -14,7 +14,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
     const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
+    const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
 
     useEffect(() => {
@@ -121,11 +121,15 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
     const sortedItems = [...items].sort((a, b) => {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
-        } else {
-            // Ordenar por precio
+        } else if (sortBy === 'price') {
             const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
             const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
             return priceA - priceB;
+        } else {
+            const priorityValues = { high: 3, medium: 2, low: 1 };
+            const priorityA = priorityValues[a.priority || 'medium'] || 2;
+            const priorityB = priorityValues[b.priority || 'medium'] || 2;
+            return priorityB - priorityA;
         }
     });
 
@@ -178,6 +182,15 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                                 }`}
                         >
                             Por precio
+                        </button>
+                        <button
+                            onClick={() => setSortBy('priority')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'priority'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por prioridad
                         </button>
                     </div>
                 )}
