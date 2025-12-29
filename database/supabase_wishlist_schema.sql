@@ -55,6 +55,7 @@ CREATE OR REPLACE FUNCTION public.check_wishlist_update_permissions()
 RETURNS TRIGGER 
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   current_user_id UUID;

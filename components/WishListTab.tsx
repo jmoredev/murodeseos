@@ -93,7 +93,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [editingItem, setEditingItem] = useState<GiftItem | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
+    const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,11 +110,10 @@ export function WishListTab({ userId }: WishListTabProps) {
                     .from('wishlist_items')
                     .select('*')
                     .eq('user_id', userId)
-                    .order('title', { ascending: true }); // Ordenar por nombre por defecto
+                    .order('title', { ascending: true });
 
                 if (error) throw error;
 
-                // Mapear de snake_case (DB) a camelCase (Frontend)
                 const mappedItems: GiftItem[] = (data || []).map(item => ({
                     id: item.id,
                     title: item.title,
@@ -141,11 +140,15 @@ export function WishListTab({ userId }: WishListTabProps) {
     const sortedItems = [...items].sort((a, b) => {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
-        } else {
-            // Ordenar por precio
+        } else if (sortBy === 'price') {
             const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
             const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
             return priceA - priceB;
+        } else {
+            const priorityValues = { high: 3, medium: 2, low: 1 };
+            const priorityA = priorityValues[a.priority || 'medium'] || 2;
+            const priorityB = priorityValues[b.priority || 'medium'] || 2;
+            return priorityB - priorityA;
         }
     });
 
@@ -180,22 +183,17 @@ export function WishListTab({ userId }: WishListTabProps) {
                 price: formData.price,
                 notes: formData.notes,
                 priority: formData.priority || 'medium',
-                // is_reserved se mantiene igual si existe, o false por defecto en DB
             };
 
             if (editingItem) {
-                // Actualizar
                 const { error } = await supabase
                     .from('wishlist_items')
                     .update(itemData)
                     .eq('id', editingItem.id);
 
                 if (error) throw error;
-
-                // Actualizar estado local
                 setItems(items.map(i => i.id === editingItem.id ? { ...i, ...formData } as GiftItem : i));
             } else {
-                // Crear
                 const { data, error } = await supabase
                     .from('wishlist_items')
                     .insert(itemData)
@@ -203,8 +201,6 @@ export function WishListTab({ userId }: WishListTabProps) {
                     .single();
 
                 if (error) throw error;
-
-                // Añadir al estado local
                 const newItem: GiftItem = {
                     id: data.id,
                     title: data.title,
@@ -220,7 +216,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             setIsFormOpen(false);
         } catch (error) {
             console.error('Error saving item:', error);
-            alert('Error al guardar el deseo. Por favor, intenta de nuevo.');
+            alert('Error al guardar el deseo.');
         } finally {
             setIsSaving(false);
         }
@@ -263,7 +259,6 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-black p-4 pb-24">
-            {/* Header */}
             <header className="mb-8 pt-4 max-w-5xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
                     <div>
@@ -273,17 +268,17 @@ export function WishListTab({ userId }: WishListTabProps) {
                     <button
                         onClick={() => openForm()}
                         className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
+                        aria-label="Nuevo deseo"
                     >
                         <Icons.Plus />
                     </button>
                 </div>
 
-                {/* Sorting controls */}
                 {items.length > 0 && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
                         <button
                             onClick={() => setSortBy('name')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'name'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -292,241 +287,255 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </button>
                         <button
                             onClick={() => setSortBy('price')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'price'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
                         >
                             Por precio
                         </button>
+                        <button
+                            onClick={() => setSortBy('priority')}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'priority'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
+                        >
+                            Por prioridad
+                        </button>
                     </div>
                 )}
             </header>
 
             {/* Grid de Tarjetas */}
-            <div className="max-w-5xl mx-auto">
-                {sortedItems.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {sortedItems.map(item => (
-                            <WishlistCard
-                                key={item.id}
-                                item={item}
-                                onClick={openForm}
-                                isOwner={true} // Always owner in this view
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-20">
-                        <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-zinc-400">
-                            🎁
+            < div className="max-w-5xl mx-auto" >
+                {
+                    sortedItems.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {sortedItems.map(item => (
+                                <WishlistCard
+                                    key={item.id}
+                                    item={item}
+                                    onClick={openForm}
+                                    isOwner={true} // Always owner in this view
+                                />
+                            ))}
                         </div>
-                        <h3 className="text-lg font-medium text-zinc-900 dark:text-white">Tu lista está vacía</h3>
-                        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Añade cosas que te ilusionen.</p>
-                    </div>
-                )}
-            </div>
+                    ) : (
+                        <div className="text-center py-20">
+                            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-zinc-400">
+                                🎁
+                            </div>
+                            <h3 className="text-lg font-medium text-zinc-900 dark:text-white">Tu lista está vacía</h3>
+                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Añade cosas que te ilusionen.</p>
+                        </div>
+                    )
+                }
+            </div >
 
             {/* Modal Formulario */}
-            {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
-                        onClick={() => !isSaving && setIsFormOpen(false)}
-                    ></div>
+            {
+                isFormOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+                            onClick={() => !isSaving && setIsFormOpen(false)}
+                        ></div>
 
-                    <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
-                        <form onSubmit={handleSave} className="p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-                                    {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
-                                </h2>
-                                <button
-                                    type="button"
-                                    onClick={() => !isSaving && setIsFormOpen(false)}
-                                    className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                                    disabled={isSaving}
-                                >
-                                    <Icons.X />
-                                </button>
-                            </div>
+                        <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+                            <form onSubmit={handleSave} className="p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+                                        {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        onClick={() => !isSaving && setIsFormOpen(false)}
+                                        className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                        disabled={isSaving}
+                                    >
+                                        <Icons.X />
+                                    </button>
+                                </div>
 
-                            <div className="space-y-6">
-                                {/* Gestión de Imagen */}
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                        Imagen
-                                    </label>
-                                    <div className="flex gap-4 items-start">
-                                        <div className="w-24 h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                            {formData.imageUrl ? (
-                                                <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <Icons.Image />
-                                            )}
-                                        </div>
-                                        <div className="flex-1 space-y-3">
-                                            <input
-                                                type="url"
-                                                placeholder="Pegar URL de imagen..."
-                                                value={formData.imageUrl || ''}
-                                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                                className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                disabled={isSaving || isUploading}
-                                            />
-                                            <div className="flex items-center gap-2">
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                                            Imagen
+                                        </label>
+                                        <div className="flex gap-4 items-start">
+                                            <div className="w-24 h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                {formData.imageUrl ? (
+                                                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Icons.Image />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 space-y-3">
                                                 <input
-                                                    type="file"
-                                                    ref={fileInputRef}
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (!file) return;
-
-                                                        setIsUploading(true);
-                                                        try {
-                                                            const fileExt = file.name.split('.').pop();
-                                                            const fileName = `${userId}/${Date.now()}.${fileExt}`;
-
-                                                            const { error: uploadError } = await supabase.storage
-                                                                .from('wishlist-images')
-                                                                .upload(fileName, file);
-
-                                                            if (uploadError) throw uploadError;
-
-                                                            const { data: { publicUrl } } = supabase.storage
-                                                                .from('wishlist-images')
-                                                                .getPublicUrl(fileName);
-
-                                                            setFormData({ ...formData, imageUrl: publicUrl });
-                                                        } catch (error) {
-                                                            console.error('Error uploading image:', error);
-                                                            alert('Error al subir la imagen');
-                                                        } finally {
-                                                            setIsUploading(false);
-                                                        }
-                                                    }}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => fileInputRef.current?.click()}
+                                                    type="url"
+                                                    placeholder="Pegar URL de imagen..."
+                                                    value={formData.imageUrl || ''}
+                                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                                    className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
                                                     disabled={isSaving || isUploading}
-                                                    className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
-                                                >
-                                                    <Icons.Upload />
-                                                    {isUploading ? 'Subiendo...' : 'Subir imagen'}
-                                                </button>
-                                                <span className="text-xs text-zinc-400">
-                                                    (Max 5MB)
-                                                </span>
+                                                />
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="file"
+                                                        ref={fileInputRef}
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+
+                                                            setIsUploading(true);
+                                                            try {
+                                                                const fileExt = file.name.split('.').pop();
+                                                                const fileName = `${userId}/${Date.now()}.${fileExt}`;
+
+                                                                const { error: uploadError } = await supabase.storage
+                                                                    .from('wishlist-images')
+                                                                    .upload(fileName, file);
+
+                                                                if (uploadError) throw uploadError;
+
+                                                                const { data: { publicUrl } } = supabase.storage
+                                                                    .from('wishlist-images')
+                                                                    .getPublicUrl(fileName);
+
+                                                                setFormData({ ...formData, imageUrl: publicUrl });
+                                                            } catch (error) {
+                                                                console.error('Error uploading image:', error);
+                                                                alert('Error al subir la imagen');
+                                                            } finally {
+                                                                setIsUploading(false);
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                        disabled={isSaving || isUploading}
+                                                        className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                                                    >
+                                                        <Icons.Upload />
+                                                        {isUploading ? 'Subiendo...' : 'Subir imagen'}
+                                                    </button>
+                                                    <span className="text-xs text-zinc-400">
+                                                        (Max 5MB)
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Título */}
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                        Título <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.title || ''}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
-                                        placeholder="¿Qué deseas?"
-                                        disabled={isSaving}
-                                    />
-                                </div>
-
-                                {/* Precio y Prioridad */}
-                                <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                            Precio Aprox.
+                                            Título <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
-                                            value={formData.price || ''}
-                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="Ej: 25.00"
+                                            required
+                                            value={formData.title || ''}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+                                            placeholder="¿Qué deseas?"
                                             disabled={isSaving}
                                         />
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                                                Precio Aprox.
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={formData.price || ''}
+                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                    className="w-full pl-4 pr-8 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                    placeholder="Ej: 25.00"
+                                                    disabled={isSaving}
+                                                />
+                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-zinc-500">
+                                                    €
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                                                Prioridad
+                                            </label>
+                                            <select
+                                                value={formData.priority || 'medium'}
+                                                onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
+                                                className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                                                disabled={isSaving}
+                                            >
+                                                <option value="low">Baja</option>
+                                                <option value="medium">Media</option>
+                                                <option value="high">Alta</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <DynamicLinkInput
+                                        links={formData.links || []}
+                                        onChange={(newLinks) => setFormData({ ...formData, links: newLinks })}
+                                    />
+
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                            Prioridad
+                                            Notas
                                         </label>
-                                        <select
-                                            value={formData.priority || 'medium'}
-                                            onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-                                            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                                        <textarea
+                                            rows={3}
+                                            value={formData.notes || ''}
+                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                                            placeholder="Talla, color, detalles..."
                                             disabled={isSaving}
-                                        >
-                                            <option value="low">Baja</option>
-                                            <option value="medium">Media</option>
-                                            <option value="high">Alta</option>
-                                        </select>
+                                        />
                                     </div>
                                 </div>
 
-                                {/* Enlaces Dinámicos */}
-                                <DynamicLinkInput
-                                    links={formData.links || []}
-                                    onChange={(newLinks) => setFormData({ ...formData, links: newLinks })}
-                                />
-
-                                {/* Notas */}
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                        Notas
-                                    </label>
-                                    <textarea
-                                        rows={3}
-                                        value={formData.notes || ''}
-                                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                        placeholder="Talla, color, detalles..."
-                                        disabled={isSaving}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mt-8 flex gap-3">
-                                {editingItem && (
+                                <div className="mt-8 flex gap-3">
+                                    {editingItem && (
+                                        <button
+                                            type="button"
+                                            onClick={handleDelete}
+                                            className="px-4 py-3 text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl font-medium transition-colors"
+                                            disabled={isSaving}
+                                            aria-label="Eliminar deseo"
+                                        >
+                                            <Icons.Trash />
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
-                                        onClick={handleDelete}
-                                        className="px-4 py-3 text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl font-medium transition-colors"
+                                        onClick={() => !isSaving && setIsFormOpen(false)}
+                                        className="flex-1 px-4 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl font-medium transition-colors"
                                         disabled={isSaving}
                                     >
-                                        <Icons.Trash />
+                                        Cancelar
                                     </button>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={() => !isSaving && setIsFormOpen(false)}
-                                    className="flex-1 px-4 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl font-medium transition-colors"
-                                    disabled={isSaving}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
-                                    disabled={isSaving}
-                                >
-                                    {isSaving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
-                                    Guardar
-                                </button>
-                            </div>
-                        </form>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                                        Guardar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

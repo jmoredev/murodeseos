@@ -39,23 +39,22 @@ test.describe('Unirse a Grupo', () => {
         // 1. Crear un grupo primero (para tener un código válido)
         await page.goto('/groups/create')
         const groupName = `Join Test ${Date.now()}`
-        const groupNameInput = page.locator('input#groupName, input[name="groupName"], input[placeholder*="Grupo"]')
+        const groupNameInput = page.locator('input#groupName')
         await expect(groupNameInput).toBeVisible()
-        await groupNameInput.fill(groupName)
-        await page.click('button[type="submit"]')
+
+        // Usar type con delay para asegurar que React detecte el cambio en WebKit
+        await groupNameInput.click()
+        await groupNameInput.pressSequentially(groupName, { delay: 50 })
+
+        const submitButton = page.locator('button[type="submit"]')
+        await expect(submitButton).toBeEnabled({ timeout: 10000 })
+        await submitButton.click()
 
         // Esperar confirmación y obtener código
         await expect(page.locator('text=¡Grupo creado!')).toBeVisible()
         const codeElement = page.locator('text=/[A-Z0-9]{6,8}/')
         await expect(codeElement).toBeVisible()
         const groupCode = await codeElement.textContent()
-
-        // Obtener ID del grupo recién creado (para limpieza)
-        // Lo podemos sacar interceptando la llamada o consultando DB.
-        // Aquí interceptaremos la respuesta de creación es más rápido
-        // Nota: Si ya pasó la request, es tarde. Mejor interceptar antes del click.
-        // Pero ya hicimos click.
-        // Alternativa: consultar por nombre
 
         // Autenticar cliente supabase
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -92,11 +91,12 @@ test.describe('Unirse a Grupo', () => {
         await expect(page.getByRole('heading', { name: 'Unirse a un grupo' })).toBeVisible()
 
         // 4. Ingresar el código
-        await page.locator('input#groupCode').pressSequentially(groupCode!.trim(), { delay: 100 })
+        const codeInput = page.locator('input#groupCode')
+        await codeInput.click()
+        await codeInput.pressSequentially(groupCode!.trim(), { delay: 50 })
 
-        // Esperar a que React actualice el estado y habilite el botón
         const joinButton = page.locator('button:has-text("Unirme")')
-        await expect(joinButton).toBeEnabled()
+        await expect(joinButton).toBeEnabled({ timeout: 10000 })
         await joinButton.click()
 
         // 5. Verificar éxito
@@ -114,10 +114,15 @@ test.describe('Unirse a Grupo', () => {
         // 1. Crear grupo
         await page.goto('/groups/create')
         const groupName = `Already Member ${Date.now()}`
-        const groupNameInput = page.locator('input#groupName, input[name="groupName"], input[placeholder*="Grupo"]')
+        const groupNameInput = page.locator('input#groupName')
         await expect(groupNameInput).toBeVisible()
-        await groupNameInput.fill(groupName)
-        await page.click('button[type="submit"]')
+
+        await groupNameInput.click()
+        await groupNameInput.pressSequentially(groupName, { delay: 50 })
+
+        const submitButton = page.locator('button[type="submit"]')
+        await expect(submitButton).toBeEnabled({ timeout: 10000 })
+        await submitButton.click()
 
         // Obtener código
         const codeElement = page.locator('text=/[A-Z0-9]{6,8}/')
@@ -134,13 +139,13 @@ test.describe('Unirse a Grupo', () => {
 
         // 2. Ir a Join e intentar unirse con el mismo código
         await page.goto('/groups/join')
-        await expect(page.getByRole('heading', { name: 'Unirse a un grupo' })).toBeVisible()
-
-        await page.locator('input#groupCode').pressSequentially(groupCode!.trim(), { delay: 100 })
+        const codeInput = page.locator('input#groupCode')
+        await codeInput.click()
+        await codeInput.pressSequentially(groupCode!.trim(), { delay: 50 })
 
         // Esperar e intentar click
         const joinButton = page.locator('button:has-text("Unirme")')
-        await expect(joinButton).toBeEnabled()
+        await expect(joinButton).toBeEnabled({ timeout: 10000 })
         await joinButton.click()
 
         // 3. Verificar mensaje
@@ -149,11 +154,12 @@ test.describe('Unirse a Grupo', () => {
 
     test('debería mostrar error con código inexistente', async ({ page }) => {
         await page.goto('/groups/join')
-        // Usar código de 6 chars para cumplir validación
-        await page.locator('input#groupCode').pressSequentially('INV999', { delay: 100 })
+        const codeInput = page.locator('input#groupCode')
+        await codeInput.click()
+        await codeInput.pressSequentially('INV999', { delay: 50 })
 
         const joinButton = page.locator('button:has-text("Unirme")')
-        await expect(joinButton).toBeEnabled()
+        await expect(joinButton).toBeEnabled({ timeout: 10000 })
         await joinButton.click()
 
         await expect(page.getByText('Código incorrecto o grupo no encontrado')).toBeVisible()

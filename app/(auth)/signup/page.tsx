@@ -65,9 +65,17 @@ export default function SignupPage() {
 
         try {
             // Intentar registrar al usuario
+            // Determinar la URL de redirección basada en el entorno
+            // Usamos la variable de entorno configurada por el usuario
+            const siteUrl = process.env.NEXT_PUBLIC_VERCEL_ENV || 'http://localhost:3000'
+            const redirectTo = `${siteUrl.replace(/\/$/, '')}/login`
+
             const { data, error: signupError } = await supabase.auth.signUp({
                 email,
                 password,
+                options: {
+                    emailRedirectTo: redirectTo,
+                },
             })
 
             if (signupError) {
