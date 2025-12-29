@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getCssColor } from '@/lib/color-utils'
 
 interface ProfileTabProps {
     userId: string;
@@ -16,12 +17,19 @@ export function ProfileTab({ userId }: ProfileTabProps) {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
 
+    // Style Information State
+    const [shirtSize, setShirtSize] = useState('')
+    const [pantsSize, setPantsSize] = useState('')
+    const [shoeSize, setShoeSize] = useState('')
+    const [favoriteBrands, setFavoriteBrands] = useState('')
+    const [favoriteColor, setFavoriteColor] = useState('')
+
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('display_name, avatar_url')
+                    .select('display_name, avatar_url, shirt_size, pants_size, shoe_size, favorite_brands, favorite_color')
                     .eq('id', userId)
                     .single()
 
@@ -30,6 +38,11 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                 if (data) {
                     setDisplayName(data.display_name || '')
                     setSelectedAvatar(data.avatar_url || '👤')
+                    setShirtSize(data.shirt_size || '')
+                    setPantsSize(data.pants_size || '')
+                    setShoeSize(data.shoe_size || '')
+                    setFavoriteBrands(data.favorite_brands || '')
+                    setFavoriteColor(data.favorite_color || '')
                 }
             } catch (err: any) {
                 console.error('Error fetching profile:', err)
@@ -57,6 +70,11 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                     id: userId,
                     display_name: displayName,
                     avatar_url: selectedAvatar,
+                    shirt_size: shirtSize,
+                    pants_size: pantsSize,
+                    shoe_size: shoeSize,
+                    favorite_brands: favoriteBrands,
+                    favorite_color: favoriteColor,
                     updated_at: new Date().toISOString(),
                 })
 
@@ -142,6 +160,78 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                     <p className="mt-2 text-[10px] text-zinc-500 dark:text-zinc-500 uppercase tracking-wider font-bold">
                         Mínimo 3 caracteres
                     </p>
+                </div>
+
+                {/* Extended Profile Fields */}
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.07 1.66L2 13.08a7 7 0 0 0 4.74 6.6l5.26 2.32 5.26-2.32A7 7 0 0 0 22 13.08l-.55-7.96a2 2 0 0 0-1.07-1.66z"></path></svg>
+                        Tallas y Estilo
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1 uppercase">Camiseta</label>
+                            <input
+                                type="text"
+                                value={shirtSize}
+                                onChange={(e) => setShirtSize(e.target.value)}
+                                placeholder="M, L, XL..."
+                                className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1 uppercase">Pantalón</label>
+                            <input
+                                type="text"
+                                value={pantsSize}
+                                onChange={(e) => setPantsSize(e.target.value)}
+                                placeholder="42, 32..."
+                                className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1 uppercase">Zapatos</label>
+                            <input
+                                type="text"
+                                value={shoeSize}
+                                onChange={(e) => setShoeSize(e.target.value)}
+                                placeholder="Ej: 43..."
+                                className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1 uppercase">Color Fav.</label>
+                            <div className="relative group/color">
+                                <input
+                                    type="text"
+                                    value={favoriteColor}
+                                    onChange={(e) => setFavoriteColor(e.target.value)}
+                                    placeholder="Azul, Rojo..."
+                                    className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 pl-4 pr-12 py-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                />
+                                <div
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg border border-black/10 shadow-sm transition-transform group-focus-within/color:scale-110"
+                                    style={{ backgroundColor: getCssColor(favoriteColor) }}
+                                    title="Previsualización del color"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1 uppercase">Marcas Favoritas</label>
+                        <textarea
+                            value={favoriteBrands}
+                            onChange={(e) => setFavoriteBrands(e.target.value)}
+                            placeholder="Ej: Nike, Apple, Levi's..."
+                            rows={2}
+                            className="block w-full rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                        />
+                    </div>
                 </div>
 
                 <button

@@ -7,6 +7,11 @@ create table profiles (
   display_name text,
   avatar_url text,
   website text,
+  shirt_size text,
+  pants_size text,
+  shoe_size text,
+  favorite_brands text,
+  favorite_color text,
 
   constraint username_length check (char_length(username) >= 3)
 );

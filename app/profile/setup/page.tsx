@@ -13,6 +13,13 @@ export default function ProfileSetupPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
+    // Style Information State
+    const [shirtSize, setShirtSize] = useState('')
+    const [pantsSize, setPantsSize] = useState('')
+    const [shoeSize, setShoeSize] = useState('')
+    const [favoriteBrands, setFavoriteBrands] = useState('')
+    const [favoriteColor, setFavoriteColor] = useState('')
+
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -38,7 +45,7 @@ export default function ProfileSetupPage() {
 
             if (updateError) throw updateError
 
-            // Avanzar al paso 2
+            // Avanzar al paso de estilo (nuevo paso 2)
             setStep(2)
         } catch (err: any) {
             console.error('Error actualizando perfil:', err)
@@ -46,6 +53,43 @@ export default function ProfileSetupPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleStyleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({
+                    shirt_size: shirtSize,
+                    pants_size: pantsSize,
+                    shoe_size: shoeSize,
+                    favorite_brands: favoriteBrands,
+                    favorite_color: favoriteColor,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', user.id)
+
+            if (updateError) throw updateError
+
+            // Avanzar al paso de grupos (ahora paso 3)
+            setStep(3)
+        } catch (err: any) {
+            console.error('Error actualizando estilo:', err)
+            setError(err.message || 'Error al guardar la información de estilo')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSkipStyle = () => {
+        setStep(3)
     }
 
     const handleCreateGroup = () => {
@@ -59,10 +103,10 @@ export default function ProfileSetupPage() {
     const isFormValid = displayName.trim().length >= 3
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-all duration-300">
-            <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl transition-all border border-gray-100 dark:border-gray-700 m-4">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-all duration-300 overflow-y-auto pt-20 pb-10">
+            <div className={`w-full max-w-md transform rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-2xl transition-all border border-gray-100 dark:border-gray-700 m-4 ${step === 2 ? 'my-auto' : ''}`}>
 
-                {step === 1 ? (
+                {step === 1 && (
                     // PASO 1: Configuración de Perfil
                     <>
                         <div className="text-center mb-8">
@@ -169,9 +213,106 @@ export default function ProfileSetupPage() {
                             </div>
                         )}
                     </>
-                ) : (
-                    // PASO 2: Selección de Grupo
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                )}
+
+                {step === 2 && (
+                    // PASO 2: Información de Estilo (NUEVO)
+                    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-extrabold text-muro-principal dark:text-white">
+                                Tu estilo
+                            </h2>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                Ayuda a tus amigos a acertar con tus regalos.
+                            </p>
+                        </div>
+
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-6">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                <span className="font-bold">Nota:</span> Estos campos son totalmente opcionales. Puedes saltar este paso y completarlos más tarde desde tu perfil si lo deseas.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleStyleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 ml-1">Talla Camiseta</label>
+                                    <input
+                                        type="text"
+                                        value={shirtSize}
+                                        onChange={(e) => setShirtSize(e.target.value)}
+                                        placeholder="Ej: M, L..."
+                                        className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:border-deseo-acento focus:ring-deseo-acento outline-none transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 ml-1">Talla Pantalón</label>
+                                    <input
+                                        type="text"
+                                        value={pantsSize}
+                                        onChange={(e) => setPantsSize(e.target.value)}
+                                        placeholder="Ej: 42, 32..."
+                                        className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:border-deseo-acento focus:ring-deseo-acento outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 ml-1">Talla Zapatillas</label>
+                                <input
+                                    type="text"
+                                    value={shoeSize}
+                                    onChange={(e) => setShoeSize(e.target.value)}
+                                    placeholder="Ej: 43, 9.5..."
+                                    className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:border-deseo-acento focus:ring-deseo-acento outline-none transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 ml-1">Color Favorito</label>
+                                <input
+                                    type="text"
+                                    value={favoriteColor}
+                                    onChange={(e) => setFavoriteColor(e.target.value)}
+                                    placeholder="Ej: Azul marino, Verde..."
+                                    className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:border-deseo-acento focus:ring-deseo-acento outline-none transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 ml-1">Marcas Favoritas</label>
+                                <textarea
+                                    value={favoriteBrands}
+                                    onChange={(e) => setFavoriteBrands(e.target.value)}
+                                    placeholder="Ej: Nike, Adidas, Levi's..."
+                                    rows={2}
+                                    className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:border-deseo-acento focus:ring-deseo-acento outline-none transition-all resize-none"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSkipStyle}
+                                    className="flex-1 py-3.5 text-sm font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                >
+                                    Saltar por ahora
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-[2] flex justify-center rounded-xl bg-deseo-acento px-4 py-3.5 text-sm font-bold text-muro-principal shadow-lg shadow-deseo-acento/20 hover:shadow-deseo-acento/40 disabled:opacity-50 transition-all duration-200"
+                                >
+                                    {loading ? 'Guardando...' : 'Guardar y Continuar'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
+                {step === 3 && (
+                    // PASO 3: Selección de Grupo
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                         <div className="text-center mb-8">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-deseo-acento/20 mb-4">
                                 <svg className="h-6 w-6 text-muro-principal dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
