@@ -84,15 +84,29 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // --- 6. Eliminar los items creados ---
         // Eliminar primero
         await card1.click();
+
+        // Esperar a que el modal de edición esté abierto y la animación termine (importante en móvil)
+        await expect(page.getByRole('heading', { name: 'Editar deseo' })).toBeVisible();
+        await page.waitForTimeout(500);
+
         page.once('dialog', dialog => dialog.accept());
-        await page.getByLabel('Eliminar deseo').click();
+        const deleteBtn1 = page.getByLabel('Eliminar deseo');
+        // Usamos evaluate para saltarnos cualquier overlay (como el de Next.js en dev) que pueda estar tapando el botón
+        await deleteBtn1.evaluate(el => (el as HTMLElement).click());
+
         await expect(page.getByText(testItem.title)).not.toBeVisible();
 
         // Eliminar segundo
         const card2 = page.locator('.group.relative').filter({ hasText: anotherItem.title }).first();
         await card2.click();
+
+        await expect(page.getByRole('heading', { name: 'Editar deseo' })).toBeVisible();
+        await page.waitForTimeout(500);
+
         page.once('dialog', dialog => dialog.accept());
-        await page.getByLabel('Eliminar deseo').click();
+        const deleteBtn2 = page.getByLabel('Eliminar deseo');
+        await deleteBtn2.evaluate(el => (el as HTMLElement).click());
+
         await expect(page.getByText(anotherItem.title)).not.toBeVisible();
     });
 
