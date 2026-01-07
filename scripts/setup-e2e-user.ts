@@ -24,67 +24,128 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 })
 
 async function setupE2EUser() {
-    console.log('🧪 Verificando usuario E2E...')
+    console.log('🧪 Verificando configuración E2E...')
 
-    const { user: testUser } = E2E_CONFIG
+    const { user: mainUser, secondaryUser, group: testGroup } = E2E_CONFIG
 
-    // 1. Buscar si el usuario ya existe
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
-    if (listError) {
-        console.error('❌ Error listando usuarios:', listError.message)
-        process.exit(1)
-    }
+    // --- Helper para crear/verificar usuarios ---
+    async function upsertUser(userConfig: typeof mainUser) {
+        console.log(`👤 Verificando usuario: ${userConfig.email}...`)
 
-    let userId: string
-    const existingUser = users.find(u => u.email === testUser.email)
+        // 1. Verificar si existe
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers()
+        if (listError) throw new Error(`Error listando usuarios: ${listError.message}`)
 
-    if (existingUser) {
-        console.log(`✨ El usuario ${testUser.email} ya existe.`)
-        userId = existingUser.id
-    } else {
-        // 2. Crear Usuario si no existe
-        console.log(`➕ Creando nuevo usuario: ${testUser.email}...`)
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: testUser.email,
-            password: testUser.password,
-            email_confirm: true,
-            user_metadata: {
-                display_name: testUser.displayName,
-                avatar_url: testUser.avatar
-            }
-        })
+        let userId: string
+        const existingUser = users.find(u => u.email === userConfig.email)
 
-        if (createError || !newUser.user) {
-            console.error('❌ Error creando usuario:', createError?.message)
-            process.exit(1)
+        if (existingUser) {
+            // Actualizar contraseña si existe
+            console.log(`   ✨ Usuario existente. Actualizando contraseña...`)
+            const { error: updateError } = await supabase.auth.admin.updateUserById(existingUser.id, {
+                password: userConfig.password,
+                user_metadata: { display_name: userConfig.displayName, avatar_url: userConfig.avatar }
+            })
+            if (updateError) throw new Error(`Error actualizando password de ${userConfig.email}: ${updateError.message}`)
+            userId = existingUser.id
+        } else {
+            // Crear usuario
+            console.log(`   ➕ Creando nuevo usuario...`)
+            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+                email: userConfig.email,
+                password: userConfig.password,
+                email_confirm: true,
+                user_metadata: {
+                    display_name: userConfig.displayName,
+                    avatar_url: userConfig.avatar
+                }
+            })
+
+            if (createError || !newUser.user) throw new Error(`Error creando usuario ${userConfig.email}: ${createError?.message}`)
+            userId = newUser.user.id
+            // Esperar trigger de perfil
+            await new Promise(resolve => setTimeout(resolve, 500))
         }
-        userId = newUser.user.id
-        // Esperar un poco al trigger de perfiles
-        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Asegurar perfil
+        console.log(`   📝 Asegurando perfil...`)
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: userId,
+                display_name: userConfig.displayName,
+                avatar_url: userConfig.avatar,
+                shirt_size: 'L',
+                pants_size: '42',
+                favorite_color: 'Gris',
+                updated_at: new Date().toISOString()
+            })
+
+        if (profileError) throw new Error(`Error en perfil de ${userConfig.email}: ${profileError.message}`)
+
+        return userId
     }
 
-    // 3. Actualizar perfil y estilo (siempre para asegurar que los datos son correctos)
-    console.log('📝 Asegurando perfil y estilo actualizados...')
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-            id: userId,
-            display_name: testUser.displayName,
-            avatar_url: testUser.avatar,
-            shirt_size: 'L',
-            pants_size: '42',
-            shoe_size: '44',
-            favorite_brands: 'Google, Apple',
-            favorite_color: 'Gris',
-            updated_at: new Date().toISOString()
-        })
+    try {
+        // 1. Crear Usuarios
+        const mainUserId = await upsertUser(mainUser)
+        const secondaryUserId = await upsertUser(secondaryUser)
 
-    if (profileError) {
-        console.error('❌ Error actualizando perfil:', profileError.message)
+        // 2. Crear Grupo
+        console.log(`🎯 Verificando grupo: ${testGroup.name}...`)
+        const { data: existingGroup, error: groupCheckError } = await supabase
+            .from('groups')
+            .select('id')
+            .eq('id', testGroup.id)
+            .single()
+
+        // Ignoramos error de "row not found", cualquier otro es real
+        if (groupCheckError && groupCheckError.code !== 'PGRST116') {
+            throw new Error(`Error buscando grupo: ${groupCheckError.message}`)
+        }
+
+        if (!existingGroup) {
+            console.log(`   ➕ Creando grupo...`)
+            const { error: createGroupError } = await supabase.from('groups').insert({
+                id: testGroup.id,
+                name: testGroup.name,
+                icon: testGroup.icon,
+                creator_id: mainUserId,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            })
+            if (createGroupError) throw new Error(`Error creando grupo: ${createGroupError.message}`)
+        } else {
+            console.log(`   ✨ Grupo ya existe.`)
+        }
+
+        // 3. Gestionar Membresías
+        console.log(`👫 Verificando membresías...`)
+
+        const members = [
+            { group_id: testGroup.id, user_id: mainUserId, role: 'admin' },
+            { group_id: testGroup.id, user_id: secondaryUserId, role: 'member' }
+        ]
+
+        for (const member of members) {
+            const { error: memberError } = await supabase
+                .from('group_members')
+                .upsert({
+                    group_id: member.group_id,
+                    user_id: member.user_id,
+                    role: member.role,
+                    joined_at: new Date().toISOString()
+                }, { onConflict: 'group_id,user_id' })
+
+            if (memberError) throw new Error(`Error asignando miembro ${member.user_id}: ${memberError.message}`)
+        }
+
+        console.log('✅ Setup E2E completo y listo.')
+
+    } catch (error: any) {
+        console.error('❌ Error fatal en setup:', error.message)
         process.exit(1)
     }
-
-    console.log('✅ Usuario E2E listo para los tests.')
 }
 
 setupE2EUser().catch(err => {

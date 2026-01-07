@@ -11,6 +11,13 @@ export const E2E_CONFIG = {
         displayName: 'E2E Test User',
         avatar: '🤖'
     },
+    // Usuario secundario para pruebas de interacción
+    secondaryUser: {
+        email: 'juan@test.com',
+        password: 'Test123!',
+        displayName: 'Juan Pérez',
+        avatar: '👨‍💻'
+    },
 
     // Grupo E2E
     group: {
