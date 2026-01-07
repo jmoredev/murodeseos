@@ -212,13 +212,14 @@ async function createGroupMembers(userMap: Map<string, string>, groupMap: Map<st
         console.log('✅ Club de Lectura: Ana (admin), María, Juan')
     }
 
-    // Grupo E2E: Solo el usuario E2E (admin)
+    // Grupo E2E: Usuario E2E (admin) + Juan Pérez (miembro)
     const e2eGroup = groupMap.get('E2E001')
     if (e2eGroup) {
         await supabase.from('group_members').insert([
             { group_id: 'E2E001', user_id: e2eGroup.creatorId, role: 'admin', joined_at: new Date().toISOString() },
+            { group_id: 'E2E001', user_id: userMap.get('juan@test.com')!, role: 'member', joined_at: new Date().toISOString() },
         ])
-        console.log('✅ E2E Test Group: E2E Test User (admin)')
+        console.log('✅ E2E Test Group: E2E Test User (admin), Juan Pérez (miembro)')
     }
 
     console.log('')

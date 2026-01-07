@@ -55,8 +55,12 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByPlaceholder('Pegar URL de imagen...').fill(testItem.imageUrl);
         await page.locator('select').selectOption({ label: testItem.priority });
 
-        // Interceptar respuesta para sacar el ID
-        const responsePromise = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('/api/wishlist') && r.status() === 201);
+        // Interceptar respuesta para sacar el ID (PostgREST de Supabase)
+        const responsePromise = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
         await page.getByRole('button', { name: 'Guardar', exact: true }).click();
         const response = await responsePromise;
         const body = await response.json();
@@ -77,7 +81,11 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByPlaceholder('Ej: 25.00').fill(anotherItem.price);
         await page.locator('select').selectOption({ label: anotherItem.priority });
 
-        const responsePromise2 = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('/api/wishlist') && r.status() === 201);
+        const responsePromise2 = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
         await page.getByRole('button', { name: 'Guardar', exact: true }).click();
         const response2 = await responsePromise2;
         const body2 = await response2.json();

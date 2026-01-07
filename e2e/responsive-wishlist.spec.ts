@@ -1,61 +1,64 @@
 import { test, expect } from '@playwright/test';
+import { E2E_CONFIG } from './config';
 
 test.describe('Lista de Deseos de Amigo Responsiva', () => {
 
     test.afterEach(async ({ page }) => {
         // Limpiar reservas realizadas durante el test
         const cancelButtons = page.getByRole('button', { name: 'Cancelar reserva' });
-        const count = await cancelButtons.count();
-        for (let i = 0; i < count; i++) {
+        // Hacemos una limpieza secuencial robusta
+        while (await cancelButtons.count() > 0) {
             await cancelButtons.first().click();
-            await page.waitForTimeout(500); // Pequeña espera para asegurar que la API termine
+            await page.waitForTimeout(500);
         }
     });
 
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-        await page.getByRole('button', { name: /Mis grupos|Grupos/i }).first().click();
+        // Ir a la pestaña de grupos directamente
+        await page.goto('/?tab=groups');
 
         // Esperar a que carguen los grupos
-        await expect(page.getByText('E2E Test Group')).toBeVisible();
+        const groupName = E2E_CONFIG.group.name;
+        await expect(page.getByText(groupName)).toBeVisible({ timeout: 10000 });
 
         // Entrar en el grupo E2E
-        await page.getByText('E2E Test Group').click();
+        await page.getByText(groupName).click();
 
-        // Navegar a la lista de un amigo (usando Juan Pérez como ejemplo del seed)
-        // Intentamos buscar el grupo "Familia García" que tiene más miembros
-        await page.goto('/?tab=groups');
-        const familyGroup = page.getByText('Familia García');
-        if (await familyGroup.isVisible()) {
-            await familyGroup.click();
-            await expect(page.getByText('Juan Pérez')).toBeVisible();
-            await page.getByRole('button', { name: 'Ver Lista' }).first().click();
-        } else {
-            // Fallback: Ir directamente a una URL conocida del seed si no se encuentra el grupo
-            await page.goto('/wishlist/00000000-0000-0000-0000-000000000001?name=Juan%20Pérez');
-        }
+        // Verificar que estamos en la página del grupo
+        await expect(page).toHaveURL(/\/groups\/E2E001/);
 
-        await expect(page.getByText('Lista de Juan Pérez')).toBeVisible();
+        // Buscar a Juan Pérez (que ha sido añadido al grupo en el seed)
+        const friendName = 'Juan Pérez';
+        await expect(page.getByText(friendName)).toBeVisible({ timeout: 10000 });
+
+        // Hacer clic en Juan Pérez para ver su lista
+        await page.getByText(friendName).first().click();
+
+        // Verificar que estamos en su lista
+        await expect(page).toHaveURL(/\/wishlist\//);
+        await expect(page.getByText(`Lista de deseos de ${friendName}`)).toBeVisible();
     });
 
     test('debe mostrar la barra lateral integrada en escritorio', async ({ page }) => {
         // Forzar viewport de escritorio
         await page.setViewportSize({ width: 1280, height: 800 });
 
-        // La barra lateral debería estar visible
-        await expect(page.locator('aside')).toBeVisible();
-        await expect(page.getByText('Perfil de Estilo')).toBeVisible();
+        // La barra lateral (aside) debería estar visible
+        const sidebar = page.locator('aside');
+        await expect(sidebar).toBeVisible();
+        await expect(sidebar).toContainText('Perfil de Estilo');
 
-        // Verificar información específica
-        await expect(page.locator('aside')).toContainText('Tallas');
+        // Verificar información específica del perfil de Juan Pérez
+        await expect(sidebar).toContainText('Tallas');
+        await expect(sidebar).toContainText('Camiseta');
     });
 
     test('debe mostrar el FAB y el Bottom Sheet en móvil', async ({ page }) => {
         // Forzar viewport móvil
         await page.setViewportSize({ width: 375, height: 667 });
 
-        // La barra lateral debería estar oculta
-        await expect(page.locator('aside.hidden.lg\\:block')).not.toBeVisible();
+        // La barra lateral debería estar oculta en móvil (display: none por Tailwind)
+        await expect(page.locator('aside')).not.toBeVisible();
 
         // El FAB (Botón Flotante) debería estar visible
         const fab = page.locator('button.bg-indigo-600.rounded-full');
@@ -64,12 +67,19 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         // Abrir el Bottom Sheet
         await fab.click();
 
-        // El contenido del bottom sheet debería aparecer
-        await expect(page.getByText('Tallas')).toBeVisible();
+        // Localizar el contenedor del Bottom Sheet (el que tiene bordes redondeados arriba)
+        const drawer = page.locator('div.rounded-t-\\[2\\.5rem\\]');
+        await expect(drawer).toBeVisible();
 
-        // Cerrar el bottom sheet (haciendo clic en el overlay)
-        await page.locator('div.bg-black\\/60').click({ position: { x: 10, y: 10 }, force: true });
-        await expect(page.getByText('Tallas')).not.toBeVisible();
+        // El contenido del bottom sheet debería aparecer
+        await expect(drawer.getByText('Tallas')).toBeVisible();
+
+        // Cerrar el bottom sheet usando el botón de cerrar (la X)
+        const closeButton = drawer.locator('button').first();
+        await closeButton.click();
+
+        // El contenido debería desaparecer
+        await expect(drawer).not.toBeVisible();
     });
 
     test('debe permitir reservar un artículo en la vista de amigo', async ({ page }) => {
