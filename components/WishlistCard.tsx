@@ -32,6 +32,7 @@ interface WishlistCardProps {
     currentUserId?: string;
     onReserve?: (item: GiftItem) => void;
     onCancelReserve?: (item: GiftItem) => void;
+    onDelete?: (item: GiftItem) => void;
 }
 
 export function WishlistCard({
@@ -40,7 +41,8 @@ export function WishlistCard({
     isOwner,
     currentUserId,
     onReserve,
-    onCancelReserve
+    onCancelReserve,
+    onDelete
 }: WishlistCardProps) {
     const priorityColors = {
         low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -131,7 +133,7 @@ export function WishlistCard({
 
                 <div className="mt-auto pt-3 flex items-center justify-between text-sm">
                     <div className={item.price
-                        ? "font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/30 text-sm shadow-sm"
+                        ? "font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-lg border border-amber-100 dark:border-amber-800/30 text-sm shadow-sm"
                         : "text-zinc-400 text-sm font-normal italic pl-1"
                     }>
                         {item.price ? `${item.price} €` : 'Sin precio'}
@@ -144,6 +146,24 @@ export function WishlistCard({
                         </div>
                     )}
                 </div>
+
+                {/* Owner Actions: Já lo tengo (Quick Delete) */}
+                {isOwner && (
+                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('¿Ya tienes este artículo? Se eliminará de tu lista.')) {
+                                    onDelete && onDelete(item);
+                                }
+                            }}
+                            className="w-full py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                        >
+                            <Icons.Check />
+                            Ya lo tengo
+                        </button>
+                    </div>
+                )}
 
                 {/* Reservation Actions (Only for non-owners) */}
                 {!isOwner && (

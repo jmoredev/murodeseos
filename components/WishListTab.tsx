@@ -246,6 +246,22 @@ export function WishListTab({ userId }: WishListTabProps) {
         }
     };
 
+    const handleQuickDelete = async (item: GiftItem) => {
+        setItems(prev => prev.filter(i => i.id !== item.id)); // Optimistic update
+        try {
+            const { error } = await supabase
+                .from('wishlist_items')
+                .delete()
+                .eq('id', item.id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            alert('Error al eliminar el deseo.');
+            // Revert optimistic update? (Simplified here for quick delete)
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center p-4">
@@ -318,6 +334,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     item={item}
                                     onClick={openForm}
                                     isOwner={true} // Always owner in this view
+                                    onDelete={handleQuickDelete}
                                 />
                             ))}
                         </div>
