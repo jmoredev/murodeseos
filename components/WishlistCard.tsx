@@ -14,6 +14,7 @@ export interface GiftItem {
     notes?: string;
     priority: Priority;
     reservedBy?: string | null; // ID of the user who reserved it
+    excludedGroupIds?: string[];
 }
 
 // --- Icons ---

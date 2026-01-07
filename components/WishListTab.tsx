@@ -94,6 +94,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
+    const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +115,21 @@ export function WishListTab({ userId }: WishListTabProps) {
 
                 if (error) throw error;
 
+                // Load user groups for visibility settings
+                const { data: groupsData } = await supabase
+                    .from('group_members')
+                    .select('group_id, groups(id, name, icon)')
+                    .eq('user_id', userId);
+
+                if (groupsData) {
+                    const mappedGroups = groupsData.map((gm: any) => ({
+                        id: gm.groups.id,
+                        name: gm.groups.name,
+                        icon: gm.groups.icon
+                    }));
+                    setUserGroups(mappedGroups);
+                }
+
                 const mappedItems: GiftItem[] = (data || []).map(item => ({
                     id: item.id,
                     title: item.title,
@@ -122,7 +138,8 @@ export function WishListTab({ userId }: WishListTabProps) {
                     price: item.price,
                     notes: item.notes,
                     priority: item.priority as Priority,
-                    reservedBy: item.reserved_by
+                    reservedBy: item.reserved_by,
+                    excludedGroupIds: item.excluded_group_ids || []
                 }));
 
                 setItems(mappedItems);
@@ -163,7 +180,8 @@ export function WishListTab({ userId }: WishListTabProps) {
                 links: [],
                 priority: 'medium',
                 notes: '',
-                price: ''
+                price: '',
+                excludedGroupIds: []
             });
         }
         setIsFormOpen(true);
@@ -183,6 +201,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 price: formData.price,
                 notes: formData.notes,
                 priority: formData.priority || 'medium',
+                excluded_group_ids: formData.excludedGroupIds || []
             };
 
             if (editingItem) {
@@ -517,6 +536,51 @@ export function WishListTab({ userId }: WishListTabProps) {
                                             disabled={isSaving}
                                         />
                                     </div>
+
+                                    {/* Visibilidad / Exclusiones */}
+                                    {userGroups.length > 0 && (
+                                        <div className="space-y-3">
+                                            <div className="flex flex-col">
+                                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                                    Privacidad (Grupos excluidos)
+                                                </label>
+                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                                                    Selecciona los grupos que **NO** quieres que vean este deseo.
+                                                </p>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {userGroups.map((group) => {
+                                                    const isExcluded = formData.excludedGroupIds?.includes(group.id);
+                                                    return (
+                                                        <label
+                                                            key={group.id}
+                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isExcluded
+                                                                ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30'
+                                                                : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isExcluded}
+                                                                onChange={(e) => {
+                                                                    const current = formData.excludedGroupIds || [];
+                                                                    const updated = e.target.checked
+                                                                        ? [...current, group.id]
+                                                                        : current.filter(id => id !== group.id);
+                                                                    setFormData({ ...formData, excludedGroupIds: updated });
+                                                                }}
+                                                                className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                                                            />
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <span className="text-lg flex-shrink-0">{group.icon}</span>
+                                                                <span className="text-sm font-medium truncate">{group.name}</span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mt-8 flex gap-3">

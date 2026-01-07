@@ -48,6 +48,21 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
 
             if (error) throw error;
 
+            // 3. Obtener grupos compartidos
+            const { data: viewerGroups } = await supabase
+                .from('group_members')
+                .select('group_id')
+                .eq('user_id', currentUserId);
+
+            const { data: ownerGroups } = await supabase
+                .from('group_members')
+                .select('group_id')
+                .eq('user_id', userId);
+
+            const commonGroupIds = (viewerGroups || [])
+                .map(v => v.group_id)
+                .filter(id => (ownerGroups || []).some(o => o.group_id === id));
+
             const mappedItems: GiftItem[] = (data || []).map(item => ({
                 id: item.id,
                 title: item.title,
@@ -56,10 +71,21 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                 price: item.price,
                 notes: item.notes,
                 priority: item.priority as Priority,
-                reservedBy: item.reserved_by
+                reservedBy: item.reserved_by,
+                excludedGroupIds: item.excluded_group_ids || []
             }));
 
-            setItems(mappedItems);
+            // 4. Filtrar por visibilidad
+            const visibleItems = mappedItems.filter(item => {
+                const exclusions = item.excludedGroupIds || [];
+                // Si no hay exclusiones, es visible para todos los que puedan ver la lista
+                if (exclusions.length === 0) return true;
+
+                // Si hay exclusiones, debe compartir al menos un grupo que NO esté excluido
+                return commonGroupIds.some(gId => !exclusions.includes(gId));
+            });
+
+            setItems(visibleItems);
         } catch (error) {
             console.error('Error fetching wishlist:', error);
         } finally {
