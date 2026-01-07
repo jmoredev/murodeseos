@@ -108,7 +108,11 @@ describe('WishListTab', () => {
                     })
                 };
             }
-            return { select: jest.fn() };
+            return {
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({ data: [], error: null })
+                })
+            };
         });
     });
 
@@ -272,7 +276,11 @@ describe('WishListTab', () => {
                     })
                 };
             }
-            return { select: jest.fn() };
+            return {
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({ data: [], error: null })
+                })
+            };
         });
 
         await act(async () => {
