@@ -1,6 +1,7 @@
 import { test as setup, expect } from '@playwright/test'
 // IMPORTANTE: Ajusta esta ruta a donde tengas definido tu E2E_CONFIG
 import { E2E_CONFIG } from './config'
+import packageJson from '../package.json'
 
 const authFile = 'playwright/.auth/user.json'
 
@@ -25,7 +26,7 @@ setup('autenticar usuario', async ({ page }) => {
     // 4. Guardar el estado (incluyendo lastSeenVersion para evitar el modal)
     await page.evaluate((version) => {
         localStorage.setItem('lastSeenVersion', version);
-    }, process.env.npm_package_version || '1.1.0');
+    }, packageJson.version);
 
     await page.context().storageState({ path: authFile })
     console.log('✅ Autenticación completada y estado guardado.')

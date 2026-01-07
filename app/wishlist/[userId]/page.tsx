@@ -211,7 +211,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                     <div className="max-w-6xl mx-auto px-4 pb-4 flex gap-2">
                         <button
                             onClick={() => setSortBy('name')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'name'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -220,7 +220,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                         </button>
                         <button
                             onClick={() => setSortBy('price')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'price'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -229,7 +229,7 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                         </button>
                         <button
                             onClick={() => setSortBy('priority')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'priority'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sortBy === 'priority'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -534,7 +534,9 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                                             <span className={`w-2.5 h-2.5 rounded-full ${selectedItem.priority === 'high' ? 'bg-red-500' :
                                                 selectedItem.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
                                                 }`}></span>
-                                            <span className="font-bold text-zinc-900 dark:text-white capitalize">{selectedItem.priority}</span>
+                                            <span className="font-bold text-zinc-900 dark:text-white capitalize">
+                                                {selectedItem.priority === 'high' ? 'Alta' : selectedItem.priority === 'low' ? 'Baja' : 'Media'}
+                                            </span>
                                         </div>
                                     </div>
                                 )}

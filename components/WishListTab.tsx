@@ -313,7 +313,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
                         <button
                             onClick={() => setSortBy('name')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'name'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'name'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -322,7 +322,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </button>
                         <button
                             onClick={() => setSortBy('price')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'price'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'price'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -331,7 +331,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </button>
                         <button
                             onClick={() => setSortBy('priority')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'priority'
+                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'priority'
                                 ? 'bg-indigo-600 text-white'
                                 : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                                 }`}
@@ -489,7 +489,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                                             </label>
                                             <div className="relative">
                                                 <input
-                                                    type="text"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
                                                     value={formData.price || ''}
                                                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                                     className="w-full pl-4 pr-8 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
