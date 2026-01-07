@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { E2E_CONFIG } from './config';
+const createdIds = new Set<string>();
 
 test.describe('Funcionalidad de Lista de Deseos', () => {
     test.setTimeout(60000);
@@ -16,6 +16,17 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
 
         // Verificar que estamos en la vista de lista
         await expect(page.getByRole('heading', { name: /Mi lista de deseos/i })).toBeVisible();
+    });
+
+    test.afterEach(async ({ request }) => {
+        for (const id of createdIds) {
+            console.log(`🧹 [Limpieza] Borrando deseo ID: ${id}`);
+            const response = await request.delete(`http://localhost:3000/api/wishlist/${id}`);
+            if (!response.ok()) {
+                console.error(`🔴 Error al borrar deseo ${id}: ${response.status()}`);
+            }
+        }
+        createdIds.clear();
     });
 
     test('debe crear, ver, ordenar y eliminar un deseo con imagen y prioridad', async ({ page }) => {
@@ -44,7 +55,12 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByPlaceholder('Pegar URL de imagen...').fill(testItem.imageUrl);
         await page.locator('select').selectOption({ label: testItem.priority });
 
+        // Interceptar respuesta para sacar el ID
+        const responsePromise = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('/api/wishlist') && r.status() === 201);
         await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+        const response = await responsePromise;
+        const body = await response.json();
+        if (body.id) createdIds.add(body.id);
 
         // Esperar a que el modal se cierre
         await expect(page.getByRole('heading', { name: 'Nuevo deseo' })).not.toBeVisible();
@@ -60,7 +76,13 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByPlaceholder('¿Qué deseas?').fill(anotherItem.title);
         await page.getByPlaceholder('Ej: 25.00').fill(anotherItem.price);
         await page.locator('select').selectOption({ label: anotherItem.priority });
+
+        const responsePromise2 = page.waitForResponse(r => r.request().method() === 'POST' && r.url().includes('/api/wishlist') && r.status() === 201);
         await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+        const response2 = await responsePromise2;
+        const body2 = await response2.json();
+        if (body2.id) createdIds.add(body2.id);
+
         await expect(page.getByRole('heading', { name: 'Nuevo deseo' })).not.toBeVisible();
 
         // --- 3. Probar Ordenación por Nombre ---

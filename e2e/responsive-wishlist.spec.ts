@@ -2,6 +2,16 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Lista de Deseos de Amigo Responsiva', () => {
 
+    test.afterEach(async ({ page }) => {
+        // Limpiar reservas realizadas durante el test
+        const cancelButtons = page.getByRole('button', { name: 'Cancelar reserva' });
+        const count = await cancelButtons.count();
+        for (let i = 0; i < count; i++) {
+            await cancelButtons.first().click();
+            await page.waitForTimeout(500); // Pequeña espera para asegurar que la API termine
+        }
+    });
+
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
         await page.getByRole('button', { name: /Mis grupos|Grupos/i }).first().click();
