@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
+import { notifyWishAdded } from '@/lib/notification-utils'
 
 // --- Componentes Auxiliares (Iconos) ---
 const Icons = {
@@ -231,6 +232,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                     reservedBy: data.reserved_by
                 };
                 setItems([newItem, ...items]);
+
+                // Notificar a los grupos
+                notifyWishAdded(userId, data.id, formData.excludedGroupIds || []);
             }
             setIsFormOpen(false);
         } catch (error) {

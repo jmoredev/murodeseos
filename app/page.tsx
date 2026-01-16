@@ -8,6 +8,7 @@ import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
 import { ProfileTab } from '@/components/ProfileTab'
 import WhatsNewModal from '@/components/WhatsNewModal'
+import { NotificationMenu } from '@/components/NotificationMenu'
 
 export default function Home() {
   return (
@@ -224,6 +225,7 @@ function HomeContent() {
 
             {/* User Actions */}
             <div className="flex items-center gap-3">
+              <NotificationMenu userId={user.id} />
               <button
                 onClick={() => handleTabChange('profile')}
                 className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile'
@@ -254,6 +256,7 @@ function HomeContent() {
               Muro de deseos
             </h1>
             <div className="flex items-center gap-1">
+              <NotificationMenu userId={user.id} />
               <button
                 onClick={() => handleTabChange('profile')}
                 className={`cursor-pointer p-2 rounded-full transition-colors ${activeTab === 'profile'
