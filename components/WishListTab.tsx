@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
+import { ConfirmModal } from './ConfirmModal'
+import { useToast } from './Toast'
 
 // --- Componentes Auxiliares (Iconos) ---
 const Icons = {
@@ -101,6 +103,9 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     // Form State
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
+
+    const { showToast, ToastComponent } = useToast();
+    const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
 
     // Cargar items desde Supabase
     useEffect(() => {
@@ -237,9 +242,10 @@ export function WishListTab({ userId }: WishListTabProps) {
                 notifyWishAdded(userId, data.id, formData.excludedGroupIds || []);
             }
             setIsFormOpen(false);
+            showToast(editingItem ? 'Deseo actualizado' : 'Deseo guardado');
         } catch (error) {
             console.error('Error saving item:', error);
-            alert('Error al guardar el deseo.');
+            showToast('Error al guardar el deseo.', 'error');
         } finally {
             setIsSaving(false);
         }
@@ -247,42 +253,36 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     const handleDelete = async () => {
         if (editingItem) {
-            if (!confirm('¿Estás seguro de que quieres eliminar este deseo?')) return;
-
-            setIsSaving(true);
-            try {
-                const { error } = await supabase
-                    .from('wishlist_items')
-                    .delete()
-                    .eq('id', editingItem.id);
-
-                if (error) throw error;
-
-                setItems(items.filter(i => i.id !== editingItem.id));
-                setIsFormOpen(false);
-            } catch (error) {
-                console.error('Error deleting item:', error);
-                alert('Error al eliminar el deseo.');
-            } finally {
-                setIsSaving(false);
-            }
+            setItemToDelete(editingItem);
         }
     };
 
-    const handleQuickDelete = async (item: GiftItem) => {
-        setItems(prev => prev.filter(i => i.id !== item.id)); // Optimistic update
+    const executeDelete = async () => {
+        if (!itemToDelete) return;
+
+        setIsSaving(true);
         try {
             const { error } = await supabase
                 .from('wishlist_items')
                 .delete()
-                .eq('id', item.id);
+                .eq('id', itemToDelete.id);
 
             if (error) throw error;
+
+            setItems(items.filter(i => i.id !== itemToDelete.id));
+            setIsFormOpen(false);
+            showToast('Deseo eliminado');
         } catch (error) {
             console.error('Error deleting item:', error);
-            alert('Error al eliminar el deseo.');
-            // Revert optimistic update? (Simplified here for quick delete)
+            showToast('Error al eliminar el deseo.', 'error');
+        } finally {
+            setIsSaving(false);
+            setItemToDelete(null);
         }
+    };
+
+    const handleQuickDelete = async (item: GiftItem) => {
+        setItemToDelete(item);
     };
 
     if (loading) {
@@ -347,7 +347,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             </header>
 
             {/* Grid de Tarjetas */}
-            < div className="max-w-5xl mx-auto" >
+            <div className="max-w-5xl mx-auto">
                 {
                     sortedItems.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -371,7 +371,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </div>
                     )
                 }
-            </div >
+            </div>
 
             {/* Modal Formulario */}
             {
@@ -448,7 +448,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                                                 setFormData({ ...formData, imageUrl: publicUrl });
                                                             } catch (error) {
                                                                 console.error('Error uploading image:', error);
-                                                                alert('Error al subir la imagen');
+                                                                showToast('Error al subir la imagen', 'error');
                                                             } finally {
                                                                 setIsUploading(false);
                                                             }
@@ -623,6 +623,18 @@ export function WishListTab({ userId }: WishListTabProps) {
                     </div>
                 )
             }
-        </div >
+
+            <ConfirmModal
+                isOpen={!!itemToDelete}
+                onClose={() => setItemToDelete(null)}
+                onConfirm={executeDelete}
+                title="Eliminar deseo"
+                message={`¿Estás seguro de que quieres eliminar "${itemToDelete?.title}"?`}
+                confirmText="Eliminar"
+                isDestructive={true}
+            />
+
+            {ToastComponent}
+        </div>
     );
 }

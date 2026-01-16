@@ -7,6 +7,9 @@ import { Group, GroupMember } from '@/components/GroupCard';
 import { removeMemberFromGroup, shareGroup } from '@/lib/group-utils';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getUserAliases, setUserAlias } from '@/lib/aliases';
+import { SecretSantaModal } from '@/components/SecretSantaModal';
+import { getMyAssignmentInGroup } from '@/lib/draw-utils';
+import { useToast } from '@/components/Toast';
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -21,6 +24,13 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     const [aliases, setAliases] = useState<Record<string, string>>({});
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
     const [aliasInput, setAliasInput] = useState("");
+
+    const { showToast, ToastComponent } = useToast();
+
+    // Amigo Invisible state
+    const [isSecretSantaModalOpen, setIsSecretSantaModalOpen] = useState(false);
+    const [isDrawActive, setIsDrawActive] = useState(false);
+    const [myAssignment, setMyAssignment] = useState<any>(null);
 
     useEffect(() => {
         const fetchGroupDetails = async () => {
@@ -88,6 +98,15 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     members: members
                 });
 
+                setIsDrawActive(groupData.is_draw_active);
+
+                if (groupData.is_draw_active) {
+                    const assignment = await getMyAssignmentInGroup(user.id, id);
+                    if (assignment) {
+                        setMyAssignment(assignment);
+                    }
+                }
+
                 // Check admin status
                 const currentUserMember = membersData.find((m: { user_id: string; role: string }) => m.user_id === user.id);
                 setIsAdmin(currentUserMember?.role === 'admin');
@@ -115,12 +134,11 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 members: prev.members.filter(m => m.id !== memberToDelete.id)
             }) : null);
 
-            // Show success message (could use a toast library here)
-            // alert(`Usuario ${memberToDelete.name} eliminado correctamente`);
+            showToast('Participante expulsado');
 
         } catch (error) {
             console.error('Error removing member:', error);
-            alert('Error al eliminar usuario');
+            showToast('Error al eliminar usuario', 'error');
         }
     };
 
@@ -154,13 +172,34 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
         const success = await setUserAlias(editingMemberId, newAlias);
         if (!success) {
             setAliases(oldAliases);
-            alert("No se pudo guardar el apodo");
+            showToast("No se pudo guardar el apodo", "error");
+        } else {
+            showToast("Apodo guardado");
         }
     };
 
     const cancelEditingAlias = () => {
         setEditingMemberId(null);
         setAliasInput("");
+    };
+
+    const handleDrawStatusChange = async () => {
+        const { data: groupData } = await supabase
+            .from('groups')
+            .select('is_draw_active')
+            .eq('id', id)
+            .single();
+
+        setIsDrawActive(groupData?.is_draw_active || false);
+
+        if (groupData?.is_draw_active && currentUserId) {
+            const assignment = await getMyAssignmentInGroup(currentUserId, id);
+            if (assignment) {
+                setMyAssignment(assignment);
+            }
+        } else {
+            setMyAssignment(null);
+        }
     };
 
     if (loading) {
@@ -207,18 +246,65 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
             <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
-                {/* Draw Placeholder */}
-                <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 text-center border border-indigo-100 dark:border-indigo-900/30 border-dashed">
-                    <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-2xl">
-                        🎁
+                {/* Secret Santa Status / Result */}
+                {!isDrawActive ? (
+                    <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 text-center border border-indigo-100 dark:border-indigo-900/30 border-dashed">
+                        <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-2xl">
+                            🎁
+                        </div>
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                            El sorteo aún no ha comenzado
+                        </h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto mb-6">
+                            Espera a que el administrador inicie el sorteo para ver a quién te toca regalar.
+                        </p>
+                        {isAdmin && (
+                            <button
+                                onClick={() => setIsSecretSantaModalOpen(true)}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all text-sm"
+                            >
+                                Configurar Amigo Invisible
+                            </button>
+                        )}
                     </div>
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">
-                        El sorteo aún no ha comenzado
-                    </h3>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
-                        Espera a que el administrador inicie el sorteo para ver a quién te toca regalar.
-                    </p>
-                </div>
+                ) : (
+                    <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-900/30">
+                        <div className="flex flex-col sm:flex-row items-center gap-6">
+                            <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center shadow-md text-3xl shrink-0">
+                                🎅
+                            </div>
+                            <div className="flex-1 text-center sm:text-left">
+                                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                                    ¡El Amigo Invisible está activo!
+                                </h3>
+                                {myAssignment ? (
+                                    <div className="mt-2 text-zinc-600 dark:text-zinc-300">
+                                        <p className="text-sm">Te ha tocado regalar a:</p>
+                                        <button
+                                            onClick={() => router.push(`/wishlist/${myAssignment.receiver.id}?name=${encodeURIComponent(myAssignment.receiver.display_name)}`)}
+                                            className="mt-1 font-black text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-2"
+                                        >
+                                            {myAssignment.receiver.display_name} 🎁
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                                        No pareces estar participando en este sorteo.
+                                    </p>
+                                )}
+                            </div>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => setIsSecretSantaModalOpen(true)}
+                                    className="p-3 bg-white dark:bg-zinc-800 rounded-xl text-zinc-400 hover:text-indigo-600 shadow-sm transition-colors border border-zinc-100 dark:border-zinc-700"
+                                    title="Gestionar sorteo"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Participants List */}
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
@@ -386,6 +472,19 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 confirmText="Expulsar"
                 isDestructive={true}
             />
+
+            {group && currentUserId && (
+                <SecretSantaModal
+                    isOpen={isSecretSantaModalOpen}
+                    onClose={() => setIsSecretSantaModalOpen(false)}
+                    group={group}
+                    adminId={currentUserId}
+                    isDrawActive={isDrawActive}
+                    onDrawStatusChange={handleDrawStatusChange}
+                />
+            )}
+
+            {ToastComponent}
         </div>
     );
 }

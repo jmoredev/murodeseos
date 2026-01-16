@@ -9,6 +9,8 @@ import { GroupsTab } from '@/components/GroupsTab'
 import { ProfileTab } from '@/components/ProfileTab'
 import WhatsNewModal from '@/components/WhatsNewModal'
 import { NotificationMenu } from '@/components/NotificationMenu'
+import { RevealModal } from '@/components/RevealModal'
+import { getMyAssignments, markAsRevealed } from '@/lib/draw-utils'
 
 export default function Home() {
   return (
@@ -28,6 +30,20 @@ function HomeContent() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'wishlist' | 'groups' | 'profile'>('wishlist')
+
+  // Reveal Modal state
+  const [revealData, setRevealData] = useState<{
+    isOpen: boolean;
+    groupName: string;
+    receiverName: string;
+    receiverAvatar?: string;
+    assignmentId?: string;
+  }>({
+    isOpen: false,
+    groupName: '',
+    receiverName: ''
+  });
+  const [pendingRevealQueue, setPendingRevealQueue] = useState<any[]>([]);
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -66,6 +82,7 @@ function HomeContent() {
       }
 
       setUser(session.user)
+      checkPendingDraws(session.user.id)
       return true
     } catch (error) {
       console.error('Error verifying session:', error)
@@ -82,6 +99,7 @@ function HomeContent() {
 
         if (session?.user) {
           setUser(session.user)
+          checkPendingDraws(session.user.id)
 
           // Verificar perfil
           const { data: profile } = await supabase
@@ -133,6 +151,51 @@ function HomeContent() {
       }
     }
   }
+
+  const checkPendingDraws = async (userId: string) => {
+    try {
+      const assignments = await getMyAssignments(userId);
+      const pending = assignments.filter((a: any) => !a.is_revealed);
+
+      if (pending.length > 0) {
+        setPendingRevealQueue(pending);
+        showNextReveal(pending);
+      }
+    } catch (error) {
+      console.error('Error checking pending draws:', error);
+    }
+  };
+
+  const showNextReveal = (queue: any[]) => {
+    if (queue.length === 0) return;
+
+    const next = queue[0];
+    setRevealData({
+      isOpen: true,
+      assignmentId: next.id,
+      groupName: next.group.name,
+      receiverName: next.receiver.display_name,
+      receiverAvatar: next.receiver.avatar_url
+    });
+  };
+
+  const handleCloseReveal = async () => {
+    if (revealData.assignmentId) {
+      await markAsRevealed(revealData.assignmentId);
+    }
+
+    // Siguiente en la cola
+    const newQueue = pendingRevealQueue.slice(1);
+    setPendingRevealQueue(newQueue);
+
+    if (newQueue.length > 0) {
+      // Pequeño delay para que el anterior se cierre visualmente
+      setRevealData(prev => ({ ...prev, isOpen: false }));
+      setTimeout(() => showNextReveal(newQueue), 300);
+    } else {
+      setRevealData(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 768px)')
@@ -324,6 +387,14 @@ function HomeContent() {
           </div>
         </nav>
       )}
+
+      <RevealModal
+        isOpen={revealData.isOpen}
+        onClose={handleCloseReveal}
+        groupName={revealData.groupName}
+        receiverName={revealData.receiverName}
+        receiverAvatar={revealData.receiverAvatar}
+      />
     </div>
   );
 }

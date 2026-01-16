@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { createGroup, shareGroup } from '@/lib/group-utils'
+import { useToast } from '@/components/Toast'
 
 // Lista de emojis predefinidos para iconos de grupo
 const EMOJI_OPTIONS = ['🎁', '🎉', '🎄', '🎂', '💝', '🎈', '⭐', '🌟', '💫', '🎊', '🏆', '👨‍👩‍👧‍👦', '❤️', '🎀', '🌈']
@@ -15,6 +16,8 @@ export default function CreateGroupPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [createdGroup, setCreatedGroup] = useState<{ id: string; name: string } | null>(null)
+
+    const { showToast, ToastComponent } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -47,7 +50,7 @@ export default function CreateGroupPage() {
 
             if (!shared && !navigator.share) {
                 // Si no se pudo compartir y no hay Web Share API, mostrar el código
-                alert(`Grupo creado con éxito!\n\nCódigo: ${group.id}\n\nComparte este código con tus amigos.`)
+                showToast(`Código del grupo: ${group.id}`);
             }
 
         } catch (err: any) {
@@ -210,6 +213,8 @@ export default function CreateGroupPage() {
                     </div>
                 )}
             </div>
+
+            {ToastComponent}
         </div>
     )
 }

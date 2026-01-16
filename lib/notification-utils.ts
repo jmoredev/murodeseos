@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export type NotificationType = 'wish_added' | 'wish_reserved';
+export type NotificationType = 'wish_added' | 'wish_reserved' | 'draw_performed';
 
 export interface Notification {
     id: string;
@@ -189,4 +189,31 @@ export async function markAllAsRead(userId: string) {
         .eq('is_read', false);
 
     if (error) throw error;
+}
+/**
+ * Notifica a todos los miembros de un grupo que se ha realizado el sorteo del Amigo Invisible
+ */
+export async function notifySecretSantaDraw(groupId: string, memberIds: string[]) {
+    try {
+        // Obtenemos el admin (el que lanza el sorteo)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const notifications = memberIds.map(userId => ({
+            user_id: userId,
+            actor_id: user.id,
+            group_id: groupId,
+            type: 'draw_performed' as NotificationType
+        }));
+
+        if (notifications.length > 0) {
+            const { error: notifyError } = await supabase
+                .from('notifications')
+                .insert(notifications);
+
+            if (notifyError) throw notifyError;
+        }
+    } catch (error) {
+        console.error('Error in notifySecretSantaDraw:', error);
+    }
 }
