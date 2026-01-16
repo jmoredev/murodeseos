@@ -54,7 +54,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 const userIds = membersData.map(m => m.user_id);
                 const { data: profilesData, error: profilesError } = await supabase
                     .from('profiles')
-                    .select('id, display_name, avatar_url')
+                    .select('id, display_name, avatar_url, shirt_size, pants_size, shoe_size, favorite_brands, favorite_color')
                     .in('id', userIds);
 
                 if (profilesError) throw profilesError;
@@ -72,7 +72,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     return {
                         id: m.user_id,
                         name: profile?.display_name || 'Usuario',
-                        avatar: profile?.avatar_url
+                        avatar: profile?.avatar_url,
+                        shirt_size: profile?.shirt_size,
+                        pants_size: profile?.pants_size,
+                        shoe_size: profile?.shoe_size,
+                        favorite_brands: profile?.favorite_brands,
+                        favorite_color: profile?.favorite_color,
                     };
                 });
 

@@ -203,7 +203,7 @@ function HomeContent() {
               <nav className="flex gap-1">
                 <button
                   onClick={() => handleTabChange('wishlist')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'wishlist'
+                  className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'wishlist'
                     ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                     : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
@@ -212,7 +212,7 @@ function HomeContent() {
                 </button>
                 <button
                   onClick={() => handleTabChange('groups')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'groups'
+                  className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'groups'
                     ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                     : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }`}
@@ -226,7 +226,7 @@ function HomeContent() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleTabChange('profile')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile'
+                className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile'
                   ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                   : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
@@ -237,7 +237,7 @@ function HomeContent() {
               </button>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 title="Cerrar sesión"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -256,7 +256,7 @@ function HomeContent() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => handleTabChange('profile')}
-                className={`p-2 rounded-full transition-colors ${activeTab === 'profile'
+                className={`cursor-pointer p-2 rounded-full transition-colors ${activeTab === 'profile'
                   ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                   : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
@@ -266,7 +266,7 @@ function HomeContent() {
               </button>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
+                className="cursor-pointer p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
                 title="Cerrar sesión"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -293,7 +293,7 @@ function HomeContent() {
           <div className="max-w-5xl mx-auto px-4 flex justify-around">
             <button
               onClick={() => handleTabChange('wishlist')}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'wishlist'
+              className={`cursor-pointer flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'wishlist'
                 ? 'text-indigo-600 dark:text-indigo-400'
                 : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
@@ -305,7 +305,7 @@ function HomeContent() {
             </button>
             <button
               onClick={() => handleTabChange('groups')}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'groups'
+              className={`cursor-pointer flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${activeTab === 'groups'
                 ? 'text-indigo-600 dark:text-indigo-400'
                 : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}

@@ -26,12 +26,12 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 
 // Datos de usuarios
 const USERS = [
-    { email: 'juan@test.com', password: 'Test123!', displayName: 'Juan Pérez', avatar: '👨‍💻' },
-    { email: 'maria@test.com', password: 'Test123!', displayName: 'María García', avatar: '👩‍💼' },
-    { email: 'ana@test.com', password: 'Test123!', displayName: 'Ana López', avatar: '👩‍🎨' },
-    { email: 'carlos@test.com', password: 'Test123!', displayName: 'Carlos Ruiz', avatar: '👨‍🔧' },
+    { email: 'juan@test.com', password: 'Test123!', displayName: 'Juan Pérez', avatar: '👨‍💻', shirtSize: 'L', pantsSize: '42', shoeSize: '43', favoriteBrands: 'Nike, Adidas', favoriteColor: 'Azul' },
+    { email: 'maria@test.com', password: 'Test123!', displayName: 'María García', avatar: '👩‍💼', shirtSize: 'M', pantsSize: '38', shoeSize: '39', favoriteBrands: 'Zara, Mango', favoriteColor: 'Rojo' },
+    { email: 'ana@test.com', password: 'Test123!', displayName: 'Ana López', avatar: '👩‍🎨', shirtSize: 'S', pantsSize: '36', shoeSize: '37', favoriteBrands: 'Levi\'s, Converse', favoriteColor: 'Verde' },
+    { email: 'carlos@test.com', password: 'Test123!', displayName: 'Carlos Ruiz', avatar: '👨‍🔧', shirtSize: 'XL', pantsSize: '46', shoeSize: '45', favoriteBrands: 'Vans, North Face', favoriteColor: 'Negro' },
     // Usuario E2E para tests automáticos
-    { email: 'e2e-test@test.com', password: 'E2ETest123!', displayName: 'E2E Test User', avatar: '🤖' }
+    { email: 'e2e-test@test.com', password: 'E2ETest123!', displayName: 'E2E Test User', avatar: '🤖', shirtSize: 'L', pantsSize: '42', shoeSize: '44', favoriteBrands: 'Google, Apple', favoriteColor: 'Gris' }
 ]
 
 // Datos de grupos
@@ -116,21 +116,24 @@ async function createUsers() {
             continue
         }
 
-        // Si el perfil no tiene display_name, actualizarlo
-        if (!profile.display_name) {
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                    display_name: user.displayName,
-                    avatar_url: user.avatar,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', userId)
+        // Actualizar perfil con datos base y de estilo
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+                display_name: user.displayName,
+                avatar_url: user.avatar,
+                shirt_size: (user as any).shirtSize,
+                pants_size: (user as any).pantsSize,
+                shoe_size: (user as any).shoeSize,
+                favorite_brands: (user as any).favoriteBrands,
+                favorite_color: (user as any).favoriteColor,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId)
 
-            if (updateError) {
-                console.error(`❌ Error actualizando perfil para ${user.email}:`, updateError.message)
-                continue
-            }
+        if (updateError) {
+            console.error(`❌ Error actualizando perfil para ${user.email}:`, updateError.message)
+            continue
         }
 
         console.log(`✅ ${user.avatar} ${user.displayName} (${user.email})`)
@@ -209,13 +212,14 @@ async function createGroupMembers(userMap: Map<string, string>, groupMap: Map<st
         console.log('✅ Club de Lectura: Ana (admin), María, Juan')
     }
 
-    // Grupo E2E: Solo el usuario E2E (admin)
+    // Grupo E2E: Usuario E2E (admin) + Juan Pérez (miembro)
     const e2eGroup = groupMap.get('E2E001')
     if (e2eGroup) {
         await supabase.from('group_members').insert([
             { group_id: 'E2E001', user_id: e2eGroup.creatorId, role: 'admin', joined_at: new Date().toISOString() },
+            { group_id: 'E2E001', user_id: userMap.get('juan@test.com')!, role: 'member', joined_at: new Date().toISOString() },
         ])
-        console.log('✅ E2E Test Group: E2E Test User (admin)')
+        console.log('✅ E2E Test Group: E2E Test User (admin), Juan Pérez (miembro)')
     }
 
     console.log('')

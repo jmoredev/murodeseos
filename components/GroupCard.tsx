@@ -8,6 +8,11 @@ export interface GroupMember {
     name: string;
     originalName?: string; // Nombre original si tiene apodo
     avatar?: string;
+    shirt_size?: string;
+    pants_size?: string;
+    shoe_size?: string;
+    favorite_brands?: string;
+    favorite_color?: string;
 }
 
 export interface Group {
@@ -253,7 +258,17 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
             {/* Members List */}
             <div className="space-y-2.5">
                 {displayMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3 group/member min-h-[2rem]">
+                    <div
+                        key={member.id}
+                        data-testid={`member-${member.id}`}
+                        data-member-name={member.name}
+                        className="flex items-center gap-3 group/member min-h-[2rem] cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-1 -m-1 rounded-lg transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (editingMemberId) return;
+                            router.push(`/wishlist/${member.id}?name=${encodeURIComponent(member.name)}`);
+                        }}
+                    >
                         <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
                             {/* Avatar: Check if it's a URL, emoji, or use initials */}
                             {member.avatar && member.avatar.startsWith('http') ? (

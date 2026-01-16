@@ -6,6 +6,17 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        version: '1.2.0',
+        date: '2026-01-16',
+        changes: [
+            '🔒 Privacidad por Grupos: Ahora puedes excluir deseos de grupos específicos',
+            '🎨 Rediseño de Lista: Nueva interfaz más moderna y limpia para tus deseos',
+            '📱 Navegación Adaptativa: Acceso rápido con botón flotante y menú inferior',
+            '✏️ Gestión de Apodos: Cambia alias de miembros y grupos directamente en la tarjeta',
+            '🚀 Estabilidad Pro: Mejoras masivas en la fiabilidad de la plataforma y tests E2E',
+        ],
+    },
+    {
         version: '1.1.0',
         date: '2025-12-29',
         changes: [

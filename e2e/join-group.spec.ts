@@ -18,22 +18,17 @@ test.describe('Unirse a Grupo', () => {
         await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
     })
 
-    test.afterEach(async () => {
+    test.afterEach(async ({ request }) => {
         // Limpieza de grupos creados
-        if (createdGroupIds.size > 0) {
-            // Necesitamos estar autenticados para borrar
-            const { data: { session } } = await supabase.auth.signInWithPassword({
-                email: E2E_CONFIG.user.email,
-                password: E2E_CONFIG.user.password,
-            })
-
-            for (const groupId of createdGroupIds) {
-                console.log(`🧹 Limpiando grupo ${groupId}...`)
-                await supabase.from('groups').delete().eq('id', groupId)
+        for (const groupId of createdGroupIds) {
+            console.log(`🧹 [Limpieza] Borrando grupo ${groupId}...`);
+            const response = await request.delete(`http://localhost:3000/api/groups/${groupId}`);
+            if (!response.ok() && response.status() !== 404) {
+                console.error(`🔴 Error al borrar grupo ${groupId}: ${response.status()}`);
             }
-            createdGroupIds.clear()
         }
-    })
+        createdGroupIds.clear();
+    });
 
     test('debería unirse a un grupo exitosamente tras haber salido', async ({ page }) => {
         // 1. Crear un grupo primero (para tener un código válido)
