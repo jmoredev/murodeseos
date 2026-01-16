@@ -15,7 +15,7 @@ export const E2E_CONFIG = {
     secondaryUser: {
         email: 'juan@test.com',
         password: 'Test123!',
-        displayName: 'Juan Pérez',
+        displayName: 'Juan Perez',
         avatar: '👨‍💻'
     },
 

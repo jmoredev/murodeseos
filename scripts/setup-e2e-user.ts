@@ -63,15 +63,19 @@ async function setupE2EUser() {
 
             if (createError || !newUser.user) throw new Error(`Error creando usuario ${userConfig.email}: ${createError?.message}`)
             userId = newUser.user.id
-            // Esperar trigger de perfil
-            await new Promise(resolve => setTimeout(resolve, 500))
+            // Esperar un poco más para asegurar que los triggers terminen y no sobreescriban nuestro upsert
+            await new Promise(resolve => setTimeout(resolve, 2000))
         }
 
-        // Asegurar perfil
-        console.log(`   📝 Asegurando perfil...`)
+        // Asegurar perfil de forma robusta
+        console.log(`   📝 Asegurando perfil de forma limpia para ${userConfig.email}...`)
+
+        // Borramos por si acaso hay un trigger que creó algo incompleto
+        await supabase.from('profiles').delete().eq('id', userId)
+
         const { error: profileError } = await supabase
             .from('profiles')
-            .upsert({
+            .insert({
                 id: userId,
                 display_name: userConfig.displayName,
                 avatar_url: userConfig.avatar,
@@ -81,7 +85,19 @@ async function setupE2EUser() {
                 updated_at: new Date().toISOString()
             })
 
-        if (profileError) throw new Error(`Error en perfil de ${userConfig.email}: ${profileError.message}`)
+        if (profileError) throw new Error(`Error insertando perfil de ${userConfig.email}: ${profileError.message}`)
+
+        // Verificación inmediata
+        const { data: verify, error: verifyError } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', userId)
+            .single()
+
+        if (verifyError || !verify?.display_name) {
+            throw new Error(`Fallo la verificación del perfil para ${userConfig.email}`)
+        }
+        console.log(`      ✅ Perfil verificado para ${userConfig.email}: ${verify.display_name}`)
 
         return userId
     }
@@ -120,7 +136,23 @@ async function setupE2EUser() {
         }
 
         // 3. Gestionar Membresías
-        console.log(`👫 Verificando membresías...`)
+        console.log(`👫 Limpiando y verificando membresías...`)
+
+        // LIMPIEZA TOTAL: Borrar todas las membresías de estos dos usuarios para evitar interferencias entre tests
+        const { error: deleteMembershipsError } = await supabase
+            .from('group_members')
+            .delete()
+            .or(`user_id.eq.${mainUserId},user_id.eq.${secondaryUserId}`)
+
+        if (deleteMembershipsError) throw new Error(`Error limpiando membresías globales: ${deleteMembershipsError.message}`)
+
+        // LIMPIEZA: Borrar todos los aliases para que los nombres sean predecibles
+        const { error: deleteAliasesError } = await supabase
+            .from('user_aliases')
+            .delete()
+            .or(`owner_id.eq.${mainUserId},owner_id.eq.${secondaryUserId},target_user_id.eq.${mainUserId},target_user_id.eq.${secondaryUserId}`)
+
+        if (deleteAliasesError) throw new Error(`Error limpiando aliases: ${deleteAliasesError.message}`)
 
         const members = [
             { group_id: testGroup.id, user_id: mainUserId, role: 'admin' },

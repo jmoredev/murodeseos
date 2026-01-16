@@ -95,10 +95,17 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         // Manejar posible redirección a /profile/setup (común en primer login o pérdida de estado)
         if (page.url().includes('/profile/setup')) {
             console.log('⚠️ Redirigido a setup, completando perfil básico...');
-            await page.fill('input[name="display_name"]', 'Juan Pérez');
-            // Selectores pueden variar, ajustamos a lo más probable en base a setup
-            const saveBtn = page.locator('button', { hasText: 'Guardar' }).or(page.locator('button[type="submit"]'));
-            await saveBtn.click();
+            // Paso 1: Nombre y Avatar
+            await page.fill('#displayName', E2E_CONFIG.secondaryUser.displayName);
+            await page.click('button:has-text("Continuar")');
+
+            // Paso 2: Estilo (opcional) - Esperar a que aparezca el botón de saltar
+            const skipStyleBtn = page.locator('button', { hasText: 'Saltar por ahora' });
+            await skipStyleBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+            if (await skipStyleBtn.isVisible()) {
+                await skipStyleBtn.click();
+            }
+
             await page.waitForURL('/', { timeout: 15000 });
         }
 
@@ -118,13 +125,24 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         // Esperar a que el contenido de la pestaña de grupos sea visible
         await expect(page.locator('h1', { hasText: 'Mis grupos' })).toBeVisible({ timeout: 15000 });
 
+        // Esperar a que la red esté inactiva para asegurar que todo está cargado
+        await page.waitForLoadState('networkidle', { timeout: 10000 });
+
         // Localizar el grupo E2E
         const groupCard = page.locator('.group-card', { hasText: E2E_CONFIG.group.name });
         await expect(groupCard).toBeVisible({ timeout: 10000 });
 
         // Dentro de la tarjeta del grupo, Juan debería ver a "E2E Test User"
-        // Hacemos clic en el nombre del usuario para ir a su lista
-        await groupCard.locator(`text=${E2E_CONFIG.user.displayName}`).click();
+        // Hacemos el selector más robusto buscando por atributo o por texto exacto
+        const memberRow = groupCard.locator(`[data-member-name="${E2E_CONFIG.user.displayName}"]`)
+            .or(groupCard.locator('div').filter({ hasText: E2E_CONFIG.user.displayName }))
+            .first();
+
+        await expect(memberRow).toBeVisible({ timeout: 15000 });
+
+        // Hacer click específicamente en el texto del nombre para evitar el botón de "Editar apodo"
+        // que aparece al hacer hover sobre la fila.
+        await memberRow.locator('span').filter({ hasText: E2E_CONFIG.user.displayName }).first().click({ force: true });
 
         // 4. Verificar visibilidad
         // El regalo público debe ser visible

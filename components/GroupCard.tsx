@@ -260,6 +260,8 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
                 {displayMembers.map((member) => (
                     <div
                         key={member.id}
+                        data-testid={`member-${member.id}`}
+                        data-member-name={member.name}
                         className="flex items-center gap-3 group/member min-h-[2rem] cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-1 -m-1 rounded-lg transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
