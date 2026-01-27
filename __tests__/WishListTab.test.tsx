@@ -207,9 +207,6 @@ describe('WishListTab', () => {
     });
 
     it('deletes a wish successfully', async () => {
-        // Mock window.confirm
-        window.confirm = jest.fn(() => true);
-
         await act(async () => {
             render(<WishListTab userId={userId} />);
         });
@@ -217,16 +214,25 @@ describe('WishListTab', () => {
         // Click to edit
         fireEvent.click(screen.getByText('Item 1'));
 
-        // Click delete
+        // Click delete button in form
         const deleteBtn = screen.getByLabelText('Eliminar deseo');
 
         await act(async () => {
             fireEvent.click(deleteBtn);
         });
 
-        expect(window.confirm).toHaveBeenCalled();
-        expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
+        // Verify ConfirmModal appears
+        expect(screen.getByText('Eliminar deseo')).toBeInTheDocument();
+        expect(screen.getByText(/¿Estás seguro de que quieres eliminar "Item 1"?/)).toBeInTheDocument();
 
+        // Click confirm in modal
+        const confirmBtn = screen.getByRole('button', { name: 'Eliminar' });
+        await act(async () => {
+            fireEvent.click(confirmBtn);
+        });
+
+        // Verify item is gone
+        expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
     });
 
     it('handles image upload', async () => {

@@ -16,6 +16,9 @@ jest.mock('@/lib/supabase', () => {
         order: jest.fn().mockReturnThis(),
         single: jest.fn(),
         then: jest.fn(),
+        auth: {
+            getUser: jest.fn(),
+        },
     };
     return {
         supabase: mockMethods
@@ -84,6 +87,80 @@ describe('Notification Utils', () => {
 
             expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([
                 expect.objectContaining({ user_id: 'user-3', actor_id: actorId, type: 'wish_reserved' })
+            ]));
+        });
+    });
+
+    describe('getNotifications', () => {
+        it('should fetch notifications for a user', async () => {
+            const userId = 'user-1';
+            const mockData = [{ id: 'notif-1', user_id: userId }];
+
+            mockSupabase.then.mockImplementationOnce((callback: any) =>
+                Promise.resolve({ data: mockData, error: null }).then(callback)
+            );
+
+            const { getNotifications } = require('@/lib/notification-utils');
+            const result = await getNotifications(userId);
+
+            expect(mockSupabase.from).toHaveBeenCalledWith('notifications');
+            expect(mockSupabase.eq).toHaveBeenCalledWith('user_id', userId);
+            expect(result).toEqual(mockData);
+        });
+    });
+
+    describe('markAsRead', () => {
+        it('should update is_read to true for a specific notification', async () => {
+            const notifId = 'notif-1';
+
+            mockSupabase.then.mockImplementationOnce((callback: any) =>
+                Promise.resolve({ error: null }).then(callback)
+            );
+
+            const { markAsRead } = require('@/lib/notification-utils');
+            await markAsRead(notifId);
+
+            expect(mockSupabase.update).toHaveBeenCalledWith({ is_read: true });
+            expect(mockSupabase.eq).toHaveBeenCalledWith('id', notifId);
+        });
+    });
+
+    describe('markAllAsRead', () => {
+        it('should update all unread notifications for a user', async () => {
+            const userId = 'user-1';
+
+            mockSupabase.then.mockImplementationOnce((callback: any) =>
+                Promise.resolve({ error: null }).then(callback)
+            );
+
+            const { markAllAsRead } = require('@/lib/notification-utils');
+            await markAllAsRead(userId);
+
+            expect(mockSupabase.update).toHaveBeenCalledWith({ is_read: true });
+            expect(mockSupabase.eq).toHaveBeenCalledWith('user_id', userId);
+            expect(mockSupabase.eq).toHaveBeenCalledWith('is_read', false);
+        });
+    });
+
+    describe('notifySecretSantaDraw', () => {
+        it('should create notifications for all members when a draw is performed', async () => {
+            const groupId = 'group-1';
+            const memberIds = ['user-1', 'user-2'];
+            const adminId = 'admin-1';
+
+            // Mock auth.getUser
+            mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: adminId } }, error: null });
+
+            mockSupabase.then.mockImplementationOnce((callback: any) =>
+                Promise.resolve({ error: null }).then(callback)
+            );
+
+            const { notifySecretSantaDraw } = require('@/lib/notification-utils');
+            await notifySecretSantaDraw(groupId, memberIds);
+
+            expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([
+                expect.objectContaining({ user_id: 'user-1', actor_id: adminId, group_id: groupId, type: 'draw_performed' }),
+                expect.objectContaining({ user_id: 'user-2', actor_id: adminId, group_id: groupId, type: 'draw_performed' })
             ]));
         });
     });

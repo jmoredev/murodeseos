@@ -115,14 +115,18 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // Eliminar primero
         await card1.click();
 
-        // Esperar a que el modal de edición esté abierto y la animación termine (importante en móvil)
+        // Esperar a que el modal de edición esté abierto
         await expect(page.getByRole('heading', { name: 'Editar deseo' })).toBeVisible();
         await page.waitForTimeout(500);
 
-        page.once('dialog', dialog => dialog.accept());
+        // Clic en eliminar y luego confirmar en el modal personalizado
         const deleteBtn1 = page.getByLabel('Eliminar deseo');
-        // Usamos evaluate para saltarnos cualquier overlay (como el de Next.js en dev) que pueda estar tapando el botón
-        await deleteBtn1.evaluate(el => (el as HTMLElement).click());
+        await deleteBtn1.click();
+
+        // Interaction with ConfirmModal
+        const confirmBtn = page.getByRole('button', { name: 'Confirmar' });
+        await expect(confirmBtn).toBeVisible();
+        await confirmBtn.click();
 
         await expect(page.getByText(testItem.title)).not.toBeVisible();
 
@@ -133,9 +137,10 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByRole('heading', { name: 'Editar deseo' })).toBeVisible();
         await page.waitForTimeout(500);
 
-        page.once('dialog', dialog => dialog.accept());
         const deleteBtn2 = page.getByLabel('Eliminar deseo');
-        await deleteBtn2.evaluate(el => (el as HTMLElement).click());
+        await deleteBtn2.click();
+
+        await page.getByRole('button', { name: 'Confirmar' }).click();
 
         await expect(page.getByText(anotherItem.title)).not.toBeVisible();
     });
