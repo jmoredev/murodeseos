@@ -6,6 +6,17 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        version: '1.3.0',
+        date: '2026-02-04',
+        changes: [
+            '🔔 Sistema de Notificaciones: Recibe avisos en tiempo real sobre actividad en tus grupos',
+            '🎅 Amigo Invisible: Nuevo sistema de sorteos y gestión de Secret Santa mejorado',
+            '📱 Optimización Móvil: Rediseño completo del panel de notificaciones para móviles',
+            '✅ Tests de Integración: Cobertura total para las nuevas funcionalidades de sorteos',
+            '🛠️ Mejoras de UI: Pequeños ajustes visuales para una interfaz más pulida',
+        ],
+    },
+    {
         version: '1.2.0',
         date: '2026-01-16',
         changes: [
