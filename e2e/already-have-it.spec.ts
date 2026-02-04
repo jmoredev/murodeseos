@@ -31,12 +31,12 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
         const quickDeleteBtn = card.getByRole('button', { name: 'Ya lo tengo' });
         await expect(quickDeleteBtn).toBeVisible();
 
-        // 3. Hacer clic y confirmar el diálogo (window.confirm)
-        page.once('dialog', dialog => {
-            expect(dialog.message()).toContain('¿Ya tienes este artículo?');
-            dialog.accept();
-        });
+        // 3. Hacer clic y confirmar el diálogo (ConfirmModal)
         await quickDeleteBtn.click();
+
+        const confirmBtn = page.getByRole('button', { name: 'Confirmar' });
+        await expect(confirmBtn).toBeVisible();
+        await confirmBtn.click();
 
         // 4. Verificar que desaparece
         await expect(card).not.toBeVisible();

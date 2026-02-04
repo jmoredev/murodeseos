@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getCssColor } from '@/lib/color-utils';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
+import { notifyWishReserved } from '@/lib/notification-utils';
 
 export default function FriendWishlistPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = use(params);
@@ -129,6 +130,9 @@ export default function FriendWishlistPage({ params }: { params: Promise<{ userI
                 ));
                 throw error;
             }
+
+            // Notificar a otros miembros del grupo (sorpresa para el dueño)
+            notifyWishReserved(currentUserId, item.id);
         } catch (error) {
             console.error('Error reserving item:', error);
             alert('No se pudo reservar el regalo. Inténtalo de nuevo.');

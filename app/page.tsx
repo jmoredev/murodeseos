@@ -8,6 +8,9 @@ import { WishListTab } from '@/components/WishListTab'
 import { GroupsTab } from '@/components/GroupsTab'
 import { ProfileTab } from '@/components/ProfileTab'
 import WhatsNewModal from '@/components/WhatsNewModal'
+import { NotificationMenu } from '@/components/NotificationMenu'
+import { RevealModal } from '@/components/RevealModal'
+import { getMyAssignments, markAsRevealed } from '@/lib/draw-utils'
 
 export default function Home() {
   return (
@@ -27,6 +30,20 @@ function HomeContent() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'wishlist' | 'groups' | 'profile'>('wishlist')
+
+  // Reveal Modal state
+  const [revealData, setRevealData] = useState<{
+    isOpen: boolean;
+    groupName: string;
+    receiverName: string;
+    receiverAvatar?: string;
+    assignmentId?: string;
+  }>({
+    isOpen: false,
+    groupName: '',
+    receiverName: ''
+  });
+  const [pendingRevealQueue, setPendingRevealQueue] = useState<any[]>([]);
 
   useEffect(() => {
     const tab = searchParams.get('tab')
@@ -65,6 +82,7 @@ function HomeContent() {
       }
 
       setUser(session.user)
+      checkPendingDraws(session.user.id)
       return true
     } catch (error) {
       console.error('Error verifying session:', error)
@@ -81,6 +99,7 @@ function HomeContent() {
 
         if (session?.user) {
           setUser(session.user)
+          checkPendingDraws(session.user.id)
 
           // Verificar perfil
           const { data: profile } = await supabase
@@ -132,6 +151,51 @@ function HomeContent() {
       }
     }
   }
+
+  const checkPendingDraws = async (userId: string) => {
+    try {
+      const assignments = await getMyAssignments(userId);
+      const pending = assignments.filter((a: any) => !a.is_revealed);
+
+      if (pending.length > 0) {
+        setPendingRevealQueue(pending);
+        showNextReveal(pending);
+      }
+    } catch (error) {
+      console.error('Error checking pending draws:', error);
+    }
+  };
+
+  const showNextReveal = (queue: any[]) => {
+    if (queue.length === 0) return;
+
+    const next = queue[0];
+    setRevealData({
+      isOpen: true,
+      assignmentId: next.id,
+      groupName: next.group.name,
+      receiverName: next.receiver.display_name,
+      receiverAvatar: next.receiver.avatar_url
+    });
+  };
+
+  const handleCloseReveal = async () => {
+    if (revealData.assignmentId) {
+      await markAsRevealed(revealData.assignmentId);
+    }
+
+    // Siguiente en la cola
+    const newQueue = pendingRevealQueue.slice(1);
+    setPendingRevealQueue(newQueue);
+
+    if (newQueue.length > 0) {
+      // Pequeño delay para que el anterior se cierre visualmente
+      setRevealData(prev => ({ ...prev, isOpen: false }));
+      setTimeout(() => showNextReveal(newQueue), 300);
+    } else {
+      setRevealData(prev => ({ ...prev, isOpen: false }));
+    }
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 768px)')
@@ -224,6 +288,7 @@ function HomeContent() {
 
             {/* User Actions */}
             <div className="flex items-center gap-3">
+              <NotificationMenu userId={user.id} />
               <button
                 onClick={() => handleTabChange('profile')}
                 className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile'
@@ -254,6 +319,7 @@ function HomeContent() {
               Muro de deseos
             </h1>
             <div className="flex items-center gap-1">
+              <NotificationMenu userId={user.id} />
               <button
                 onClick={() => handleTabChange('profile')}
                 className={`cursor-pointer p-2 rounded-full transition-colors ${activeTab === 'profile'
@@ -321,6 +387,14 @@ function HomeContent() {
           </div>
         </nav>
       )}
+
+      <RevealModal
+        isOpen={revealData.isOpen}
+        onClose={handleCloseReveal}
+        groupName={revealData.groupName}
+        receiverName={revealData.receiverName}
+        receiverAvatar={revealData.receiverAvatar}
+      />
     </div>
   );
 }
