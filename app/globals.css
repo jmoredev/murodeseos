@@ -1,17 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #F5F6FA;
   --foreground: #171717;
-}
-
-/* Tailwind CSS v4 theme configuration */
-/* stylelint-disable-next-line at-rule-no-unknown */
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --color-muro-principal: #192A56;
   --color-deseo-acento: #FFC312;
   --color-urgencia-coral: #FF6B81;

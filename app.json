@@ -1,0 +1,36 @@
+{
+    "expo": {
+        "name": "Muro de Deseos",
+        "slug": "murodeseos",
+        "version": "1.3.0",
+        "orientation": "portrait",
+        "icon": "./public/favicon.ico",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "splash": {
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#ffffff"
+            }
+        },
+        "web": {
+            "favicon": "./public/favicon.ico",
+            "bundler": "metro"
+        },
+        "plugins": [
+            "expo-router"
+        ],
+        "experiments": {
+            "typedRoutes": true
+        }
+    }
+}
