@@ -1,0 +1,3 @@
+[    3354ms] [WARNING] Cannot record touch end without a touch start.
+ Touch End: {"identifier":0,"pageX":740,"pageY":647,"timestamp":3348.5999999998603}
+ Touch Bank: [] @ http://localhost:8081/node_modules/expo-router/entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:28765
