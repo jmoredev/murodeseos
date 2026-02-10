@@ -1,91 +1,12 @@
-
-
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
 
-// --- Componentes Auxiliares (Iconos) ---
-const Icons = {
-    Link: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
-    Image: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>,
-    Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
-    Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
-    Gift: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>,
-    Fire: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.5-3.3.3-1.1 1-2 1-2z"></path></svg>,
-    X: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-    Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-};
-
-// --- 2. Componente: Input Dinámico de Links ---
-interface DynamicLinkInputProps {
-    links: string[];
-    onChange: (links: string[]) => void;
-}
-
-function DynamicLinkInput({ links, onChange }: DynamicLinkInputProps) {
-    const addLink = () => {
-        onChange([...links, '']);
-    };
-
-    const removeLink = (index: number) => {
-        const newLinks = links.filter((_, i) => i !== index);
-        onChange(newLinks);
-    };
-
-    const updateLink = (index: number, value: string) => {
-        const newLinks = [...links];
-        newLinks[index] = value;
-        onChange(newLinks);
-    };
-
-    return (
-        <div className="space-y-3">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Enlaces de compra
-            </label>
-
-            {links.map((link, index) => (
-                <div key={index} className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
-                            <Icons.Link />
-                        </div>
-                        <input
-                            type="url"
-                            value={link}
-                            onChange={(e) => updateLink(index, e.target.value)}
-                            placeholder="https://..."
-                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => removeLink(index)}
-                        className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                        title="Eliminar enlace"
-                    >
-                        <Icons.Trash />
-                    </button>
-                </div>
-            ))}
-
-            <button
-                type="button"
-                onClick={addLink}
-                className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors w-fit"
-            >
-                <Icons.Plus />
-                Añadir enlace
-            </button>
-        </div>
-    );
-}
-
-// --- Componente Principal ---
-interface WishListTabProps {
+export interface WishListTabProps {
     userId: string;
 }
 
@@ -99,11 +20,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Form State
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
-
     const { showToast, ToastComponent } = useToast();
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
 
@@ -159,7 +76,6 @@ export function WishListTab({ userId }: WishListTabProps) {
         fetchItems();
     }, [userId]);
 
-    // Ordenar items según la opción seleccionada
     const sortedItems = [...items].sort((a, b) => {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
@@ -193,8 +109,7 @@ export function WishListTab({ userId }: WishListTabProps) {
         setIsFormOpen(true);
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSave = async () => {
         if (!formData.title || !userId) return;
 
         setIsSaving(true);
@@ -237,8 +152,6 @@ export function WishListTab({ userId }: WishListTabProps) {
                     reservedBy: data.reserved_by
                 };
                 setItems([newItem, ...items]);
-
-                // Notificar a los grupos
                 notifyWishAdded(userId, data.id, formData.excludedGroupIds || []);
             }
             setIsFormOpen(false);
@@ -251,15 +164,8 @@ export function WishListTab({ userId }: WishListTabProps) {
         }
     };
 
-    const handleDelete = async () => {
-        if (editingItem) {
-            setItemToDelete(editingItem);
-        }
-    };
-
     const executeDelete = async () => {
         if (!itemToDelete) return;
-
         setIsSaving(true);
         try {
             const { error } = await supabase
@@ -268,7 +174,6 @@ export function WishListTab({ userId }: WishListTabProps) {
                 .eq('id', itemToDelete.id);
 
             if (error) throw error;
-
             setItems(items.filter(i => i.id !== itemToDelete.id));
             setIsFormOpen(false);
             showToast('Deseo eliminado');
@@ -281,360 +186,171 @@ export function WishListTab({ userId }: WishListTabProps) {
         }
     };
 
-    const handleQuickDelete = async (item: GiftItem) => {
-        setItemToDelete(item);
-    };
-
     if (loading) {
         return (
-            <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center p-4">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-                    <p className="text-zinc-500 dark:text-zinc-400 font-medium">Cargando deseos...</p>
-                </div>
-            </div>
+            <View className="flex-1 items-center justify-center p-20">
+                <ActivityIndicator size="large" color="#4F46E5" />
+                <Text className="mt-4 text-zinc-500 font-medium">Cargando deseos...</Text>
+            </View>
         );
     }
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-black p-4 pb-24">
-            <header className="mb-8 pt-4 max-w-5xl mx-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Mi lista de deseos</h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 text-sm">¿Qué te gustaría recibir?</p>
-                    </div>
-                    <button
-                        onClick={() => openForm()}
-                        className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
-                        aria-label="Nuevo deseo"
-                    >
-                        <Icons.Plus />
-                    </button>
-                </div>
+        <View className="flex-1 p-4 pb-20">
+            <View className="flex-row justify-between items-end mb-8 px-2">
+                <View>
+                    <Text className="text-3xl font-black text-zinc-900 dark:text-white">Deseos</Text>
+                    <Text className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-widest mt-1">¿Qué te gustaría recibir?</Text>
+                </View>
+                <Pressable
+                    onPress={() => openForm()}
+                    className="w-12 h-12 rounded-2xl bg-indigo-600 items-center justify-center shadow-lg shadow-indigo-600/30"
+                >
+                    <Text style={{ color: 'white', fontSize: 24, fontWeight: '900' }}>+</Text>
+                </Pressable>
+            </View>
 
-                {items.length > 0 && (
-                    <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
-                        <button
-                            onClick={() => setSortBy('name')}
-                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'name'
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                                }`}
+            {items.length > 0 && (
+                <View className="flex-row gap-2 mb-8 px-2 overflow-auto no-scrollbar">
+                    {['name', 'price', 'priority'].map((type) => (
+                        <Pressable
+                            key={type}
+                            onPress={() => setSortBy(type as any)}
+                            className={`px-4 py-2 rounded-xl border-2 ${sortBy === type ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800'}`}
                         >
-                            Por nombre
-                        </button>
-                        <button
-                            onClick={() => setSortBy('price')}
-                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'price'
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                                }`}
-                        >
-                            Por precio
-                        </button>
-                        <button
-                            onClick={() => setSortBy('priority')}
-                            className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${sortBy === 'priority'
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                                }`}
-                        >
-                            Por prioridad
-                        </button>
-                    </div>
-                )}
-            </header>
+                            <Text className={`text-xs font-bold uppercase tracking-wider ${sortBy === type ? 'text-white' : 'text-zinc-500'}`}>
+                                {type === 'name' ? 'Por Nombre' : type === 'price' ? 'Por Precio' : 'Por Prioridad'}
+                            </Text>
+                        </Pressable>
+                    ))}
+                </View>
+            )}
 
-            {/* Grid de Tarjetas */}
-            <div className="max-w-5xl mx-auto">
-                {
-                    sortedItems.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {sortedItems.map(item => (
+            <View className="w-full">
+                {sortedItems.length > 0 ? (
+                    <View className="flex-row flex-wrap -m-2">
+                        {sortedItems.map(item => (
+                            <View key={item.id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
                                 <WishlistCard
-                                    key={item.id}
                                     item={item}
                                     onClick={openForm}
-                                    isOwner={true} // Always owner in this view
-                                    onDelete={handleQuickDelete}
+                                    isOwner={true}
+                                    onDelete={(i) => setItemToDelete(i)}
                                 />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20">
-                            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl text-zinc-400">
-                                🎁
-                            </div>
-                            <h3 className="text-lg font-medium text-zinc-900 dark:text-white">Tu lista está vacía</h3>
-                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Añade cosas que te ilusionen.</p>
-                        </div>
-                    )
-                }
-            </div>
+                            </View>
+                        ))}
+                    </View>
+                ) : (
+                    <View className="items-center justify-center py-20 text-center">
+                        <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-full items-center justify-center mb-6">
+                            <Text style={{ fontSize: 40 }}>🎁</Text>
+                        </View>
+                        <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Tu lista está vacía</Text>
+                        <Text className="text-zinc-500 dark:text-zinc-400 font-medium">Añade cosas que te ilusionen.</Text>
+                    </View>
+                )}
+            </View>
 
-            {/* Modal Formulario */}
-            {
-                isFormOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-                        <div
-                            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
-                            onClick={() => !isSaving && setIsFormOpen(false)}
-                        ></div>
+            {/* Form Modal Placeholder (Real implementation would be more complex) */}
+            {isFormOpen && (
+                <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
+                    <Pressable className="absolute inset-0" onPress={() => !isSaving && setIsFormOpen(false)} />
+                    <View className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 shadow-2xl overflow-scroll max-h-[90%]">
+                        <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-6">
+                            {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
+                        </Text>
 
-                        <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
-                            <form onSubmit={handleSave} className="p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-                                        {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
-                                    </h2>
-                                    <button
-                                        type="button"
-                                        onClick={() => !isSaving && setIsFormOpen(false)}
-                                        className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                                        disabled={isSaving}
-                                    >
-                                        <Icons.X />
-                                    </button>
-                                </div>
+                        <ScrollView className="space-y-6">
+                            <View className="mb-4">
+                                <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Título</Text>
+                                <TextInput
+                                    value={formData.title || ''}
+                                    onChangeText={(text) => setFormData({ ...formData, title: text })}
+                                    placeholder="¿Qué deseas?"
+                                    className="w-full px-4 py-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold"
+                                />
+                            </View>
 
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                                            Imagen
-                                        </label>
-                                        <div className="flex gap-4 items-start">
-                                            <div className="w-24 h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                {formData.imageUrl ? (
-                                                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <Icons.Image />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 space-y-3">
-                                                <input
-                                                    type="url"
-                                                    placeholder="Pegar URL de imagen..."
-                                                    value={formData.imageUrl || ''}
-                                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                                    className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                    disabled={isSaving || isUploading}
-                                                />
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="file"
-                                                        ref={fileInputRef}
-                                                        className="hidden"
-                                                        accept="image/*"
-                                                        onChange={async (e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (!file) return;
-
-                                                            setIsUploading(true);
-                                                            try {
-                                                                const fileExt = file.name.split('.').pop();
-                                                                const fileName = `${userId}/${Date.now()}.${fileExt}`;
-
-                                                                const { error: uploadError } = await supabase.storage
-                                                                    .from('wishlist-images')
-                                                                    .upload(fileName, file);
-
-                                                                if (uploadError) throw uploadError;
-
-                                                                const { data: { publicUrl } } = supabase.storage
-                                                                    .from('wishlist-images')
-                                                                    .getPublicUrl(fileName);
-
-                                                                setFormData({ ...formData, imageUrl: publicUrl });
-                                                            } catch (error) {
-                                                                console.error('Error uploading image:', error);
-                                                                showToast('Error al subir la imagen', 'error');
-                                                            } finally {
-                                                                setIsUploading(false);
-                                                            }
-                                                        }}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        disabled={isSaving || isUploading}
-                                                        className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
-                                                    >
-                                                        <Icons.Upload />
-                                                        {isUploading ? 'Subiendo...' : 'Subir imagen'}
-                                                    </button>
-                                                    <span className="text-xs text-zinc-400">
-                                                        (Max 5MB)
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                            Título <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.title || ''}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
-                                            placeholder="¿Qué deseas?"
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Precio Aprox.
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    value={formData.price || ''}
-                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                    className="w-full pl-4 pr-8 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    placeholder="Ej: 25.00"
-                                                    disabled={isSaving}
-                                                />
-                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-zinc-500">
-                                                    €
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                                Prioridad
-                                            </label>
-                                            <select
-                                                value={formData.priority || 'medium'}
-                                                onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-                                                className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
-                                                disabled={isSaving}
-                                            >
-                                                <option value="low">Baja</option>
-                                                <option value="medium">Media</option>
-                                                <option value="high">Alta</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <DynamicLinkInput
-                                        links={formData.links || []}
-                                        onChange={(newLinks) => setFormData({ ...formData, links: newLinks })}
+                            <View className="flex-row gap-4 mb-4">
+                                <View className="flex-1">
+                                    <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Precio (€)</Text>
+                                    <TextInput
+                                        value={formData.price?.toString() || ''}
+                                        onChangeText={(text) => setFormData({ ...formData, price: text })}
+                                        placeholder="0.00"
+                                        keyboardType="numeric"
+                                        className="w-full px-4 py-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold"
                                     />
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Prioridad</Text>
+                                    <View className="flex-row gap-2 bg-zinc-50 dark:bg-zinc-800 p-1 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800">
+                                        {['low', 'medium', 'high'].map((p) => (
+                                            <Pressable
+                                                key={p}
+                                                onPress={() => setFormData({ ...formData, priority: p as any })}
+                                                className={`flex-1 py-3 rounded-xl items-center ${formData.priority === p ? 'bg-white shadow-sm' : ''}`}
+                                            >
+                                                <Text style={{ fontSize: 16 }}>{p === 'low' ? '☁️' : p === 'medium' ? '⭐️' : '🔥'}</Text>
+                                            </Pressable>
+                                        ))}
+                                    </View>
+                                </View>
+                            </View>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                            Notas
-                                        </label>
-                                        <textarea
-                                            rows={3}
-                                            value={formData.notes || ''}
-                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                            className="w-full px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                            placeholder="Talla, color, detalles..."
-                                            disabled={isSaving}
-                                        />
-                                    </div>
+                            <View className="mb-4">
+                                <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">URL Imagen</Text>
+                                <TextInput
+                                    value={formData.imageUrl || ''}
+                                    onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
+                                    placeholder="https://..."
+                                    className="w-full px-4 py-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                                />
+                            </View>
 
-                                    {/* Visibilidad / Exclusiones */}
-                                    {userGroups.length > 0 && (
-                                        <div className="space-y-3">
-                                            <div className="flex flex-col">
-                                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                                    Privacidad (Grupos excluidos)
-                                                </label>
-                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                                                    Selecciona los grupos que **NO** quieres que vean este deseo.
-                                                </p>
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                {userGroups.map((group) => {
-                                                    const isExcluded = formData.excludedGroupIds?.includes(group.id);
-                                                    return (
-                                                        <label
-                                                            key={group.id}
-                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isExcluded
-                                                                ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30'
-                                                                : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700'
-                                                                }`}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isExcluded}
-                                                                onChange={(e) => {
-                                                                    const current = formData.excludedGroupIds || [];
-                                                                    const updated = e.target.checked
-                                                                        ? [...current, group.id]
-                                                                        : current.filter(id => id !== group.id);
-                                                                    setFormData({ ...formData, excludedGroupIds: updated });
-                                                                }}
-                                                                className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-                                                            />
-                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                <span className="text-lg flex-shrink-0">{group.icon}</span>
-                                                                <span className="text-sm font-medium truncate">{group.name}</span>
-                                                            </div>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                            <View className="mb-8">
+                                <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Notas</Text>
+                                <TextInput
+                                    value={formData.notes || ''}
+                                    onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                                    placeholder="Talla, color, detalles..."
+                                    multiline
+                                    numberOfLines={3}
+                                    className="w-full px-4 py-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                                />
+                            </View>
+                        </ScrollView>
 
-                                <div className="mt-8 flex gap-3">
-                                    {editingItem && (
-                                        <button
-                                            type="button"
-                                            onClick={handleDelete}
-                                            className="px-4 py-3 text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl font-medium transition-colors"
-                                            disabled={isSaving}
-                                            aria-label="Eliminar deseo"
-                                        >
-                                            <Icons.Trash />
-                                        </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={() => !isSaving && setIsFormOpen(false)}
-                                        className="flex-1 px-4 py-3 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl font-medium transition-colors"
-                                        disabled={isSaving}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
-                                        disabled={isSaving}
-                                    >
-                                        {isSaving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
-                                        Guardar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )
-            }
+                        <View className="flex-row gap-3 mt-8">
+                            <Pressable
+                                onPress={() => setIsFormOpen(false)}
+                                className="flex-1 py-4 items-center"
+                            >
+                                <Text className="text-zinc-400 font-bold">Cancelar</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={handleSave}
+                                disabled={isSaving}
+                                className="flex-[2] bg-indigo-600 py-4 rounded-2xl items-center shadow-xl shadow-indigo-600/30"
+                            >
+                                <Text className="text-white font-black">{isSaving ? 'Guardando...' : 'Guardar'}</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            )}
 
             <ConfirmModal
                 isOpen={!!itemToDelete}
                 onClose={() => setItemToDelete(null)}
                 onConfirm={executeDelete}
                 title="Eliminar deseo"
-                message={`¿Estás seguro de que quieres eliminar "${itemToDelete?.title}"?`}
+                message={`¿Estás seguro de que quieres eliminar este deseo?`}
                 confirmText="Eliminar"
                 isDestructive={true}
             />
 
             {ToastComponent}
-        </div>
+        </View>
     );
 }

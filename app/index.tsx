@@ -7,6 +7,7 @@ import { GroupsTab } from '@/components/GroupsTab';
 import { WishListTab } from '@/components/WishListTab';
 import { ProfileTab } from '@/components/ProfileTab';
 import { NotificationMenu } from '@/components/NotificationMenu';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 type Tab = 'groups' | 'wishlist' | 'profile';
 
@@ -47,74 +48,16 @@ export default function LandingPage() {
 
     if (user) {
         return (
-            <View className="flex-1 bg-white">
-                <SafeAreaView className="flex-1">
-                    {/* Header superior con Notificaciones */}
-                    <View className="px-6 py-4 flex-row justify-between items-center border-b border-gray-100">
-                        <Text className="text-xl font-black text-blue-600">
-                            Muro de <Text className="text-purple-600">deseos</Text>
-                        </Text>
-                        <NotificationMenu userId={user.id} />
-                    </View>
-
-                    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
-                        {activeTab === 'wishlist' && <WishListTab userId={user.id} />}
-                        {activeTab === 'groups' && <GroupsTab userId={user.id} />}
-                        {activeTab === 'profile' && (
-                            <View className="pb-10">
-                                <ProfileTab userId={user.id} />
-                                <View className="px-6 mt-4">
-                                    <Pressable
-                                        onPress={() => supabase.auth.signOut()}
-                                        className="bg-red-50 p-4 rounded-2xl border border-red-100"
-                                    >
-                                        <Text className="text-red-600 text-center font-bold">Cerrar Sesión</Text>
-                                    </Pressable>
-                                </View>
-                            </View>
-                        )}
-                    </ScrollView>
-                </SafeAreaView>
-
-                {/* Navbar Inferior */}
-                <View className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 pt-3 pb-8 flex-row justify-around items-center">
-                    <Pressable
-                        onPress={() => setActiveTab('wishlist')}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'wishlist' ? 'bg-purple-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'wishlist' ? 'text-purple-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>🎁</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'wishlist' ? 'text-purple-600' : 'text-gray-400'}`}>
-                            Deseos
-                        </Text>
-                    </Pressable>
-
-                    <Pressable
-                        onPress={() => setActiveTab('groups')}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'groups' ? 'bg-blue-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'groups' ? 'text-blue-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>👥</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'groups' ? 'text-blue-600' : 'text-gray-400'}`}>
-                            Grupos
-                        </Text>
-                    </Pressable>
-
-                    <Pressable
-                        onPress={() => setActiveTab('profile')}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'profile' ? 'bg-indigo-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>👤</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                            Perfil
-                        </Text>
-                    </Pressable>
-                </View>
-            </View>
+            <ResponsiveLayout
+                userId={user.id}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onSignOut={() => supabase.auth.signOut()}
+            >
+                {activeTab === 'wishlist' && <WishListTab userId={user.id} />}
+                {activeTab === 'groups' && <GroupsTab userId={user.id} />}
+                {activeTab === 'profile' && <ProfileTab userId={user.id} />}
+            </ResponsiveLayout>
         );
     }
 
