@@ -7,27 +7,36 @@ import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 
 export default function UserWishlistPage() {
     const router = useRouter();
-    const { id: targetUserId, name: targetUserName } = useLocalSearchParams();
+    const params = useLocalSearchParams();
+    const targetUserId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+    const targetUserName = params.name;
     const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
     useEffect(() => {
         const loadWishlist = async () => {
+            if (!targetUserId) {
+                setError("Usuario no encontrado.");
+                setLoading(false);
+                return;
+            }
+
             try {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 setUser(currentUser);
 
                 // Cargar items de la lista de deseos del usuario objetivo
-                const { data, error } = await supabase
+                const { data, error: sbError } = await supabase
                     .from('wishlist_items')
                     .select('*')
                     .eq('user_id', targetUserId)
                     .order('priority', { ascending: false });
 
-                if (error) throw error;
+                if (sbError) throw sbError;
 
                 const mappedItems: GiftItem[] = (data || []).map(item => ({
                     id: item.id,
@@ -41,21 +50,22 @@ export default function UserWishlistPage() {
                 }));
 
                 setItems(mappedItems);
-            } catch (error) {
-                console.error('Error loading wishlist:', error);
+            } catch (err: any) {
+                console.error('Error loading wishlist:', err);
+                setError(err.message || "Error al cargar la lista de deseos");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (targetUserId) loadWishlist();
+        loadWishlist();
     }, [targetUserId]);
 
     const handleReserve = async (item: GiftItem) => {
         if (!user) return;
 
         try {
-            const { error } = await supabase
+            const { error: sbError } = await supabase
                 .from('wishlist_items')
                 .update({
                     reserved_by: user.id,
@@ -63,13 +73,13 @@ export default function UserWishlistPage() {
                 })
                 .eq('id', item.id);
 
-            if (error) throw error;
+            if (sbError) throw sbError;
 
             // Actualizar estado local
             setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: user.id } : i));
             Alert.alert('¡Reservado!', 'Has reservado este regalo con éxito.');
-        } catch (error: any) {
-            Alert.alert('Error', error.message || 'No se pudo reservar el regalo');
+        } catch (err: any) {
+            Alert.alert('Error', err.message || 'No se pudo reservar el regalo');
         }
     };
 
@@ -77,7 +87,7 @@ export default function UserWishlistPage() {
         if (!user) return;
 
         try {
-            const { error } = await supabase
+            const { error: sbError } = await supabase
                 .from('wishlist_items')
                 .update({
                     reserved_by: null,
@@ -86,14 +96,30 @@ export default function UserWishlistPage() {
                 .eq('id', item.id)
                 .eq('reserved_by', user.id); // Solo si yo lo reservé
 
-            if (error) throw error;
+            if (sbError) throw sbError;
 
             // Actualizar estado local
             setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: null } : i));
-        } catch (error: any) {
-            Alert.alert('Error', error.message || 'No se pudo cancelar la reserva');
+        } catch (err: any) {
+            Alert.alert('Error', err.message || 'No se pudo cancelar la reserva');
         }
     };
+
+    if (error) {
+        return (
+            <View className="flex-1 items-center justify-center bg-white p-6">
+                <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
+                <Text className="text-2xl font-black text-zinc-900 mb-2">¡Vaya!</Text>
+                <Text className="text-zinc-500 text-center font-medium mb-8">{error}</Text>
+                <Pressable
+                    onPress={() => router.replace('/')}
+                    className="px-8 py-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20"
+                >
+                    <Text className="text-white font-bold">Volver al inicio</Text>
+                </Pressable>
+            </View>
+        );
+    }
 
     if (loading) {
         return (

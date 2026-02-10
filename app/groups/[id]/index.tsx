@@ -7,10 +7,13 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 
 export default function GroupDetailsPage() {
     const router = useRouter();
-    const { id: groupId } = useLocalSearchParams();
+    const params = useLocalSearchParams();
+    const groupId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+
     const [group, setGroup] = useState<any>(null);
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const { width } = useWindowDimensions();
@@ -18,6 +21,12 @@ export default function GroupDetailsPage() {
 
     useEffect(() => {
         const loadGroupData = async () => {
+            if (!groupId) {
+                setError("ID de grupo no válido");
+                setLoading(false);
+                return;
+            }
+
             try {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 setUser(currentUser);
@@ -27,46 +36,79 @@ export default function GroupDetailsPage() {
                     .from('groups')
                     .select('*')
                     .eq('id', groupId)
-                    .single();
+                    .maybeSingle();
 
                 if (groupError) throw groupError;
+                if (!groupData) {
+                    setError("No se encontró el grupo solicitado.");
+                    return;
+                }
                 setGroup(groupData);
 
                 // Cargar miembros
-                const { data: membersData, error: membersError } = await supabase
+                const { data: membersRaw, error: membersError } = await supabase
                     .from('group_members')
-                    .select(`
-                        *,
-                        profiles:user_id (
-                            id,
-                            display_name,
-                            avatar_url
-                        )
-                    `)
+                    .select('*')
                     .eq('group_id', groupId);
 
                 if (membersError) throw membersError;
-                setMembers(membersData);
 
-                // Verificar si es admin
-                const userMember = membersData.find(m => m.user_id === currentUser?.id);
-                setIsAdmin(userMember?.role === 'admin');
+                if (membersRaw && membersRaw.length > 0) {
+                    const userIds = membersRaw.map(m => m.user_id);
+                    const { data: profilesRaw, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('id, display_name, avatar_url')
+                        .in('id', userIds);
 
-            } catch (error) {
-                console.error('Error loading group:', error);
-                router.replace('/');
+                    if (profilesError) throw profilesError;
+
+                    const profilesMap = new Map(profilesRaw?.map(p => [p.id, p]));
+
+                    const enrichedMembers = membersRaw.map(m => ({
+                        ...m,
+                        profiles: profilesMap.get(m.user_id)
+                    }));
+
+                    setMembers(enrichedMembers);
+
+                    // Verificar si es admin
+                    const userMember = enrichedMembers.find(m => m.user_id === currentUser?.id);
+                    setIsAdmin(userMember?.role === 'admin');
+                } else {
+                    setMembers([]);
+                }
+
+            } catch (err: any) {
+                console.error('Error loading group:', err);
+                setError(err.message || "Error al cargar los datos del grupo");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (groupId) loadGroupData();
+        loadGroupData();
     }, [groupId]);
 
     const handleShare = async () => {
         if (!group) return;
         await shareGroup(group.name, group.id);
     };
+
+    if (error) {
+        return (
+            <View className="flex-1 items-center justify-center bg-white p-6">
+                <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
+                <Text className="text-2xl font-black text-zinc-900 mb-2">¡Vaya!</Text>
+                <Text className="text-zinc-500 text-center font-medium mb-8">{error}</Text>
+                <Pressable
+                    onPress={() => router.replace('/')}
+                    className="px-8 py-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20"
+                >
+                    <Text className="text-white font-bold">Volver al inicio</Text>
+                </Pressable>
+            </View>
+        );
+    }
 
     if (loading) {
         return (

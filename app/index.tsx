@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { GroupsTab } from '@/components/GroupsTab';
 import { WishListTab } from '@/components/WishListTab';
@@ -13,9 +13,17 @@ type Tab = 'groups' | 'wishlist' | 'profile';
 
 export default function LandingPage() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<Tab>('wishlist');
+    const [activeTab, setActiveTab] = useState<Tab>((params.tab as Tab) || 'wishlist');
+
+    // Update activeTab when URL params change
+    useEffect(() => {
+        if (params.tab) {
+            setActiveTab(params.tab as Tab);
+        }
+    }, [params.tab]);
 
     useEffect(() => {
         const checkUser = async () => {
