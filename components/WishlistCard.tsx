@@ -47,11 +47,6 @@ export function WishlistCard({
         high: 'Alta'
     };
 
-    const priorityEmojis = {
-        low: '☁️',
-        medium: '⭐️',
-        high: '🔥'
-    };
 
     // --- Reservation Logic ---
     const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
@@ -87,10 +82,9 @@ export function WishlistCard({
 
                 {/* Badges superpuestos */}
                 <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                    <View className={`px-2.5 py-1 rounded-full shadow-sm flex-row items-center ${priorityColors[item.priority]}`}>
-                        <Text className="text-[10px] mr-1">{priorityEmojis[item.priority]}</Text>
-                        <Text className={`text-[10px] font-black uppercase tracking-wider ${priorityColors[item.priority].split(' ').pop()}`}>
-                            {priorityLabels[item.priority]}
+                    <View className={`px-2.5 py-1 rounded-full shadow-sm ${priorityColors[item.priority]}`}>
+                        <Text className={`text-[11px] font-black uppercase tracking-wider ${priorityColors[item.priority].split(' ').pop()}`}>
+                            Prioridad {priorityLabels[item.priority]}
                         </Text>
                     </View>
                 </View>

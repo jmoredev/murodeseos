@@ -285,13 +285,19 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 <View className="flex-1">
                                     <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Prioridad</Text>
                                     <View className="flex-row gap-2 bg-zinc-50 dark:bg-zinc-800 p-1 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800">
-                                        {['low', 'medium', 'high'].map((p) => (
+                                        {[
+                                            { key: 'low', label: 'Baja', color: 'text-blue-600' },
+                                            { key: 'medium', label: 'Media', color: 'text-yellow-600' },
+                                            { key: 'high', label: 'Alta', color: 'text-red-600' },
+                                        ].map((p) => (
                                             <Pressable
-                                                key={p}
-                                                onPress={() => setFormData({ ...formData, priority: p as any })}
-                                                className={`flex-1 py-3 rounded-xl items-center ${formData.priority === p ? 'bg-white shadow-sm' : ''}`}
+                                                key={p.key}
+                                                onPress={() => setFormData({ ...formData, priority: p.key as any })}
+                                                className={`flex-1 py-3 rounded-xl items-center ${formData.priority === p.key ? 'bg-white shadow-sm' : ''}`}
                                             >
-                                                <Text style={{ fontSize: 16 }}>{p === 'low' ? '☁️' : p === 'medium' ? '⭐️' : '🔥'}</Text>
+                                                <Text className={`text-xs font-bold uppercase tracking-wider ${formData.priority === p.key ? p.color : 'text-zinc-400'}`}>
+                                                    {p.label}
+                                                </Text>
                                             </Pressable>
                                         ))}
                                     </View>
