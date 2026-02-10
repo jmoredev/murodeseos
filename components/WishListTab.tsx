@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image } from 'react-native'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
@@ -19,6 +19,8 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
+    const { width } = useWindowDimensions();
+    const isDesktop = width > 768;
 
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
     const { showToast, ToastComponent } = useToast();
@@ -251,14 +253,35 @@ export function WishListTab({ userId }: WishListTabProps) {
                 )}
             </View>
 
-            {/* Form Modal Placeholder (Real implementation would be more complex) */}
-            {isFormOpen && (
-                <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
-                    <Pressable className="absolute inset-0" onPress={() => !isSaving && setIsFormOpen(false)} />
-                    <View className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 shadow-2xl overflow-scroll max-h-[90%]">
-                        <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-6">
-                            {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
-                        </Text>
+            {/* Form Modal */}
+            <Modal
+                visible={isFormOpen}
+                animationType={isDesktop ? 'fade' : 'slide'}
+                transparent={isDesktop}
+                onRequestClose={() => !isSaving && setIsFormOpen(false)}
+            >
+                <View className={`flex-1 ${isDesktop ? 'items-center justify-center px-4 bg-black/60' : 'bg-white dark:bg-zinc-900'}`}>
+                    {isDesktop && <Pressable className="absolute inset-0" onPress={() => !isSaving && setIsFormOpen(false)} />}
+                    <View className={`bg-white dark:bg-zinc-900 ${isDesktop ? 'w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl overflow-scroll max-h-[90%]' : 'flex-1 p-6 pt-14'}`}>
+                        {/* Mobile Header with Back Button */}
+                        {!isDesktop && (
+                            <View className="flex-row items-center mb-6">
+                                <Pressable
+                                    onPress={() => !isSaving && setIsFormOpen(false)}
+                                    className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center mr-4"
+                                >
+                                    <Text className="text-zinc-600 dark:text-zinc-400 font-bold">←</Text>
+                                </Pressable>
+                                <Text className="text-2xl font-black text-zinc-900 dark:text-white">
+                                    {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
+                                </Text>
+                            </View>
+                        )}
+                        {isDesktop && (
+                            <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-6">
+                                {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
+                            </Text>
+                        )}
 
                         <ScrollView className="space-y-6">
                             <View className="mb-4">
@@ -327,24 +350,38 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
                         </ScrollView>
 
-                        <View className="flex-row gap-3 mt-8">
-                            <Pressable
-                                onPress={() => setIsFormOpen(false)}
-                                className="flex-1 py-4 items-center"
-                            >
-                                <Text className="text-zinc-400 font-bold">Cancelar</Text>
-                            </Pressable>
+                        <View className={`flex-row gap-3 ${isDesktop ? 'mt-8' : 'mt-auto pt-6'}`}>
+                            {isDesktop && (
+                                <Pressable
+                                    onPress={() => setIsFormOpen(false)}
+                                    className="flex-1 py-4 items-center"
+                                >
+                                    <Text className="text-zinc-400 font-bold">Cancelar</Text>
+                                </Pressable>
+                            )}
+                            {editingItem && (
+                                <Pressable
+                                    onPress={() => { setItemToDelete(editingItem); setIsFormOpen(false); }}
+                                    className={`bg-red-500 py-4 rounded-2xl items-center justify-center shadow-lg shadow-red-500/20 active:scale-[0.98] ${isDesktop ? 'px-6' : 'w-14'}`}
+                                >
+                                    {isDesktop ? (
+                                        <Text className="text-white font-black text-xs uppercase tracking-widest">Eliminar</Text>
+                                    ) : (
+                                        <Text style={{ fontSize: 20 }}>🗑️</Text>
+                                    )}
+                                </Pressable>
+                            )}
                             <Pressable
                                 onPress={handleSave}
                                 disabled={isSaving}
-                                className="flex-[2] bg-indigo-600 py-4 rounded-2xl items-center shadow-xl shadow-indigo-600/30"
+                                className={`bg-indigo-600 py-4 rounded-2xl items-center shadow-xl shadow-indigo-600/30 ${isDesktop ? 'flex-[2]' : 'flex-1'}`}
                             >
                                 <Text className="text-white font-black">{isSaving ? 'Guardando...' : 'Guardar'}</Text>
                             </Pressable>
                         </View>
                     </View>
                 </View>
-            )}
+            </Modal>
 
             <ConfirmModal
                 isOpen={!!itemToDelete}
