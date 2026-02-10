@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useEffect, useState } from 'react'
-import Link from "next/link";
+import { Link } from "expo-router";
 import { supabase } from '@/lib/supabase'
 import { GroupCard, Group } from '@/components/GroupCard';
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils';
@@ -316,16 +316,14 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 </div>
                 <div className="flex gap-2">
                     <Link
-                        href="/groups/join"
+                        href={"/groups/join" as any}
                         className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-lg hover:bg-purple-700 transition-colors"
-                        title="Unirse a grupo"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </Link>
                     <Link
-                        href="/groups/create"
+                        href={"/groups/create" as any}
                         className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-colors"
-                        title="Crear grupo"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     </Link>
@@ -359,10 +357,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             Crea un nuevo grupo para empezar a organizar tus intercambios de regalos.
                         </p>
                         <div className="flex gap-3 w-full max-w-xs">
-                            <Link href="/groups/join" className="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white font-medium text-center hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                            <Link href={"/groups/join" as any} className="flex-1 py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white font-medium text-center hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                                 Unirse
                             </Link>
-                            <Link href="/groups/create" className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 text-white font-medium text-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
+                            <Link href={"/groups/create" as any} className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 text-white font-medium text-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20">
                                 Crear
                             </Link>
                         </div>

@@ -25,9 +25,7 @@ export default function RootLayout() {
           headerShown: false,
           contentStyle: { backgroundColor: 'white' },
         }}
-      >
-        <Stack.Screen name="index" />
-      </Stack>
+      />
     </SafeAreaProvider>
   );
 }

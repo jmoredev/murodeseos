@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { View, Text, Pressable, TextInput, Image } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export interface GroupMember {
     id: string;
@@ -35,8 +34,7 @@ interface GroupCardProps {
 
 export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMemberEdit, onGroupAliasEdit }: GroupCardProps) {
     const router = useRouter();
-    const [menuOpen, setMenuOpen] = React.useState(false);
-    const menuRef = React.useRef<HTMLDivElement>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // Estado para edición en línea
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
@@ -46,300 +44,221 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
     const [isEditingGroupName, setIsEditingGroupName] = useState(false);
     const [groupNameInput, setGroupNameInput] = useState("");
 
-    React.useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setMenuOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleCardClick = (e: React.MouseEvent) => {
-        // No navegar si estamos editando o si se hizo clic en un elemento interactivo
+    const handleCardClick = () => {
         if (editingMemberId) return;
-        router.push(`/groups/${group.id}`);
+        router.push(`/groups/${group.id}` as any);
     };
 
-    const handleShareClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleShareClick = () => {
         onShare(group.id);
     };
 
-    const handleMenuClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleMenuClick = () => {
         setMenuOpen(!menuOpen);
     };
 
-    const handleRenameClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleRenameClick = () => {
         setMenuOpen(false);
         if (onRename) onRename(group.id, group.name);
     };
 
-    const handleDeleteClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleDeleteClick = () => {
         setMenuOpen(false);
         if (onDelete) onDelete(group.id, group.name);
     };
 
     // Alias handlers
-    const startEditing = (e: React.MouseEvent, member: GroupMember) => {
-        e.stopPropagation();
+    const startEditing = (member: GroupMember) => {
         if (!onMemberEdit) return;
         setEditingMemberId(member.id);
-        // Usar el alias actual (name) o el original si queremos editar sobre el base
         setAliasInput(member.name);
     };
 
-    const saveAlias = async (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const saveAlias = async () => {
         if (!editingMemberId || !onMemberEdit) return;
-
         const success = await onMemberEdit(editingMemberId, aliasInput);
         if (success) {
             setEditingMemberId(null);
         }
     };
 
-    const cancelEditing = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const cancelEditing = () => {
         setEditingMemberId(null);
         setAliasInput("");
     };
 
     // Group Alias Handlers
-    const startEditingGroupName = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const startEditingGroupName = () => {
         if (!onGroupAliasEdit) return;
         setIsEditingGroupName(true);
         setGroupNameInput(group.name);
     };
 
-    const saveGroupName = async (e: React.MouseEvent | React.KeyboardEvent) => {
-        e.stopPropagation();
+    const saveGroupName = async () => {
         if (!onGroupAliasEdit) return;
-
         const success = await onGroupAliasEdit(group.id, groupNameInput);
         if (success) {
             setIsEditingGroupName(false);
         }
     };
 
-    const cancelEditingGroupName = (e: React.MouseEvent | React.KeyboardEvent) => {
-        e.stopPropagation();
+    const cancelEditingGroupName = () => {
         setIsEditingGroupName(false);
         setGroupNameInput("");
     };
 
-    // Logic for truncating members
     const displayMembers = group.members.slice(0, 3);
     const remainingCount = group.members.length - 3;
 
     return (
-        <div
-            onClick={handleCardClick}
-            className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 active:scale-[0.98] transition-all cursor-pointer hover:shadow-md relative overflow-visible group-card"
+        <Pressable
+            onPress={handleCardClick}
+            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800 active:scale-[0.98] transition-all mb-4"
         >
             {/* Header */}
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-2xl shadow-inner">
-                        {group.icon}
-                    </div>
-                    <div>
-
+            <View className="flex-row justify-between items-start mb-6">
+                <View className="flex-row items-center flex-1">
+                    <View className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 items-center justify-center shadow-inner">
+                        <Text className="text-3xl">{group.icon}</Text>
+                    </View>
+                    <View className="ml-4 flex-1">
                         {isEditingGroupName ? (
-                            <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                                <input
-                                    type="text"
+                            <View className="flex-row items-center">
+                                <TextInput
                                     value={groupNameInput}
-                                    onChange={(e) => setGroupNameInput(e.target.value)}
-                                    className="font-bold text-lg text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border-b-2 border-indigo-500 focus:outline-none w-full min-w-[150px]"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') saveGroupName(e);
-                                        if (e.key === 'Escape') cancelEditingGroupName(e);
-                                    }}
+                                    onChangeText={setGroupNameInput}
+                                    className="font-bold text-xl text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border-b-2 border-indigo-500 flex-1"
                                     autoFocus
-                                    onClick={e => e.stopPropagation()}
                                 />
-                                <button
-                                    onClick={saveGroupName}
-                                    className="p-1 text-green-600 hover:text-green-700 bg-green-50 dark:bg-green-900/20 rounded"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                </button>
-                                <button
-                                    onClick={cancelEditingGroupName}
-                                    className="p-1 text-red-600 hover:text-red-700 bg-red-50 dark:bg-red-900/20 rounded"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                </button>
-                            </div>
+                                <Pressable onPress={saveGroupName} className="p-2 ml-2 bg-green-50 rounded-lg">
+                                    <Text className="text-green-600">✓</Text>
+                                </Pressable>
+                                <Pressable onPress={cancelEditingGroupName} className="p-2 ml-1 bg-red-50 rounded-lg">
+                                    <Text className="text-red-600">✕</Text>
+                                </Pressable>
+                            </View>
                         ) : (
-                            <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100 leading-tight flex items-center gap-2 group/title">
-                                {group.name}
-                                {group.originalName && (
-                                    <span className="text-xs font-normal text-zinc-400 italic">
-                                        ({group.originalName})
-                                    </span>
-                                )}
+                            <View className="flex-row items-center">
+                                <Text className="font-black text-xl text-zinc-900 dark:text-zinc-100 flex-1" numberOfLines={1}>
+                                    {group.name}
+                                </Text>
                                 {onGroupAliasEdit && (
-                                    <button
-                                        onClick={startEditingGroupName}
-                                        className="opacity-0 group-hover/title:opacity-100 transition-opacity p-1 text-zinc-400 hover:text-indigo-600 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded"
-                                        title="Poner apodo al grupo"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                    </button>
+                                    <Pressable onPress={startEditingGroupName} className="p-1 ml-1">
+                                        <Text className="text-zinc-400 text-xs">✎</Text>
+                                    </Pressable>
                                 )}
-                            </h3>
+                            </View>
                         )}
-                        <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                        <Text className="text-xs text-zinc-400 mt-1 font-bold uppercase tracking-wider">
                             {group.members.length} participantes
-                        </p>
-                    </div>
-                </div>
-                <div className="flex gap-1">
-                    <button
-                        onClick={handleShareClick}
-                        className="p-2.5 rounded-full bg-zinc-50 dark:bg-zinc-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                        aria-label="Compartir código de grupo"
+                        </Text>
+                    </View>
+                </View>
+
+                <View className="flex-row">
+                    <Pressable
+                        onPress={handleShareClick}
+                        className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center mr-2"
                     >
-                        {/* Share Icon SVG */}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                            <polyline points="16 6 12 2 8 6"></polyline>
-                            <line x1="12" y1="2" x2="12" y2="15"></line>
-                        </svg>
-                    </button>
+                        <Text className="text-lg">↗</Text>
+                    </Pressable>
 
                     {isAdmin && (
-                        <div className="relative" ref={menuRef}>
-                            <button
-                                onClick={handleMenuClick}
-                                className="p-2.5 rounded-full bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                                aria-label="Opciones de grupo"
+                        <View className="relative">
+                            <Pressable
+                                onPress={handleMenuClick}
+                                className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="1"></circle>
-                                    <circle cx="12" cy="5" r="1"></circle>
-                                    <circle cx="12" cy="19" r="1"></circle>
-                                </svg>
-                            </button>
+                                <Text className="text-lg">⋮</Text>
+                            </Pressable>
 
                             {menuOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                    <button
-                                        onClick={handleRenameClick}
-                                        className="w-full text-left px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 flex items-center gap-2"
+                                <View className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-10 overflow-hidden">
+                                    <Pressable
+                                        onPress={handleRenameClick}
+                                        className="w-full px-4 py-4 border-b border-zinc-50 flex-row items-center"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                                        Cambiar nombre
-                                    </button>
-                                    <button
-                                        onClick={handleDeleteClick}
-                                        className="w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                        <Text className="text-sm font-bold text-zinc-700 dark:text-zinc-200 ml-2">Cambiar nombre</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={handleDeleteClick}
+                                        className="w-full px-4 py-4 flex-row items-center"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                        Eliminar grupo
-                                    </button>
-                                </div>
+                                        <Text className="text-sm font-bold text-red-600 dark:text-red-400 ml-2">Eliminar grupo</Text>
+                                    </Pressable>
+                                </View>
                             )}
-                        </div>
+                        </View>
                     )}
-                </div>
-            </div>
+                </View>
+            </View>
 
             {/* Members List */}
-            <div className="space-y-2.5">
+            <View className="space-y-3">
                 {displayMembers.map((member) => (
-                    <div
+                    <Pressable
                         key={member.id}
-                        data-testid={`member-${member.id}`}
-                        data-member-name={member.name}
-                        className="flex items-center gap-3 group/member min-h-[2rem] cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-1 -m-1 rounded-lg transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation();
+                        onPress={() => {
                             if (editingMemberId) return;
-                            router.push(`/wishlist/${member.id}?name=${encodeURIComponent(member.name)}`);
+                            router.push({
+                                pathname: "/wishlist/[id]",
+                                params: { id: member.id, name: member.name }
+                            } as any);
                         }}
+                        className="flex-row items-center p-2 -m-2 rounded-xl active:bg-zinc-50 transition-colors"
                     >
-                        <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
-                            {/* Avatar: Check if it's a URL, emoji, or use initials */}
-                            {member.avatar && member.avatar.startsWith('http') ? (
-                                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                            ) : member.avatar ? (
-                                <div className="w-full h-full flex items-center justify-center text-sm">
-                                    {member.avatar}
-                                </div>
+                        <View className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 overflow-hidden items-center justify-center">
+                            {member.avatar && (member.avatar.startsWith('http') || member.avatar.length > 5) ? (
+                                <Image source={{ uri: member.avatar }} className="w-full h-full" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800">
-                                    {member.name.charAt(0).toUpperCase()}
-                                </div>
+                                <Text className="text-lg">{member.avatar || member.name.charAt(0).toUpperCase()}</Text>
                             )}
-                        </div>
+                        </View>
 
-                        {editingMemberId === member.id ? (
-                            <div className="flex items-center gap-1 flex-1 min-w-0" onClick={e => e.stopPropagation()}>
-                                <input
-                                    type="text"
-                                    value={aliasInput}
-                                    onChange={(e) => setAliasInput(e.target.value)}
-                                    className="w-full px-1.5 py-0.5 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') saveAlias(e as any);
-                                        if (e.key === 'Escape') cancelEditing(e as any);
-                                    }}
-                                    autoFocus
-                                    onClick={e => e.stopPropagation()}
-                                />
-                                <button
-                                    onClick={saveAlias}
-                                    className="p-0.5 text-green-600 hover:text-green-700"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                </button>
-                                <button
-                                    onClick={cancelEditing}
-                                    className="p-0.5 text-red-600 hover:text-red-700"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300 truncate">
-                                    {member.name}
+                        <View className="ml-3 flex-1 flex-row items-center">
+                            {editingMemberId === member.id ? (
+                                <View className="flex-row items-center flex-1">
+                                    <TextInput
+                                        value={aliasInput}
+                                        onChangeText={setAliasInput}
+                                        className="flex-1 px-2 py-1 bg-zinc-50 rounded border border-zinc-200 text-sm"
+                                        autoFocus
+                                    />
+                                    <Pressable onPress={saveAlias} className="p-2 ml-1">
+                                        <Text className="text-green-600 font-bold">✓</Text>
+                                    </Pressable>
+                                    <Pressable onPress={cancelEditing} className="p-2">
+                                        <Text className="text-red-600">✕</Text>
+                                    </Pressable>
+                                </View>
+                            ) : (
+                                <View className="flex-row items-center flex-1">
+                                    <Text className="text-sm font-bold text-zinc-700 dark:text-zinc-300" numberOfLines={1}>
+                                        {member.name}
+                                    </Text>
                                     {member.originalName && (
-                                        <span className="ml-1.5 text-[10px] text-zinc-400 font-normal italic">
+                                        <Text className="ml-2 text-[10px] text-zinc-400 italic">
                                             ({member.originalName})
-                                        </span>
+                                        </Text>
                                     )}
-                                </span>
-                                {onMemberEdit && (
-                                    <button
-                                        onClick={(e) => startEditing(e, member)}
-                                        className="opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5 text-zinc-400 hover:text-indigo-600"
-                                        title="Editar apodo"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                                    {onMemberEdit && (
+                                        <Pressable onPress={() => startEditing(member)} className="p-1 ml-1">
+                                            <Text className="text-zinc-300 text-[10px]">✎</Text>
+                                        </Pressable>
+                                    )}
+                                </View>
+                            )}
+                        </View>
+                        <Text className="text-zinc-300 ml-2">›</Text>
+                    </Pressable>
                 ))}
+
                 {remainingCount > 0 && (
-                    <div className="text-xs font-medium text-zinc-400 pl-10">
-                        ... y {remainingCount} más
-                    </div>
+                    <Text className="text-xs font-bold text-zinc-400 mt-2 ml-11">
+                        + {remainingCount} otros participantes
+                    </Text>
                 )}
-            </div>
-        </div>
+            </View>
+        </Pressable>
     );
 }
