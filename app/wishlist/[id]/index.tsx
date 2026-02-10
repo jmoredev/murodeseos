@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 
 export default function UserWishlistPage() {
     const router = useRouter();
     const { id: targetUserId, name: targetUserName } = useLocalSearchParams();
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const { width } = useWindowDimensions();
+    const isDesktop = width > 768;
 
     useEffect(() => {
         const loadWishlist = async () => {
@@ -25,7 +28,19 @@ export default function UserWishlistPage() {
                     .order('priority', { ascending: false });
 
                 if (error) throw error;
-                setItems(data || []);
+
+                const mappedItems: GiftItem[] = (data || []).map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    links: item.links || [],
+                    imageUrl: item.image_url,
+                    price: item.price,
+                    notes: item.notes,
+                    priority: item.priority as Priority,
+                    reservedBy: item.reserved_by,
+                }));
+
+                setItems(mappedItems);
             } catch (error) {
                 console.error('Error loading wishlist:', error);
             } finally {
@@ -36,7 +51,7 @@ export default function UserWishlistPage() {
         if (targetUserId) loadWishlist();
     }, [targetUserId]);
 
-    const handleReserve = async (item: any) => {
+    const handleReserve = async (item: GiftItem) => {
         if (!user) return;
 
         try {
@@ -51,14 +66,14 @@ export default function UserWishlistPage() {
             if (error) throw error;
 
             // Actualizar estado local
-            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reserved_by: user.id } : i));
+            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: user.id } : i));
             Alert.alert('¡Reservado!', 'Has reservado este regalo con éxito.');
         } catch (error: any) {
             Alert.alert('Error', error.message || 'No se pudo reservar el regalo');
         }
     };
 
-    const handleCancelReserve = async (item: any) => {
+    const handleCancelReserve = async (item: GiftItem) => {
         if (!user) return;
 
         try {
@@ -74,7 +89,7 @@ export default function UserWishlistPage() {
             if (error) throw error;
 
             // Actualizar estado local
-            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reserved_by: null } : i));
+            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: null } : i));
         } catch (error: any) {
             Alert.alert('Error', error.message || 'No se pudo cancelar la reserva');
         }
@@ -89,79 +104,57 @@ export default function UserWishlistPage() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center border-b border-gray-100">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-                    <Text className="text-blue-600 font-bold">← Volver</Text>
-                </Pressable>
-                <Text className="text-lg font-bold flex-1 text-center" numberOfLines={1}>
-                    Lista de {targetUserName || 'Usuario'}
-                </Text>
-                <View className="w-10" />
-            </View>
-
-            <ScrollView className="flex-1 bg-gray-50">
-                <View className="p-6">
-                    {items.length === 0 ? (
-                        <View className="items-center justify-center py-20 grayscale opacity-50">
-                            <Text className="text-6xl mb-4">🎁</Text>
-                            <Text className="text-gray-500 font-medium text-center">Todavía no ha añadido ningún deseo a su lista.</Text>
+        <ResponsiveLayout
+            userId={user?.id}
+            activeTab="wishlist"
+            setActiveTab={(tab) => router.push(`/?tab=${tab}` as any)}
+            onSignOut={() => supabase.auth.signOut()}
+        >
+            <View className="p-4">
+                {/* Header Section */}
+                <View className={`flex-row justify-between items-center mb-10 ${isDesktop ? 'px-0' : 'px-2'}`}>
+                    <View className="flex-row items-center flex-1">
+                        <Pressable
+                            onPress={() => router.back()}
+                            className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center mr-4"
+                        >
+                            <Text className="text-zinc-600 dark:text-zinc-400 font-bold">←</Text>
+                        </Pressable>
+                        <View className="flex-1">
+                            <Text className="text-3xl font-black text-zinc-900 dark:text-white" numberOfLines={1}>
+                                Lista de {targetUserName || 'Usuario'}
+                            </Text>
+                            <Text className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-widest mt-1">
+                                Wishlist Pública
+                            </Text>
                         </View>
-                    ) : (
-                        <View className="space-y-4">
-                            {items.map((item) => {
-                                const isReservedByMe = item.reserved_by === user?.id;
-                                const isReservedByOther = item.reserved_by && item.reserved_by !== user?.id;
-
-                                return (
-                                    <View key={item.id} className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                                        <View className="flex-row items-center mb-3">
-                                            <View className="w-12 h-12 bg-indigo-50 rounded-xl items-center justify-center">
-                                                <Text className="text-2xl">🎁</Text>
-                                            </View>
-                                            <View className="ml-4 flex-1">
-                                                <Text className="font-bold text-gray-900 text-lg">{item.title}</Text>
-                                                {item.price && <Text className="text-amber-600 font-bold">{item.price} €</Text>}
-                                            </View>
-                                            <View className={`px-2 py-1 rounded-full ${item.priority === 'high' ? 'bg-red-50' : item.priority === 'medium' ? 'bg-yellow-50' : 'bg-blue-50'
-                                                }`}>
-                                                <Text className={`text-[10px] font-bold uppercase ${item.priority === 'high' ? 'text-red-600' : item.priority === 'medium' ? 'text-yellow-600' : 'text-blue-600'
-                                                    }`}>
-                                                    {item.priority === 'high' ? 'Alta' : item.priority === 'medium' ? 'Media' : 'Baja'}
-                                                </Text>
-                                            </View>
-                                        </View>
-
-                                        {item.notes ? (
-                                            <Text className="text-gray-500 text-sm mb-4 leading-relaxed">{item.notes}</Text>
-                                        ) : null}
-
-                                        {isReservedByOther ? (
-                                            <View className="bg-gray-100 p-3 rounded-xl flex-row items-center justify-center">
-                                                <Text className="text-gray-400 font-bold text-sm ml-2">RESERVADO POR OTRA PERSONA</Text>
-                                            </View>
-                                        ) : isReservedByMe ? (
-                                            <Pressable
-                                                onPress={() => handleCancelReserve(item)}
-                                                className="bg-green-50 p-3 rounded-xl flex-row items-center justify-center border border-green-100"
-                                            >
-                                                <Text className="text-green-600 font-bold text-sm">✓ RESERVADO POR TI (Toca para cancelar)</Text>
-                                            </Pressable>
-                                        ) : (
-                                            <Pressable
-                                                onPress={() => handleReserve(item)}
-                                                className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-600/20"
-                                            >
-                                                <Text className="text-white text-center font-bold">Reservar este regalo</Text>
-                                            </Pressable>
-                                        )}
-                                    </View>
-                                );
-                            })}
-                        </View>
-                    )}
+                    </View>
                 </View>
-            </ScrollView>
-        </SafeAreaView>
+
+                {items.length === 0 ? (
+                    <View className="items-center justify-center py-20 grayscale opacity-50">
+                        <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-full items-center justify-center mb-6">
+                            <Text style={{ fontSize: 40 }}>🎁</Text>
+                        </View>
+                        <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-2 text-center">Lista vacía</Text>
+                        <Text className="text-zinc-500 dark:text-zinc-400 font-medium text-center">Este usuario aún no ha añadido deseos.</Text>
+                    </View>
+                ) : (
+                    <View className="flex-row flex-wrap -m-2">
+                        {items.map((item) => (
+                            <View key={item.id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
+                                <WishlistCard
+                                    item={item}
+                                    isOwner={false}
+                                    currentUserId={user?.id}
+                                    onReserve={handleReserve}
+                                    onCancelReserve={handleCancelReserve}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                )}
+            </View>
+        </ResponsiveLayout>
     );
 }

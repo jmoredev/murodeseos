@@ -45,7 +45,7 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
     const [groupNameInput, setGroupNameInput] = useState("");
 
     const handleCardClick = () => {
-        if (editingMemberId) return;
+        if (editingMemberId || isEditingGroupName) return;
         router.push(`/groups/${group.id}` as any);
     };
 
