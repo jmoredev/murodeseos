@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { View, Text, Pressable, TextInput, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -32,7 +32,15 @@ interface GroupCardProps {
     onGroupAliasEdit?: (groupId: string, newAlias: string) => Promise<boolean>;
 }
 
-export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMemberEdit, onGroupAliasEdit }: GroupCardProps) {
+export const GroupCard = memo(function GroupCard({
+    group,
+    isAdmin,
+    onShare,
+    onRename,
+    onDelete,
+    onMemberEdit,
+    onGroupAliasEdit
+}: GroupCardProps) {
     const router = useRouter();
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -265,4 +273,4 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
             </View>
         </Pressable>
     );
-}
+});

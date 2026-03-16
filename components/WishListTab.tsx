@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useTransition } from 'react'
 import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
@@ -25,6 +25,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
     const { showToast, ToastComponent } = useToast();
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
+    const [isPending, startTransition] = useTransition();
 
     // Cargar items desde Supabase
     useEffect(() => {
@@ -32,19 +33,23 @@ export function WishListTab({ userId }: WishListTabProps) {
             if (!userId) return;
 
             try {
-                const { data, error } = await supabase
-                    .from('wishlist_items')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .order('title', { ascending: true });
+                // Parallelize wishlist items and group memberships fetching
+                const [wishlistResult, groupsResult] = await Promise.all([
+                    supabase
+                        .from('wishlist_items')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .order('title', { ascending: true }),
+                    supabase
+                        .from('group_members')
+                        .select('group_id, groups(id, name, icon)')
+                        .eq('user_id', userId)
+                ]);
 
-                if (error) throw error;
-
-                // Load user groups for visibility settings
-                const { data: groupsData } = await supabase
-                    .from('group_members')
-                    .select('group_id, groups(id, name, icon)')
-                    .eq('user_id', userId);
+                if (wishlistResult.error) throw wishlistResult.error;
+                
+                const data = wishlistResult.data;
+                const groupsData = groupsResult.data;
 
                 if (groupsData) {
                     const mappedGroups = groupsData.map((gm: any) => ({
@@ -213,12 +218,16 @@ export function WishListTab({ userId }: WishListTabProps) {
                 </Pressable>
             </View>
 
-            {items.length > 0 && (
-                <View className="flex-row gap-2 mb-8 px-2 overflow-auto no-scrollbar">
+            {items.length > 0 ? (
+                <View className="flex-row gap-2 mb-8 px-2 overflow-auto no-scrollbar" style={{ opacity: isPending ? 0.7 : 1 }}>
                     {['name', 'price', 'priority'].map((type) => (
                         <Pressable
                             key={type}
-                            onPress={() => setSortBy(type as any)}
+                            onPress={() => {
+                                startTransition(() => {
+                                    setSortBy(type as any);
+                                });
+                            }}
                             accessibilityLabel={type === 'name' ? 'Ordenar por nombre' : type === 'price' ? 'Ordenar por precio' : 'Ordenar por prioridad'}
                             className={`px-4 py-2 rounded-xl border-2 ${sortBy === type ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800'}`}
                         >
@@ -228,7 +237,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </Pressable>
                     ))}
                 </View>
-            )}
+            ) : null}
 
             <View className="w-full">
                 {sortedItems.length > 0 ? (
@@ -353,15 +362,15 @@ export function WishListTab({ userId }: WishListTabProps) {
                         </ScrollView>
 
                         <View className={`flex-row gap-3 ${isDesktop ? 'mt-8' : 'mt-auto pt-6'}`}>
-                            {isDesktop && (
+                            {isDesktop ? (
                                 <Pressable
                                     onPress={() => setIsFormOpen(false)}
                                     className="flex-1 py-4 items-center"
                                 >
                                     <Text className="text-zinc-400 font-bold">Cancelar</Text>
                                 </Pressable>
-                            )}
-                            {editingItem && (
+                            ) : null}
+                            {editingItem ? (
                                 <Pressable
                                     onPress={() => { setItemToDelete(editingItem); setIsFormOpen(false); }}
                                     accessibilityLabel="Eliminar deseo"
@@ -373,7 +382,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         <Text style={{ fontSize: 20 }}>🗑️</Text>
                                     )}
                                 </Pressable>
-                            )}
+                            ) : null}
                             <Pressable
                                 onPress={handleSave}
                                 disabled={isSaving}

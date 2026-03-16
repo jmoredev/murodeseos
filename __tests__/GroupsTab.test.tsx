@@ -594,18 +594,17 @@ describe('GroupsTab', () => {
 
             const mockMemberships = [{ group_id: 'group-1', role: 'admin' }]
             const mockGroups = [{ id: 'group-1', name: 'Grupo Test', icon: '🎁' }]
-            const mockMembers = [
-                { group_id: 'group-1', user_id: mockUserId },
-                { group_id: 'group-1', user_id: 'user-456' }
+            const mockMembersWithProfiles = [
+                { group_id: 'group-1', user_id: mockUserId, profiles: { id: mockUserId, display_name: 'Yo', avatar_url: null } },
+                { group_id: 'group-1', user_id: 'user-456', profiles: { id: 'user-456', display_name: 'Usuario Test', avatar_url: null } }
             ]
-            const mockProfiles = [{ id: 'user-456', display_name: 'Usuario Test', avatar_url: null }]
 
                 ; (supabase.from as any).mockImplementation((table: string) => {
                     if (table === 'group_members') {
                         return {
                             select: vi.fn().mockReturnThis(),
                             eq: vi.fn().mockResolvedValue({ data: mockMemberships, error: null }),
-                            in: vi.fn().mockResolvedValue({ data: mockMembers, error: null })
+                            in: vi.fn().mockResolvedValue({ data: mockMembersWithProfiles, error: null })
                         }
                     }
                     if (table === 'groups') {
@@ -614,11 +613,9 @@ describe('GroupsTab', () => {
                             in: vi.fn().mockResolvedValue({ data: mockGroups, error: null })
                         }
                     }
-                    if (table === 'profiles') {
-                        return {
-                            select: vi.fn().mockReturnThis(),
-                            in: vi.fn().mockResolvedValue({ data: mockProfiles, error: null })
-                        }
+                    return {
+                        select: vi.fn().mockReturnThis(),
+                        in: vi.fn().mockResolvedValue({ data: [], error: null })
                     }
                 })
 

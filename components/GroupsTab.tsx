@@ -51,41 +51,32 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             });
             setUserRoles(rolesMap);
 
-            const { data: groupsData, error: groupsError } = await supabase
-                .from('groups')
-                .select('id, name, icon')
-                .in('id', groupIds)
+            // Parallelize requests: group details, members with profiles, and aliases
+            const [groupsResult, membersResult, userAliases] = await Promise.all([
+                supabase
+                    .from('groups')
+                    .select('id, name, icon')
+                    .in('id', groupIds),
+                supabase
+                    .from('group_members')
+                    .select('group_id, user_id, profiles(id, display_name, avatar_url)')
+                    .in('group_id', groupIds),
+                getUserAliases()
+            ]);
 
-            if (groupsError) {
-                console.error('Error fetching groups:', groupsError)
-                throw groupsError
+            if (groupsResult.error) {
+                console.error('Error fetching groups:', groupsResult.error);
+                throw groupsResult.error;
             }
 
-            const { data: membersData, error: membersError } = await supabase
-                .from('group_members')
-                .select('group_id, user_id')
-                .in('group_id', groupIds)
-
-            if (membersError) {
-                console.error('Error fetching members:', membersError)
-                throw membersError
+            if (membersResult.error) {
+                console.error('Error fetching members:', membersResult.error);
+                throw membersResult.error;
             }
 
-            const userIdsItems = [...new Set(membersData.map(m => m.user_id))]
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, display_name, avatar_url')
-                .in('id', userIdsItems)
+            const groupsData = groupsResult.data;
+            const membersData = membersResult.data;
 
-            if (profilesError) {
-                console.error('Error fetching profiles:', profilesError)
-                throw profilesError
-            }
-
-            const profilesMap = new Map(profilesData.map(p => [p.id, p]))
-
-            // Obtener apodos
-            const userAliases = await getUserAliases();
             setAliases(userAliases);
 
             const formattedGroups: Group[] = groupsData.map(g => {
@@ -94,7 +85,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 const groupMembers = allGroupMembers
                     .filter(m => m.user_id !== userId)
                     .map(m => {
-                        const profile = profilesMap.get(m.user_id)
+                        const profile: any = m.profiles;
                         const alias = userAliases[m.user_id];
                         return {
                             id: m.user_id,
@@ -360,7 +351,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             </View>
 
             {/* Modals are kept using React Native Modal or simple Views if triggered correctly */}
-            {shareModalOpen && (
+            {shareModalOpen ? (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={closeShareModal} />
                     <View className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 shadow-2xl">
@@ -396,10 +387,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         </Pressable>
                     </View>
                 </View>
-            )}
+            ) : null}
 
             {/* Rename Modal */}
-            {renameModalOpen && (
+            {renameModalOpen ? (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setRenameModalOpen(false)} />
                     <View className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl">
@@ -429,10 +420,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         </View>
                     </View>
                 </View>
-            )}
+            ) : null}
 
             {/* Delete Modal */}
-            {deleteModalOpen && (
+            {deleteModalOpen ? (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setDeleteModalOpen(false)} />
                     <View className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl">
@@ -461,7 +452,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         </View>
                     </View>
                 </View>
-            )}
+            ) : null}
         </View>
     );
 }
