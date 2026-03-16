@@ -25,7 +25,13 @@
         "web": {
             "favicon": "./public/favicon.ico",
             "bundler": "metro",
-            "output": "static"
+            "output": "static",
+            "name": "Muro de Deseos",
+            "shortName": "MuroDeseos",
+            "themeColor": "#4F46E5",
+            "backgroundColor": "#ffffff",
+            "display": "standalone",
+            "description": "Comparte tus sueños y organiza tus regalos."
         },
         "plugins": [
             "expo-router"

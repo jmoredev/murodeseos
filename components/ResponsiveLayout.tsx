@@ -26,13 +26,13 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                         </Text>
 
                         {/* Desktop Navigation Links */}
-                        {isDesktop && (
+                        {isDesktop ? (
                             <View className="flex-row items-center gap-8 ml-8">
                                 <Pressable
                                     onPress={() => setActiveTab('wishlist')}
                                     className="px-2 py-1"
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'wishlist' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500 hover:text-gray-900'}`}>
+                                    <Text className={`text-sm font-bold ${activeTab === 'wishlist' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
                                         MIS DESEOS
                                     </Text>
                                 </Pressable>
@@ -40,7 +40,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                     onPress={() => setActiveTab('groups')}
                                     className="px-2 py-1"
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'groups' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-900'}`}>
+                                    <Text className={`text-sm font-bold ${activeTab === 'groups' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
                                         MIS GRUPOS
                                     </Text>
                                 </Pressable>
@@ -48,23 +48,23 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                     onPress={() => setActiveTab('profile')}
                                     className="px-2 py-1"
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'profile' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-900'}`}>
+                                    <Text className={`text-sm font-bold ${activeTab === 'profile' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
                                         MI PERFIL
                                     </Text>
                                 </Pressable>
                             </View>
-                        )}
+                        ) : null}
 
                         <View className="flex-row items-center">
                             <NotificationMenu userId={userId} />
-                            {isDesktop && (
+                            {isDesktop ? (
                                 <Pressable
                                     onPress={onSignOut}
                                     className="ml-4 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100"
                                 >
                                     <Text className="text-red-600 text-xs font-bold">SALIR</Text>
                                 </Pressable>
-                            )}
+                            ) : null}
                         </View>
                     </View>
                 </View>
@@ -84,8 +84,13 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
             </SafeAreaView>
 
             {/* Mobile Bottom Navbar */}
-            {!isDesktop && (
-                <View className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 pt-3 pb-8 flex-row justify-around items-center">
+            {!isDesktop ? (
+                <View 
+                    style={[{
+                        paddingBottom: Platform.select({ ios: 24, android: 12, default: 12 }),
+                    }]}
+                    className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 pt-3 flex-row justify-around items-center"
+                >
                     <Pressable
                         onPress={() => setActiveTab('wishlist')}
                         className={`items-center p-2 rounded-2xl ${activeTab === 'wishlist' ? 'bg-purple-50' : ''}`}
@@ -122,7 +127,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                         </Text>
                     </Pressable>
                 </View>
-            )}
+            ) : null}
         </View>
     );
 }
