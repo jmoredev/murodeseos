@@ -420,6 +420,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             </Pressable>
                             <Pressable
                                 onPress={handleRenameSubmit}
+                                accessibilityRole="button"
+                                accessibilityLabel="Guardar"
                                 className="px-4 py-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-600/20"
                             >
                                 <Text className="text-white font-medium">Guardar</Text>
@@ -450,6 +452,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             </Pressable>
                             <Pressable
                                 onPress={handleDeleteConfirm}
+                                accessibilityRole="button"
+                                accessibilityLabel="Eliminar"
                                 className="px-4 py-2 bg-red-600 rounded-lg shadow-lg shadow-red-600/20"
                             >
                                 <Text className="text-white font-medium">Eliminar</Text>

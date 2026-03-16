@@ -158,6 +158,8 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
                 <View className="flex-row">
                     <Pressable
                         onPress={handleShareClick}
+                        accessibilityRole="button"
+                        accessibilityLabel="Compartir grupo"
                         className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center mr-2"
                     >
                         <Text className="text-lg">↗</Text>
@@ -167,6 +169,8 @@ export function GroupCard({ group, isAdmin, onShare, onRename, onDelete, onMembe
                         <View className="relative">
                             <Pressable
                                 onPress={handleMenuClick}
+                                accessibilityRole="button"
+                                accessibilityLabel="Opciones de grupo"
                                 className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center"
                             >
                                 <Text className="text-lg">⋮</Text>

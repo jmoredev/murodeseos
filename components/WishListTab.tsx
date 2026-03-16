@@ -206,6 +206,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 </View>
                 <Pressable
                     onPress={() => openForm()}
+                    accessibilityLabel="Nuevo deseo"
                     className="w-12 h-12 rounded-2xl bg-indigo-600 items-center justify-center shadow-lg shadow-indigo-600/30"
                 >
                     <Text style={{ color: 'white', fontSize: 24, fontWeight: '900' }}>+</Text>
@@ -218,6 +219,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         <Pressable
                             key={type}
                             onPress={() => setSortBy(type as any)}
+                            accessibilityLabel={type === 'name' ? 'Ordenar por nombre' : type === 'price' ? 'Ordenar por precio' : 'Ordenar por prioridad'}
                             className={`px-4 py-2 rounded-xl border-2 ${sortBy === type ? 'bg-indigo-600 border-indigo-600' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800'}`}
                         >
                             <Text className={`text-xs font-bold uppercase tracking-wider ${sortBy === type ? 'text-white' : 'text-zinc-500'}`}>
@@ -362,6 +364,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             {editingItem && (
                                 <Pressable
                                     onPress={() => { setItemToDelete(editingItem); setIsFormOpen(false); }}
+                                    accessibilityLabel="Eliminar deseo"
                                     className={`bg-red-500 py-4 rounded-2xl items-center justify-center shadow-lg shadow-red-500/20 active:scale-[0.98] ${isDesktop ? 'px-6' : 'w-14'}`}
                                 >
                                     {isDesktop ? (

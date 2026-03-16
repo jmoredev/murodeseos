@@ -1,4 +1,6 @@
-jest.unmock('@/lib/group-utils')
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+
+vi.unmock('@/lib/group-utils')
 
 import {
     generateUniqueGroupCode,
@@ -12,17 +14,17 @@ import {
 } from '@/lib/group-utils'
 import { supabase } from '@/lib/supabase'
 
-// Mock de Supabase ya está en jest.setup.js, pero necesitamos resetear los mocks entre tests
+// Mock de Supabase ya está en vitest.setup.ts, pero necesitamos resetear los mocks entre tests
 
 describe('generateUniqueGroupCode', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
 
             // Configurar mock por defecto para generateUniqueGroupCode
-            ; (supabase.from as jest.Mock).mockReturnValue({
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
+            ; (supabase.from as any).mockReturnValue({
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                single: vi.fn().mockResolvedValue({
                     data: null,
                     error: { code: 'PGRST116' } // Código no encontrado
                 })
@@ -75,26 +77,26 @@ describe('generateUniqueGroupCode', () => {
 // ============================================
 describe('createGroup', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
 
             // Mock generateUniqueGroupCode en el beforeEach para que devuelva un código fijo
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({
                             data: null,
                             error: { code: 'PGRST116' } // Código no encontrado - para generateUniqueGroupCode
                         }),
-                        insert: jest.fn().mockReturnThis()
+                        insert: vi.fn().mockReturnThis()
                     }
                 }
                 return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    single: jest.fn(),
-                    insert: jest.fn()
+                    select: vi.fn().mockReturnThis(),
+                    eq: vi.fn().mockReturnThis(),
+                    single: vi.fn(),
+                    insert: vi.fn()
                 }
             })
     })
@@ -109,19 +111,19 @@ describe('createGroup', () => {
         }
 
         // Mock de insert para groups
-        const mockInsert = jest.fn().mockReturnThis()
-        const mockSelect = jest.fn().mockReturnThis()
-        const mockSingle = jest.fn().mockResolvedValue({ data: mockGroup, error: null })
+        const mockInsert = vi.fn().mockReturnThis()
+        const mockSelect = vi.fn().mockReturnThis()
+        const mockSingle = vi.fn().mockResolvedValue({ data: mockGroup, error: null })
 
         // Mock de insert para group_members
-        const mockMemberInsert = jest.fn().mockResolvedValue({ error: null })
+        const mockMemberInsert = vi.fn().mockResolvedValue({ error: null })
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
                         insert: mockInsert
                     }
                 } else if (table === 'group_members') {
@@ -158,23 +160,23 @@ describe('createGroup', () => {
     })
 
     it('usa icono por defecto 🎁 si no se proporciona', async () => {
-        const mockInsert = jest.fn().mockReturnThis()
-        const mockSelect = jest.fn().mockReturnThis()
-        const mockSingle = jest.fn().mockResolvedValue({
+        const mockInsert = vi.fn().mockReturnThis()
+        const mockSelect = vi.fn().mockReturnThis()
+        const mockSingle = vi.fn().mockResolvedValue({
             data: { id: expect.any(String), name: 'Test', icon: '🎁' },
             error: null
         })
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
                         insert: mockInsert
                     }
                 }
-                return { insert: jest.fn().mockResolvedValue({ error: null }) }
+                return { insert: vi.fn().mockResolvedValue({ error: null }) }
             })
 
         mockInsert.mockReturnValue({ select: mockSelect })
@@ -192,20 +194,20 @@ describe('createGroup', () => {
 
     it('lanza error si falla la creación del grupo', async () => {
         const mockError = { message: 'Database error', code: 'DB_ERROR' }
-        const mockInsert = jest.fn().mockReturnThis()
-        const mockSelect = jest.fn().mockReturnThis()
-        const mockSingle = jest.fn().mockResolvedValue({ data: null, error: mockError })
+        const mockInsert = vi.fn().mockReturnThis()
+        const mockSelect = vi.fn().mockReturnThis()
+        const mockSingle = vi.fn().mockResolvedValue({ data: null, error: mockError })
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
                         insert: mockInsert
                     }
                 }
-                return { insert: jest.fn() }
+                return { insert: vi.fn() }
             })
 
         mockInsert.mockReturnValue({ select: mockSelect })
@@ -219,21 +221,21 @@ describe('createGroup', () => {
 
     it('lanza error si falla añadir al creador como miembro', async () => {
         const mockMemberError = { message: 'Member insert failed', code: 'MEMBER_ERROR' }
-        const mockInsert = jest.fn().mockReturnThis()
-        const mockSelect = jest.fn().mockReturnThis()
-        const mockSingle = jest.fn().mockResolvedValue({ data: { id: expect.any(String) }, error: null })
+        const mockInsert = vi.fn().mockReturnThis()
+        const mockSelect = vi.fn().mockReturnThis()
+        const mockSingle = vi.fn().mockResolvedValue({ data: { id: expect.any(String) }, error: null })
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
                         insert: mockInsert
                     }
                 } else if (table === 'group_members') {
                     return {
-                        insert: jest.fn().mockResolvedValue({ error: mockMemberError })
+                        insert: vi.fn().mockResolvedValue({ error: mockMemberError })
                     }
                 }
             })
@@ -253,25 +255,25 @@ describe('createGroup', () => {
 // ============================================
 describe('joinGroup', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
     })
 
     it('une a un usuario a un grupo existente', async () => {
         const mockGroup = { id: 'ABC123', name: 'Grupo Test', icon: '🎉' }
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: mockGroup, error: null })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: mockGroup, error: null })
                     }
                 } else if (table === 'group_members') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
-                        insert: jest.fn().mockResolvedValue({ error: null })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        insert: vi.fn().mockResolvedValue({ error: null })
                     }
                 }
             })
@@ -291,23 +293,23 @@ describe('joinGroup', () => {
         const mockGroup = { id: 'ABC123', name: 'Test', icon: '🎁' }
         let capturedCode = ''
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn((field: string, value: string) => {
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn((field: string, value: string) => {
                             if (field === 'id') capturedCode = value
                             return {
-                                single: jest.fn().mockResolvedValue({ data: mockGroup, error: null })
+                                single: vi.fn().mockResolvedValue({ data: mockGroup, error: null })
                             }
                         })
                     }
                 }
                 return {
-                    select: jest.fn().mockReturnThis(),
-                    eq: jest.fn().mockReturnThis(),
-                    single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
-                    insert: jest.fn().mockResolvedValue({ error: null })
+                    select: vi.fn().mockReturnThis(),
+                    eq: vi.fn().mockReturnThis(),
+                    single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                    insert: vi.fn().mockResolvedValue({ error: null })
                 }
             })
 
@@ -322,18 +324,18 @@ describe('joinGroup', () => {
     it('detecta si el usuario ya es miembro', async () => {
         const mockGroup = { id: 'ABC123', name: 'Test', icon: '🎁' }
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: mockGroup, error: null })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: mockGroup, error: null })
                     }
                 } else if (table === 'group_members') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: { id: 'member-1' }, error: null })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: { id: 'member-1' }, error: null })
                     }
                 }
             })
@@ -350,10 +352,10 @@ describe('joinGroup', () => {
     })
 
     it('lanza error si el código de grupo no existe', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
+        ; (supabase.from as any).mockReturnValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
         })
 
         await expect(joinGroup({
@@ -365,19 +367,19 @@ describe('joinGroup', () => {
     it('lanza error si falla la inserción en group_members', async () => {
         const mockGroup = { id: 'ABC123', name: 'Test', icon: '🎁' }
 
-            ; (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            ; (supabase.from as any).mockImplementation((table: string) => {
                 if (table === 'groups') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: mockGroup, error: null })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: mockGroup, error: null })
                     }
                 } else if (table === 'group_members') {
                     return {
-                        select: jest.fn().mockReturnThis(),
-                        eq: jest.fn().mockReturnThis(),
-                        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
-                        insert: jest.fn().mockResolvedValue({ error: { message: 'Insert failed' } })
+                        select: vi.fn().mockReturnThis(),
+                        eq: vi.fn().mockReturnThis(),
+                        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+                        insert: vi.fn().mockResolvedValue({ error: { message: 'Insert failed' } })
                     }
                 }
             })
@@ -394,17 +396,17 @@ describe('joinGroup', () => {
 // ============================================
 describe('updateGroupName', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
     })
 
     it('actualiza el nombre del grupo correctamente', async () => {
-        const mockUpdate = jest.fn().mockReturnThis()
-        const mockEq = jest.fn().mockResolvedValue({ error: null })
+        const mockUpdate = vi.fn().mockReturnThis()
+        const mockEq = vi.fn().mockResolvedValue({ error: null })
 
-            ; (supabase.from as jest.Mock).mockReturnValue({
-                update: mockUpdate,
-                eq: mockEq
-            })
+                ; (supabase.from as any).mockReturnValue({
+                    update: mockUpdate,
+                    eq: mockEq
+                })
 
         await updateGroupName('ABC123', 'Nuevo Nombre')
 
@@ -413,9 +415,9 @@ describe('updateGroupName', () => {
     })
 
     it('retorna true en caso de éxito', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            update: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ error: null })
+        ; (supabase.from as any).mockReturnValue({
+            update: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ error: null })
         })
 
         const result = await updateGroupName('ABC123', 'Nuevo Nombre')
@@ -423,9 +425,9 @@ describe('updateGroupName', () => {
     })
 
     it('lanza error si falla la actualización', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            update: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ error: { message: 'Update failed' } })
+        ; (supabase.from as any).mockReturnValue({
+            update: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ error: { message: 'Update failed' } })
         })
 
         await expect(updateGroupName('ABC123', 'Nuevo Nombre'))
@@ -438,17 +440,17 @@ describe('updateGroupName', () => {
 // ============================================
 describe('deleteGroup', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
     })
 
     it('elimina un grupo correctamente', async () => {
-        const mockDelete = jest.fn().mockReturnThis()
-        const mockEq = jest.fn().mockResolvedValue({ error: null })
+        const mockDelete = vi.fn().mockReturnThis()
+        const mockEq = vi.fn().mockResolvedValue({ error: null })
 
-            ; (supabase.from as jest.Mock).mockReturnValue({
-                delete: mockDelete,
-                eq: mockEq
-            })
+                ; (supabase.from as any).mockReturnValue({
+                    delete: mockDelete,
+                    eq: mockEq
+                })
 
         await deleteGroup('ABC123')
 
@@ -457,9 +459,9 @@ describe('deleteGroup', () => {
     })
 
     it('retorna true en caso de éxito', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ error: null })
+        ; (supabase.from as any).mockReturnValue({
+            delete: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ error: null })
         })
 
         const result = await deleteGroup('ABC123')
@@ -467,9 +469,9 @@ describe('deleteGroup', () => {
     })
 
     it('lanza error si falla la eliminación', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            delete: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+        ; (supabase.from as any).mockReturnValue({
+            delete: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
         })
 
         await expect(deleteGroup('ABC123'))
@@ -482,19 +484,19 @@ describe('deleteGroup', () => {
 // ============================================
 describe('removeMemberFromGroup', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
     })
 
     it('elimina un miembro del grupo correctamente', async () => {
-        const mockDelete = jest.fn(() => ({
-            eq: jest.fn(() => ({
-                eq: jest.fn().mockResolvedValue({ error: null })
+        const mockDelete = vi.fn(() => ({
+            eq: vi.fn(() => ({
+                eq: vi.fn().mockResolvedValue({ error: null })
             }))
         }))
 
-            ; (supabase.from as jest.Mock).mockReturnValue({
-                delete: mockDelete
-            })
+                ; (supabase.from as any).mockReturnValue({
+                    delete: mockDelete
+                })
 
         await removeMemberFromGroup('ABC123', 'user-456')
 
@@ -502,10 +504,10 @@ describe('removeMemberFromGroup', () => {
     })
 
     it('retorna true en caso de éxito', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            delete: jest.fn(() => ({
-                eq: jest.fn(() => ({
-                    eq: jest.fn().mockResolvedValue({ error: null })
+        ; (supabase.from as any).mockReturnValue({
+            delete: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    eq: vi.fn().mockResolvedValue({ error: null })
                 }))
             }))
         })
@@ -515,10 +517,10 @@ describe('removeMemberFromGroup', () => {
     })
 
     it('lanza error si falla la eliminación', async () => {
-        ; (supabase.from as jest.Mock).mockReturnValue({
-            delete: jest.fn(() => ({
-                eq: jest.fn(() => ({
-                    eq: jest.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
+        ; (supabase.from as any).mockReturnValue({
+            delete: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    eq: vi.fn().mockResolvedValue({ error: { message: 'Delete failed' } })
                 }))
             }))
         })
@@ -576,11 +578,11 @@ describe('generateShareMessage', () => {
 // ============================================
 describe('shareGroup', () => {
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
     })
 
     it('usa navigator.share si está disponible', async () => {
-        const mockShare = jest.fn().mockResolvedValue(undefined)
+        const mockShare = vi.fn().mockResolvedValue(undefined)
         Object.defineProperty(global.navigator, 'share', {
             value: mockShare,
             writable: true
@@ -596,7 +598,7 @@ describe('shareGroup', () => {
 
     it('retorna true si share es exitoso', async () => {
         Object.defineProperty(global.navigator, 'share', {
-            value: jest.fn().mockResolvedValue(undefined),
+            value: vi.fn().mockResolvedValue(undefined),
             writable: true
         })
 
@@ -606,7 +608,7 @@ describe('shareGroup', () => {
 
     it('fallback a clipboard si share no disponible', async () => {
         // Configurar navigator sin share usando Object.assign
-        const mockWriteText = jest.fn().mockResolvedValue(undefined)
+        const mockWriteText = vi.fn().mockResolvedValue(undefined)
         const originalNavigator = global.navigator
 
         // Crear un nuevo navigator sin share
@@ -634,7 +636,7 @@ describe('shareGroup', () => {
 
     it('retorna false si usuario cancela', async () => {
         Object.defineProperty(global.navigator, 'share', {
-            value: jest.fn().mockRejectedValue(new Error('User cancelled')),
+            value: vi.fn().mockRejectedValue(new Error('User cancelled')),
             writable: true
         })
 

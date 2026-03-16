@@ -1,23 +1,24 @@
 import { notifyWishAdded, notifyWishReserved } from '@/lib/notification-utils';
 import { supabase } from '@/lib/supabase';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock Supabase directamente en la factory para evitar problemas de inicialización
-jest.mock('@/lib/supabase', () => {
+vi.mock('@/lib/supabase', () => {
     const mockMethods = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        neq: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        single: jest.fn(),
-        then: jest.fn(),
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        neq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        single: vi.fn(),
+        then: vi.fn(),
         auth: {
-            getUser: jest.fn(),
+            getUser: vi.fn(),
         },
     };
     return {
@@ -29,7 +30,7 @@ describe('Notification Utils', () => {
     const mockSupabase = supabase as any;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         // Reset chainable mock por defecto
         mockSupabase.from.mockReturnThis();
         mockSupabase.select.mockReturnThis();
@@ -100,7 +101,7 @@ describe('Notification Utils', () => {
                 Promise.resolve({ data: mockData, error: null }).then(callback)
             );
 
-            const { getNotifications } = require('@/lib/notification-utils');
+            const { getNotifications } = await import('@/lib/notification-utils');
             const result = await getNotifications(userId);
 
             expect(mockSupabase.from).toHaveBeenCalledWith('notifications');
@@ -117,7 +118,7 @@ describe('Notification Utils', () => {
                 Promise.resolve({ error: null }).then(callback)
             );
 
-            const { markAsRead } = require('@/lib/notification-utils');
+            const { markAsRead } = await import('@/lib/notification-utils');
             await markAsRead(notifId);
 
             expect(mockSupabase.update).toHaveBeenCalledWith({ is_read: true });
@@ -133,7 +134,7 @@ describe('Notification Utils', () => {
                 Promise.resolve({ error: null }).then(callback)
             );
 
-            const { markAllAsRead } = require('@/lib/notification-utils');
+            const { markAllAsRead } = await import('@/lib/notification-utils');
             await markAllAsRead(userId);
 
             expect(mockSupabase.update).toHaveBeenCalledWith({ is_read: true });
@@ -155,7 +156,7 @@ describe('Notification Utils', () => {
                 Promise.resolve({ error: null }).then(callback)
             );
 
-            const { notifySecretSantaDraw } = require('@/lib/notification-utils');
+            const { notifySecretSantaDraw } = await import('@/lib/notification-utils');
             await notifySecretSantaDraw(groupId, memberIds);
 
             expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([

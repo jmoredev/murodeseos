@@ -1,11 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { GroupCard } from '@/components/GroupCard'
+import { vi, describe, it, expect } from 'vitest'
 
 // Mock de useRouter
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
     useRouter: () => ({
-        push: jest.fn(),
-        back: jest.fn(),
+        push: vi.fn(),
+        back: vi.fn(),
     }),
 }))
 
@@ -25,9 +26,9 @@ describe('GroupCard', () => {
             <GroupCard
                 group={mockGroup}
                 isAdmin={false}
-                onShare={jest.fn()}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onShare={vi.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 
@@ -52,9 +53,9 @@ describe('GroupCard', () => {
             <GroupCard
                 group={groupWithManyMembers}
                 isAdmin={false}
-                onShare={jest.fn()}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onShare={vi.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 
@@ -67,8 +68,8 @@ describe('GroupCard', () => {
         expect(screen.queryByText('Usuario 4')).not.toBeInTheDocument()
         expect(screen.queryByText('Usuario 5')).not.toBeInTheDocument()
 
-        // Verificar que se muestra el indicador de "... y X más"
-        expect(screen.getByText('... y 2 más')).toBeInTheDocument()
+        // Verificar que se muestra el indicador de "+ X otros participantes"
+        expect(screen.getByText('+ 2 otros participantes')).toBeInTheDocument()
     })
 
     it('muestra el botón de "Eliminar grupo" cuando isAdmin es true', async () => {
@@ -76,9 +77,9 @@ describe('GroupCard', () => {
             <GroupCard
                 group={mockGroup}
                 isAdmin={true}
-                onShare={jest.fn()}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onShare={vi.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 
@@ -100,9 +101,9 @@ describe('GroupCard', () => {
             <GroupCard
                 group={mockGroup}
                 isAdmin={false}
-                onShare={jest.fn()}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onShare={vi.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 
@@ -116,9 +117,9 @@ describe('GroupCard', () => {
             <GroupCard
                 group={mockGroup}
                 isAdmin={false}
-                onShare={jest.fn()}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onShare={vi.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 
@@ -131,15 +132,15 @@ describe('GroupCard', () => {
     })
 
     it('llama a onShare cuando se hace clic en el botón de compartir', () => {
-        const mockOnShare = jest.fn()
+        const mockOnShare = vi.fn()
 
         render(
             <GroupCard
                 group={mockGroup}
                 isAdmin={false}
                 onShare={mockOnShare}
-                onRename={jest.fn()}
-                onDelete={jest.fn()}
+                onRename={vi.fn()}
+                onDelete={vi.fn()}
             />
         )
 

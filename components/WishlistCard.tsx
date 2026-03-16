@@ -75,6 +75,8 @@ export function WishlistCard({
                         source={{ uri: item.imageUrl }}
                         className="w-full h-full"
                         resizeMode="cover"
+                        accessibilityRole="image"
+                        accessibilityLabel={item.title}
                     />
                 ) : (
                     <Text style={{ fontSize: 40 }} className="opacity-20">🎁</Text>

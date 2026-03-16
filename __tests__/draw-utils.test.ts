@@ -1,58 +1,59 @@
 import { performDraw, endDraw, getMyAssignments, getMyAssignmentInGroup, addExclusion, getExclusions, removeExclusion } from '@/lib/draw-utils';
 import { supabase } from '@/lib/supabase';
 import { notifySecretSantaDraw } from '@/lib/notification-utils';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock dependencies
-jest.mock('@/lib/supabase', () => {
+vi.mock('@/lib/supabase', () => {
     const mockMethods = {
-        from: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        in: jest.fn().mockReturnThis(),
-        single: jest.fn(),
-        maybeSingle: jest.fn(),
-        then: jest.fn(),
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        single: vi.fn(),
+        maybeSingle: vi.fn(),
+        then: vi.fn(),
     };
     return {
         supabase: mockMethods
     };
 });
 
-jest.mock('@/lib/notification-utils', () => ({
-    notifySecretSantaDraw: jest.fn(),
+vi.mock('@/lib/notification-utils', () => ({
+    notifySecretSantaDraw: vi.fn(),
 }));
 
 describe('Draw Utils', () => {
     const mockSupabase = supabase as any;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Setup chainable mocks
         const mockChain = {
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            in: jest.fn().mockReturnThis(),
-            single: jest.fn().mockReturnThis(),
-            maybeSingle: jest.fn().mockReturnThis(),
-            delete: jest.fn().mockReturnThis(),
-            insert: jest.fn().mockReturnThis(),
-            update: jest.fn().mockReturnThis(),
-            then: jest.fn().mockImplementation(function (this: any, callback) {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
+            single: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            insert: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            then: vi.fn().mockImplementation(function (this: any, callback) {
                 return Promise.resolve(this.resolvedValue || { data: [], error: null }).then(callback);
             })
         };
 
         mockSupabase.from.mockImplementation(() => {
-            const chain = { ...mockChain };
-            (chain as any).resolvedValue = null;
+            const chain: any = { ...mockChain };
+            chain.resolvedValue = null;
             // Overwrite then to use the specific chain context
-            chain.then = function (callback) {
-                return Promise.resolve((this as any).resolvedValue || { data: [], error: null }).then(callback);
-            }.bind(chain);
+            chain.then = (callback: any) => {
+                return Promise.resolve(chain.resolvedValue || { data: [], error: null }).then(callback);
+            };
             return chain;
         });
     });
@@ -60,14 +61,14 @@ describe('Draw Utils', () => {
     const mockResponseOnce = (data: any, error: any = null) => {
         mockSupabase.from.mockImplementationOnce(() => {
             const chain: any = {
-                select: jest.fn().mockReturnThis(),
-                eq: jest.fn().mockReturnThis(),
-                in: jest.fn().mockReturnThis(),
-                single: jest.fn().mockReturnThis(),
-                maybeSingle: jest.fn().mockReturnThis(),
-                delete: jest.fn().mockReturnThis(),
-                insert: jest.fn().mockReturnThis(),
-                update: jest.fn().mockReturnThis(),
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                in: vi.fn().mockReturnThis(),
+                single: vi.fn().mockReturnThis(),
+                maybeSingle: vi.fn().mockReturnThis(),
+                delete: vi.fn().mockReturnThis(),
+                insert: vi.fn().mockReturnThis(),
+                update: vi.fn().mockReturnThis(),
             };
             chain.then = (callback: any) => Promise.resolve({ data, error }).then(callback);
             return chain;
