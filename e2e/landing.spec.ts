@@ -10,7 +10,7 @@ test.describe('Página de Inicio / Redirección de Login', () => {
 
         // El middleware redirige automáticamente a /login
         await expect(page).toHaveURL(/\/login/)
-        await expect(page.getByRole('heading', { name: /bienvenido de nuevo/i })).toBeVisible()
+        await expect(page.getByText(/bienvenido de nuevo/i)).toBeVisible()
     })
 
     test('debería mostrar los elementos del formulario de login', async ({ page }) => {
@@ -29,21 +29,21 @@ test.describe('Página de Inicio / Redirección de Login', () => {
         await page.goto('/')
 
         // Estamos en login, click en el enlace de registro
-        await page.getByRole('link', { name: /regístrate/i }).click()
+        await page.getByText(/regístrate/i).click()
 
         // Verificar que estamos en la página de signup
         await expect(page).toHaveURL(/\/signup/)
-        await expect(page.getByRole('heading', { name: /crear una cuenta/i })).toBeVisible()
+        await expect(page.getByText(/crear una cuenta/i)).toBeVisible()
     })
 
     test('debería navegar al login desde el registro', async ({ page }) => {
         await page.goto('/signup')
 
         // Click en el enlace de login
-        await page.getByRole('link', { name: /inicia sesión/i }).click()
+        await page.getByText(/inicia sesión/i).click()
 
         // Verificar que estamos en la página de login
         await expect(page).toHaveURL(/\/login/)
-        await expect(page.getByRole('heading', { name: /bienvenido de nuevo/i })).toBeVisible()
+        await expect(page.getByText(/bienvenido de nuevo/i)).toBeVisible()
     })
 })

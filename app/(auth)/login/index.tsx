@@ -115,6 +115,8 @@ export default function LoginPage() {
                                     }}
                                     autoCapitalize="none"
                                     keyboardType="email-address"
+                                    accessibilityLabel="Correo electrónico"
+                                    testID="email-input"
                                 />
                                 {emailError ? <Text className="mt-1 text-xs text-red-500">{emailError}</Text> : null}
                             </View>
@@ -127,6 +129,8 @@ export default function LoginPage() {
                                     value={password}
                                     onChangeText={setPassword}
                                     secureTextEntry
+                                    accessibilityLabel="Contraseña"
+                                    testID="password-input"
                                 />
                             </View>
 
@@ -134,6 +138,9 @@ export default function LoginPage() {
                                 onPress={handleLogin}
                                 disabled={loading}
                                 className={`mt-4 p-4 rounded-lg bg-purple-600 ${loading ? 'opacity-50' : 'active:opacity-80'}`}
+                                accessibilityRole="button"
+                                accessibilityLabel="Iniciar sesión"
+                                testID="login-button"
                             >
                                 <Text className="text-white text-center font-bold">
                                     {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
