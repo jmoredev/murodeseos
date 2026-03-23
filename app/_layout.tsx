@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
@@ -32,7 +31,13 @@ function ensureWebHead() {
     link.setAttribute('rel', 'manifest');
     document.head.appendChild(link);
   }
-  link.setAttribute('href', '/manifest.json');
+  const pathname = window.location.pathname || '/';
+  // GitHub Pages sirve la app bajo /<repo>. Usamos una heurística segura para ese caso.
+  // Si no estamos en GitHub Pages, mantenemos la raíz.
+  const maybeRepoBase = pathname.split('/').filter(Boolean)[0];
+  const isGithubPages = window.location.hostname.endsWith('github.io');
+  const manifestBase = isGithubPages && maybeRepoBase ? `/${maybeRepoBase}` : '';
+  link.setAttribute('href', `${manifestBase}/manifest.json`);
 }
 
 export default function RootLayout() {
