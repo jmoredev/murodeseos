@@ -20,8 +20,8 @@ setup('autenticar usuario', async ({ page }) => {
     // 3. Esperar redirección a la home
     await page.waitForURL('**/', { timeout: 15000 })
 
-    // Verificar que estamos dentro (buscando el botón de salir en desktop o mobile)
-    await expect(page.getByText(/salir|cerrar sesión/i).first()).toBeVisible()
+    // Verificar que estamos dentro de la app (en móvil el texto del logout no es estable)
+    await expect(page.getByText(/Muro de deseos/i).first()).toBeVisible()
 
     // 4. Guardar el estado (incluyendo lastSeenVersion para evitar el modal)
     await page.evaluate((version) => {
