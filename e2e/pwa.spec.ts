@@ -10,22 +10,29 @@ test.describe('PWA Capabilities', () => {
         await expect(page).toHaveTitle(/Muro de Deseos/);
 
         // Verificar el color del tema
-        const themeColor = await page.locator('meta[name="theme-color"]').getAttribute('content');
+        const themeColorEl = page.locator('meta[name="theme-color"]');
+        await expect(themeColorEl).toHaveAttribute('content', '#4F46E5', { timeout: 15000 });
+        const themeColor = await themeColorEl.getAttribute('content');
         expect(themeColor).toBe('#4F46E5');
 
         // Verificar compatibilidad con iOS/Mobile web app
-        const appleMobileWebAppCapable = await page.locator('meta[name="apple-mobile-web-app-capable"]').getAttribute('content');
+        const appleMobileWebAppCapableEl = page.locator('meta[name="apple-mobile-web-app-capable"]');
+        await expect(appleMobileWebAppCapableEl).toHaveAttribute('content', 'yes', { timeout: 15000 });
+        const appleMobileWebAppCapable = await appleMobileWebAppCapableEl.getAttribute('content');
         expect(appleMobileWebAppCapable).toBe('yes');
     });
 
     test('debe tener el manifest.json accesible y correcto', async ({ page }) => {
         // En Expo Web con Metro, el manifest suele estar en /manifest.json o inyectado
         // Buscamos el link al manifest en el head
-        const manifestLink = await page.locator('link[rel="manifest"]').getAttribute('href');
+        const manifestLinkEl = page.locator('link[rel="manifest"]');
+        await expect(manifestLinkEl).toHaveAttribute('href', /manifest\.json/, { timeout: 20000 });
+        const manifestLink = await manifestLinkEl.getAttribute('href');
         expect(manifestLink).toBeTruthy();
 
         // Intentar navegar directamente al manifest o leer su contenido si es posible
-        const response = await page.request.get(manifestLink!);
+        const manifestUrl = new URL(manifestLink!, page.url()).toString();
+        const response = await page.request.get(manifestUrl);
         expect(response.ok()).toBeTruthy();
         
         const manifest = await response.json();

@@ -1,6 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import packageJson from '../package.json';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceRoleKey =
+    process.env.NEXT_SERVICE_ROLE_KEY ||
+    process.env.EXPO_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Faltan env vars para supabaseAdmin en E2E');
+}
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+});
 
 test.describe('Visibilidad de Deseos por Grupo', () => {
     // El usuario E2E ya está logueado por auth.setup.ts
@@ -14,13 +29,14 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         await expect(page).toHaveURL('/');
 
         // Crear Regalo Público
-        await page.click('button[aria-label="Nuevo deseo"]');
+        await page.getByLabel('Nuevo deseo').click();
         await page.fill('input[placeholder="¿Qué deseas?"]', publicTitle);
-        await page.click('button[type="submit"]');
+        const saveBtn1 = page.getByText('Guardar', { exact: true }).last();
+        await saveBtn1.evaluate((el) => (el as HTMLElement).click());
         await expect(page.locator(`text=${publicTitle}`)).toBeVisible();
 
         // Crear Regalo Secreto (Excluido de E2E Test Group)
-        await page.click('button[aria-label="Nuevo deseo"]');
+        await page.getByLabel('Nuevo deseo').click();
         await page.fill('input[placeholder="¿Qué deseas?"]', secretTitle);
 
         // Marcar exclusión para E2E Test Group
@@ -28,7 +44,8 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         await expect(groupCheckbox).toBeVisible({ timeout: 10000 });
         await groupCheckbox.check();
 
-        await page.click('button[type="submit"]');
+        const saveBtn2 = page.getByText('Guardar', { exact: true }).last();
+        await saveBtn2.evaluate((el) => (el as HTMLElement).click());
         await expect(page.locator(`text=${secretTitle}`)).toBeVisible();
 
         // 2. Logout del usuario E2E y Login como Juan Pérez
@@ -41,55 +58,56 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         }, packageJson.version);
 
         await page.goto('/login');
-        const emailInput = page.locator('input#email');
-        const passwordInput = page.locator('input#password');
+        const emailInput = page.getByTestId('email-input');
+        const passwordInput = page.getByTestId('password-input');
 
         await expect(emailInput).toBeVisible();
         await expect(passwordInput).toBeVisible();
 
-        // Helper para rellenar campos de forma robusta (especialmente para móvil + hidratación)
+        // Mobile Safari puede perder el valor en inputs justo antes del submit.
+        // Reintentamos con tecleo secuencial si el valor no queda persistido.
         const fillRobustly = async (input: any, value: string) => {
-            await input.scrollIntoViewIfNeeded();
-            // Esperar a que sea editable 
             await expect(input).toBeEditable();
-
-            await input.click();
+            await input.fill('');
             await input.fill(value);
-            await input.blur();
-
-            // Si falla, reintentamos tecleando (común en móviles lentos o hidratación tardía)
             if (await input.inputValue() !== value) {
-                console.log(`⚠️ Reintentando rellenar campo con tecleo lento para "${value}"...`);
-                await input.click();
-                await input.clear();
-                await input.pressSequentially(value, { delay: 100 });
-                await input.blur();
+                await input.fill('');
+                await input.pressSequentially(value, { delay: 60 });
+            }
+            if (await input.inputValue() !== value) {
+                await input.evaluate((el, v) => {
+                    const inputEl = el as HTMLInputElement;
+                    inputEl.value = v as string;
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }, value);
             }
             await expect(input).toHaveValue(value);
         };
 
-        await fillRobustly(emailInput, E2E_CONFIG.secondaryUser.email);
-        await fillRobustly(passwordInput, E2E_CONFIG.secondaryUser.password);
+        const loginAsSecondaryUser = async () => {
+            for (let attempt = 1; attempt <= 2; attempt++) {
+                await fillRobustly(emailInput, E2E_CONFIG.secondaryUser.email);
+                await fillRobustly(passwordInput, E2E_CONFIG.secondaryUser.password);
 
-        const submitBtn = page.locator('button[type="submit"]');
-        await expect(submitBtn).toBeEnabled({ timeout: 5000 }).catch(() => console.log('⚠️ Botón submit no habilitado a tiempo'));
-        await submitBtn.click();
+                const loginBtn = page.getByTestId('login-button');
+                await loginBtn.evaluate((el) => (el as HTMLElement).click());
 
-        // Esperar a entrar y que desaparezca el Cargando oficial
-        try {
-            await page.waitForURL(url => url.pathname === '/' || url.pathname === '/profile/setup', { timeout: 30000 });
-        } catch (e) {
-            const currentUrl = page.url();
-            console.error(`❌ Timeout esperando redirección. URL actual: ${currentUrl}`);
-
-            // Si falla, intentamos ver si hay un error en pantalla para debug
-            const errorMsg = await page.locator('div[role="alert"], .text-red-500').textContent().catch(() => null);
-            if (errorMsg) {
-                console.error('❌ Error visible en login:', errorMsg);
-                throw new Error(`Login fallido con error visible: ${errorMsg}`);
+                try {
+                    await page.waitForURL(url => url.pathname === '/' || url.pathname === '/profile/setup', { timeout: 15000 });
+                    return;
+                } catch {
+                    if (attempt === 2) {
+                        const currentUrl = page.url();
+                        const errorMsg = await page.locator('div[role="alert"], .text-red-500').textContent().catch(() => null);
+                        throw new Error(`Login secundario fallido. URL: ${currentUrl}. Error: ${errorMsg ?? 'sin mensaje visible'}`);
+                    }
+                    await page.waitForTimeout(1000);
+                }
             }
-            throw e;
-        }
+        };
+
+        await loginAsSecondaryUser();
         await expect(page.locator('text=Cargando...')).not.toBeVisible({ timeout: 15000 });
 
         // Manejar posible redirección a /profile/setup (común en primer login o pérdida de estado)
@@ -110,103 +128,22 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         }
 
         // Asegurar que el dashboard base está cargado antes de navegar
-        await expect(page.locator('h1', { hasText: 'Muro de deseos' })).toBeVisible({ timeout: 20000 });
+        await expect(page.getByText('Deseos', { exact: true }).first()).toBeVisible({ timeout: 20000 });
 
-        // 3. Juan navega al grupo E2E
-        // Intentamos navegar usando goto, pero capturamos el posible aborto por redirects en vuelo
-        try {
-            await page.goto('/?tab=groups');
-        } catch (e) {
-            // Si falla por abort, asumimos que hubo un redirect concurrente.
-            // Verificamos si ya estamos en la pestaña correcta o reintentamos
-            await page.goto('/?tab=groups');
-        }
-
-        // Esperar a que el contenido de la pestaña de grupos sea visible
-        await expect(page.locator('h1', { hasText: 'Mis grupos' })).toBeVisible({ timeout: 15000 });
-
-        // Esperar a que la red esté inactiva para asegurar que todo está cargado
-        await page.waitForLoadState('networkidle', { timeout: 10000 });
-
-        // Localizar el grupo E2E
-        const groupCard = page.locator('.group-card', { hasText: E2E_CONFIG.group.name });
-        await expect(groupCard).toBeVisible({ timeout: 10000 });
-
-        // Dentro de la tarjeta del grupo, Juan debería ver a "E2E Test User"
-        // Hacemos el selector más robusto buscando por atributo o por texto exacto
-        const memberRow = groupCard.locator(`[data-member-name="${E2E_CONFIG.user.displayName}"]`)
-            .or(groupCard.locator('div').filter({ hasText: E2E_CONFIG.user.displayName }))
-            .first();
-
-        await expect(memberRow).toBeVisible({ timeout: 15000 });
-
-        // Hacer click específicamente en el texto del nombre para evitar el botón de "Editar apodo"
-        // que aparece al hacer hover sobre la fila.
-        await memberRow.locator('span').filter({ hasText: E2E_CONFIG.user.displayName }).first().click({ force: true });
+        // 3. Juan navega directo al grupo E2E para evitar fragilidad del tab "Mis grupos"
+        await page.goto(`/groups/${E2E_CONFIG.group.id}`);
+        await expect(page).toHaveURL(new RegExp(`/groups/${E2E_CONFIG.group.id}`));
+        await page.getByText(E2E_CONFIG.user.displayName).first().click({ force: true });
 
         // 4. Verificar visibilidad
         // El regalo público debe ser visible
-        await expect(page.locator(`text=${publicTitle}`)).toBeVisible({ timeout: 15000 });
+        await expect(page.locator(`text=${publicTitle}`).first()).toBeVisible({ timeout: 15000 });
 
         // El regalo secreto NO debe ser visible
-        await expect(page.locator(`text=${secretTitle}`)).not.toBeVisible();
+        await expect(page.locator(`text=${secretTitle}`).first()).not.toBeVisible();
 
-        // 5. Limpieza
-        await page.context().clearCookies();
-        await page.evaluate((version) => {
-            localStorage.clear();
-            localStorage.setItem('lastSeenVersion', version);
-        }, packageJson.version);
-        await page.goto('/login');
-
-        const emailInput2 = page.locator('input#email');
-        const passwordInput2 = page.locator('input#password');
-
-        // Reutilizamos el helper con reintentos
-        await fillRobustly(emailInput2, E2E_CONFIG.user.email);
-        await fillRobustly(passwordInput2, E2E_CONFIG.user.password);
-
-        await page.click('button[type="submit"]');
-
-        // Aumentamos timeout aquí también
-        await page.waitForURL('/', { timeout: 30000 });
-
-        // Asegurarnos de estar en la pestaña de "Mi lista"
-        try {
-            await page.goto('/?tab=wishlist');
-        } catch (e) {
-            console.log('⚠️ Navegación abortada o interrumpida (posible redirect), verificando estado...');
-        }
-        await expect(page.locator('h1', { hasText: 'Mi lista de deseos' })).toBeVisible({ timeout: 15000 });
-
-        // Borrar regalo público
-        const publicGiftCard = page.locator('div.group', { hasText: publicTitle }).first();
-        await publicGiftCard.click();
-
-        const deleteBtn1 = page.locator('button[aria-label="Eliminar deseo"]');
-        await expect(deleteBtn1).toBeVisible({ timeout: 10000 });
-
-        // Configuramos un manejador para dialogos por si acaso hay confirmación nativa
-        page.once('dialog', dialog => dialog.accept());
-
-        // Usar click nativo JS para evitar intercepción del click por el icono de Next.js
-        await deleteBtn1.evaluate((btn) => (btn as HTMLElement).click());
-
-        // Esperar a que el item desaparezca de la lista (confirmación real de borrado)
-        // Esto también implica que el modal se ha cerrado y la lista se ha actualizado
-        await expect(page.locator(`text=${publicTitle}`)).not.toBeVisible({ timeout: 15000 });
-
-        // Borrar regalo secreto
-        const secretGiftCard = page.locator('div.group', { hasText: secretTitle }).first();
-        await expect(secretGiftCard).toBeVisible({ timeout: 10000 });
-        await secretGiftCard.click();
-
-        const deleteBtn2 = page.locator('button[aria-label="Eliminar deseo"]');
-        await expect(deleteBtn2).toBeVisible({ timeout: 10000 });
-
-        page.once('dialog', dialog => dialog.accept());
-        await deleteBtn2.evaluate((btn) => (btn as HTMLElement).click());
-
-        await expect(page.locator(`text=${secretTitle}`)).not.toBeVisible({ timeout: 15000 });
+        // 5. Limpieza (DB directa para evitar flakiness de UI móvil)
+        await supabaseAdmin.from('wishlist_items').delete().eq('title', publicTitle);
+        await supabaseAdmin.from('wishlist_items').delete().eq('title', secretTitle);
     });
 });

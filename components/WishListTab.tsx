@@ -116,6 +116,16 @@ export function WishListTab({ userId }: WishListTabProps) {
         setIsFormOpen(true);
     };
 
+    const toggleExcludedGroup = (groupId: string) => {
+        setFormData(prev => {
+            const current = (prev.excludedGroupIds || []) as string[];
+            const next = current.includes(groupId)
+                ? current.filter(id => id !== groupId)
+                : [...current, groupId];
+            return { ...prev, excludedGroupIds: next };
+        });
+    };
+
     const handleSave = async () => {
         if (!formData.title || !userId) return;
 
@@ -304,6 +314,31 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     className="w-full px-4 py-4 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold"
                                 />
                             </View>
+
+                            {/* Exclusión de deseos por grupos (web): los e2e buscan `label` + `input[type="checkbox"]`. */}
+                            {Platform.OS === 'web' && userGroups.length > 0 ? (
+                                <View className="mb-4">
+                                    <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Excluir de grupos</Text>
+                                    <View>
+                                        {userGroups.map(group => {
+                                            const excluded = (formData.excludedGroupIds || []).includes(group.id);
+                                            return (
+                                                <label
+                                                    key={group.id}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={excluded}
+                                                        onChange={() => toggleExcludedGroup(group.id)}
+                                                    />
+                                                    <span>{group.name}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+                            ) : null}
 
                             <View className="flex-row gap-4 mb-4">
                                 <View className="flex-1">

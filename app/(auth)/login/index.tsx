@@ -149,15 +149,16 @@ export default function LoginPage() {
                         </View>
 
                         <View className="mt-8">
-                            <Text className="text-center text-gray-600">
-                                ¿No tienes una cuenta?{' '}
-                                <Text
-                                    onPress={() => router.push('/signup')}
-                                    className="text-blue-600 font-bold"
-                                >
-                                    Regístrate
-                                </Text>
-                            </Text>
+                            <Text className="text-center text-gray-600">¿No tienes una cuenta?</Text>
+                            <Pressable
+                                onPress={() => router.push('/signup')}
+                                accessibilityRole="button"
+                                accessibilityLabel="Regístrate"
+                                testID="register-link"
+                                className="mt-2"
+                            >
+                                <Text className="text-center text-blue-600 font-bold">Regístrate</Text>
+                            </Pressable>
                         </View>
                     </View>
                 </ScrollView>

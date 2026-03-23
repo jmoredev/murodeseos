@@ -32,6 +32,21 @@ export default function UserWishlistPage() {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 setUser(currentUser);
 
+                // Obtener grupos del viewer para filtrar deseos excluidos por grupo compartido.
+                let viewerGroupIds: string[] = [];
+                if (currentUser?.id) {
+                    const { data: viewerMemberships, error: viewerMembershipsError } = await supabase
+                        .from('group_members')
+                        .select('group_id')
+                        .eq('user_id', currentUser.id);
+
+                    if (viewerMembershipsError) {
+                        console.error('Error loading viewer groups:', viewerMembershipsError);
+                    } else {
+                        viewerGroupIds = (viewerMemberships || []).map((m: any) => m.group_id);
+                    }
+                }
+
                 // Cargar perfil del usuario objetivo
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
@@ -51,7 +66,14 @@ export default function UserWishlistPage() {
 
                 if (sbError) throw sbError;
 
-                const mappedItems: GiftItem[] = (data || []).map(item => ({
+                const visibleItems = (data || []).filter((item: any) => {
+                    const excludedGroupIds = item.excluded_group_ids || [];
+                    if (!Array.isArray(excludedGroupIds) || excludedGroupIds.length === 0) return true;
+                    if (viewerGroupIds.length === 0) return true;
+                    return !excludedGroupIds.some((groupId: string) => viewerGroupIds.includes(groupId));
+                });
+
+                const mappedItems: GiftItem[] = visibleItems.map(item => ({
                     id: item.id,
                     title: item.title,
                     links: item.links || [],

@@ -1,0 +1,9 @@
+{
+  "name": "Muro de Deseos",
+  "short_name": "MuroDeseos",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5"
+}
+

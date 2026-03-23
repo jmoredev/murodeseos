@@ -23,10 +23,34 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false }
 })
 
+async function waitForSupabaseAdminAuthReady(options?: { timeoutMs?: number, intervalMs?: number }) {
+    const timeoutMs = options?.timeoutMs ?? 30000
+    const intervalMs = options?.intervalMs ?? 1000
+    const startedAt = Date.now()
+
+    // Supabase local a veces tarda unos segundos en levantar el endpoint de admin auth.
+    // Este "wait" evita fallos intermitentes de `ConnectionRefused`.
+    // Usamos listUsers como "probe" porque falla exactamente si admin auth no está listo.
+    while (Date.now() - startedAt < timeoutMs) {
+        try {
+            await supabase.auth.admin.listUsers({ page: 0, per_page: 1 })
+            return
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            console.log(`⏳ Esperando Supabase admin auth... (${message})`)
+            await new Promise(resolve => setTimeout(resolve, intervalMs))
+        }
+    }
+
+    throw new Error(`Supabase admin auth no disponible tras ${timeoutMs}ms`)
+}
+
 async function setupE2EUser() {
     console.log('🧪 Verificando configuración E2E...')
 
     const { user: mainUser, secondaryUser, group: testGroup } = E2E_CONFIG
+
+    await waitForSupabaseAdminAuthReady()
 
     // --- Helper para crear/verificar usuarios ---
     async function upsertUser(userConfig: typeof mainUser) {

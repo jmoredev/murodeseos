@@ -23,6 +23,23 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
 // Mapa para limpieza
 const createdGroupIds = new Set<string>()
 
+async function findCreatedGroupByName(name: string, timeoutMs = 15000) {
+    const deadline = Date.now() + timeoutMs
+    while (Date.now() < deadline) {
+        const { data } = await supabaseAdmin
+            .from('groups')
+            .select('id, name')
+            .eq('name', name)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+        if (data?.id) return data
+        await new Promise(resolve => setTimeout(resolve, 400))
+    }
+    return null
+}
+
 test.describe('Unirse a Grupo', () => {
     // Evitar colisiones en DB/estado del mismo usuario entre tests del mismo spec.
     test.describe.configure({ mode: 'serial' })
@@ -70,12 +87,8 @@ test.describe('Unirse a Grupo', () => {
 
         const userId = authData.user.id
 
-        // Buscar el grupo por nombre para obtener su ID real
-        const { data: groupData } = await supabase
-            .from('groups')
-            .select('id')
-            .eq('name', groupName)
-            .single()
+        // Buscar el grupo por nombre para obtener su ID real (con retry + admin para evitar RLS/timing)
+        const groupData = await findCreatedGroupByName(groupName, 20000)
 
         if (!groupData) throw new Error('No se encontró el grupo creado')
         createdGroupIds.add(groupData.id)
@@ -161,7 +174,7 @@ test.describe('Unirse a Grupo', () => {
         const userId = authData.user?.id
         if (!userId) throw new Error('No se pudo obtener userId para el test')
 
-        const { data: groupData } = await supabase.from('groups').select('id').eq('name', groupName).single()
+        const groupData = await findCreatedGroupByName(groupName, 20000)
         if (groupData) createdGroupIds.add(groupData.id)
         if (!groupData) throw new Error('No se encontró el grupo creado')
         const groupCode = groupData.id

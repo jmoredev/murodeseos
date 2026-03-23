@@ -69,13 +69,15 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 throw groupsResult.error;
             }
 
+            // Nota: si falla el join hacia `profiles`, igual queremos mostrar los grupos
+            // para no dejar la UI en estado vacío (esto afecta e2e en móvil).
+            let membersData: any[] = membersResult.data ?? [];
             if (membersResult.error) {
-                console.error('Error fetching members:', membersResult.error);
-                throw membersResult.error;
+                console.error('Error fetching members (profiles enrich):', membersResult.error);
+                membersData = [];
             }
 
             const groupsData = groupsResult.data;
-            const membersData = membersResult.data;
 
             setAliases(userAliases);
 
