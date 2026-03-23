@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey =
     process.env.NEXT_SERVICE_ROLE_KEY ||
     process.env.EXPO_SERVICE_ROLE_KEY ||

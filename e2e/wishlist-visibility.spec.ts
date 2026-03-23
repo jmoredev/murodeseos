@@ -3,7 +3,7 @@ import { E2E_CONFIG } from './config';
 import packageJson from '../package.json';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseServiceRoleKey =
     process.env.NEXT_SERVICE_ROLE_KEY ||
     process.env.EXPO_SERVICE_ROLE_KEY ||
@@ -75,9 +75,9 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
                 await input.pressSequentially(value, { delay: 60 });
             }
             if (await input.inputValue() !== value) {
-                await input.evaluate((el, v) => {
+                await input.evaluate((el: Element, v: string) => {
                     const inputEl = el as HTMLInputElement;
-                    inputEl.value = v as string;
+                    inputEl.value = v;
                     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
                     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
                 }, value);

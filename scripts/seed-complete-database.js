@@ -47,7 +47,7 @@ var dotenv_1 = require("dotenv");
 var path_1 = require("path");
 // Cargar variables de entorno
 dotenv_1.default.config({ path: path_1.default.resolve(process.cwd(), '.env.local') });
-var supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+var supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 var supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !supabaseServiceKey) {
     console.error('❌ Faltan variables de entorno');

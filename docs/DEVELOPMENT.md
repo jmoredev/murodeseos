@@ -21,8 +21,8 @@ Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrol
 3. Configura las variables de entorno:
    Crea un archivo `.env.local` con las siguientes claves:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=tu_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+   EXPO_PUBLIC_SUPABASE_URL=tu_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
    ```
 
 ## 🛠️ Desarrollo

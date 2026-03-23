@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 
 const supabaseServiceRoleKey =
     process.env.NEXT_SERVICE_ROLE_KEY ||
@@ -63,7 +63,7 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
         const friendEmail = E2E_CONFIG.secondaryUser.email;
         const friendName = E2E_CONFIG.secondaryUser.displayName;
 
-        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 0, per_page: 100 });
+        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 0, perPage: 100 });
         const friendUser = users?.find(u => u.email === friendEmail);
         if (!friendUser?.id) throw new Error(`No se encontró el userId del amigo (${friendEmail})`);
 

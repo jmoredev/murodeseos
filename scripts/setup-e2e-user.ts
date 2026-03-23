@@ -11,7 +11,7 @@ import { E2E_CONFIG } from '../e2e/config'
 // Cargar variables de entorno
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_SERVICE_ROLE_KEY || process.env.EXPO_SERVICE_ROLE_KEY!
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -33,7 +33,7 @@ async function waitForSupabaseAdminAuthReady(options?: { timeoutMs?: number, int
     // Usamos listUsers como "probe" porque falla exactamente si admin auth no está listo.
     while (Date.now() - startedAt < timeoutMs) {
         try {
-            await supabase.auth.admin.listUsers({ page: 0, per_page: 1 })
+            await supabase.auth.admin.listUsers({ page: 0, perPage: 1 })
             return
         } catch (err) {
             const message = err instanceof Error ? err.message : String(err)

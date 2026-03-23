@@ -5,7 +5,7 @@ import { E2E_CONFIG, BASE_URL } from './config'
 //Almacena pares de { ID_del_Test : ID_del_Dato_Creado }
 const createdIds = new Map<string, string>();
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseServiceRoleKey =
     process.env.NEXT_SERVICE_ROLE_KEY ||
     process.env.EXPO_SERVICE_ROLE_KEY ||

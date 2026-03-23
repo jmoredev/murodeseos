@@ -20,8 +20,8 @@ Este directorio contiene scripts para crear y gestionar datos de prueba en tu ap
 2. **Configurar variables de entorno:**
    Añade a tu archivo `.env.local`:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=tu-url-de-supabase
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
+   EXPO_PUBLIC_SUPABASE_URL=tu-url-de-supabase
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
    SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
    ```
 
