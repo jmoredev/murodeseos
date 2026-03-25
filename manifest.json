@@ -9,19 +9,19 @@
   "description": "Comparte tus sueños y organiza tus regalos.",
   "icons": [
     {
-      "src": "/AppIcons/android/mipmap-xxxhdpi/app_icon.png",
+      "src": "./AppIcons/android/mipmap-xxxhdpi/app_icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/AppIcons/Assets.xcassets/AppIcon.appiconset/_/512.png",
+      "src": "./AppIcons/Assets.xcassets/AppIcon.appiconset/_/512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/AppIcons/Assets.xcassets/AppIcon.appiconset/_/1024.png",
+      "src": "./AppIcons/Assets.xcassets/AppIcon.appiconset/_/1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
