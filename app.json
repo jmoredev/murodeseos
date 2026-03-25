@@ -31,14 +31,14 @@
             "themeColor": "#4F46E5",
             "backgroundColor": "#ffffff",
             "display": "standalone",
-            "baseUrl": "/murodeseos",
             "description": "Comparte tus sueños y organiza tus regalos."
         },
         "plugins": [
             "expo-router"
         ],
         "experiments": {
-            "typedRoutes": true
+            "typedRoutes": true,
+            "baseUrl": "/murodeseos"
         }
     }
 }

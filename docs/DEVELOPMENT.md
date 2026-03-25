@@ -19,11 +19,23 @@ Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrol
    bun install
    ```
 3. Configura las variables de entorno:
-   Crea un archivo `.env.local` con las siguientes claves:
+   - **Desarrollo local:** crea `.env.local` (no lo subas a Git) con las claves públicas de tu proyecto:
    ```env
    EXPO_PUBLIC_SUPABASE_URL=tu_url
    EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+   EXPO_PUBLIC_SITE_URL=http://localhost:3000
    ```
+   - **Deploy (GitHub Pages):** crea `.env.production` en la raíz con los mismos nombres de variable y los valores del **proyecto Supabase de producción** y la URL pública del sitio. Los scripts `deploy`, `deploy:test` y `deploy:prod` ejecutan `build:deploy`, que **solo** carga `.env.production` (se desactiva la carga automática de `.env` de Expo y no se usa `.env.local`), así el build no hereda tu base local.
+
+### Comandos de build
+- `bun run build` / `npm run build`: export web con la carga habitual de `.env` (útil en local; suele usar `.env.local`).
+- `bun run build:deploy` / `npm run build:deploy`: export para publicar, **forzando** variables desde `.env.production`.
+
+### Cómo comprobar qué valores usó el build de deploy
+1. Pon en `.env.production` un valor distintivo (por ejemplo una URL de Supabase que solo exista en producción).
+2. Ejecuta `npm run build:deploy` (o `bun run build:deploy`).
+3. En el bundle generado, busca ese valor en archivos bajo `dist/` (por ejemplo `grep` o búsqueda en el IDE sobre la carpeta `dist`). Debe aparecer la URL de producción, no la de `.env.local`.
+4. Para desarrollo, ejecuta `bun run dev` y confirma en la app o en la consola de red que sigue apuntando a tu instancia local.
 
 ## 🛠️ Desarrollo
 

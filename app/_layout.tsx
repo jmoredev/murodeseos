@@ -4,6 +4,20 @@ import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import './global.css';
 
+function getGithubPagesBasePath() {
+  if (typeof window === 'undefined') return '';
+  const isGithubPages = window.location.hostname.endsWith('github.io');
+  if (!isGithubPages) return '';
+
+  const pathname = window.location.pathname || '/';
+  const maybeRepoBase = pathname.split('/').filter(Boolean)[0];
+
+  // Fallback fijo para cuando se accede por accidente a https://<user>.github.io/
+  // o cuando la app todavía no ha navegado a /<repo>/.
+  const fallbackRepo = 'murodeseos';
+  return `/${maybeRepoBase || fallbackRepo}`;
+}
+
 function ensureWebHead() {
   if (typeof document === 'undefined') return;
 
@@ -24,6 +38,17 @@ function ensureWebHead() {
   ensureMeta('theme-color', '#4F46E5');
   ensureMeta('apple-mobile-web-app-capable', 'yes');
 
+  const base = getGithubPagesBasePath();
+
+  // Favicon (evita que el navegador pida /favicon.ico en la raíz del dominio).
+  let icon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+  if (!icon) {
+    icon = document.createElement('link');
+    icon.setAttribute('rel', 'icon');
+    document.head.appendChild(icon);
+  }
+  icon.setAttribute('href', `${base}/favicon.ico`);
+
   // Manifest link
   let link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
   if (!link) {
@@ -31,13 +56,7 @@ function ensureWebHead() {
     link.setAttribute('rel', 'manifest');
     document.head.appendChild(link);
   }
-  const pathname = window.location.pathname || '/';
-  // GitHub Pages sirve la app bajo /<repo>. Usamos una heurística segura para ese caso.
-  // Si no estamos en GitHub Pages, mantenemos la raíz.
-  const maybeRepoBase = pathname.split('/').filter(Boolean)[0];
-  const isGithubPages = window.location.hostname.endsWith('github.io');
-  const manifestBase = isGithubPages && maybeRepoBase ? `/${maybeRepoBase}` : '';
-  link.setAttribute('href', `${manifestBase}/manifest.json`);
+  link.setAttribute('href', `${base}/manifest.json`);
 }
 
 export default function RootLayout() {
@@ -49,6 +68,14 @@ export default function RootLayout() {
   useEffect(() => {
     // Ensure tags again after hydration (guards against fast navigation / React ordering).
     ensureWebHead();
+
+    // Register service worker (required for "Install app" on most browsers).
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      const base = getGithubPagesBasePath();
+
+      // Best effort; ignore failures in dev / unsupported environments.
+      navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {});
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
