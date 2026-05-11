@@ -13,6 +13,8 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [emailError, setEmailError] = useState('');
+    const emailErrorId = 'login-email-error';
+    const formStatusId = 'login-form-status';
 
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,13 +93,21 @@ export default function LoginPage() {
                         </Text>
 
                         {successMessage ? (
-                            <View className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <View
+                                className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+                                accessibilityLiveRegion="polite"
+                                nativeID={formStatusId}
+                            >
                                 <Text className="text-green-800 text-sm">{successMessage}</Text>
                             </View>
                         ) : null}
 
                         {error ? (
-                            <View className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <View
+                                className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                                accessibilityLiveRegion="polite"
+                                nativeID={formStatusId}
+                            >
                                 <Text className="text-red-600 text-sm font-medium">Error: {error}</Text>
                             </View>
                         ) : null}
@@ -116,9 +126,15 @@ export default function LoginPage() {
                                     autoCapitalize="none"
                                     keyboardType="email-address"
                                     accessibilityLabel="Correo electrónico"
+                                    accessibilityInvalid={!!emailError}
+                                    accessibilityDescribedBy={emailError ? emailErrorId : undefined}
                                     testID="email-input"
                                 />
-                                {emailError ? <Text className="mt-1 text-xs text-red-500">{emailError}</Text> : null}
+                                {emailError ? (
+                                    <Text nativeID={emailErrorId} className="mt-1 text-xs text-red-500">
+                                        {emailError}
+                                    </Text>
+                                ) : null}
                             </View>
 
                             <View>

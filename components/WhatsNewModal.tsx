@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getLatestUpdate } from '@/lib/updates';
 import packageJson from '@/package.json';
 
@@ -8,6 +8,8 @@ export default function WhatsNewModal() {
     const [isOpen, setIsOpen] = useState(false);
     const latestUpdate = getLatestUpdate();
     const currentVersion = packageJson.version;
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const previouslyFocused = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
         const lastSeenVersion = localStorage.getItem('lastSeenVersion');
@@ -18,6 +20,36 @@ export default function WhatsNewModal() {
             setIsOpen(true);
         }
     }, [latestUpdate.version, currentVersion]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                handleClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        const t = window.setTimeout(() => {
+            titleRef.current?.focus();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(t);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) return;
+        previouslyFocused.current?.focus?.();
+    }, [isOpen]);
 
     const handleClose = () => {
         setIsOpen(false);
@@ -44,7 +76,12 @@ export default function WhatsNewModal() {
                             v{latestUpdate.version}
                         </span>
                     </div>
-                    <h2 id="modal-title" className="text-2xl font-bold text-white mb-1">
+                    <h2
+                        id="modal-title"
+                        ref={titleRef}
+                        tabIndex={-1}
+                        className="text-2xl font-bold text-white mb-1"
+                    >
                         Novedades
                     </h2>
                     <p className="text-sm text-gray-400">

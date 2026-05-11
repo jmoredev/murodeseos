@@ -40,6 +40,21 @@ function injectHeadLinksIfHtmlExists(htmlPath) {
   return false;
 }
 
+function injectHtmlLangIfHtmlExists(htmlPath) {
+  if (!fs.existsSync(htmlPath)) return false;
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  // If already has a lang attribute, don't touch it.
+  if (/<html[^>]*\slang=/.test(html)) return true;
+
+  if (html.includes('<html')) {
+    fs.writeFileSync(htmlPath, html.replace('<html', '<html lang="es"'), 'utf8');
+    return true;
+  }
+
+  return false;
+}
+
 function main() {
   const root = process.cwd();
   const dist = path.join(root, 'dist');
@@ -61,6 +76,10 @@ function main() {
   // Ensure favicon/manifest are declared in the exported HTML so browsers don't request /favicon.ico.
   injectHeadLinksIfHtmlExists(path.join(dist, 'index.html'));
   injectHeadLinksIfHtmlExists(path.join(dist, '404.html'));
+
+  // Ensure correct document language for screen readers (WCAG 3.1.1).
+  injectHtmlLangIfHtmlExists(path.join(dist, 'index.html'));
+  injectHtmlLangIfHtmlExists(path.join(dist, '404.html'));
 }
 
 main();

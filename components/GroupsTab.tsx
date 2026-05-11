@@ -354,7 +354,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             {/* Modals are kept using React Native Modal or simple Views if triggered correctly */}
             {shareModalOpen ? (
-                <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
+                <View
+                    className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60"
+                    style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}
+                    accessibilityViewIsModal
+                >
                     <Pressable className="absolute inset-0" onPress={closeShareModal} />
                     <View className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 shadow-2xl">
                         <View className="items-center mb-8">
@@ -379,12 +383,19 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
                         <Pressable
                             onPress={shareNative}
+                            accessibilityRole="button"
+                            accessibilityLabel="Compartir enlace"
                             className="w-full py-5 bg-indigo-600 rounded-2xl items-center justify-center shadow-xl shadow-indigo-600/30 active:scale-[0.98] mb-4"
                         >
                             <Text className="text-white font-black text-lg">Compartir enlace</Text>
                         </Pressable>
 
-                        <Pressable onPress={closeShareModal} className="w-full items-center py-2">
+                        <Pressable
+                            onPress={closeShareModal}
+                            accessibilityRole="button"
+                            accessibilityLabel="Cerrar"
+                            className="w-full items-center py-2"
+                        >
                             <Text className="text-zinc-400 font-bold">Cerrar</Text>
                         </Pressable>
                     </View>
@@ -393,20 +404,27 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             {/* Rename Modal */}
             {renameModalOpen ? (
-                <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
+                <View
+                    className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60"
+                    style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}
+                    accessibilityViewIsModal
+                >
                     <Pressable className="absolute inset-0" onPress={() => setRenameModalOpen(false)} />
                     <View className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl">
                         <Text className="text-xl font-bold text-zinc-900 dark:text-white mb-4">Cambiar nombre del grupo</Text>
                         <TextInput
                             value={newName}
                             onChangeText={setNewName}
-                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none mb-6"
+                            accessibilityLabel="Nuevo nombre del grupo"
+                            className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all mb-6"
                             placeholder="Nuevo nombre"
                             autoFocus
                         />
                         <View className="flex-row gap-3 justify-end">
                             <Pressable
                                 onPress={() => setRenameModalOpen(false)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cancelar"
                                 className="px-4 py-2"
                             >
                                 <Text className="text-zinc-600 dark:text-zinc-400 font-medium">Cancelar</Text>
@@ -426,7 +444,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             {/* Delete Modal */}
             {deleteModalOpen ? (
-                <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
+                <View
+                    className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60"
+                    style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}
+                    accessibilityViewIsModal
+                >
                     <Pressable className="absolute inset-0" onPress={() => setDeleteModalOpen(false)} />
                     <View className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-xl">
                         <View className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 items-center justify-center mb-4">
@@ -439,6 +461,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         <View className="flex-row gap-3 justify-end">
                             <Pressable
                                 onPress={() => setDeleteModalOpen(false)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cancelar"
                                 className="px-4 py-2"
                             >
                                 <Text className="text-zinc-600 dark:text-zinc-400 font-medium">Cancelar</Text>

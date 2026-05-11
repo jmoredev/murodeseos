@@ -58,6 +58,18 @@ El proyecto utiliza **Vitest** como framework de pruebas unitarias y de componen
 Los tests se encuentran en el directorio `__tests__`.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
+## ♿ Checklist de Accesibilidad (antes de publicar)
+
+- **Teclado (web)**: puedes navegar por toda la UI con Tab/Shift+Tab y activar con Enter/Espacio.
+- **Foco visible**: el elemento enfocado se distingue claramente (especialmente en inputs y botones).
+- **Modales/overlays**:
+  - Al abrir, el foco cae dentro del modal.
+  - Con `Escape` se cierra (web).
+  - Al cerrar, el foco vuelve al elemento que lo abrió.
+- **Mensajes dinámicos**: errores/éxitos (login/registro) se anuncian sin tener que “buscar” el texto.
+- **Zoom 200%**: el contenido sigue siendo usable sin solaparse.
+- **Idioma**: el documento web está en español (`lang="es"`).
+
 ### Mocks Globales
 Si necesitas añadir mocks globales para nuevos módulos de terceros, edita `vitest.setup.ts`.
 

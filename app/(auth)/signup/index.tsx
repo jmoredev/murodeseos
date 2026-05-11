@@ -13,6 +13,9 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
+    const emailErrorId = 'signup-email-error';
+    const confirmPasswordErrorId = 'signup-confirm-password-error';
+    const formStatusId = 'signup-form-status';
 
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,7 +90,11 @@ export default function SignupPage() {
                         </Text>
 
                         {error ? (
-                            <View className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <View
+                                className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                                accessibilityLiveRegion="polite"
+                                nativeID={formStatusId}
+                            >
                                 <Text className="text-red-600 text-sm font-medium">Error: {error}</Text>
                             </View>
                         ) : null}
@@ -106,9 +113,15 @@ export default function SignupPage() {
                                     autoCapitalize="none"
                                     keyboardType="email-address"
                                     accessibilityLabel="Correo electrónico"
+                                    accessibilityInvalid={!!emailError}
+                                    accessibilityDescribedBy={emailError ? emailErrorId : undefined}
                                     testID="email-input"
                                 />
-                                {emailError ? <Text className="mt-1 text-xs text-red-500">{emailError}</Text> : null}
+                                {emailError ? (
+                                    <Text nativeID={emailErrorId} className="mt-1 text-xs text-red-500">
+                                        {emailError}
+                                    </Text>
+                                ) : null}
                             </View>
 
                             <View>
@@ -133,9 +146,15 @@ export default function SignupPage() {
                                     onChangeText={setConfirmPassword}
                                     secureTextEntry
                                     accessibilityLabel="Confirmar contraseña"
+                                    accessibilityInvalid={!!confirmPasswordError}
+                                    accessibilityDescribedBy={confirmPasswordError ? confirmPasswordErrorId : undefined}
                                     testID="confirm-password-input"
                                 />
-                                {confirmPasswordError ? <Text className="mt-1 text-xs text-red-500">{confirmPasswordError}</Text> : null}
+                                {confirmPasswordError ? (
+                                    <Text nativeID={confirmPasswordErrorId} className="mt-1 text-xs text-red-500">
+                                        {confirmPasswordError}
+                                    </Text>
+                                ) : null}
                             </View>
 
                             <Pressable

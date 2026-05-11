@@ -18,6 +18,9 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const [isDesktop, setIsDesktop] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const dialogTitleId = 'notifications-dialog-title';
+    const previouslyFocused = useRef<HTMLElement | null>(null);
 
     // Cargar notificaciones iniciales y configurar suscripción
     const loadNotifications = async () => {
@@ -74,6 +77,39 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isDesktop]);
 
+    // Focus management + Escape close (web)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Defer focus until DOM is painted.
+        const t = window.setTimeout(() => {
+            const el = document.getElementById(dialogTitleId);
+            el?.focus?.();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(t);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) return;
+        // Restore focus after closing.
+        (previouslyFocused.current || buttonRef.current)?.focus?.();
+    }, [isOpen]);
+
     const handleNotificationClick = async (notif: Notification) => {
         if (!notif.is_read) {
             await markAsRead(notif.id);
@@ -125,11 +161,12 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
         <div className="relative" ref={menuRef}>
             {/* Botón de Campana */}
             <button
+                ref={buttonRef}
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all active:scale-90"
                 aria-label="Ver notificaciones"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                 {unreadCount > 0 && (
                     <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-900 animate-in zoom-in-50 duration-300">
                         {unreadCount > 9 ? '+9' : unreadCount}
@@ -139,9 +176,16 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
 
             {/* VISTA ESCRITORIO (Bocadillo Flotante) */}
             {isOpen && isDesktop && (
-                <div className="absolute right-0 mt-3 w-96 bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col">
+                <div
+                    className="absolute right-0 mt-3 w-96 bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={dialogTitleId}
+                >
                     <div className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-                        <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Notificaciones</h3>
+                        <h3 id={dialogTitleId} tabIndex={-1} className="font-bold text-lg text-zinc-900 dark:text-white">
+                            Notificaciones
+                        </h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={handleMarkAllRead}
@@ -166,17 +210,25 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
 
             {/* VISTA MÓVIL (Pantalla Completa Real) */}
             {isOpen && !isDesktop && createPortal(
-                <div className="fixed inset-0 z-[200] bg-white dark:bg-zinc-950 flex flex-col animate-in slide-in-from-bottom duration-300">
+                <div
+                    className="fixed inset-0 z-[200] bg-white dark:bg-zinc-950 flex flex-col animate-in slide-in-from-bottom duration-300"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={dialogTitleId}
+                >
                     <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800 h-20 shrink-0 bg-white dark:bg-zinc-950">
                         <div className="flex flex-col">
-                            <h2 className="text-2xl font-black text-zinc-900 dark:text-white">Notificaciones</h2>
+                            <h2 id={dialogTitleId} tabIndex={-1} className="text-2xl font-black text-zinc-900 dark:text-white">
+                                Notificaciones
+                            </h2>
                             {unreadCount > 0 && <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Tienes {unreadCount} por leer</span>}
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
                             className="w-12 h-12 flex items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white active:scale-90 transition-transform"
+                            aria-label="Cerrar notificaciones"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
 

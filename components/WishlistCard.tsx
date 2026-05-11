@@ -55,6 +55,16 @@ export function WishlistCard({
 
     // If owner, we ignore reservation state visually (privacy rule)
 
+    const a11yReservation = isOwner
+        ? undefined
+        : isReservedByMe
+            ? 'Reservado por ti'
+            : isReservedByOther
+                ? 'Reservado'
+                : 'Disponible';
+
+    const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
+
     const handlePress = () => {
         if (onClick) onClick(item);
     };
@@ -62,6 +72,12 @@ export function WishlistCard({
     return (
         <Pressable
             onPress={handlePress}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            accessibilityHint="Abrir detalle del deseo"
+            accessibilityValue={{
+                text: `Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${a11yReservation ? `. ${a11yReservation}.` : '.'}`,
+            }}
             className={`bg-white dark:bg-zinc-900 rounded-3xl border overflow-hidden transition-all flex-col h-full active:scale-[0.98]
                 ${isReservedByMe
                     ? 'border-green-500 dark:border-green-500 shadow-lg shadow-green-500/10'
@@ -150,6 +166,8 @@ export function WishlistCard({
                         onPress={(e) => {
                             if (onDelete) onDelete(item);
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Marcar como ya lo tengo"
                         className="mt-5 pt-4 border-t border-zinc-50 dark:border-zinc-800 items-center justify-center flex-row active:opacity-60"
                     >
                         <Text className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mr-2">✓ Ya lo tengo</Text>
@@ -162,6 +180,8 @@ export function WishlistCard({
                         {isAvailable && (
                             <Pressable
                                 onPress={() => onReserve && onReserve(item)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Reservar deseo"
                                 className="w-full py-3.5 bg-indigo-600 rounded-2xl items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
                             >
                                 <Text className="text-white font-black text-xs uppercase tracking-widest">Reservar</Text>
@@ -171,6 +191,8 @@ export function WishlistCard({
                         {isReservedByMe && (
                             <Pressable
                                 onPress={() => onCancelReserve && onCancelReserve(item)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cancelar reserva"
                                 className="w-full py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl items-center justify-center active:scale-[0.98]"
                             >
                                 <Text className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Cancelar reserva</Text>

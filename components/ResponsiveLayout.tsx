@@ -30,6 +30,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="flex-row items-center gap-8 ml-8">
                                 <Pressable
                                     onPress={() => setActiveTab('wishlist')}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Mis deseos"
+                                    accessibilityState={{ selected: activeTab === 'wishlist' }}
                                     className="px-2 py-1"
                                 >
                                     <Text className={`text-sm font-bold ${activeTab === 'wishlist' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
@@ -38,6 +41,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('groups')}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Mis grupos"
+                                    accessibilityState={{ selected: activeTab === 'groups' }}
                                     className="px-2 py-1"
                                 >
                                     <Text className={`text-sm font-bold ${activeTab === 'groups' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
@@ -47,6 +53,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                 <Pressable
                                     onPress={() => setActiveTab('profile')}
                                     className="px-2 py-1"
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Mi perfil"
+                                    accessibilityState={{ selected: activeTab === 'profile' }}
                                 >
                                     <Text className={`text-sm font-bold ${activeTab === 'profile' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
                                         MI PERFIL
@@ -61,6 +70,8 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                 <Pressable
                                     onPress={onSignOut}
                                     className="ml-4 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100"
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Salir"
                                 >
                                     <Text className="text-red-600 text-xs font-bold">SALIR</Text>
                                 </Pressable>
@@ -93,6 +104,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                 >
                     <Pressable
                         onPress={() => setActiveTab('wishlist')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Deseos"
+                        accessibilityState={{ selected: activeTab === 'wishlist' }}
                         className={`items-center p-2 rounded-2xl ${activeTab === 'wishlist' ? 'bg-purple-50' : ''}`}
                     >
                         <View className={`w-6 h-6 items-center justify-center ${activeTab === 'wishlist' ? 'text-purple-600' : 'text-gray-400'}`}>
@@ -105,6 +119,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
 
                     <Pressable
                         onPress={() => setActiveTab('groups')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Grupos"
+                        accessibilityState={{ selected: activeTab === 'groups' }}
                         className={`items-center p-2 rounded-2xl ${activeTab === 'groups' ? 'bg-blue-50' : ''}`}
                     >
                         <View className={`w-6 h-6 items-center justify-center ${activeTab === 'groups' ? 'text-blue-600' : 'text-gray-400'}`}>
@@ -117,6 +134,9 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
 
                     <Pressable
                         onPress={() => setActiveTab('profile')}
+                        accessibilityRole="button"
+                        accessibilityLabel="Perfil"
+                        accessibilityState={{ selected: activeTab === 'profile' }}
                         className={`items-center p-2 rounded-2xl ${activeTab === 'profile' ? 'bg-indigo-50' : ''}`}
                     >
                         <View className={`w-6 h-6 items-center justify-center ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}>
