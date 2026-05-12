@@ -223,8 +223,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                 <PrimaryButton
                     onPress={() => openForm()}
                     accessibilityLabel="Nuevo deseo"
+                    variant="icon"
                     className="w-12 h-12 rounded-2xl"
-                    textClassName="text-on-primary font-display text-2xl"
+                    textClassName="text-on-primary font-display text-2xl leading-none"
                 >
                     +
                 </PrimaryButton>

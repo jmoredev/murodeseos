@@ -25,6 +25,7 @@ Treat the UI as a series of physical layers. Use the hierarchy below to "lift" c
 2. **Sectioning:** `surface-container-low` (#ffecee)
 3. **Floating Cards:** `surface-container-lowest` (#ffffff)
 4. **Interactive Overlays:** `surface-bright` (#fff4f4)
+5. **Soft-filled fields (inputs):** `surface-container-highest` (#ecd8e0) — blush intermedio (más cuerpo que `#efe0e5`, más ligero que un malva) para leer bien sobre blanco y encajar con `surface` / `surface-container-low`.
 
 ### The "Glass & Gradient" Rule
 To escape a "flat" feel, use Glassmorphism for floating navigation bars or modal headers. Apply `surface` at 70% opacity with a `20px` backdrop-blur.
@@ -65,7 +66,7 @@ Traditional drop shadows are often messy. This system uses **Ambient Light Physi
 * **Layout:** Use vertical white space (`spacing-4`) to separate the "Wisher's Name" from the "Wish Body."
 
 ### Input Fields
-* **Style:** Soft-filled. Use `surface-container-highest` background.
+* **Style:** Soft-filled. Use `surface-container-highest` (#ecd8e0) background on any parent (incluido `surface-container-lowest` en tarjetas).
 * **Focus State:** Shift background to `surface-container-lowest` and add a `2px` "Ghost Border" of `primary` at 20% opacity.
 
 ### Navigation (The Floating Dock)

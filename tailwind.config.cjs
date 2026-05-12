@@ -16,7 +16,8 @@ module.exports = {
         'surface-bright': '#fff4f4',
         'surface-container-low': '#ffecee',
         'surface-container-high': '#fff0f0',
-        'surface-container-highest': '#ffe8ea',
+        // Relleno de inputs: entre el lienzo y el gris-malva; armoniza con #ffecee / surface sin el salto de #d6c2ce
+        'surface-container-highest': '#ecd8e0',
         'surface-container-lowest': '#ffffff',
         secondary: '#6d5a00',
         tertiary: '#006666',

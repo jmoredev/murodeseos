@@ -327,8 +327,9 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     <PrimaryButton
                         onPress={() => router.push('/groups/create' as any)}
                         accessibilityLabel="Crear grupo"
+                        variant="icon"
                         className="w-12 h-12 rounded-2xl"
-                        textClassName="text-on-primary font-display text-2xl"
+                        textClassName="text-on-primary font-display text-2xl leading-none"
                     >
                         +
                     </PrimaryButton>
@@ -338,9 +339,9 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             {/* Group List Grid */}
             <View className="w-full">
                 {groups.length > 0 ? (
-                    <View className="flex-row flex-wrap -m-3">
+                    <View className="flex-row flex-wrap -m-3 items-stretch">
                         {groups.map(group => (
-                            <View key={group.id} className="w-full md:w-1/2 lg:w-1/3 p-3">
+                            <View key={group.id} className="w-full md:w-1/2 lg:w-1/3 p-3 flex">
                                 <GroupCard
                                     group={group}
                                     isAdmin={userRoles.get(group.id) === 'admin'}

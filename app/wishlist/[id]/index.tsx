@@ -190,14 +190,20 @@ export default function UserWishlistPage() {
                     </View>
 
                     {!isDesktop && (
-                        <PrimaryButton
+                        <Pressable
                             onPress={() => setShowInfo(true)}
+                            accessibilityRole="button"
                             accessibilityLabel="Información del perfil"
-                            className="w-12 h-12 rounded-2xl"
-                            textClassName="text-on-primary text-2xl"
+                            testID="wishlist-profile-info-button"
+                            className="w-12 h-12 shrink-0 rounded-full bg-surface-container-low items-center justify-center ring-1 ring-outline-variant/25 active:opacity-80"
                         >
-                            ℹ️
-                        </PrimaryButton>
+                            <Text
+                                className="text-primary font-display font-bold text-lg"
+                                style={{ lineHeight: 20 }}
+                            >
+                                i
+                            </Text>
+                        </Pressable>
                     )}
                 </View>
 

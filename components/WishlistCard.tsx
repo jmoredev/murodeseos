@@ -35,16 +35,11 @@ export function WishlistCard({
     onCancelReserve,
     onDelete,
 }: WishlistCardProps) {
-    const prioritySurface = {
-        low: 'bg-tertiary/12',
-        medium: 'bg-secondary/12',
-        high: 'bg-primary/10',
-    };
-
-    const priorityText = {
-        low: 'text-tertiary font-sans-bold',
-        medium: 'text-secondary font-sans-bold',
-        high: 'text-primary font-sans-bold',
+    /** Indicador de categoría (solo el punto); el texto va siempre sobre superficie clara para contraste sobre la foto. */
+    const priorityAccent = {
+        low: 'bg-tertiary',
+        medium: 'bg-secondary',
+        high: 'bg-primary',
     };
 
     const priorityLabels = {
@@ -103,8 +98,9 @@ export function WishlistCard({
                 )}
 
                 <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                    <View className={`px-2.5 py-1 rounded-full ${prioritySurface[item.priority]}`}>
-                        <Text className={`text-[11px] uppercase tracking-wider ${priorityText[item.priority]}`}>
+                    <View className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface-container-lowest/92 shadow-ambient backdrop-blur-md ring-1 ring-outline-variant/15">
+                        <View className={`w-1.5 h-1.5 rounded-full shrink-0 ${priorityAccent[item.priority]}`} />
+                        <Text className="text-[11px] uppercase tracking-wider text-on-background font-sans-bold">
                             Prioridad {priorityLabels[item.priority]}
                         </Text>
                     </View>

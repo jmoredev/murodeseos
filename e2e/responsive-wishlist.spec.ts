@@ -104,8 +104,8 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         // La barra lateral debería estar oculta en móvil (display: none por Tailwind)
         await expect(page.locator('aside')).not.toBeVisible();
 
-        // En la vista móvil actual, en lugar de un FAB, hay un botón de información ("ℹ️")
-        const infoButton = page.getByText('ℹ️').first();
+        // Botón de información del perfil (móvil)
+        const infoButton = page.getByTestId('wishlist-profile-info-button');
         await expect(infoButton).toBeVisible();
 
         // Abrir el Bottom Sheet

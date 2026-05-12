@@ -127,49 +127,57 @@ export const GroupCard = memo(function GroupCard({
             accessibilityRole="button"
             accessibilityLabel={`${group.name}, ${participantCount} participantes`}
             accessibilityHint="Abrir detalle del grupo"
-            className="bg-surface-container-lowest rounded-lg p-6 shadow-ambient active:scale-[0.98] transition-all mb-4"
+            className="bg-surface-container-lowest rounded-lg p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
         >
-            {/* Header */}
-            <View className="flex-row justify-between items-start mb-6">
-                <View className="flex-row items-center flex-1">
-                    <View className="w-14 h-14 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
+            {/* Header: ancho fijo para acciones → misma columna de título en web; min-w-0 evita desbordes en flex */}
+            <View className="flex-row justify-between items-start mb-6 min-w-0">
+                <View className="flex-row items-start flex-1 min-w-0 pr-2">
+                    <View className="w-14 h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
                         <Text className="text-3xl">{group.icon}</Text>
                     </View>
-                    <View className="ml-4 flex-1">
+                    <View className="ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
                         {isEditingGroupName ? (
-                            <View className="flex-row items-center">
+                            <View className="flex-row items-center min-w-0">
                                 <TextInput
                                     value={groupNameInput}
                                     onChangeText={setGroupNameInput}
-                                    className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 ring-2 ring-primary/20"
+                                    className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 min-w-0 ring-2 ring-primary/20"
                                     autoFocus
                                 />
-                                <Pressable onPress={saveGroupName} className="p-2 ml-2 bg-green-50 rounded-lg">
+                                <Pressable onPress={saveGroupName} className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
                                     <Text className="text-green-600">✓</Text>
                                 </Pressable>
-                                <Pressable onPress={cancelEditingGroupName} className="p-2 ml-1 bg-red-50 rounded-lg">
+                                <Pressable onPress={cancelEditingGroupName} className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
                                     <Text className="text-red-600">✕</Text>
                                 </Pressable>
                             </View>
                         ) : (
-                            <View className="flex-row items-center">
-                                <Text className="font-display text-xl text-on-background flex-1" numberOfLines={1}>
+                            <View className="flex-row items-center min-w-0">
+                                <Text
+                                    className="font-display text-xl text-on-background min-w-0 flex-1 shrink"
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
                                     {group.name}
                                 </Text>
                                 {onGroupAliasEdit && (
-                                    <Pressable onPress={startEditingGroupName} className="p-1 ml-1">
+                                    <Pressable onPress={startEditingGroupName} className="p-1 ml-1 shrink-0">
                                         <Text className="text-on-surface/40 text-xs">✎</Text>
                                     </Pressable>
                                 )}
                             </View>
                         )}
-                        <Text className="text-xs text-on-surface/50 mt-1 font-sans-bold uppercase tracking-wider">
+                        <Text
+                            className="text-xs text-on-surface/50 mt-1 font-sans-bold uppercase tracking-wider leading-tight"
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
                             {participantCount} participantes
                         </Text>
                     </View>
                 </View>
 
-                <View className="flex-row">
+                <View className="w-[7.25rem] shrink-0 flex-row justify-end items-start">
                     <Pressable
                         onPress={handleShareClick}
                         accessibilityRole="button"
@@ -179,7 +187,7 @@ export const GroupCard = memo(function GroupCard({
                         <Text className="text-lg">↗</Text>
                     </Pressable>
 
-                    {isAdmin && (
+                    {isAdmin ? (
                         <View className="relative">
                             <Pressable
                                 onPress={handleMenuClick}
@@ -207,6 +215,8 @@ export const GroupCard = memo(function GroupCard({
                                 </View>
                             )}
                         </View>
+                    ) : (
+                        <View className="w-12 h-12 shrink-0" pointerEvents="none" accessibilityElementsHidden />
                     )}
                 </View>
             </View>
