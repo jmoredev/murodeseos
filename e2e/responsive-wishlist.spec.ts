@@ -24,7 +24,7 @@ async function getUserIdByEmail(email: string) {
 }
 
 test.describe('Lista de Deseos de Amigo Responsiva', () => {
-    let createdFriendWish: { userId: string; title: string } | null = null;
+    let createdFriendWish: { userId: string; title: string; id: string } | null = null;
 
     test.afterEach(async ({ page }) => {
         // Limpiar reservas realizadas durante el test
@@ -49,19 +49,25 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         // Asegurar que el amigo tenga al menos un deseo para que el test encuentre "Reservar"
         const friendUserId = await getUserIdByEmail(E2E_CONFIG.secondaryUser.email);
         const friendWishTitle = `Friend Wish ${Date.now()}`;
-        const { error: insertError } = await supabaseAdmin.from('wishlist_items').insert({
-            user_id: friendUserId,
-            title: friendWishTitle,
-            price: E2E_CONFIG.wishlistItems[0].price,
-            image_url: null,
-            links: [],
-            notes: '',
-            priority: E2E_CONFIG.wishlistItems[2].priority,
-            reserved_by: null
-        });
+        const { data: insertedWish, error: insertError } = await supabaseAdmin
+            .from('wishlist_items')
+            .insert({
+                user_id: friendUserId,
+                title: friendWishTitle,
+                price: E2E_CONFIG.wishlistItems[0].price,
+                image_url: null,
+                links: [],
+                notes: '',
+                priority: E2E_CONFIG.wishlistItems[2].priority,
+                reserved_by: null,
+            })
+            .select('id')
+            .single();
 
-        if (insertError) throw new Error(`Error insertando wishlist para el amigo: ${insertError.message}`);
-        createdFriendWish = { userId: friendUserId, title: friendWishTitle };
+        if (insertError || !insertedWish?.id) {
+            throw new Error(`Error insertando wishlist para el amigo: ${insertError?.message ?? 'sin id'}`);
+        }
+        createdFriendWish = { userId: friendUserId, title: friendWishTitle, id: insertedWish.id };
 
         // Navegar directo al detalle del grupo E2E (evita fragilidad del tab "Mis grupos")
         const groupId = E2E_CONFIG.group.id;
@@ -120,23 +126,14 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
     });
 
     test('debe permitir reservar un artículo en la vista de amigo', async ({ page }) => {
-        // Reservar el deseo que sembramos en `beforeEach` para evitar ambigüedad.
-        const getCard = () => {
-            const title = page.getByText(createdFriendWish!.title, { exact: true }).first();
-            return title.locator('xpath=ancestor::*[contains(@class,"rounded-3xl")]').first();
-        };
-        const card = getCard();
-        const reserveText = card.getByText('Reservar', { exact: true }).first();
-        await expect(reserveText).toBeVisible();
-
-        // `Reservar` es texto dentro de un `Pressable`; en RN Web a veces hacer click al texto no dispara `onPress`.
-        const reservePressable = reserveText.locator('xpath=ancestor::*[contains(@class,"bg-indigo-600") and contains(@class,"rounded-2xl")]').first();
-        await expect(reservePressable).toBeVisible();
+        const card = page.getByTestId(`wishlist-card-${createdFriendWish!.id}`);
+        await expect(card.getByText(createdFriendWish!.title, { exact: true })).toBeVisible();
+        const reserveBtn = card.getByTestId('wish-reserve-button');
+        await expect(reserveBtn).toBeVisible();
         page.once('dialog', dialog => dialog.accept());
-        await reservePressable.evaluate((el) => (el as HTMLElement).click());
+        await reserveBtn.evaluate((el) => (el as HTMLElement).click());
         await page.waitForTimeout(500);
 
-        // Asertar estabilidad mínima de la acción en UI (evitar falsos negativos por diferencias de engine)
-        await expect(getCard().getByText(/Reservar|Cancelar reserva/i).first()).toBeVisible({ timeout: 15000 });
+        await expect(card.getByText(/Reservar|Cancelar reserva/i).first()).toBeVisible({ timeout: 15000 });
     });
 });

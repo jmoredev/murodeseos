@@ -594,9 +594,13 @@ describe('GroupsTab', () => {
 
             const mockMemberships = [{ group_id: 'group-1', role: 'admin' }]
             const mockGroups = [{ id: 'group-1', name: 'Grupo Test', icon: '🎁' }]
-            const mockMembersWithProfiles = [
-                { group_id: 'group-1', user_id: mockUserId, profiles: { id: mockUserId, display_name: 'Yo', avatar_url: null } },
-                { group_id: 'group-1', user_id: 'user-456', profiles: { id: 'user-456', display_name: 'Usuario Test', avatar_url: null } }
+            const mockMemberRows = [
+                { group_id: 'group-1', user_id: mockUserId },
+                { group_id: 'group-1', user_id: 'user-456' },
+            ]
+            const mockProfiles = [
+                { id: mockUserId, display_name: 'Yo', avatar_url: null },
+                { id: 'user-456', display_name: 'Usuario Test', avatar_url: null },
             ]
 
                 ; (supabase.from as any).mockImplementation((table: string) => {
@@ -604,13 +608,19 @@ describe('GroupsTab', () => {
                         return {
                             select: vi.fn().mockReturnThis(),
                             eq: vi.fn().mockResolvedValue({ data: mockMemberships, error: null }),
-                            in: vi.fn().mockResolvedValue({ data: mockMembersWithProfiles, error: null })
+                            in: vi.fn().mockResolvedValue({ data: mockMemberRows, error: null })
                         }
                     }
                     if (table === 'groups') {
                         return {
                             select: vi.fn().mockReturnThis(),
                             in: vi.fn().mockResolvedValue({ data: mockGroups, error: null })
+                        }
+                    }
+                    if (table === 'profiles') {
+                        return {
+                            select: vi.fn().mockReturnThis(),
+                            in: vi.fn().mockResolvedValue({ data: mockProfiles, error: null })
                         }
                     }
                     return {

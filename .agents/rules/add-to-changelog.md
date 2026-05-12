@@ -1,34 +1,45 @@
 ---
-trigger: always_on
+description: Gestión automática del archivo CHANGELOG.md siguiendo el estándar Keep a Changelog.
+globs: CHANGELOG.md
 ---
 
-# Add to Changelog
+# Changelog Manager Role
 
-Update the project's CHANGELOG.md file with a new entry.
+Actúa como un experto en mantenimiento de software. Tu objetivo es mantener el archivo `CHANGELOG.md` siempre actualizado, estructurado y profesional.
 
-## Usage:
-`/add-to-changelog <version> <change_type> <message>`
+## Disparadores (Triggers)
+- Cuando el usuario diga "actualiza el changelog", "añade al log" o use el comando sugerido `/add-to-changelog`.
+- Al finalizar una tarea importante o corrección de errores, sugiere al usuario si desea documentarlo en el changelog.
 
-## Parameters:
-- `<version>`: Version number (e.g., "1.1.0")
-- `<change_type>`: One of: "added", "changed", "deprecated", "removed", "fixed", "security"
-- `<message>`: Description of the change
+## Instrucciones de Ejecución
+1. **Verificación de Archivo**: Si `CHANGELOG.md` no existe en la raíz, créalo usando la plantilla oficial de [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+2. **Localización de Versión**: 
+   - Busca la sección de la versión indicada.
+   - Si la versión es nueva, añádela al principio (debajo de `[Unreleased]`) con la fecha actual en formato `YYYY-MM-DD`.
+3. **Clasificación de Cambios**: Debes agrupar la entrada estrictamente en una de estas categorías:
+   - `Added`: para nuevas funciones.
+   - `Changed`: para cambios en funciones existentes.
+   - `Deprecated`: para funciones que se eliminarán pronto.
+   - `Removed`: para funciones eliminadas.
+   - `Fixed`: para cualquier corrección de errores.
+   - `Security`: en caso de vulnerabilidades.
+4. **Formato de Entrada**:
+   - Usa listas con viñetas (`-`).
+   - Mantén un lenguaje conciso y técnico pero comprensible.
+   - Enlaza los números de versión si existe una sección de referencias al final del documento.
 
-## Examples:
-- `/add-to-changelog 1.1.0 added "New markdown to BlockDoc conversion feature"`
-- `/add-to-changelog 1.0.2 fixed "Bug in HTML renderer causing incorrect output"`
+## Comando Simulado: `/add-to-changelog`
+Aunque Cursor no registra comandos `/` reales desde reglas, si el usuario escribe esto, procesa los argumentos en este orden: `<versión> <tipo> <mensaje>`.
 
-## Steps:
-1. Check for existing CHANGELOG.md or create if missing
-2. Find or create section for the specified version
-3. Add the new entry under the appropriate change type
-4. Format according to Keep a Changelog conventions
-5. Write the updated changelog back to file
-6. Optionally commit the changes with appropriate message
+### Ejemplo de comportamiento esperado:
+**Usuario:** `/add-to-changelog 1.2.0 added "Autenticación con Google"`
+**Tú (Cursor):** 1. Lees el archivo `CHANGELOG.md`.
+2. Buscas o creas la sección `## [1.2.0] - 202X-XX-XX`.
+3. Añades `### Added` si no existe.
+4. Insertas `- Autenticación con Google`.
+5. Guardas el archivo y confirmas la acción.
 
-## Format:
-Follow [Keep a Changelog](https://keepachangelog.com) format:
-- Group changes by type
-- List changes as bullet points
-- Include date for version sections
-- Keep entries concise but descriptive
+## Restricciones
+- NO inventes versiones si el usuario no las proporciona (pregunta primero).
+- NO rompas el formato Markdown existente.
+- Asegúrate de que solo haya un H1 en el documento.
