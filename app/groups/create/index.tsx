@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { createGroup } from '@/lib/group-utils';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function CreateGroupPage() {
     const router = useRouter();
@@ -25,13 +26,12 @@ export default function CreateGroupPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('No se encontró el usuario');
 
-            const group = await createGroup({
+            await createGroup({
                 name: name.trim(),
                 icon,
                 creatorId: user.id
             });
 
-            // Navegar al home (el dashboard se actualizará)
             router.replace('/');
         } catch (err: any) {
             console.error('Error creating group:', err);
@@ -42,51 +42,53 @@ export default function CreateGroupPage() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <View className="px-6 py-4 flex-row items-center justify-between border-b border-gray-100">
+        <SafeAreaView className="flex-1 bg-surface">
+            <View className="px-6 py-4 flex-row items-center justify-between bg-surface-container-low">
                 <Pressable onPress={() => router.back()} className="p-2">
-                    <Text className="text-blue-600 font-bold">Volver</Text>
+                    <Text className="text-primary font-sans-bold">Volver</Text>
                 </Pressable>
-                <Text className="text-lg font-bold">Crear Grupo</Text>
+                <Text className="text-lg font-display text-on-background">Crear grupo</Text>
                 <View className="w-10" />
             </View>
 
             <ScrollView className="flex-1 p-6">
                 <View className="items-center mb-8">
-                    <View className="w-24 h-24 bg-blue-50 rounded-full items-center justify-center border-2 border-blue-100">
+                    <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center shadow-ambient">
                         <Text className="text-5xl">{icon}</Text>
                     </View>
-                    <Text className="mt-4 text-gray-500 text-sm">Toca para cambiar el icono (Próximamente)</Text>
+                    <Text className="mt-4 text-on-surface/55 text-sm font-sans">Icono del grupo</Text>
                 </View>
 
                 <View className="space-y-6">
                     <View>
-                        <Text className="text-sm font-bold text-gray-700 mb-2">Nombre del grupo</Text>
+                        <Text className="text-sm font-sans-semibold text-on-background mb-2">Nombre del grupo</Text>
                         <TextInput
                             value={name}
                             onChangeText={setName}
                             placeholder="Ej: Amigos de la Uni, Familia..."
-                            className="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-gray-900"
+                            placeholderTextColor="#4c212b88"
+                            className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                         />
                     </View>
 
                     {error ? (
-                        <View className="bg-red-50 p-4 rounded-xl border border-red-100">
-                            <Text className="text-red-600 text-sm text-center font-medium">{error}</Text>
+                        <View className="bg-primary/10 p-4 rounded-xl ring-1 ring-primary/20">
+                            <Text className="text-primary text-sm text-center font-sans-medium">{error}</Text>
                         </View>
                     ) : null}
 
-                    <Pressable
+                    <PrimaryButton
                         onPress={handleCreate}
                         disabled={loading}
-                        className={`mt-6 p-4 rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/30 ${loading ? 'opacity-70' : ''}`}
+                        textClassName="text-on-primary font-sans-bold text-lg"
+                        accessibilityLabel="Crear grupo"
                     >
                         {loading ? (
-                            <ActivityIndicator color="white" />
+                            <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text className="text-white text-center font-bold text-lg">Crear Grupo</Text>
+                            'Crear grupo'
                         )}
-                    </Pressable>
+                    </PrimaryButton>
                 </View>
             </ScrollView>
         </SafeAreaView>

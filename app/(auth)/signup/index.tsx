@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -17,9 +18,9 @@ export default function SignupPage() {
     const confirmPasswordErrorId = 'signup-confirm-password-error';
     const formStatusId = 'signup-form-status';
 
-    const validateEmail = (email: string): boolean => {
+    const validateEmail = (emailValue: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
+        return emailRegex.test(emailValue);
     };
 
     const handleSignup = async () => {
@@ -45,11 +46,9 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            // Nota: En Expo PWA, el redirectTo debe apuntar al dominio configurado
-            // Para desarrollo local, usaremos localhost:8081 que es el puerto por defecto de Expo
             const redirectTo = 'http://localhost:8081/login';
 
-            const { data, error: signupError } = await supabase.auth.signUp({
+            const { error: signupError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
@@ -68,43 +67,44 @@ export default function SignupPage() {
             }
 
             router.push({ pathname: '/login', params: { registered: 'true' } });
-        } catch (err) {
+        } catch {
             setError('Ocurrió un error inesperado. Por favor, intenta de nuevo.');
             setLoading(false);
         }
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-surface">
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 className="flex-1"
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
                     <View className="w-full max-w-sm mx-auto">
-                        <Text className="text-3xl font-extrabold text-blue-600 text-center">
+                        <Text className="text-3xl font-display text-on-background text-center tracking-tight">
                             Crear una cuenta
                         </Text>
-                        <Text className="mt-2 text-sm text-gray-600 text-center">
+                        <Text className="mt-3 text-sm text-on-surface/65 text-center font-sans">
                             Únete a Muro de deseos hoy
                         </Text>
 
                         {error ? (
                             <View
-                                className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                                className="mt-6 p-4 bg-primary/10 rounded-2xl ring-1 ring-primary/20"
                                 accessibilityLiveRegion="polite"
                                 nativeID={formStatusId}
                             >
-                                <Text className="text-red-600 text-sm font-medium">Error: {error}</Text>
+                                <Text className="text-primary text-sm font-sans-medium">Error: {error}</Text>
                             </View>
                         ) : null}
 
                         <View className="mt-8 space-y-4">
                             <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Correo electrónico</Text>
+                                <Text className="text-sm font-sans-semibold text-on-background mb-2">Correo electrónico</Text>
                                 <TextInput
-                                    className={`p-3 border rounded-lg bg-gray-50 ${emailError ? 'border-red-500' : 'border-gray-300'}`}
+                                    className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${emailError ? 'ring-2 ring-primary/30' : ''}`}
                                     placeholder="tu@ejemplo.com"
+                                    placeholderTextColor="#4c212b88"
                                     value={email}
                                     onChangeText={(text) => {
                                         setEmail(text);
@@ -118,17 +118,18 @@ export default function SignupPage() {
                                     testID="email-input"
                                 />
                                 {emailError ? (
-                                    <Text nativeID={emailErrorId} className="mt-1 text-xs text-red-500">
+                                    <Text nativeID={emailErrorId} className="mt-1 text-xs text-primary font-sans-medium">
                                         {emailError}
                                     </Text>
                                 ) : null}
                             </View>
 
                             <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Contraseña</Text>
+                                <Text className="text-sm font-sans-semibold text-on-background mb-2">Contraseña</Text>
                                 <TextInput
-                                    className="p-3 border border-gray-300 rounded-lg bg-gray-50"
+                                    className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                     placeholder="••••••••"
+                                    placeholderTextColor="#4c212b88"
                                     value={password}
                                     onChangeText={setPassword}
                                     secureTextEntry
@@ -138,10 +139,11 @@ export default function SignupPage() {
                             </View>
 
                             <View>
-                                <Text className="text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</Text>
+                                <Text className="text-sm font-sans-semibold text-on-background mb-2">Confirmar contraseña</Text>
                                 <TextInput
-                                    className={`p-3 border rounded-lg bg-gray-50 ${confirmPasswordError ? 'border-red-500' : 'border-gray-300'}`}
+                                    className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${confirmPasswordError ? 'ring-2 ring-primary/30' : ''}`}
                                     placeholder="••••••••"
+                                    placeholderTextColor="#4c212b88"
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
                                     secureTextEntry
@@ -151,28 +153,25 @@ export default function SignupPage() {
                                     testID="confirm-password-input"
                                 />
                                 {confirmPasswordError ? (
-                                    <Text nativeID={confirmPasswordErrorId} className="mt-1 text-xs text-red-500">
+                                    <Text nativeID={confirmPasswordErrorId} className="mt-1 text-xs text-primary font-sans-medium">
                                         {confirmPasswordError}
                                     </Text>
                                 ) : null}
                             </View>
 
-                            <Pressable
+                            <PrimaryButton
                                 onPress={handleSignup}
                                 disabled={loading}
-                                className={`mt-4 p-4 rounded-lg bg-purple-600 ${loading ? 'opacity-50' : 'active:opacity-80'}`}
-                                accessibilityRole="button"
                                 accessibilityLabel="Registrarse"
                                 testID="signup-button"
+                                textClassName="text-on-primary font-sans-bold text-base"
                             >
-                                <Text className="text-white text-center font-bold">
-                                    {loading ? 'Creando cuenta...' : 'Registrarse'}
-                                </Text>
-                            </Pressable>
+                                {loading ? 'Creando cuenta...' : 'Registrarse'}
+                            </PrimaryButton>
                         </View>
 
                         <View className="mt-8">
-                            <Text className="text-center text-gray-600">¿Ya tienes una cuenta?</Text>
+                            <Text className="text-center text-on-surface/65 font-sans">¿Ya tienes una cuenta?</Text>
                             <Pressable
                                 onPress={() => router.push('/login')}
                                 accessibilityRole="button"
@@ -180,7 +179,7 @@ export default function SignupPage() {
                                 testID="login-link"
                                 className="mt-2"
                             >
-                                <Text className="text-center text-blue-600 font-bold">Inicia sesión</Text>
+                                <Text className="text-center text-primary font-sans-bold">Inicia sesión</Text>
                             </Pressable>
                         </View>
                     </View>

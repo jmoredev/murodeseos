@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, useWindowDimensions, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
+import { GlassBar } from './ui/GlassBar';
 
 interface ResponsiveLayoutProps {
     userId: string;
@@ -11,55 +12,102 @@ interface ResponsiveLayoutProps {
     onSignOut: () => void;
 }
 
+function TabLabel({
+    active,
+    children: label,
+}: {
+    active: boolean;
+    children: string;
+}) {
+    return (
+        <Text
+            className={`text-sm font-sans-bold uppercase tracking-widest ${
+                active ? 'text-primary' : 'text-on-surface/55'
+            }`}
+        >
+            {label}
+        </Text>
+    );
+}
+
 export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, onSignOut }: ResponsiveLayoutProps) {
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
+    const scrollToMain = () => {
+        if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+        const el = document.getElementById('muro-main-content');
+        el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        const first = el?.querySelector?.(
+            'button, a[href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])'
+        ) as HTMLElement | null;
+        window.setTimeout(() => first?.focus?.(), 200);
+    };
+
+    const tabListProps =
+        Platform.OS === 'web'
+            ? ({ role: 'tablist' as const, 'aria-label': 'Secciones principales' } as const)
+            : { accessibilityLabel: 'Secciones principales' as const };
+
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-surface">
             <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
-                {/* Header / Top Navbar */}
-                <View className="border-b border-gray-100 bg-white/80 backdrop-blur-md z-50">
-                    <View className={`mx-auto w-full px-6 py-4 flex-row justify-between items-center ${isDesktop ? 'max-w-6xl' : ''}`}>
-                        <Text className="text-xl font-black text-blue-600">
-                            Muro de <Text className="text-purple-600">deseos</Text>
+                {Platform.OS === 'web' ? (
+                    <Pressable
+                        onPress={scrollToMain}
+                        accessibilityRole="link"
+                        accessibilityLabel="Saltar al contenido principal"
+                        className="skip-to-main"
+                    >
+                        <Text className="text-sm font-sans-bold text-primary">Saltar al contenido principal</Text>
+                    </Pressable>
+                ) : null}
+                <View className="bg-surface-container-low z-50 shadow-ambient">
+                    <View className={`mx-auto w-full px-6 pt-6 pb-4 flex-row justify-between items-center ${isDesktop ? 'max-w-6xl' : ''}`}>
+                        <Text className="text-xl font-display text-on-background tracking-tight">
+                            Muro de <Text className="text-primary">deseos</Text>
                         </Text>
 
-                        {/* Desktop Navigation Links */}
                         {isDesktop ? (
-                            <View className="flex-row items-center gap-8 ml-8">
+                            <View className="flex-row items-center gap-2 ml-8 bg-surface/90 rounded-full px-2 py-1.5 shadow-ambient" {...tabListProps}>
                                 <Pressable
                                     onPress={() => setActiveTab('wishlist')}
-                                    accessibilityRole="button"
+                                    {...(Platform.OS === 'web'
+                                        ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'wishlist' } as const)
+                                        : {
+                                              accessibilityRole: 'button',
+                                              accessibilityState: { selected: activeTab === 'wishlist' },
+                                          })}
                                     accessibilityLabel="Mis deseos"
-                                    accessibilityState={{ selected: activeTab === 'wishlist' }}
-                                    className="px-2 py-1"
+                                    className={`px-4 py-2 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'wishlist' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
-                                        MIS DESEOS
-                                    </Text>
+                                    <TabLabel active={activeTab === 'wishlist'}>Mis deseos</TabLabel>
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('groups')}
-                                    accessibilityRole="button"
+                                    {...(Platform.OS === 'web'
+                                        ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'groups' } as const)
+                                        : {
+                                              accessibilityRole: 'button',
+                                              accessibilityState: { selected: activeTab === 'groups' },
+                                          })}
                                     accessibilityLabel="Mis grupos"
-                                    accessibilityState={{ selected: activeTab === 'groups' }}
-                                    className="px-2 py-1"
+                                    className={`px-4 py-2 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'groups' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
-                                        MIS GRUPOS
-                                    </Text>
+                                    <TabLabel active={activeTab === 'groups'}>Mis grupos</TabLabel>
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('profile')}
-                                    className="px-2 py-1"
-                                    accessibilityRole="button"
+                                    className={`px-4 py-2 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                                    {...(Platform.OS === 'web'
+                                        ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'profile' } as const)
+                                        : {
+                                              accessibilityRole: 'button',
+                                              accessibilityState: { selected: activeTab === 'profile' },
+                                          })}
                                     accessibilityLabel="Mi perfil"
-                                    accessibilityState={{ selected: activeTab === 'profile' }}
                                 >
-                                    <Text className={`text-sm font-bold ${activeTab === 'profile' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
-                                        MI PERFIL
-                                    </Text>
+                                    <TabLabel active={activeTab === 'profile'}>Mi perfil</TabLabel>
                                 </Pressable>
                             </View>
                         ) : null}
@@ -69,83 +117,89 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             {isDesktop ? (
                                 <Pressable
                                     onPress={onSignOut}
-                                    className="ml-4 px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100"
+                                    className="ml-4 px-4 py-2 rounded-full"
                                     accessibilityRole="button"
                                     accessibilityLabel="Salir"
                                 >
-                                    <Text className="text-red-600 text-xs font-bold">SALIR</Text>
+                                    <Text className="text-primary text-xs font-sans-bold uppercase tracking-widest">Salir</Text>
                                 </Pressable>
                             ) : null}
                         </View>
                     </View>
                 </View>
 
-                {/* Main Content Area */}
                 <ScrollView
-                    className="flex-1"
+                    nativeID="muro-main-content"
+                    className="flex-1 bg-surface"
                     contentContainerStyle={{
-                        paddingBottom: isDesktop ? 40 : 100,
-                        alignItems: 'center'
+                        paddingBottom: isDesktop ? 40 : 112,
+                        alignItems: 'center',
                     }}
                 >
-                    <View className={`w-full ${isDesktop ? 'max-w-5xl px-10 pt-10' : ''}`}>
-                        {children}
-                    </View>
+                    <View className={`w-full ${isDesktop ? 'max-w-5xl px-10 pt-10' : ''}`}>{children}</View>
                 </ScrollView>
             </SafeAreaView>
 
-            {/* Mobile Bottom Navbar */}
             {!isDesktop ? (
-                <View 
-                    style={[{
-                        paddingBottom: Platform.select({ ios: 24, android: 12, default: 12 }),
-                    }]}
-                    className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 pt-3 flex-row justify-around items-center"
+                <View
+                    className="absolute left-0 right-0 items-center pointer-events-box-none"
+                    style={{
+                        bottom: Platform.select({ ios: 20, android: 16, default: 16 }),
+                    }}
+                    pointerEvents="box-none"
                 >
-                    <Pressable
-                        onPress={() => setActiveTab('wishlist')}
-                        accessibilityRole="button"
-                        accessibilityLabel="Deseos"
-                        accessibilityState={{ selected: activeTab === 'wishlist' }}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'wishlist' ? 'bg-purple-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'wishlist' ? 'text-purple-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>🎁</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'wishlist' ? 'text-purple-600' : 'text-gray-400'}`}>
-                            Deseos
-                        </Text>
-                    </Pressable>
+                    <GlassBar className="rounded-full px-2 py-2 flex-row items-center justify-around shadow-ambient-lg w-[92%] max-w-md">
+                        <Pressable
+                            onPress={() => setActiveTab('wishlist')}
+                            accessibilityRole="button"
+                            accessibilityLabel="Mis deseos"
+                            accessibilityState={{ selected: activeTab === 'wishlist' }}
+                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                        >
+                            <View importantForAccessibility="no-hide-descendants">
+                                <Text style={{ fontSize: 20 }}>🎁</Text>
+                                <Text
+                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
+                                >
+                                    Deseos
+                                </Text>
+                            </View>
+                        </Pressable>
 
-                    <Pressable
-                        onPress={() => setActiveTab('groups')}
-                        accessibilityRole="button"
-                        accessibilityLabel="Grupos"
-                        accessibilityState={{ selected: activeTab === 'groups' }}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'groups' ? 'bg-blue-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'groups' ? 'text-blue-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>👥</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'groups' ? 'text-blue-600' : 'text-gray-400'}`}>
-                            Grupos
-                        </Text>
-                    </Pressable>
+                        <Pressable
+                            onPress={() => setActiveTab('groups')}
+                            accessibilityRole="button"
+                            accessibilityLabel="Mis grupos"
+                            accessibilityState={{ selected: activeTab === 'groups' }}
+                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                        >
+                            <View importantForAccessibility="no-hide-descendants">
+                                <Text style={{ fontSize: 20 }}>👥</Text>
+                                <Text
+                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
+                                >
+                                    Grupos
+                                </Text>
+                            </View>
+                        </Pressable>
 
-                    <Pressable
-                        onPress={() => setActiveTab('profile')}
-                        accessibilityRole="button"
-                        accessibilityLabel="Perfil"
-                        accessibilityState={{ selected: activeTab === 'profile' }}
-                        className={`items-center p-2 rounded-2xl ${activeTab === 'profile' ? 'bg-indigo-50' : ''}`}
-                    >
-                        <View className={`w-6 h-6 items-center justify-center ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                            <Text style={{ fontSize: 20 }}>👤</Text>
-                        </View>
-                        <Text className={`text-[10px] mt-1 font-bold ${activeTab === 'profile' ? 'text-indigo-600' : 'text-gray-400'}`}>
-                            Perfil
-                        </Text>
-                    </Pressable>
+                        <Pressable
+                            onPress={() => setActiveTab('profile')}
+                            accessibilityRole="button"
+                            accessibilityLabel="Mi perfil"
+                            accessibilityState={{ selected: activeTab === 'profile' }}
+                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                        >
+                            <View importantForAccessibility="no-hide-descendants">
+                                <Text style={{ fontSize: 20 }}>👤</Text>
+                                <Text
+                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
+                                >
+                                    Perfil
+                                </Text>
+                            </View>
+                        </Pressable>
+                    </GlassBar>
                 </View>
             ) : null}
         </View>

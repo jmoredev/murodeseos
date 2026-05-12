@@ -1,5 +1,7 @@
 # Guía de Desarrollo - Muro de Deseos
 
+> **Última revisión de contenido:** 2026-05-12
+
 Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrollar y mantener el proyecto "Muro de Deseos".
 
 ## 🚀 Configuración del Proyecto
@@ -47,8 +49,9 @@ bun run dev
 
 ### Comandos Útiles
 - `bun run lint`: Ejecuta el linter.
-- `bun run test`: Ejecuta todos los tests con Vitest.
-- `bun run test:watch`: Ejecuta Vitest en modo watch.
+- `bun run test:unit`: Ejecuta Vitest (tests unitarios / componentes).
+- `bun run test:watch`: Vitest en modo watch.
+- `bun run test`: Playwright E2E (requiere `test:e2e:prepare` vía script; ver `package.json`).
 
 ## 🧪 Testing
 
@@ -68,7 +71,20 @@ Los tests se encuentran en el directorio `__tests__`.
   - Al cerrar, el foco vuelve al elemento que lo abrió.
 - **Mensajes dinámicos**: errores/éxitos (login/registro) se anuncian sin tener que “buscar” el texto.
 - **Zoom 200%**: el contenido sigue siendo usable sin solaparse.
-- **Idioma**: el documento web está en español (`lang="es"`).
+- **Idioma**: el documento web está en español (`lang="es"` en `app/_layout.tsx`, función `ensureWebHead`).
+
+### Implementación en código (referencia rápida)
+
+- **Foco visible (web):** reglas `:focus-visible` en `app/global.css` (dentro de `@layer base`).
+- **Saltar al contenido (solo web):** `components/ResponsiveLayout.tsx` — `Pressable` con clase `skip-to-main`; región principal `ScrollView` con `nativeID="muro-main-content"`; `scroll-margin-top` en `app/global.css` para cabecera fija.
+- **Navegación principal:** escritorio usa `role="tablist"` / `role="tab"` (web); móvil: pestañas inferiores con `importantForAccessibility="no-hide-descendants"` en el contenido decorativo para no duplicar el nombre con el emoji.
+- **Diálogos web (`createPortal`):** `ConfirmModal`, `UserProfileModal`, `RevealModal`, `SecretSantaModal` — `role="dialog"`, `aria-modal`, título vinculado, `Escape`, foco inicial y restauración; `NotificationItem` es `<button type="button">` con `aria-label` descriptivo.
+- **`PrimaryButton`:** si no pasas `accessibilityLabel` y `children` es un string, se usa como etiqueta accesible.
+
+### Limitaciones conocidas
+
+- **`GroupCard`:** la tarjeta entera es un `Pressable` que contiene otros controles (compartir, menú, filas de miembros). Es un patrón de “interactivo anidado” imperfecto para algunos lectores de pantalla; los controles internos siguen siendo alcanzables por teclado en web.
+- **Focus trap completo** (ciclo de tab solo dentro del modal) no está implementado en todos los diálogos; sí hay Escape y retorno de foco básico.
 
 ### Mocks Globales
 Si necesitas añadir mocks globales para nuevos módulos de terceros, edita `vitest.setup.ts`.
@@ -79,7 +95,7 @@ Para mantener la aplicación rápida y fluida:
 
 1. **Peticiones en Paralelo**: Usa `Promise.all` para peticiones de Supabase en el mismo nivel lógico.
 2. **Memoización**: Usa `React.memo` para componentes de lista pesados (ej. `GroupCard`).
-3. **Joins vs Multiples Queries**: Prefiere Joins de Supabase cuando sea posible para reducir round-trips.
+3. **Joins vs consultas separadas**: Un `select` anidado tipo `group_members(..., profiles(...))` puede fallar o devolver vacío con PostgREST/RLS. Para la **lista de grupos** se replica el patrón de detalle: filas en `group_members` y luego `profiles` con `.in('id', userIds)`. Ver `components/GroupsTab.tsx` (aprox. 56–100 y 106–132) y `app/groups/[id]/index.tsx` (aprox. 49–73).
 4. **Ternary Rendering**: Usa operadores ternarios `{cond ? <A /> : null}` en lugar de `&&` para evitar errores de renderizado en React Native Web/PWA.
 
 ## 🏗️ Arquitectura
@@ -87,6 +103,11 @@ Para mantener la aplicación rápida y fluida:
 - **Routing**: [Expo Router](https://expo.github.io/router) (File-based routing).
 - **Layout**: `ResponsiveLayout.tsx` maneja la adaptación entre Desktop y Mobile.
 - **Estilos**: NativeWind (Tailwind CSS para React Native).
+
+### Grupos: contador de participantes en lista
+
+- `GroupCard` muestra el total con `totalMemberCount` cuando existe; si no, cae en `members.length` (`components/GroupCard.tsx`, línea 120).
+- `members` en la lista **excluye al usuario actual** (solo vista previa de “otros”); el total real debe venir de `totalMemberCount`, poblado con el número de filas de `group_members` por grupo (`components/GroupsTab.tsx`, líneas 106–132).
 
 ---
 *Muro de Deseos - Hecho con ❤️ para organizar tus regalos.*

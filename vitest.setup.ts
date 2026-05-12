@@ -1,6 +1,11 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+vi.mock('expo-splash-screen', () => ({
+    preventAutoHideAsync: vi.fn(),
+    hideAsync: vi.fn(),
+}));
+
 // Mock de react-native-safe-area-context
 vi.mock('react-native-safe-area-context', () => ({
     SafeAreaView: ({ children }: any) => children,

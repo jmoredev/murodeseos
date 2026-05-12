@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 import { ProfileInfoSection } from '@/components/ProfileInfoSection';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function UserWishlistPage() {
     const router = useRouter();
@@ -142,31 +143,28 @@ export default function UserWishlistPage() {
 
     if (error) {
         return (
-            <View className="flex-1 items-center justify-center bg-white p-6">
+            <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
-                <Text className="text-2xl font-black text-zinc-900 mb-2">¡Vaya!</Text>
-                <Text className="text-zinc-500 text-center font-medium mb-8">{error}</Text>
-                <Pressable
-                    onPress={() => router.replace('/')}
-                    className="px-8 py-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20"
-                >
-                    <Text className="text-white font-bold">Volver al inicio</Text>
-                </Pressable>
+                <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
+                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
+                    Volver al inicio
+                </PrimaryButton>
             </View>
         );
     }
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white">
-                <ActivityIndicator size="large" color="#4F46E5" />
+            <View className="flex-1 items-center justify-center bg-surface">
+                <ActivityIndicator size="large" color="#aa2c32" />
             </View>
         );
     }
 
     return (
         <ResponsiveLayout
-            userId={user?.id}
+            userId={user?.id ?? ''}
             activeTab="wishlist"
             setActiveTab={(tab) => router.push(`/?tab=${tab}` as any)}
             onSignOut={() => supabase.auth.signOut()}
@@ -177,27 +175,29 @@ export default function UserWishlistPage() {
                     <View className="flex-row items-center flex-1">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center mr-4"
+                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-zinc-600 dark:text-zinc-400 font-bold">←</Text>
+                            <Text className="text-on-surface font-sans-bold">←</Text>
                         </Pressable>
                         <View className="flex-1">
-                            <Text className="text-3xl font-black text-zinc-900 dark:text-white" numberOfLines={1}>
+                            <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
                             </Text>
-                            <Text className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-widest mt-1">
-                                Wishlist Pública
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                                Wishlist pública
                             </Text>
                         </View>
                     </View>
 
                     {!isDesktop && (
-                        <Pressable
+                        <PrimaryButton
                             onPress={() => setShowInfo(true)}
-                            className="w-12 h-12 rounded-2xl bg-indigo-600 items-center justify-center shadow-lg shadow-indigo-600/30"
+                            accessibilityLabel="Información del perfil"
+                            className="w-12 h-12 rounded-2xl"
+                            textClassName="text-on-primary text-2xl"
                         >
-                            <Text style={{ fontSize: 24 }}>ℹ️</Text>
-                        </Pressable>
+                            ℹ️
+                        </PrimaryButton>
                     )}
                 </View>
 
@@ -205,12 +205,12 @@ export default function UserWishlistPage() {
                     {/* Main Content (Wishlist Grid) */}
                     <View className={`flex-1`}>
                         {items.length === 0 ? (
-                            <View className="items-center justify-center py-20 grayscale opacity-50">
-                                <View className="w-24 h-24 bg-zinc-100 dark:bg-zinc-900 rounded-full items-center justify-center mb-6">
+                            <View className="items-center justify-center py-20 opacity-80">
+                                <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
                                     <Text style={{ fontSize: 40 }}>🎁</Text>
                                 </View>
-                                <Text className="text-2xl font-black text-zinc-900 dark:text-white mb-2 text-center">Lista vacía</Text>
-                                <Text className="text-zinc-500 dark:text-zinc-400 font-medium text-center">Este usuario aún no ha añadido deseos.</Text>
+                                <Text className="text-2xl font-display text-on-background mb-2 text-center">Lista vacía</Text>
+                                <Text className="text-on-surface/55 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
                             </View>
                         ) : (
                             <View className="flex-row flex-wrap -m-2">
@@ -245,19 +245,19 @@ export default function UserWishlistPage() {
                 transparent={true}
                 onRequestClose={() => setShowInfo(false)}
             >
-                <View className="flex-1 justify-end bg-black/40">
-                    <View className="bg-white rounded-t-[40px] max-h-[80%] pb-10">
+                <View className="flex-1 justify-end bg-on-surface/40">
+                    <View className="bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[80%] pb-10">
                         <View className="items-center py-4">
-                            <View className="w-12 h-1.5 bg-zinc-200 rounded-full" />
+                            <View className="w-12 h-1.5 bg-outline-variant/30 rounded-full" />
                         </View>
 
                         <View className="px-6 flex-row justify-between items-center mb-2">
-                            <Text className="text-2xl font-black text-zinc-900">Información</Text>
+                            <Text className="text-2xl font-display text-on-background">Información</Text>
                             <Pressable
                                 onPress={() => setShowInfo(false)}
-                                className="w-10 h-10 rounded-full bg-zinc-100 items-center justify-center"
+                                className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center"
                             >
-                                <Text className="text-zinc-500 font-bold">✕</Text>
+                                <Text className="text-on-surface/55 font-sans-bold">✕</Text>
                             </Pressable>
                         </View>
 

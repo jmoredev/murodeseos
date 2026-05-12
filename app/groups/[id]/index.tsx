@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function GroupDetailsPage() {
     const router = useRouter();
@@ -96,31 +97,28 @@ export default function GroupDetailsPage() {
 
     if (error) {
         return (
-            <View className="flex-1 items-center justify-center bg-white p-6">
+            <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
-                <Text className="text-2xl font-black text-zinc-900 mb-2">¡Vaya!</Text>
-                <Text className="text-zinc-500 text-center font-medium mb-8">{error}</Text>
-                <Pressable
-                    onPress={() => router.replace('/')}
-                    className="px-8 py-4 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20"
-                >
-                    <Text className="text-white font-bold">Volver al inicio</Text>
-                </Pressable>
+                <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
+                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
+                    Volver al inicio
+                </PrimaryButton>
             </View>
         );
     }
 
     if (loading) {
         return (
-            <View className="flex-1 items-center justify-center bg-white">
-                <ActivityIndicator size="large" color="#4F46E5" />
+            <View className="flex-1 items-center justify-center bg-surface">
+                <ActivityIndicator size="large" color="#aa2c32" />
             </View>
         );
     }
 
     return (
         <ResponsiveLayout
-            userId={user?.id}
+            userId={user?.id ?? ''}
             activeTab="groups"
             setActiveTab={(tab) => router.push(`/?tab=${tab}` as any)}
             onSignOut={() => supabase.auth.signOut()}
@@ -131,41 +129,42 @@ export default function GroupDetailsPage() {
                     <View className="flex-row items-center flex-1">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 items-center justify-center mr-4"
+                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-zinc-600 dark:text-zinc-400 font-bold">←</Text>
+                            <Text className="text-on-surface font-sans-bold">←</Text>
                         </Pressable>
                         <View className="flex-1">
-                            <Text className="text-3xl font-black text-zinc-900 dark:text-white" numberOfLines={1}>
+                            <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 {group?.name}
                             </Text>
-                            <Text className="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px] tracking-widest mt-1">
-                                Detalles del Grupo
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                                Detalles del grupo
                             </Text>
                         </View>
                     </View>
-                    <Pressable
+                    <PrimaryButton
                         onPress={handleShare}
-                        className="px-6 py-3 rounded-2xl bg-indigo-600 items-center justify-center shadow-lg shadow-indigo-600/30"
+                        accessibilityLabel="Compartir grupo"
+                        textClassName="text-on-primary font-sans-bold"
                     >
-                        <Text className="text-white font-bold">Compartir</Text>
-                    </Pressable>
+                        Compartir
+                    </PrimaryButton>
                 </View>
 
                 {/* Group Info Card */}
-                <View className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-100 dark:border-zinc-800 shadow-sm mb-8 flex-row items-center">
-                    <View className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-3xl items-center justify-center shadow-inner mr-6">
+                <View className="bg-surface-container-lowest rounded-3xl p-8 shadow-ambient mb-8 flex-row items-center">
+                    <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center shadow-inner mr-6">
                         <Text className="text-4xl">{group?.icon || '🎁'}</Text>
                     </View>
                     <View className="flex-1">
-                        <Text className="text-2xl font-black text-zinc-900 dark:text-white">{group?.name}</Text>
-                        <View className="flex-row items-center mt-2">
-                            <View className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full mr-3">
-                                <Text className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <Text className="text-2xl font-display text-on-background">{group?.name}</Text>
+                        <View className="flex-row items-center mt-3 gap-2">
+                            <View className="px-3 py-1 bg-surface-container-low rounded-full">
+                                <Text className="text-[10px] font-sans-bold text-on-surface/55 uppercase tracking-widest">
                                     Código: {group?.id}
                                 </Text>
                             </View>
-                            <Text className="text-xs text-zinc-400 font-bold">
+                            <Text className="text-xs text-on-surface/45 font-sans-bold">
                                 {members.length} participantes
                             </Text>
                         </View>
@@ -174,7 +173,7 @@ export default function GroupDetailsPage() {
 
                 {/* Members Grid */}
                 <View>
-                    <Text className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 ml-2">
+                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-6 ml-2">
                         Participantes
                     </Text>
 
@@ -186,30 +185,30 @@ export default function GroupDetailsPage() {
                                         pathname: "/wishlist/[id]",
                                         params: { id: member.user_id, name: member.profiles?.display_name || 'Usuario' }
                                     } as any)}
-                                    className="bg-white dark:bg-zinc-900 rounded-3xl p-4 border border-zinc-100 dark:border-zinc-800 shadow-sm active:scale-[0.98] transition-all"
+                                    className="bg-surface-container-lowest rounded-lg p-4 shadow-ambient active:scale-[0.98] transition-all relative"
                                 >
                                     <View className="items-center mb-4">
-                                        <View className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 rounded-full items-center justify-center border-4 border-zinc-100 dark:border-zinc-800 relative overflow-hidden">
+                                        <View className="w-20 h-20 bg-surface-container-low rounded-full items-center justify-center relative overflow-hidden ring-1 ring-outline-variant/15">
                                             {member.profiles?.avatar_url ? (
                                                 <Text style={{ fontSize: 36 }}>{member.profiles.avatar_url}</Text>
                                             ) : (
-                                                <Text className="text-2xl font-black text-zinc-300">
+                                                <Text className="text-2xl font-sans-bold text-on-surface/30">
                                                     {member.profiles?.display_name?.charAt(0)}
                                                 </Text>
                                             )}
                                         </View>
                                         {member.role === 'admin' && (
-                                            <View className="absolute top-0 right-0 bg-amber-500 rounded-full px-2 py-0.5 border-2 border-white dark:border-zinc-900">
-                                                <Text className="text-[8px] font-black text-white uppercase">Admin</Text>
+                                            <View className="absolute top-0 right-0 bg-secondary rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
+                                                <Text className="text-[8px] font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
                                             </View>
                                         )}
                                     </View>
-                                    <Text className="text-center font-bold text-zinc-900 dark:text-white mb-1" numberOfLines={1}>
+                                    <Text className="text-center font-sans-bold text-on-background mb-1" numberOfLines={1}>
                                         {member.profiles?.display_name || 'Usuario'}
-                                        {member.user_id === user?.id && <Text className="text-indigo-500"> (Tú)</Text>}
+                                        {member.user_id === user?.id && <Text className="text-primary"> (Tú)</Text>}
                                     </Text>
-                                    <Text className="text-center text-[10px] text-zinc-400 font-bold uppercase tracking-tighter">
-                                        Ver Deseos ›
+                                    <Text className="text-center text-[10px] text-on-surface/45 font-sans-bold uppercase tracking-tighter">
+                                        Ver deseos ›
                                     </Text>
                                 </Pressable>
                             </View>
@@ -219,18 +218,19 @@ export default function GroupDetailsPage() {
 
                 {/* Admin Actions */}
                 {isAdmin && (
-                    <View className="mt-12 p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/20">
-                        <Text className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-4 text-center">
-                            Zona de Administrador
+                    <View className="mt-12 p-6 bg-surface-container-low rounded-3xl shadow-ambient">
+                        <Text className="text-xs font-sans-bold text-primary uppercase tracking-widest mb-4 text-center">
+                            Zona de administrador
                         </Text>
-                        <Pressable
-                            className="bg-indigo-600 p-5 rounded-2xl shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+                        <PrimaryButton
                             onPress={() => {
                                 Alert.alert('Próximamente', 'La función de Amigo Invisible estará disponible pronto.');
                             }}
+                            textClassName="text-on-primary font-sans-bold text-lg"
+                            accessibilityLabel="Sortear amigo invisible"
                         >
-                            <Text className="text-white text-center font-bold text-lg">Sortear Amigo Invisible</Text>
-                        </Pressable>
+                            Sortear Amigo Invisible
+                        </PrimaryButton>
                     </View>
                 )}
             </View>

@@ -1,48 +1,41 @@
 ---
-trigger: always_on
+description: Guía para la creación de commits semánticos y atómicos siguiendo Conventional Commits y Emojis.
+globs: **/*
 ---
 
-# Commit
+# Git Commit Expert Role
 
-Create well-formatted commits with conventional commit messages and emojis.
+Actúa como un experto en control de versiones. Tu objetivo es asegurar que cada commit sea atómico, descriptivo y siga el estándar de la industria.
 
-## Features:
-- Runs pre-commit checks by default (lint, build, generate docs)
-- Automatically stages files if none are staged
-- Uses conventional commit format with descriptive emojis
-- Suggests splitting commits for different concerns
+## Capacidades Críticas
+- **Auto-staging**: Si el usuario pide un commit y no hay archivos en el "staged area", identifica los cambios relevantes y súbelos (`git add`).
+- **Análisis de Cambios**: Antes de proponer un mensaje, analiza el `diff` actual para entender el "por qué" y no solo el "qué".
+- **Detección de Commits Multitarea**: Si detectas cambios no relacionados (ej. un fix y una doc), sugiere dividirlos en dos commits separados.
 
-## Usage:
-- `/commit` - Standard commit with pre-commit checks
-- `/commit --no-verify` - Skip pre-commit checks
+## Estándar de Mensajes (Conventional Commits + Emojis)
+Usa estrictamente este formato: `<emoji> <type>(<scope>): <description>`
 
-## Commit Types:
-- ✨ feat: New features
-- 🐛 fix: Bug fixes
-- 📝 docs: Documentation changes
-- ♻️ refactor: Code restructuring without changing functionality
-- 🎨 style: Code formatting, missing semicolons, etc.
-- ⚡️ perf: Performance improvements
-- ✅ test: Adding or correcting tests
-- 🧑‍💻 chore: Tooling, configuration, maintenance
-- 🚧 wip: Work in progress
-- 🔥 remove: Removing code or files
-- 🚑 hotfix: Critical fixes
-- 🔒 security: Security improvements
+- ✨ `feat`: Nuevas características.
+- 🐛 `fix`: Corrección de errores.
+- 📝 `docs`: Cambios en documentación.
+- ♻️ `refactor`: Refactorización que no añade funcionalidad ni arregla bugs.
+- 🎨 `style`: Formato, puntos y comas, etc. (no afecta la lógica).
+- ⚡️ `perf`: Mejoras de rendimiento.
+- ✅ `test`: Añadir o corregir tests.
+- 🧑‍💻 `chore`: Tareas de mantenimiento, configuración, herramientas.
+- 🚧 `wip`: Trabajo en progreso.
+- 🔥 `remove`: Eliminar código o archivos.
+- 🚑 `hotfix`: Arreglo crítico en producción.
+- 🔒 `security`: Mejoras de seguridad.
 
-## Process:
-1. Check for staged changes (`git status`)
-2. If no staged changes, review and stage appropriate files
-3. Run pre-commit checks (unless --no-verify)
-4. Analyze changes to determine commit type
-5. Generate descriptive commit message
-6. Include scope if applicable: `type(scope): description`
-7. Add body for complex changes explaining why
-8. Execute commit
+## Protocolo de Ejecución (cuando el usuario diga "commit")
+1. **Validación**: Ejecuta `git status` y `git diff --cached`.
+2. **Pre-checks**: Si el usuario no indica `--no-verify`, revisa mentalmente si los cambios podrían romper el build basándote en el contexto del proyecto.
+3. **Generación de Mensaje**:
+   - Título en modo imperativo ("Add" no "Added"), máximo 50 caracteres.
+   - Si el cambio es complejo, añade un cuerpo explicando el motivo del cambio.
+4. **Acción**: Propón el comando final de git para que el usuario solo tenga que darle a "Run Command" o ejecutarlo tú mismo en el terminal de Cursor.
 
-## Best Practices:
-- Keep commits atomic and focused
-- Write in imperative mood ("Add feature" not "Added feature")
-- Explain why, not just what
-- Reference issues/PRs when relevant
-- Split unrelated changes into separate commits
+## Instrucciones Especiales
+- **Scope**: Identifica el módulo afectado para el paréntesis, ej: `feat(auth): ...` o `fix(ui): ...`.
+- **Atomicidad**: Si hay más de 5 archivos cambiados con propósitos distintos, detente y pregunta: "¿Quieres dividir esto en varios commits?".

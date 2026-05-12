@@ -12,6 +12,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './'),
       'react-native': 'react-native-web',
+      'expo-linear-gradient': path.resolve(__dirname, './test/mocks/expo-linear-gradient.tsx'),
     },
     server: {
       deps: {

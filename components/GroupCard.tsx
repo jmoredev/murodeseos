@@ -19,6 +19,8 @@ export interface Group {
     name: string;
     icon: string;
     originalName?: string;
+    /** Total de personas en el grupo (incluido el usuario actual). `members` solo lista a otros para la vista previa. */
+    totalMemberCount?: number;
     members: GroupMember[];
 }
 
@@ -115,18 +117,22 @@ export const GroupCard = memo(function GroupCard({
         setGroupNameInput("");
     };
 
+    const participantCount = group.totalMemberCount ?? group.members.length;
     const displayMembers = group.members.slice(0, 3);
     const remainingCount = group.members.length - 3;
 
     return (
         <Pressable
             onPress={handleCardClick}
-            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800 active:scale-[0.98] transition-all mb-4"
+            accessibilityRole="button"
+            accessibilityLabel={`${group.name}, ${participantCount} participantes`}
+            accessibilityHint="Abrir detalle del grupo"
+            className="bg-surface-container-lowest rounded-lg p-6 shadow-ambient active:scale-[0.98] transition-all mb-4"
         >
             {/* Header */}
             <View className="flex-row justify-between items-start mb-6">
                 <View className="flex-row items-center flex-1">
-                    <View className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 items-center justify-center shadow-inner">
+                    <View className="w-14 h-14 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
                         <Text className="text-3xl">{group.icon}</Text>
                     </View>
                     <View className="ml-4 flex-1">
@@ -135,7 +141,7 @@ export const GroupCard = memo(function GroupCard({
                                 <TextInput
                                     value={groupNameInput}
                                     onChangeText={setGroupNameInput}
-                                    className="font-bold text-xl text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 border-b-2 border-indigo-500 flex-1"
+                                    className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 ring-2 ring-primary/20"
                                     autoFocus
                                 />
                                 <Pressable onPress={saveGroupName} className="p-2 ml-2 bg-green-50 rounded-lg">
@@ -147,18 +153,18 @@ export const GroupCard = memo(function GroupCard({
                             </View>
                         ) : (
                             <View className="flex-row items-center">
-                                <Text className="font-black text-xl text-zinc-900 dark:text-zinc-100 flex-1" numberOfLines={1}>
+                                <Text className="font-display text-xl text-on-background flex-1" numberOfLines={1}>
                                     {group.name}
                                 </Text>
                                 {onGroupAliasEdit && (
                                     <Pressable onPress={startEditingGroupName} className="p-1 ml-1">
-                                        <Text className="text-zinc-400 text-xs">✎</Text>
+                                        <Text className="text-on-surface/40 text-xs">✎</Text>
                                     </Pressable>
                                 )}
                             </View>
                         )}
-                        <Text className="text-xs text-zinc-400 mt-1 font-bold uppercase tracking-wider">
-                            {group.members.length} participantes
+                        <Text className="text-xs text-on-surface/50 mt-1 font-sans-bold uppercase tracking-wider">
+                            {participantCount} participantes
                         </Text>
                     </View>
                 </View>
@@ -168,7 +174,7 @@ export const GroupCard = memo(function GroupCard({
                         onPress={handleShareClick}
                         accessibilityRole="button"
                         accessibilityLabel="Compartir grupo"
-                        className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center mr-2"
+                        className="p-3 rounded-full bg-surface-container-low items-center justify-center mr-2"
                     >
                         <Text className="text-lg">↗</Text>
                     </Pressable>
@@ -179,24 +185,24 @@ export const GroupCard = memo(function GroupCard({
                                 onPress={handleMenuClick}
                                 accessibilityRole="button"
                                 accessibilityLabel="Opciones de grupo"
-                                className="p-3 rounded-full bg-zinc-50 dark:bg-zinc-800 items-center justify-center"
+                                className="p-3 rounded-full bg-surface-container-low items-center justify-center"
                             >
                                 <Text className="text-lg">⋮</Text>
                             </Pressable>
 
                             {menuOpen && (
-                                <View className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 z-10 overflow-hidden">
+                                <View className="absolute right-0 top-full mt-2 w-48 bg-surface-container-lowest rounded-2xl shadow-ambient-lg z-10 overflow-hidden gap-1 p-1">
                                     <Pressable
                                         onPress={handleRenameClick}
-                                        className="w-full px-4 py-4 border-b border-zinc-50 flex-row items-center"
+                                        className="w-full px-4 py-4 rounded-xl bg-surface-container-low flex-row items-center"
                                     >
-                                        <Text className="text-sm font-bold text-zinc-700 dark:text-zinc-200 ml-2">Cambiar nombre</Text>
+                                        <Text className="text-sm font-sans-bold text-on-background ml-2">Cambiar nombre</Text>
                                     </Pressable>
                                     <Pressable
                                         onPress={handleDeleteClick}
-                                        className="w-full px-4 py-4 flex-row items-center"
+                                        className="w-full px-4 py-4 rounded-xl flex-row items-center active:bg-surface-container-low"
                                     >
-                                        <Text className="text-sm font-bold text-red-600 dark:text-red-400 ml-2">Eliminar grupo</Text>
+                                        <Text className="text-sm font-sans-bold text-primary ml-2">Eliminar grupo</Text>
                                     </Pressable>
                                 </View>
                             )}
@@ -217,9 +223,9 @@ export const GroupCard = memo(function GroupCard({
                                 params: { id: member.id, name: member.name }
                             } as any);
                         }}
-                        className="flex-row items-center p-2 -m-2 rounded-xl active:bg-zinc-50 transition-colors"
+                        className="flex-row items-center p-2 -m-2 rounded-xl active:bg-surface-container-low transition-colors"
                     >
-                        <View className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 overflow-hidden items-center justify-center">
+                        <View className="w-9 h-9 rounded-full bg-surface-container-low overflow-hidden items-center justify-center ring-1 ring-outline-variant/15">
                             {member.avatar && (member.avatar.startsWith('http') || member.avatar.length > 5) ? (
                                 <Image source={{ uri: member.avatar }} className="w-full h-full" />
                             ) : (
@@ -233,7 +239,7 @@ export const GroupCard = memo(function GroupCard({
                                     <TextInput
                                         value={aliasInput}
                                         onChangeText={setAliasInput}
-                                        className="flex-1 px-2 py-1 bg-zinc-50 rounded border border-zinc-200 text-sm"
+                                        className="flex-1 px-2 py-1 bg-surface-container-highest rounded-md text-sm text-on-background"
                                         autoFocus
                                     />
                                     <Pressable onPress={saveAlias} className="p-2 ml-1">
@@ -245,28 +251,28 @@ export const GroupCard = memo(function GroupCard({
                                 </View>
                             ) : (
                                 <View className="flex-row items-center flex-1">
-                                    <Text className="text-sm font-bold text-zinc-700 dark:text-zinc-300" numberOfLines={1}>
+                                    <Text className="text-sm font-sans-bold text-on-background" numberOfLines={1}>
                                         {member.name}
                                     </Text>
                                     {member.originalName && (
-                                        <Text className="ml-2 text-[10px] text-zinc-400 italic">
+                                        <Text className="ml-2 text-[10px] text-on-surface/45 italic">
                                             ({member.originalName})
                                         </Text>
                                     )}
                                     {onMemberEdit && (
                                         <Pressable onPress={() => startEditing(member)} className="p-1 ml-1">
-                                            <Text className="text-zinc-300 text-[10px]">✎</Text>
+                                            <Text className="text-on-surface/35 text-[10px]">✎</Text>
                                         </Pressable>
                                     )}
                                 </View>
                             )}
                         </View>
-                        <Text className="text-zinc-300 ml-2">›</Text>
+                        <Text className="text-on-surface/30 ml-2">›</Text>
                     </Pressable>
                 ))}
 
                 {remainingCount > 0 && (
-                    <Text className="text-xs font-bold text-zinc-400 mt-2 ml-11">
+                    <Text className="text-xs font-sans-bold text-on-surface/50 mt-2 ml-11">
                         + {remainingCount} otros participantes
                     </Text>
                 )}

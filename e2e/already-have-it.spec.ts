@@ -45,7 +45,10 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
         await expect(createdTitle).toBeVisible({ timeout: 15000 });
 
         // 3. Hacer clic en el botón "✓ Ya lo tengo" de la MISMA tarjeta que contiene `testTitle`
-        const card = createdTitle.locator('xpath=ancestor::*[contains(@class,"rounded-3xl")]').first();
+        const card = page
+            .locator('[data-testid^="wishlist-card-"]')
+            .filter({ hasText: testTitle })
+            .first();
         const quickDeleteBtn = card.getByText(/Ya lo tengo/i).first();
         await expect(quickDeleteBtn).toBeVisible();
         await quickDeleteBtn.evaluate((el) => (el as HTMLElement).click());

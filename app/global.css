@@ -4,10 +4,65 @@
 
 @layer base {
     :root {
-        --background: 255 255 255;
-        --foreground: 0 0 0;
-        --muro-principal: 59 130 246;
-        --deseo-acento: 147 51 234;
+        --background: 255 244 244;
+        --foreground: 76 33 43;
+        --primary: 170 44 50;
+        --primary-container: 255 117 116;
+        --surface: 255 244 244;
+        --surface-container-low: 255 236 238;
+        --surface-container-lowest: 255 255 255;
+        --on-surface: 76 33 43;
+        --outline-variant: 220 156 168;
+    }
+
+    /**
+     * Foco visible (WCAG 2.4.7). Aplica en web; RN nativo usa su propio foco.
+     * No usar outline: none sin sustituto.
+     */
+    :where(
+            a,
+            button,
+            input:not([type="hidden"]),
+            textarea,
+            select,
+            summary,
+            [role="button"],
+            [role="tab"],
+            [role="menuitem"],
+            [role="link"],
+            [tabindex]:not([tabindex="-1"])
+        ):focus-visible {
+        outline: 2px solid rgb(170 44 50);
+        outline-offset: 2px;
+    }
+
+    /**
+     * Enlace “Saltar al contenido” (ResponsiveLayout): visible solo al recibir foco.
+     */
+    .skip-to-main {
+        position: absolute;
+        left: 0.75rem;
+        top: 0.75rem;
+        z-index: 9999;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background: #ffffff;
+        color: #aa2c32;
+        box-shadow: 0 4px 20px rgba(76, 33, 43, 0.12);
+        transform: translateY(-200%);
+        transition: transform 0.15s ease-out;
+    }
+
+    .skip-to-main:focus {
+        transform: translateY(0);
+        outline: 2px solid rgb(170 44 50);
+        outline-offset: 2px;
+    }
+
+    #muro-main-content {
+        scroll-margin-top: 5.5rem;
     }
 }
 

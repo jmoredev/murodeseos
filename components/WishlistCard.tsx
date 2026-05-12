@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Pressable, Image, Platform } from 'react-native';
+import { View, Text, Pressable, Image } from 'react-native';
+import { PrimaryButton } from './ui/PrimaryButton';
 
-// --- Types ---
 export type Priority = 'low' | 'medium' | 'high';
 
 export interface GiftItem {
@@ -12,7 +12,7 @@ export interface GiftItem {
     price?: string | number;
     notes?: string;
     priority: Priority;
-    reservedBy?: string | null; // ID of the user who reserved it
+    reservedBy?: string | null;
     excludedGroupIds?: string[];
 }
 
@@ -33,35 +33,37 @@ export function WishlistCard({
     currentUserId,
     onReserve,
     onCancelReserve,
-    onDelete
+    onDelete,
 }: WishlistCardProps) {
-    const priorityColors = {
-        low: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-        medium: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-        high: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+    const prioritySurface = {
+        low: 'bg-tertiary/12',
+        medium: 'bg-secondary/12',
+        high: 'bg-primary/10',
+    };
+
+    const priorityText = {
+        low: 'text-tertiary font-sans-bold',
+        medium: 'text-secondary font-sans-bold',
+        high: 'text-primary font-sans-bold',
     };
 
     const priorityLabels = {
         low: 'Baja',
         medium: 'Media',
-        high: 'Alta'
+        high: 'Alta',
     };
 
-
-    // --- Reservation Logic ---
     const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
     const isReservedByOther = !isOwner && item.reservedBy && item.reservedBy !== currentUserId;
     const isAvailable = !isOwner && !item.reservedBy;
 
-    // If owner, we ignore reservation state visually (privacy rule)
-
     const a11yReservation = isOwner
         ? undefined
         : isReservedByMe
-            ? 'Reservado por ti'
-            : isReservedByOther
-                ? 'Reservado'
-                : 'Disponible';
+          ? 'Reservado por ti'
+          : isReservedByOther
+            ? 'Reservado'
+            : 'Disponible';
 
     const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
 
@@ -69,8 +71,11 @@ export function WishlistCard({
         if (onClick) onClick(item);
     };
 
+    const cardShadow = isReservedByMe ? 'shadow-ambient-lg' : 'shadow-ambient';
+
     return (
         <Pressable
+            testID={`wishlist-card-${item.id}`}
             onPress={handlePress}
             accessibilityRole="button"
             accessibilityLabel={item.title}
@@ -78,51 +83,47 @@ export function WishlistCard({
             accessibilityValue={{
                 text: `Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${a11yReservation ? `. ${a11yReservation}.` : '.'}`,
             }}
-            className={`bg-white dark:bg-zinc-900 rounded-3xl border overflow-hidden transition-all flex-col h-full active:scale-[0.98]
-                ${isReservedByMe
-                    ? 'border-green-500 dark:border-green-500 shadow-lg shadow-green-500/10'
-                    : 'border-zinc-100 dark:border-zinc-800 shadow-sm'}
-            `}
+            className={`bg-surface-container-lowest rounded-lg overflow-hidden flex-col h-full active:scale-[0.98] ${cardShadow} ${
+                isReservedByMe ? 'ring-2 ring-outline-variant/20' : ''
+            }`}
         >
-            {/* Imagen / Cover */}
-            <View className="aspect-square w-full bg-zinc-50 dark:bg-zinc-800 relative items-center justify-center">
+            <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">
                 {item.imageUrl ? (
                     <Image
                         source={{ uri: item.imageUrl }}
                         className="w-full h-full"
                         resizeMode="cover"
-                        accessibilityRole="image"
-                        accessibilityLabel={item.title}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
                     />
                 ) : (
-                    <Text style={{ fontSize: 40 }} className="opacity-20">🎁</Text>
+                    <Text style={{ fontSize: 40 }} className="text-on-surface/20">
+                        🎁
+                    </Text>
                 )}
 
-                {/* Badges superpuestos */}
                 <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                    <View className={`px-2.5 py-1 rounded-full shadow-sm ${priorityColors[item.priority]}`}>
-                        <Text className={`text-[11px] font-black uppercase tracking-wider ${priorityColors[item.priority].split(' ').pop()}`}>
+                    <View className={`px-2.5 py-1 rounded-full ${prioritySurface[item.priority]}`}>
+                        <Text className={`text-[11px] uppercase tracking-wider ${priorityText[item.priority]}`}>
                             Prioridad {priorityLabels[item.priority]}
                         </Text>
                     </View>
                 </View>
 
-                {/* Reservation Overlay (if reserved by other) */}
                 {isReservedByOther && (
-                    <View className="absolute inset-0 bg-black/60 backdrop-blur-[2px] items-center justify-center">
-                        <View className="bg-white/90 dark:bg-zinc-900/90 px-4 py-2 rounded-2xl flex-row items-center shadow-lg">
-                            <Text className="text-sm font-black text-zinc-600 dark:text-zinc-300 uppercase tracking-widest">
+                    <View className="absolute inset-0 bg-on-surface/45 items-center justify-center">
+                        <View className="bg-surface/85 px-4 py-2 rounded-2xl flex-row items-center shadow-ambient-lg backdrop-blur-md">
+                            <Text className="text-sm font-sans-bold text-on-surface uppercase tracking-widest">
                                 🔒 Reservado
                             </Text>
                         </View>
                     </View>
                 )}
 
-                {/* Reserved by me Badge */}
                 {isReservedByMe && (
                     <View className="absolute top-3 left-3">
-                        <View className="bg-green-500 px-3 py-1.5 rounded-full shadow-lg flex-row items-center">
-                            <Text className="text-white text-[10px] font-black uppercase tracking-widest">
+                        <View className="bg-tertiary px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
+                            <Text className="text-surface-container-lowest text-[10px] font-sans-bold uppercase tracking-widest">
                                 ✓ Reservado por ti
                             </Text>
                         </View>
@@ -130,82 +131,90 @@ export function WishlistCard({
                 )}
             </View>
 
-            {/* Contenido */}
             <View className="p-5 flex-1">
-                <Text className="font-bold text-zinc-900 dark:text-white text-base leading-tight mb-2" numberOfLines={2}>
+                <Text className="font-sans-bold text-on-background text-base leading-tight mb-4" numberOfLines={2}>
                     {item.title}
                 </Text>
 
-                {item.notes && (
-                    <Text className="text-xs text-zinc-400 dark:text-zinc-500 mb-4" numberOfLines={2}>
+                {item.notes ? (
+                    <Text className="text-xs text-on-surface/55 font-sans mb-4" numberOfLines={2}>
                         {item.notes}
                     </Text>
-                )}
+                ) : null}
 
-                <View className="mt-auto flex-row items-center justify-between">
-                    <View className={`px-3 py-1.5 rounded-xl border ${item.price
-                        ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/20'
-                        : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800'}`}>
-                        <Text className={`text-xs font-black ${item.price ? 'text-amber-600' : 'text-zinc-400'}`}>
+                <View className="mt-auto flex-row items-center justify-between gap-2">
+                    <View
+                        className={`px-3 py-1.5 rounded-xl ${
+                            item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
+                        }`}
+                    >
+                        <Text
+                            className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
+                        >
                             {item.price ? `${item.price} €` : 'Sin precio'}
                         </Text>
                     </View>
 
-                    {item.links.length > 0 && (
-                        <View className="bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900/20">
-                            <Text className="text-indigo-600 dark:text-indigo-400 text-xs font-black">
+                    {item.links.length > 0 ? (
+                        <View className="bg-surface-container-low px-2.5 py-1.5 rounded-xl">
+                            <Text className="text-primary text-xs font-sans-bold">
                                 🔗 {item.links.length}
                             </Text>
                         </View>
-                    )}
+                    ) : null}
                 </View>
 
-                {/* Owner Actions */}
-                {isOwner && (
+                {isOwner ? (
                     <Pressable
-                        onPress={(e) => {
+                        testID="wish-already-have"
+                        onPress={() => {
                             if (onDelete) onDelete(item);
                         }}
                         accessibilityRole="button"
                         accessibilityLabel="Marcar como ya lo tengo"
-                        className="mt-5 pt-4 border-t border-zinc-50 dark:border-zinc-800 items-center justify-center flex-row active:opacity-60"
+                        className="mt-6 pt-4 items-center justify-center flex-row active:opacity-60"
                     >
-                        <Text className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mr-2">✓ Ya lo tengo</Text>
+                        <Text className="text-[10px] font-sans-bold text-tertiary uppercase tracking-[0.2em]">
+                            ✓ Ya lo tengo
+                        </Text>
                     </Pressable>
-                )}
+                ) : null}
 
-                {/* Reservation Actions (Only for non-owners) */}
-                {!isOwner && (
-                    <View className="mt-5 pt-4 border-t border-zinc-50 dark:border-zinc-800">
-                        {isAvailable && (
-                            <Pressable
-                                onPress={() => onReserve && onReserve(item)}
-                                accessibilityRole="button"
+                {!isOwner ? (
+                    <View className="mt-6 pt-4 gap-3">
+                        {isAvailable && onReserve ? (
+                            <PrimaryButton
+                                testID="wish-reserve-button"
+                                onPress={() => onReserve(item)}
                                 accessibilityLabel="Reservar deseo"
-                                className="w-full py-3.5 bg-indigo-600 rounded-2xl items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+                                className="w-full"
                             >
-                                <Text className="text-white font-black text-xs uppercase tracking-widest">Reservar</Text>
-                            </Pressable>
-                        )}
+                                Reservar
+                            </PrimaryButton>
+                        ) : null}
 
-                        {isReservedByMe && (
+                        {isReservedByMe && onCancelReserve ? (
                             <Pressable
-                                onPress={() => onCancelReserve && onCancelReserve(item)}
+                                onPress={() => onCancelReserve(item)}
                                 accessibilityRole="button"
                                 accessibilityLabel="Cancelar reserva"
-                                className="w-full py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl items-center justify-center active:scale-[0.98]"
+                                className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                             >
-                                <Text className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">Cancelar reserva</Text>
+                                <Text className="text-on-surface/55 font-sans-bold text-[10px] uppercase tracking-widest">
+                                    Cancelar reserva
+                                </Text>
                             </Pressable>
-                        )}
+                        ) : null}
 
-                        {isReservedByOther && (
-                            <View className="w-full py-3.5 bg-zinc-50 dark:bg-zinc-800 rounded-2xl items-center justify-center opacity-50">
-                                <Text className="text-zinc-400 font-black text-[10px] uppercase tracking-widest">No disponible</Text>
+                        {isReservedByOther ? (
+                            <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
+                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                    No disponible
+                                </Text>
                             </View>
-                        )}
+                        ) : null}
                     </View>
-                )}
+                ) : null}
             </View>
         </Pressable>
     );
