@@ -4,8 +4,8 @@
   "display": "standalone",
   "start_url": "./",
   "scope": "./",
-  "background_color": "#ffffff",
-  "theme_color": "#4F46E5",
+  "background_color": "#fff4f4",
+  "theme_color": "#aa2c32",
   "description": "Comparte tus sueños y organiza tus regalos.",
   "icons": [
     {
