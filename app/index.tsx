@@ -26,12 +26,18 @@ export default function LandingPage() {
     }, [params.tab]);
 
     useEffect(() => {
+        const AUTH_SESSION_MS = 12_000;
+
         const checkUser = async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                const timeout = new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error('auth_session_timeout')), AUTH_SESSION_MS)
+                );
+                const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout]);
                 setUser(session?.user ?? null);
             } catch (err) {
                 console.error('Error checking user:', err);
+                setUser(null);
             } finally {
                 setLoading(false);
             }

@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
 import {
@@ -67,6 +67,9 @@ function ensureWebHead() {
     link.setAttribute('href', `${base}/manifest.json`);
 }
 
+/** En redes móviles lentas las fuentes pueden tardar mucho; no bloquear toda la app indefinidamente. */
+const FONT_LOAD_MAX_MS = 10_000;
+
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
         PlusJakartaSans_700Bold,
@@ -76,14 +79,22 @@ export default function RootLayout() {
         BeVietnamPro_600SemiBold,
         BeVietnamPro_700Bold,
     });
+    const [fontWaitTimedOut, setFontWaitTimedOut] = useState(false);
 
     ensureWebHead();
 
     useEffect(() => {
-        if (fontsLoaded) {
+        const t = setTimeout(() => setFontWaitTimedOut(true), FONT_LOAD_MAX_MS);
+        return () => clearTimeout(t);
+    }, []);
+
+    const fontsReady = fontsLoaded || fontWaitTimedOut;
+
+    useEffect(() => {
+        if (fontsReady) {
             SplashScreen.hideAsync();
         }
-    }, [fontsLoaded]);
+    }, [fontsReady]);
 
     useEffect(() => {
         ensureWebHead();
@@ -94,7 +105,7 @@ export default function RootLayout() {
         }
     }, []);
 
-    if (!fontsLoaded) {
+    if (!fontsReady) {
         return null;
     }
 
