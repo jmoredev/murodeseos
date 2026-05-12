@@ -1,9 +1,10 @@
-/* Minimal PWA service worker for GitHub Pages (project pages under /<repo>/). */
+/* PWA service worker — GitHub Pages bajo /<repo>/. v2: fetch con tope de tiempo e install tolerante a red lenta. */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_NAME = `murodeseos-${VERSION}`;
 
-// Keep this list tiny; Expo assets are revisioned and will be cached on demand.
+const NAV_FETCH_MS = 14_000;
+
 const CORE_ASSETS = [
   './',
   './manifest.json',
@@ -11,12 +12,24 @@ const CORE_ASSETS = [
   './AppIcons/Assets.xcassets/AppIcon.appiconset/_/512.png',
 ];
 
+function fetchWithTimeout(request, ms) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  return fetch(request, { signal: ctrl.signal }).finally(() => clearTimeout(id));
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.addAll(CORE_ASSETS);
+      } catch {
+        /* Red lenta o addAll parcial: no impedir la activación del SW */
+      } finally {
+        await self.skipWaiting();
+      }
+    })()
   );
 });
 
@@ -38,34 +51,45 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
-  // Navigation: network-first, fallback to cache (good for offline + GH Pages).
   if (isNavigationRequest(request)) {
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(request);
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(request, fresh.clone());
+          const fresh = await fetchWithTimeout(request, NAV_FETCH_MS);
+          if (fresh.ok) {
+            try {
+              const cache = await caches.open(CACHE_NAME);
+              cache.put(request, fresh.clone());
+            } catch {
+              /* no-op */
+            }
+          }
           return fresh;
         } catch {
           const cached = await caches.match(request);
-          return cached || caches.match('./');
+          if (cached) return cached;
+          return caches.match('./');
         }
       })()
     );
     return;
   }
 
-  // Assets: cache-first, fallback to network, then cache.
   event.respondWith(
     (async () => {
       const cached = await caches.match(request);
       if (cached) return cached;
 
       try {
-        const fresh = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(request, fresh.clone());
+        const fresh = await fetchWithTimeout(request, NAV_FETCH_MS);
+        if (fresh.ok) {
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, fresh.clone());
+          } catch {
+            /* no-op */
+          }
+        }
         return fresh;
       } catch {
         return cached;
@@ -73,4 +97,3 @@ self.addEventListener('fetch', (event) => {
     })()
   );
 });
-
