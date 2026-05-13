@@ -63,6 +63,8 @@ Si la UI en web o en el cliente de desarrollo **no refleja** los cambios (clases
 
 Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.). El registro del SW está en `app/_layout.tsx`.
 
+**Local (`bun run web`, Metro):** no se registra el SW: `hostname` no es `github.io`, `getGithubPagesBasePath()` devuelve `''` y se llama a `unregister()` por si quedó un SW de una prueba anterior. Así HMR y recargas normales no compiten con Cache Storage.
+
 ### `ScrollView` principal (`ResponsiveLayout`)
 `contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
 

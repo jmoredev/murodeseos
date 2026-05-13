@@ -99,10 +99,19 @@ export default function RootLayout() {
     useEffect(() => {
         ensureWebHead();
 
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-            const base = getGithubPagesBasePath();
-            navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {});
+        if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+        const base = getGithubPagesBasePath();
+
+        // Solo GitHub Pages: en `bun run web` / localhost el SW cacheaba JS y la UI parecía desactualizada.
+        if (!base) {
+            void navigator.serviceWorker.getRegistrations().then((regs) => {
+                regs.forEach((r) => void r.unregister());
+            });
+            return;
         }
+
+        void navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {});
     }, []);
 
     if (!fontsReady) {
