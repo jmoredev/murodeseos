@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useTransition } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions } from 'react-native'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
+import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
-import { notifyWishAdded } from '@/lib/notification-utils'
+import { notifyWishAdded, notifyWishDeletedByOwner } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -22,6 +25,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
+    const insets = useSafeAreaInsets();
 
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
     const { showToast, ToastComponent } = useToast();
@@ -127,6 +131,50 @@ export function WishListTab({ userId }: WishListTabProps) {
         });
     };
 
+    const pickWishImageFromLibrary = async () => {
+        if (!userId) return;
+        setIsUploading(true);
+        try {
+            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!perm.granted) {
+                showToast('Necesitamos permiso para acceder a la galería.', 'error');
+                return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                quality: 0.85,
+            });
+            if (result.canceled || !result.assets[0]) return;
+
+            const asset = result.assets[0];
+            const rawExt =
+                asset.fileName?.split('.').pop()?.split('?')[0]?.toLowerCase() ?? 'jpg';
+            const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
+            const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${safeExt}`;
+
+            const res = await fetch(asset.uri);
+            const blob = await res.blob();
+            const contentType =
+                asset.mimeType ||
+                (safeExt === 'jpg' || safeExt === 'jpeg' ? 'image/jpeg' : `image/${safeExt}`);
+
+            const { error } = await supabase.storage
+                .from('wishlist-images')
+                .upload(path, blob, { contentType, upsert: true });
+
+            if (error) throw error;
+
+            const { data } = supabase.storage.from('wishlist-images').getPublicUrl(path);
+            setFormData((prev) => ({ ...prev, imageUrl: data.publicUrl }));
+            showToast('Imagen añadida');
+        } catch (err) {
+            console.error(err);
+            showToast('No se pudo subir la imagen.', 'error');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleSave = async () => {
         if (!formData.title || !userId) return;
 
@@ -186,6 +234,13 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (!itemToDelete) return;
         setIsSaving(true);
         try {
+            if (itemToDelete.reservedBy) {
+                await notifyWishDeletedByOwner(
+                    userId,
+                    itemToDelete.reservedBy,
+                    itemToDelete.title || ''
+                );
+            }
             const { error } = await supabase
                 .from('wishlist_items')
                 .delete()
@@ -214,7 +269,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     }
 
     return (
-        <View className="flex-1 p-4 pb-20">
+        <View className="flex-1 w-full max-w-full self-stretch p-4 pb-20">
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
@@ -225,15 +280,24 @@ export function WishListTab({ userId }: WishListTabProps) {
                     accessibilityLabel="Nuevo deseo"
                     variant="icon"
                     className="w-12 h-12 rounded-2xl"
-                    textClassName="text-on-primary font-display text-2xl leading-none"
+                    textClassName="text-on-primary font-sans-bold text-2xl leading-none"
                 >
                     +
                 </PrimaryButton>
             </View>
 
             {items.length > 0 ? (
-                <View className="flex-row gap-2 mb-8 px-2 overflow-auto no-scrollbar" style={{ opacity: isPending ? 0.7 : 1 }}>
-                    {['name', 'price', 'priority'].map((type) => (
+                <View
+                    className="mb-8 px-2"
+                    style={{
+                        flexDirection: 'row',
+                        width: '100%',
+                        maxWidth: '100%',
+                        gap: 6,
+                        opacity: isPending ? 0.7 : 1,
+                    }}
+                >
+                    {(['name', 'price', 'priority'] as const).map((type) => (
                         <Pressable
                             key={type}
                             onPress={() => {
@@ -242,10 +306,24 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 });
                             }}
                             accessibilityLabel={type === 'name' ? 'Ordenar por nombre' : type === 'price' ? 'Ordenar por precio' : 'Ordenar por prioridad'}
-                            className={`px-4 py-2 rounded-full ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
+                            style={{ flex: 1, minWidth: 0 }}
+                            className={`px-2 py-2.5 rounded-full items-center justify-center ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
                         >
-                            <Text className={`text-xs font-sans-bold uppercase tracking-wider ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}>
-                                {type === 'name' ? 'Por Nombre' : type === 'price' ? 'Por Precio' : 'Por Prioridad'}
+                            <Text
+                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-[10px] tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
+                                numberOfLines={1}
+                            >
+                                {isDesktop
+                                    ? type === 'name'
+                                        ? 'Por Nombre'
+                                        : type === 'price'
+                                          ? 'Por Precio'
+                                          : 'Por Prioridad'
+                                    : type === 'name'
+                                      ? 'Nombre'
+                                      : type === 'price'
+                                        ? 'Precio'
+                                        : 'Prioridad'}
                             </Text>
                         </Pressable>
                     ))}
@@ -269,7 +347,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 ) : (
                     <View className="items-center justify-center py-20 text-center">
                         <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                            <Text style={{ fontSize: 40 }}>🎁</Text>
+                            <Text style={emojiInCircle(40)}>🎁</Text>
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">Tu lista está vacía</Text>
                         <Text className="text-on-surface/55 font-sans-medium">Añade cosas que te ilusionen.</Text>
@@ -286,17 +364,34 @@ export function WishListTab({ userId }: WishListTabProps) {
             >
                 <View className={`flex-1 ${isDesktop ? 'items-center justify-center px-4 bg-on-surface/40' : 'bg-surface'}`}>
                     {isDesktop && <Pressable className="absolute inset-0" onPress={() => !isSaving && setIsFormOpen(false)} />}
-                    <View className={`bg-surface-container-lowest ${isDesktop ? 'w-full max-w-lg rounded-3xl p-8 shadow-ambient-lg overflow-scroll max-h-[90%]' : 'flex-1 p-6 pt-14'}`}>
+                    <KeyboardAvoidingView
+                        enabled={!isDesktop}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        className={isDesktop ? 'w-full max-w-lg' : 'flex-1 w-full min-w-0'}
+                    >
+                        <View
+                            className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg max-h-[90%] overflow-hidden' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
+                            style={
+                                !isDesktop
+                                    ? { paddingBottom: 12 + insets.bottom }
+                                    : { maxHeight: '90%' }
+                            }
+                        >
                         {/* Mobile Header with Back Button */}
                         {!isDesktop && (
-                            <View className="flex-row items-center mb-6">
+                            <View className="flex-row items-center mb-4 min-w-0">
                                 <Pressable
                                     onPress={() => !isSaving && setIsFormOpen(false)}
-                                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
+                                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
                                 >
-                                    <Text className="text-on-surface font-sans-bold">←</Text>
+                                    <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
+                                        ←
+                                    </Text>
                                 </Pressable>
-                                <Text className="text-2xl font-display text-on-background">
+                                <Text
+                                    className="text-2xl font-display text-on-background shrink min-w-0 flex-1"
+                                    numberOfLines={2}
+                                >
                                     {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
                                 </Text>
                             </View>
@@ -307,14 +402,24 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </Text>
                         )}
 
-                        <ScrollView className="space-y-6">
+                        <ScrollView
+                            keyboardShouldPersistTaps="handled"
+                            className={isDesktop ? 'space-y-6' : 'flex-1 min-h-0'}
+                            contentContainerStyle={
+                                isDesktop
+                                    ? { paddingBottom: 8 }
+                                    : { flexGrow: 1, width: '100%', maxWidth: '100%', paddingBottom: 16 }
+                            }
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <View className="w-full min-w-0 max-w-full">
                             <View className="mb-4">
                                 <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Título</Text>
                                 <TextInput
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
                                     placeholder="¿Qué deseas?"
-                                    className="w-full px-4 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
+                                    className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
 
@@ -343,20 +448,20 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 </View>
                             ) : null}
 
-                            <View className="flex-row gap-4 mb-4">
-                                <View className="flex-1">
+                            <View className="flex-row gap-3 mb-4 min-w-0 w-full">
+                                <View className="flex-1 min-w-0">
                                     <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Precio (€)</Text>
                                     <TextInput
                                         value={formData.price?.toString() || ''}
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
                                         placeholder="0.00"
                                         keyboardType="numeric"
-                                        className="w-full px-4 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
+                                        className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                 </View>
-                                <View className="flex-1">
+                                <View className="flex-1 min-w-0">
                                     <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Prioridad</Text>
-                                    <View className="flex-row gap-2 bg-surface-container-low p-1 rounded-full">
+                                    <View className="flex-row gap-1.5 bg-surface-container-low p-1 rounded-2xl min-w-0">
                                         {[
                                             { key: 'low', label: 'Baja', color: 'text-tertiary' },
                                             { key: 'medium', label: 'Media', color: 'text-secondary' },
@@ -365,9 +470,12 @@ export function WishListTab({ userId }: WishListTabProps) {
                                             <Pressable
                                                 key={p.key}
                                                 onPress={() => setFormData({ ...formData, priority: p.key as any })}
-                                                className={`flex-1 py-3 rounded-full items-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                                                className={`flex-1 min-w-0 py-3 rounded-xl items-center justify-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                             >
-                                                <Text className={`text-xs font-sans-bold uppercase tracking-wider ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}>
+                                                <Text
+                                                    className={`text-[10px] font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
+                                                    numberOfLines={1}
+                                                >
                                                     {p.label}
                                                 </Text>
                                             </Pressable>
@@ -376,17 +484,38 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 </View>
                             </View>
 
-                            <View className="mb-4">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">URL Imagen</Text>
+                            <View className="mb-4 min-w-0">
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                    Imagen
+                                </Text>
+                                {formData.imageUrl ? (
+                                    <View className="mb-3 items-center">
+                                        <Image
+                                            source={{ uri: formData.imageUrl }}
+                                            className="w-32 h-32 rounded-2xl bg-surface-container-low"
+                                            resizeMode="cover"
+                                            accessibilityLabel="Vista previa de la imagen del deseo"
+                                        />
+                                    </View>
+                                ) : null}
                                 <TextInput
                                     value={formData.imageUrl || ''}
                                     onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
                                     placeholder="https://..."
-                                    className="w-full px-4 py-4 rounded-full bg-surface-container-highest text-on-background"
+                                    className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
+                                <PrimaryButton
+                                    onPress={pickWishImageFromLibrary}
+                                    disabled={isSaving || isUploading}
+                                    className="rounded-2xl py-3 w-full min-w-0"
+                                    textClassName="text-on-primary font-sans-bold text-sm"
+                                    accessibilityLabel={isUploading ? 'Subiendo imagen' : 'Elegir imagen de la galería'}
+                                >
+                                    {isUploading ? 'Subiendo…' : 'Elegir de la galería'}
+                                </PrimaryButton>
                             </View>
 
-                            <View className="mb-8">
+                            <View className="mb-6 min-w-0">
                                 <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Notas</Text>
                                 <TextInput
                                     value={formData.notes || ''}
@@ -394,12 +523,13 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     placeholder="Talla, color, detalles..."
                                     multiline
                                     numberOfLines={3}
-                                    className="w-full px-4 py-4 rounded-2xl bg-surface-container-highest text-on-background"
+                                    className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background"
                                 />
+                            </View>
                             </View>
                         </ScrollView>
 
-                        <View className={`flex-row gap-3 ${isDesktop ? 'mt-8' : 'mt-auto pt-6'}`}>
+                        <View className={`flex-row gap-3 min-w-0 ${isDesktop ? 'mt-8' : 'pt-4 border-t border-outline-variant/15'}`}>
                             {isDesktop ? (
                                 <Pressable
                                     onPress={() => setIsFormOpen(false)}
@@ -412,7 +542,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 <Pressable
                                     onPress={() => { setItemToDelete(editingItem); setIsFormOpen(false); }}
                                     accessibilityLabel="Eliminar deseo"
-                                    className={`bg-primary py-4 rounded-full items-center justify-center shadow-ambient active:scale-[0.98] ${isDesktop ? 'px-6' : 'w-14'}`}
+                                    className={`bg-primary py-4 rounded-full items-center justify-center shadow-ambient active:scale-[0.98] shrink-0 ${isDesktop ? 'px-6' : 'w-14'}`}
                                 >
                                     {isDesktop ? (
                                         <Text className="text-on-primary font-sans-bold text-xs uppercase tracking-widest">Eliminar</Text>
@@ -423,15 +553,16 @@ export function WishListTab({ userId }: WishListTabProps) {
                             ) : null}
                             <PrimaryButton
                                 onPress={handleSave}
-                                disabled={isSaving}
-                                className={isDesktop ? 'flex-[2]' : 'flex-1'}
+                                disabled={isSaving || isUploading}
+                                className={`min-w-0 ${isDesktop ? 'flex-[2]' : 'flex-1'}`}
                                 textClassName="text-on-primary font-sans-bold text-base"
                                 accessibilityLabel={isSaving ? 'Guardando deseo' : 'Guardar deseo'}
                             >
                                 {isSaving ? 'Guardando...' : 'Guardar'}
                             </PrimaryButton>
                         </View>
-                    </View>
+                        </View>
+                    </KeyboardAvoidingView>
                 </View>
             </Modal>
 

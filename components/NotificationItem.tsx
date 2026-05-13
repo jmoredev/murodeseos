@@ -10,33 +10,84 @@ interface NotificationItemProps {
     onClick: (notification: Notification) => void;
 }
 
+function wishTitleFromNotification(notification: Notification): string {
+    const raw = notification.metadata?.wish_title;
+    if (typeof raw === 'string' && raw.trim()) return raw;
+    return notification.wish?.title || 'un deseo';
+}
+
 export function NotificationItem({ notification, onClick }: NotificationItemProps) {
-    const isWishAdded = notification.type === 'wish_added';
-
-    const icon = isWishAdded ? '✨' : '🎁';
-    const bgColor = isWishAdded ? 'bg-secondary/15' : 'bg-primary/10';
-
     const actorName = notification.actor?.display_name || 'Alguien';
     const groupName = notification.group?.name || 'un grupo';
-    const wishTitle = notification.wish?.title || 'un deseo';
+    const wishTitle = wishTitleFromNotification(notification);
 
-    const content = isWishAdded ? (
-        <>
-            <span className="font-sans-bold text-on-background">{actorName}</span> ha añadido &quot;
-            <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
-            <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
-        </>
-    ) : (
-        <>
-            <span className="font-sans-bold text-on-background">{actorName}</span> ha reservado &quot;
-            <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
-            <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
-        </>
-    );
+    let icon: string;
+    let bgColor: string;
+    let content: React.ReactNode;
+    let summary: string;
 
-    const summary = isWishAdded
-        ? `${actorName} añadió el deseo ${wishTitle} en ${groupName}`
-        : `${actorName} reservó el deseo ${wishTitle} en ${groupName}`;
+    switch (notification.type) {
+        case 'wish_added':
+            icon = '✨';
+            bgColor = 'bg-secondary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha añadido &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} añadió el deseo ${wishTitle} en ${groupName}`;
+            break;
+        case 'wish_reserved':
+            icon = '🎁';
+            bgColor = 'bg-primary/10';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha reservado &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} reservó el deseo ${wishTitle} en ${groupName}`;
+            break;
+        case 'wish_deleted_by_owner':
+            icon = '📭';
+            bgColor = 'bg-tertiary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> eliminó &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot;, que tenías reservado
+                    {notification.group_id ? (
+                        <>
+                            {' '}
+                            en<span className="font-sans-medium text-on-surface/70"> {groupName}</span>
+                        </>
+                    ) : null}
+                    .
+                </>
+            );
+            summary = `${actorName} eliminó el deseo ${wishTitle} que tenías reservado`;
+            break;
+        case 'draw_performed':
+            icon = '🎅';
+            bgColor = 'bg-secondary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha realizado el sorteo
+                    del Amigo Invisible en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} realizó el sorteo en ${groupName}`;
+            break;
+        default:
+            icon = '🔔';
+            bgColor = 'bg-surface-container-high';
+            content = <span className="text-on-surface/70">Notificación</span>;
+            summary = 'Notificación';
+            break;
+    }
 
     return (
         <button

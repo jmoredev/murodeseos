@@ -1,6 +1,7 @@
 import React, { useState, memo } from 'react';
 import { View, Text, Pressable, TextInput, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { emojiInCircle } from '@/lib/circle-glyph-styles';
 
 export interface GroupMember {
     id: string;
@@ -133,7 +134,9 @@ export const GroupCard = memo(function GroupCard({
             <View className="flex-row justify-between items-start mb-6 min-w-0">
                 <View className="flex-row items-start flex-1 min-w-0 pr-2">
                     <View className="w-14 h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
-                        <Text className="text-3xl">{group.icon}</Text>
+                        <Text className="text-3xl" style={emojiInCircle(30)}>
+                            {group.icon}
+                        </Text>
                     </View>
                     <View className="ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
                         {isEditingGroupName ? (
@@ -237,9 +240,11 @@ export const GroupCard = memo(function GroupCard({
                     >
                         <View className="w-9 h-9 rounded-full bg-surface-container-low overflow-hidden items-center justify-center ring-1 ring-outline-variant/15">
                             {member.avatar && (member.avatar.startsWith('http') || member.avatar.length > 5) ? (
-                                <Image source={{ uri: member.avatar }} className="w-full h-full" />
+                                <Image source={{ uri: member.avatar }} className="w-full h-full" resizeMode="cover" />
                             ) : (
-                                <Text className="text-lg">{member.avatar || member.name.charAt(0).toUpperCase()}</Text>
+                                <Text className="font-sans-bold text-on-surface" style={emojiInCircle(18)}>
+                                    {member.avatar || member.name.charAt(0).toUpperCase()}
+                                </Text>
                             )}
                         </View>
 

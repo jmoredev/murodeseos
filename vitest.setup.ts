@@ -6,6 +6,12 @@ vi.mock('expo-splash-screen', () => ({
     hideAsync: vi.fn(),
 }));
 
+vi.mock('expo-image-picker', () => ({
+    MediaTypeOptions: { Images: 'images' },
+    requestMediaLibraryPermissionsAsync: vi.fn(async () => ({ status: 'granted', granted: true, expires: 'never', canAskAgain: true })),
+    launchImageLibraryAsync: vi.fn(async () => ({ canceled: true, assets: [] })),
+}));
+
 // Mock de react-native-safe-area-context
 vi.mock('react-native-safe-area-context', () => ({
     SafeAreaView: ({ children }: any) => children,

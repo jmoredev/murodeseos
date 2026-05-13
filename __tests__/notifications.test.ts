@@ -1,4 +1,8 @@
-import { notifyWishAdded, notifyWishReserved } from '@/lib/notification-utils';
+import {
+    notifyWishAdded,
+    notifyWishReserved,
+    notifyWishDeletedByOwner,
+} from '@/lib/notification-utils';
 import { supabase } from '@/lib/supabase';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
@@ -89,6 +93,99 @@ describe('Notification Utils', () => {
             expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([
                 expect.objectContaining({ user_id: 'user-3', actor_id: actorId, type: 'wish_reserved' })
             ]));
+        });
+    });
+
+    describe('notifyWishDeletedByOwner', () => {
+        it('inserts a notification for the reserver with common group_id and wish_title in metadata', async () => {
+            const insertMock = vi.fn(() => Promise.resolve({ error: null }));
+            const groupChain = () => ({
+                select: vi.fn(() => ({
+                    eq: vi.fn(() =>
+                        Promise.resolve({
+                            data: [{ group_id: 'shared-g' }],
+                            error: null,
+                        })
+                    ),
+                })),
+            });
+
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'group_members') return groupChain() as any;
+                if (table === 'notifications') return { insert: insertMock } as any;
+                return mockSupabase;
+            });
+
+            await notifyWishDeletedByOwner('owner-1', 'reserver-1', 'Mi libro');
+
+            expect(insertMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    user_id: 'reserver-1',
+                    actor_id: 'owner-1',
+                    group_id: 'shared-g',
+                    wish_id: null,
+                    type: 'wish_deleted_by_owner',
+                    metadata: { wish_title: 'Mi libro' },
+                })
+            );
+        });
+
+        it('uses null group_id when owner and reserver share no groups', async () => {
+            const insertMock = vi.fn(() => Promise.resolve({ error: null }));
+            let groupCall = 0;
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'group_members') {
+                    return {
+                        select: vi.fn(() => ({
+                            eq: vi.fn(() => {
+                                groupCall += 1;
+                                return Promise.resolve({
+                                    data:
+                                        groupCall === 1
+                                            ? [{ group_id: 'g-owner' }]
+                                            : [{ group_id: 'g-other' }],
+                                    error: null,
+                                });
+                            }),
+                        })),
+                    } as any;
+                }
+                if (table === 'notifications') return { insert: insertMock } as any;
+                return mockSupabase;
+            });
+
+            await notifyWishDeletedByOwner('owner-1', 'reserver-1', 'Wish X');
+
+            expect(insertMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    group_id: null,
+                    metadata: { wish_title: 'Wish X' },
+                })
+            );
+        });
+
+        it('does not insert when reservedById is missing', async () => {
+            const insertMock = vi.fn(() => Promise.resolve({ error: null }));
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'notifications') return { insert: insertMock } as any;
+                return mockSupabase;
+            });
+
+            await notifyWishDeletedByOwner('owner-1', '', 'T');
+
+            expect(insertMock).not.toHaveBeenCalled();
+        });
+
+        it('does not insert when owner and reserver are the same user', async () => {
+            const insertMock = vi.fn(() => Promise.resolve({ error: null }));
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'notifications') return { insert: insertMock } as any;
+                return mockSupabase;
+            });
+
+            await notifyWishDeletedByOwner('same', 'same', 'T');
+
+            expect(insertMock).not.toHaveBeenCalled();
         });
     });
 

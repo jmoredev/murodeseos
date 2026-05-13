@@ -329,7 +329,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         accessibilityLabel="Crear grupo"
                         variant="icon"
                         className="w-12 h-12 rounded-2xl"
-                        textClassName="text-on-primary font-display text-2xl leading-none"
+                        textClassName="text-on-primary font-sans-bold text-2xl leading-none"
                     >
                         +
                     </PrimaryButton>

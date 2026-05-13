@@ -34,7 +34,14 @@
             "description": "Comparte tus sueños y organiza tus regalos."
         },
         "plugins": [
-            "expo-router"
+            "expo-router",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "La app necesita acceso a tus fotos para poner una imagen a tu deseo.",
+                    "cameraPermission": "La app puede usar la cámara si quieres hacer una foto para tu deseo."
+                }
+            ]
         ],
         "experiments": {
             "typedRoutes": true,

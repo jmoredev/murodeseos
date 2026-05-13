@@ -5,6 +5,11 @@ import { supabase } from '@/lib/supabase';
 import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
+
+function isHttpUrl(value: string | undefined | null): boolean {
+    return !!value && /^https?:\/\//i.test(value);
+}
 
 export default function GroupDetailsPage() {
     const router = useRouter();
@@ -131,7 +136,9 @@ export default function GroupDetailsPage() {
                             onPress={() => router.back()}
                             className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-on-surface font-sans-bold">←</Text>
+                            <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
+                                ←
+                            </Text>
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
@@ -152,15 +159,23 @@ export default function GroupDetailsPage() {
                 </View>
 
                 {/* Group Info Card */}
-                <View className="bg-surface-container-lowest rounded-3xl p-8 shadow-ambient mb-8 flex-row items-center">
-                    <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center shadow-inner mr-6">
-                        <Text className="text-4xl">{group?.icon || '🎁'}</Text>
+                <View className="bg-surface-container-lowest rounded-3xl p-8 shadow-ambient mb-8 flex-row items-center min-w-0">
+                    <View className="w-20 h-20 shrink-0 bg-surface-container-low rounded-3xl items-center justify-center shadow-inner mr-6">
+                        <Text className="text-4xl" style={emojiInCircle(36)}>
+                            {group?.icon || '🎁'}
+                        </Text>
                     </View>
-                    <View className="flex-1">
-                        <Text className="text-2xl font-display text-on-background">{group?.name}</Text>
-                        <View className="flex-row items-center mt-3 gap-2">
-                            <View className="px-3 py-1 bg-surface-container-low rounded-full">
-                                <Text className="text-[10px] font-sans-bold text-on-surface/55 uppercase tracking-widest">
+                    <View className="flex-1 min-w-0">
+                        <Text className="text-2xl font-display text-on-background" numberOfLines={2}>
+                            {group?.name}
+                        </Text>
+                        <View className="mt-3 gap-2">
+                            <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
+                                <Text
+                                    className="text-[10px] font-sans-bold text-on-surface/55 uppercase tracking-widest"
+                                    numberOfLines={1}
+                                    ellipsizeMode="middle"
+                                >
                                     Código: {group?.id}
                                 </Text>
                             </View>
@@ -189,11 +204,21 @@ export default function GroupDetailsPage() {
                                 >
                                     <View className="items-center mb-4">
                                         <View className="w-20 h-20 bg-surface-container-low rounded-full items-center justify-center relative overflow-hidden ring-1 ring-outline-variant/15">
-                                            {member.profiles?.avatar_url ? (
-                                                <Text style={{ fontSize: 36 }}>{member.profiles.avatar_url}</Text>
+                                            {isHttpUrl(member.profiles?.avatar_url) ? (
+                                                <Image
+                                                    source={{ uri: member.profiles.avatar_url }}
+                                                    className="w-full h-full"
+                                                    resizeMode="cover"
+                                                    accessibilityIgnoresInvertColors
+                                                />
+                                            ) : member.profiles?.avatar_url ? (
+                                                <Text style={emojiInCircle(36)}>{member.profiles.avatar_url}</Text>
                                             ) : (
-                                                <Text className="text-2xl font-sans-bold text-on-surface/30">
-                                                    {member.profiles?.display_name?.charAt(0)}
+                                                <Text
+                                                    className="font-sans-bold text-on-surface/30"
+                                                    style={emojiInCircle(22)}
+                                                >
+                                                    {member.profiles?.display_name?.charAt(0) || '?'}
                                                 </Text>
                                             )}
                                         </View>

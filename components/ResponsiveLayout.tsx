@@ -3,6 +3,7 @@ import { View, Text, Pressable, useWindowDimensions, ScrollView, Platform } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
 import { GlassBar } from './ui/GlassBar';
+import { emojiInCircle } from '@/lib/circle-glyph-styles';
 
 interface ResponsiveLayoutProps {
     userId: string;
@@ -136,7 +137,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                         alignItems: 'center',
                     }}
                 >
-                    <View className={`w-full ${isDesktop ? 'max-w-5xl px-10 pt-10' : ''}`}>{children}</View>
+                    <View className={`w-full self-stretch ${isDesktop ? 'max-w-5xl px-10 pt-10' : 'max-w-full'}`}>{children}</View>
                 </ScrollView>
             </SafeAreaView>
 
@@ -154,10 +155,10 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mis deseos"
                             accessibilityState={{ selected: activeTab === 'wishlist' }}
-                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
-                            <View importantForAccessibility="no-hide-descendants">
-                                <Text style={{ fontSize: 20 }}>🎁</Text>
+                            <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
+                                <Text style={emojiInCircle(20)}>🎁</Text>
                                 <Text
                                     className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
@@ -171,10 +172,10 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mis grupos"
                             accessibilityState={{ selected: activeTab === 'groups' }}
-                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
-                            <View importantForAccessibility="no-hide-descendants">
-                                <Text style={{ fontSize: 20 }}>👥</Text>
+                            <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
+                                <Text style={emojiInCircle(20)}>👥</Text>
                                 <Text
                                     className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
@@ -188,10 +189,10 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mi perfil"
                             accessibilityState={{ selected: activeTab === 'profile' }}
-                            className={`items-center px-4 py-1.5 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
-                            <View importantForAccessibility="no-hide-descendants">
-                                <Text style={{ fontSize: 20 }}>👤</Text>
+                            <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
+                                <Text style={emojiInCircle(20)}>👤</Text>
                                 <Text
                                     className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >

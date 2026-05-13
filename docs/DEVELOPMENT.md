@@ -1,6 +1,6 @@
 # Guía de Desarrollo - Muro de Deseos
 
-> **Última revisión de contenido:** 2026-05-12
+> **Última revisión de contenido:** 2026-05-13
 
 Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrollar y mantener el proyecto "Muro de Deseos".
 
@@ -52,6 +52,30 @@ bun run dev
 - `bun run test:unit`: Ejecuta Vitest (tests unitarios / componentes).
 - `bun run test:watch`: Vitest en modo watch.
 - `bun run test`: Playwright E2E (requiere `test:e2e:prepare` vía script; ver `package.json`).
+
+## Móvil, PWA y depuración
+
+### Caché del bundle (Expo / Metro / navegador)
+Si la UI en web o en el cliente de desarrollo **no refleja** los cambios (clases Tailwind antiguas, `font-display` donde ya no debería aparecer, etc.), suele ser **caché**: recarga forzada del navegador, reinicio de `expo start` con caché limpia (`npx expo start -c`) o reinstalación del build en el dispositivo.
+
+### `ScrollView` principal (`ResponsiveLayout`)
+`contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
+
+### Lista de deseos (`WishListTab`)
+- **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
+- **Modal nuevo/editar deseo:** `KeyboardAvoidingView`, `ScrollView` con `flex-1` / `min-h-0`, `min-w-0` en inputs y filas, área segura inferior (`useSafeAreaInsets`). **Imagen:** además de URL, **“Elegir de la galería”** sube a Supabase Storage (`wishlist-images`); plugin `expo-image-picker` en `app.json`.
+
+### Botón icono “+” (`PrimaryButton`, variante `icon`)
+Cuando el hijo es solo el carácter `+`, se renderiza con **estilos propios** (`font-sans-bold`, métricas en `lib/circle-glyph-styles`) y **no** se reutiliza `textClassName` del sitio de uso, para evitar mezclas con `font-display` / `leading-none` que desplazan el glifo. El gradiente rellena el botón con posicionamiento absoluto y un `View` intermedio con `flex: 1`.
+
+### Iconos y emojis en círculos
+Utilidades en `lib/circle-glyph-styles.ts` (`circleGlyphTextBase`, `emojiInCircle`) para centrar texto/emoji en Android/iOS (p. ej. barra inferior en `ResponsiveLayout`, avatares en `GroupCard`).
+
+### Detalle de grupo (`app/groups/[id]/index.tsx`)
+Código del grupo en chip con `ellipsizeMode="middle"`; contador de participantes **debajo** del chip; avatares con `Image` si la URL es http(s).
+
+### TypeScript (`tsconfig.json`)
+En `compilerOptions.types` se usa **`vitest/globals`** en lugar de `jest`, alineado con Vitest.
 
 ## 🧪 Testing
 
