@@ -58,6 +58,11 @@ bun run dev
 ### Caché del bundle (Expo / Metro / navegador)
 Si la UI en web o en el cliente de desarrollo **no refleja** los cambios (clases Tailwind antiguas, `font-display` donde ya no debería aparecer, etc.), suele ser **caché**: recarga forzada del navegador, reinicio de `expo start` con caché limpia (`npx expo start -c`) o reinstalación del build en el dispositivo.
 
+### Service Worker (PWA en producción / GitHub Pages)
+`public/sw.js` se copia a `dist/` en el postbuild. A partir de la **v3** del SW, las peticiones **que no son navegación** (bundles JS, chunks, CSS…) usan **red primero** y solo caen en `Cache Storage` si la red falla (modo offline). Las versiones anteriores usaban **caché primero** para esos recursos: tras un deploy el navegador podía seguir sirviendo **JS antiguo** hasta vaciar caché o recargar de forma que invalidara el SW.
+
+Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.). El registro del SW está en `app/_layout.tsx`.
+
 ### `ScrollView` principal (`ResponsiveLayout`)
 `contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
 

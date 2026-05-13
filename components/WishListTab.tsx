@@ -367,14 +367,15 @@ export function WishListTab({ userId }: WishListTabProps) {
                     <KeyboardAvoidingView
                         enabled={!isDesktop}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        className={isDesktop ? 'w-full max-w-lg' : 'flex-1 w-full min-w-0'}
+                        className={isDesktop ? 'w-full max-w-lg max-h-[90vh] flex flex-col min-h-0' : 'flex-1 w-full min-w-0'}
+                        style={isDesktop ? { maxHeight: '90vh' } : undefined}
                     >
                         <View
-                            className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg max-h-[90%] overflow-hidden' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
+                            className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg overflow-hidden flex flex-col flex-1 min-h-0 max-h-[85vh]' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
                             style={
                                 !isDesktop
                                     ? { paddingBottom: 12 + insets.bottom }
-                                    : { maxHeight: '90%' }
+                                    : { maxHeight: '85vh', width: '100%' }
                             }
                         >
                         {/* Mobile Header with Back Button */}
@@ -397,20 +398,32 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
                         )}
                         {isDesktop && (
-                            <Text className="text-2xl font-display text-on-background mb-6">
-                                {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
-                            </Text>
+                            <View className="flex-row items-center justify-between gap-4 mb-2 shrink-0 border-b border-outline-variant/15 pb-4">
+                                <Text
+                                    className="text-2xl font-display text-on-background flex-1 min-w-0 pr-2"
+                                    numberOfLines={1}
+                                >
+                                    {editingItem ? 'Editar deseo' : 'Nuevo deseo'}
+                                </Text>
+                                <Pressable
+                                    onPress={() => !isSaving && setIsFormOpen(false)}
+                                    className="shrink-0 px-4 py-2 rounded-full bg-surface-container-low active:opacity-80"
+                                    accessibilityLabel="Cerrar formulario"
+                                >
+                                    <Text className="text-sm font-sans-bold text-on-surface">Cerrar</Text>
+                                </Pressable>
+                            </View>
                         )}
 
                         <ScrollView
                             keyboardShouldPersistTaps="handled"
-                            className={isDesktop ? 'space-y-6' : 'flex-1 min-h-0'}
+                            className="flex-1 min-h-0"
                             contentContainerStyle={
                                 isDesktop
-                                    ? { paddingBottom: 8 }
+                                    ? { paddingBottom: 16, flexGrow: 0 }
                                     : { flexGrow: 1, width: '100%', maxWidth: '100%', paddingBottom: 16 }
                             }
-                            showsVerticalScrollIndicator={false}
+                            showsVerticalScrollIndicator={isDesktop}
                         >
                             <View className="w-full min-w-0 max-w-full">
                             <View className="mb-4">
@@ -529,7 +542,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
                         </ScrollView>
 
-                        <View className={`flex-row gap-3 min-w-0 ${isDesktop ? 'mt-8' : 'pt-4 border-t border-outline-variant/15'}`}>
+                        <View className={`flex-row gap-3 min-w-0 shrink-0 ${isDesktop ? 'pt-4 mt-0 border-t border-outline-variant/15' : 'pt-4 border-t border-outline-variant/15'}`}>
                             {isDesktop ? (
                                 <Pressable
                                     onPress={() => setIsFormOpen(false)}

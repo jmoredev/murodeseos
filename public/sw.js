@@ -1,6 +1,6 @@
-/* PWA service worker — GitHub Pages bajo /<repo>/. v2: fetch con tope de tiempo e install tolerante a red lenta. */
+/* PWA service worker — GitHub Pages bajo /<repo>/. v3: activos JS/CSS red-primero (evita UI antigua). */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE_NAME = `murodeseos-${VERSION}`;
 
 const NAV_FETCH_MS = 14_000;
@@ -77,9 +77,8 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     (async () => {
-      const cached = await caches.match(request);
-      if (cached) return cached;
-
+      // Red primero: tras un deploy los bundles tienen otro hash; así no se sirve JS/CSS obsoleto
+      // desde Cache Storage (antes: cache-first y la UI quedaba “pegada” a una versión antigua).
       try {
         const fresh = await fetchWithTimeout(request, NAV_FETCH_MS);
         if (fresh.ok) {
@@ -92,7 +91,9 @@ self.addEventListener('fetch', (event) => {
         }
         return fresh;
       } catch {
-        return cached;
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return Response.error();
       }
     })()
   );
