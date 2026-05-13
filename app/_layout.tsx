@@ -125,7 +125,14 @@ export default function RootLayout() {
                     headerShown: false,
                     contentStyle: { backgroundColor: SURFACE_BG },
                 }}
-            />
+            >
+                <Stack.Screen
+                    name="index"
+                    options={{
+                        gestureEnabled: false,
+                    }}
+                />
+            </Stack>
         </SafeAreaProvider>
     );
 }

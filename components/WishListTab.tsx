@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useTransition } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView } from 'react-native'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView, BackHandler } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
@@ -31,6 +31,16 @@ export function WishListTab({ userId }: WishListTabProps) {
     const { showToast, ToastComponent } = useToast();
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
     const [isPending, startTransition] = useTransition();
+
+    useEffect(() => {
+        if (isDesktop || !isFormOpen) return undefined;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (isSaving) return true;
+            setIsFormOpen(false);
+            return true;
+        });
+        return () => sub.remove();
+    }, [isFormOpen, isDesktop, isSaving]);
 
     // Cargar items desde Supabase
     useEffect(() => {
@@ -360,7 +370,10 @@ export function WishListTab({ userId }: WishListTabProps) {
                 visible={isFormOpen}
                 animationType={isDesktop ? 'fade' : 'slide'}
                 transparent={isDesktop}
-                onRequestClose={() => !isSaving && setIsFormOpen(false)}
+                presentationStyle="fullScreen"
+                onRequestClose={() => {
+                    if (!isSaving) setIsFormOpen(false);
+                }}
             >
                 <View className={`flex-1 ${isDesktop ? 'items-center justify-center px-4 bg-on-surface/40' : 'bg-surface'}`}>
                     {isDesktop && <Pressable className="absolute inset-0" onPress={() => !isSaving && setIsFormOpen(false)} />}
