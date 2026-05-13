@@ -46,24 +46,33 @@ CREATE POLICY "Solo el creador puede eliminar el grupo"
   USING (creator_id = (select auth.uid()));
 
 -- Políticas para group_members (sin recursión)
--- Función auxiliar para evitar recursión infinita en políticas RLS
-CREATE OR REPLACE FUNCTION get_user_group_ids(user_uuid UUID)
-RETURNS TABLE(group_id TEXT) 
+-- Función en schema `private`: no expuesta por PostgREST (solo public/graphql_public en API).
+CREATE SCHEMA IF NOT EXISTS private;
+
+CREATE OR REPLACE FUNCTION private.get_user_group_ids(user_uuid uuid)
+RETURNS TABLE(group_id text)
 SECURITY DEFINER
 SET search_path = public
 LANGUAGE sql
 AS $$
-  SELECT group_id 
-  FROM group_members 
-  WHERE user_id = user_uuid;
+  SELECT gm.group_id
+  FROM public.group_members AS gm
+  WHERE gm.user_id = user_uuid;
 $$;
+
+REVOKE ALL ON FUNCTION private.get_user_group_ids(uuid) FROM PUBLIC;
+GRANT USAGE ON SCHEMA private TO authenticated;
+GRANT EXECUTE ON FUNCTION private.get_user_group_ids(uuid) TO authenticated;
+GRANT USAGE ON SCHEMA private TO service_role;
+GRANT EXECUTE ON FUNCTION private.get_user_group_ids(uuid) TO service_role;
 
 -- Política corregida: Los miembros pueden ver a TODOS los miembros de los grupos a los que pertenecen
 CREATE POLICY "Los miembros pueden ver otros miembros de sus grupos"
   ON group_members FOR SELECT
+  TO authenticated
   USING (
     group_id IN (
-      SELECT get_user_group_ids((select auth.uid()))
+      SELECT private.get_user_group_ids((select auth.uid()))
     )
   );
 
