@@ -71,6 +71,11 @@ Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → 
 ### Lista de deseos (`WishListTab`)
 - **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
 - **Modal nuevo/editar deseo:** `KeyboardAvoidingView`, `ScrollView` con `flex-1` / `min-h-0`, `min-w-0` en inputs y filas, área segura inferior (`useSafeAreaInsets`). **Imagen:** además de URL, **“Elegir de la galería”** sube a Supabase Storage (`wishlist-images`); plugin `expo-image-picker` en `app.json`.
+- **Subida de imagen (`lib/wish-image-upload.ts`):** en **web/PWA móvil** el botón abre un `<input type="file" accept="image/*">` oculto de forma síncrona con el clic (los navegadores bloquean el selector si hay `await` antes). En **iOS/Android** se pide permiso de galería y se usa `expo-image-picker` con `base64` para evitar `fetch` sobre URIs locales. La utilidad normaliza `File`, `asset.file` (web) o `base64` (nativo) antes del `upload` a Storage.
+
+### Lista de deseos de otro usuario (`app/wishlist/[id]/index.tsx`)
+- Al pulsar una tarjeta se abre **`WishDetailModal`**: imagen, prioridad, precio, notas, enlaces y acciones de reserva/cancelar. El estado del modal se sincroniza si el usuario reserva desde la tarjeta o desde el detalle.
+- E2E: `responsive-wishlist.spec.ts` incluye el caso “debe abrir el detalle al hacer clic en un deseo” (`wish-detail-modal`, `wish-detail-title`).
 
 ### Botón icono “+” (`PrimaryButton`, variante `icon`)
 Cuando el hijo es solo el carácter `+`, se renderiza con **estilos propios** (`font-sans-bold`, métricas en `lib/circle-glyph-styles`) y **no** se reutiliza `textClassName` del sitio de uso, para evitar mezclas con `font-display` / `leading-none` que desplazan el glifo. El gradiente rellena el botón con posicionamiento absoluto y un `View` intermedio con `flex: 1`.
@@ -90,6 +95,7 @@ El proyecto utiliza **Vitest** como framework de pruebas unitarias y de componen
 
 ### Estructura de pruebas
 Los tests se encuentran en el directorio `__tests__`.
+- `wish-image-upload.test.ts`: utilidades de extensión MIME, base64 y rutas de Storage para imágenes de deseos.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
 ## ♿ Checklist de Accesibilidad (antes de publicar)

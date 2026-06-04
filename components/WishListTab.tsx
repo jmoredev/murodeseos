@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef, useTransition } from 'react'
 import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView, BackHandler } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
+import {
+    buildWishImageStoragePath,
+    pickWishImageAsset,
+    resolveWishImageUploadPayload,
+} from '@/lib/wish-image-upload'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded, notifyWishDeletedByOwner } from '@/lib/notification-utils'
@@ -31,6 +35,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const { showToast, ToastComponent } = useToast();
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
     const [isPending, startTransition] = useTransition();
+    const webImageInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         if (isDesktop || !isFormOpen) return undefined;
@@ -141,36 +146,16 @@ export function WishListTab({ userId }: WishListTabProps) {
         });
     };
 
-    const pickWishImageFromLibrary = async () => {
+    const uploadWishImageSource = async (source: File | import('expo-image-picker').ImagePickerAsset) => {
         if (!userId) return;
         setIsUploading(true);
         try {
-            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (!perm.granted) {
-                showToast('Necesitamos permiso para acceder a la galería.', 'error');
-                return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                quality: 0.85,
-            });
-            if (result.canceled || !result.assets[0]) return;
-
-            const asset = result.assets[0];
-            const rawExt =
-                asset.fileName?.split('.').pop()?.split('?')[0]?.toLowerCase() ?? 'jpg';
-            const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
-            const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${safeExt}`;
-
-            const res = await fetch(asset.uri);
-            const blob = await res.blob();
-            const contentType =
-                asset.mimeType ||
-                (safeExt === 'jpg' || safeExt === 'jpeg' ? 'image/jpeg' : `image/${safeExt}`);
+            const { body, contentType, extension } = await resolveWishImageUploadPayload(source);
+            const path = buildWishImageStoragePath(userId, extension);
 
             const { error } = await supabase.storage
                 .from('wishlist-images')
-                .upload(path, blob, { contentType, upsert: true });
+                .upload(path, body, { contentType, upsert: true });
 
             if (error) throw error;
 
@@ -183,6 +168,33 @@ export function WishListTab({ userId }: WishListTabProps) {
         } finally {
             setIsUploading(false);
         }
+    };
+
+    const pickWishImageFromLibrary = async () => {
+        if (!userId) return;
+
+        const pick = await pickWishImageAsset();
+        if (pick.status === 'denied') {
+            showToast('Necesitamos permiso para acceder a la galería.', 'error');
+            return;
+        }
+        if (pick.status === 'canceled') return;
+
+        await uploadWishImageSource(pick.asset);
+    };
+
+    const handleWebImageInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (file) void uploadWishImageSource(file);
+    };
+
+    const onPickWishImagePress = () => {
+        if (Platform.OS === 'web') {
+            webImageInputRef.current?.click();
+            return;
+        }
+        void pickWishImageFromLibrary();
     };
 
     const handleSave = async () => {
@@ -530,8 +542,18 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     placeholder="https://..."
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
+                                {Platform.OS === 'web' ? (
+                                    <input
+                                        ref={webImageInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleWebImageInputChange}
+                                        data-testid="wish-image-file-input"
+                                    />
+                                ) : null}
                                 <PrimaryButton
-                                    onPress={pickWishImageFromLibrary}
+                                    onPress={onPickWishImagePress}
                                     disabled={isSaving || isUploading}
                                     className="rounded-2xl py-3 w-full min-w-0"
                                     textClassName="text-on-primary font-sans-bold text-sm"

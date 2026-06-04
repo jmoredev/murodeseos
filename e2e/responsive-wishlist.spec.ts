@@ -125,6 +125,14 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         await expect(sheetTitle).not.toBeVisible({ timeout: 10000 });
     });
 
+    test('debe abrir el detalle al hacer clic en un deseo', async ({ page }) => {
+        const card = page.getByTestId(`wishlist-card-${createdFriendWish!.id}`);
+        await card.getByText(createdFriendWish!.title, { exact: true }).click();
+
+        await expect(page.getByTestId('wish-detail-modal')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByTestId('wish-detail-title')).toHaveText(createdFriendWish!.title);
+    });
+
     test('debe permitir reservar un artículo en la vista de amigo', async ({ page }) => {
         const card = page.getByTestId(`wishlist-card-${createdFriendWish!.id}`);
         await expect(card.getByText(createdFriendWish!.title, { exact: true })).toBeVisible();

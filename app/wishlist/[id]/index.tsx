@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
+import { WishDetailModal } from '@/components/WishDetailModal';
 import { ProfileInfoSection } from '@/components/ProfileInfoSection';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -18,6 +19,7 @@ export default function UserWishlistPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -112,7 +114,9 @@ export default function UserWishlistPage() {
             if (sbError) throw sbError;
 
             // Actualizar estado local
-            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: user.id } : i));
+            const update = (i: GiftItem) => (i.id === item.id ? { ...i, reservedBy: user.id } : i);
+            setItems(prev => prev.map(update));
+            setSelectedItem(prev => (prev?.id === item.id ? { ...prev, reservedBy: user.id } : prev));
             Alert.alert('¡Reservado!', 'Has reservado este regalo con éxito.');
         } catch (err: any) {
             Alert.alert('Error', err.message || 'No se pudo reservar el regalo');
@@ -135,7 +139,8 @@ export default function UserWishlistPage() {
             if (sbError) throw sbError;
 
             // Actualizar estado local
-            setItems(prev => prev.map(i => i.id === item.id ? { ...i, reservedBy: null } : i));
+            setItems(prev => prev.map(i => (i.id === item.id ? { ...i, reservedBy: null } : i)));
+            setSelectedItem(prev => (prev?.id === item.id ? { ...prev, reservedBy: null } : prev));
         } catch (err: any) {
             Alert.alert('Error', err.message || 'No se pudo cancelar la reserva');
         }
@@ -226,6 +231,7 @@ export default function UserWishlistPage() {
                                             item={item}
                                             isOwner={false}
                                             currentUserId={user?.id}
+                                            onClick={setSelectedItem}
                                             onReserve={handleReserve}
                                             onCancelReserve={handleCancelReserve}
                                         />
@@ -243,6 +249,16 @@ export default function UserWishlistPage() {
                     )}
                 </View>
             </View>
+
+            <WishDetailModal
+                visible={!!selectedItem}
+                item={selectedItem}
+                onClose={() => setSelectedItem(null)}
+                isOwner={false}
+                currentUserId={user?.id}
+                onReserve={handleReserve}
+                onCancelReserve={handleCancelReserve}
+            />
 
             {/* Mobile Info Modal */}
             <Modal
