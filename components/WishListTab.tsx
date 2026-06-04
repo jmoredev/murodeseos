@@ -7,6 +7,7 @@ import {
     pickWishImageAsset,
     resolveWishImageUploadPayload,
 } from '@/lib/wish-image-upload'
+import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded, notifyWishDeletedByOwner } from '@/lib/notification-utils'
@@ -205,7 +206,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             const itemData = {
                 user_id: userId,
                 title: formData.title,
-                links: formData.links || [],
+                links: normalizeWishLinks(formData.links || []),
                 image_url: formData.imageUrl,
                 price: formData.price,
                 notes: formData.notes,
@@ -539,7 +540,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 <TextInput
                                     value={formData.imageUrl || ''}
                                     onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
-                                    placeholder="https://..."
+                                    placeholder="URL de la foto (opcional)"
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
                                 {Platform.OS === 'web' ? (
@@ -561,6 +562,26 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 >
                                     {isUploading ? 'Subiendo…' : 'Elegir de la galería'}
                                 </PrimaryButton>
+                            </View>
+
+                            <View className="mb-4 min-w-0">
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                    Enlace (opcional)
+                                </Text>
+                                <TextInput
+                                    value={formData.links?.[0] ?? ''}
+                                    onChangeText={(text) =>
+                                        setFormData({
+                                            ...formData,
+                                            links: text.trim() ? [text] : [],
+                                        })
+                                    }
+                                    placeholder="https://tienda.com/articulo"
+                                    keyboardType="url"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
+                                />
                             </View>
 
                             <View className="mb-6 min-w-0">

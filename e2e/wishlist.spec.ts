@@ -38,6 +38,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
             title: `Deseo E2E ${timestamp}`,
             price: '99.99',
             notes: 'Este es un deseo de prueba con imagen y prioridad alta',
+            link: 'https://example.com/producto-e2e',
             imageUrl: 'https://placehold.co/600x400/png',
             priority: 'Alta'
         };
@@ -54,8 +55,9 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
 
         await page.getByPlaceholder('¿Qué deseas?').fill(testItem.title);
         await page.getByPlaceholder('0.00').fill(testItem.price);
+        await page.getByPlaceholder('https://tienda.com/articulo').fill(testItem.link);
         await page.getByPlaceholder('Talla, color, detalles...').fill(testItem.notes);
-        await page.getByPlaceholder('https://...').fill(testItem.imageUrl);
+        await page.getByPlaceholder('URL de la foto (opcional)').fill(testItem.imageUrl);
         await page.getByText(testItem.priority, { exact: true }).first().click();
 
         // Interceptar respuesta para sacar el ID (PostgREST de Supabase)
@@ -77,6 +79,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(title1).toBeVisible();
         await expect(page.getByText(`${testItem.price} €`).first()).toBeVisible();
         await expect(page.getByText(/Prioridad Alta/i).first()).toBeVisible();
+        await expect(page.getByRole('link', { name: /example\.com/i }).first()).toBeVisible();
 
         // --- 2. Crear Segundo Item (para probar ordenación) ---
         await page.getByLabel('Nuevo deseo').click();

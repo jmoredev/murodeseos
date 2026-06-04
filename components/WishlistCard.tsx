@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { PrimaryButton } from './ui/PrimaryButton';
+import { WishLinkChip } from './WishLinkChip';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -151,12 +152,8 @@ export function WishlistCard({
                         </Text>
                     </View>
 
-                    {item.links.length > 0 ? (
-                        <View className="bg-surface-container-low px-2.5 py-1.5 rounded-xl">
-                            <Text className="text-primary text-xs font-sans-bold">
-                                🔗 {item.links.length}
-                            </Text>
-                        </View>
+                    {item.links[0] ? (
+                        <WishLinkChip url={item.links[0]} testID={`wish-link-${item.id}`} />
                     ) : null}
                 </View>
 

@@ -70,7 +70,7 @@ Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → 
 
 ### Lista de deseos (`WishListTab`)
 - **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
-- **Modal nuevo/editar deseo:** `KeyboardAvoidingView`, `ScrollView` con `flex-1` / `min-h-0`, `min-w-0` en inputs y filas, área segura inferior (`useSafeAreaInsets`). **Imagen:** además de URL, **“Elegir de la galería”** sube a Supabase Storage (`wishlist-images`); plugin `expo-image-picker` en `app.json`.
+- **Modal nuevo/editar deseo:** `KeyboardAvoidingView`, `ScrollView` con `flex-1` / `min-h-0`, `min-w-0` en inputs y filas, área segura inferior (`useSafeAreaInsets`). **Enlace (opcional):** campo propio que persiste en `wishlist_items.links` (no en `notes`). **Imagen:** URL de foto o **“Elegir de la galería”** → Supabase Storage (`wishlist-images`); plugin `expo-image-picker` en `app.json`. En tarjetas y detalle, el enlace se muestra recortado con `WishLinkChip` (`lib/wish-link-utils.ts`).
 - **Subida de imagen (`lib/wish-image-upload.ts`):** en **web/PWA móvil** el botón abre un `<input type="file" accept="image/*">` oculto de forma síncrona con el clic (los navegadores bloquean el selector si hay `await` antes). En **iOS/Android** se pide permiso de galería y se usa `expo-image-picker` con `base64` para evitar `fetch` sobre URIs locales. La utilidad normaliza `File`, `asset.file` (web) o `base64` (nativo) antes del `upload` a Storage.
 
 ### Lista de deseos de otro usuario (`app/wishlist/[id]/index.tsx`)
@@ -96,6 +96,7 @@ El proyecto utiliza **Vitest** como framework de pruebas unitarias y de componen
 ### Estructura de pruebas
 Los tests se encuentran en el directorio `__tests__`.
 - `wish-image-upload.test.ts`: utilidades de extensión MIME, base64 y rutas de Storage para imágenes de deseos.
+- `wish-link-utils.test.ts`: normalización, truncado y deduplicación de enlaces de deseos.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
 ## ♿ Checklist de Accesibilidad (antes de publicar)

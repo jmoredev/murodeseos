@@ -29,8 +29,8 @@ describe('WishlistCard', () => {
         expect(screen.getByText('Some notes')).toBeInTheDocument();
         // Priority badge
         expect(screen.getByText(/Prioridad Alta/i)).toBeInTheDocument();
-        // Link count
-        expect(screen.getByText(/🔗 1/)).toBeInTheDocument();
+        // Enlace recortado y clickeable
+        expect(screen.getByRole('link', { name: /example\.com/i })).toBeInTheDocument();
         // Image
         const img = screen.getByLabelText(mockItem.title);
         expect(img).toBeInTheDocument();

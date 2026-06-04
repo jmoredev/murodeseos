@@ -7,13 +7,12 @@ import {
     ScrollView,
     Image,
     useWindowDimensions,
-    Linking,
-    Alert,
     BackHandler,
     Platform,
 } from 'react-native';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
+import { WishLinkChip } from './WishLinkChip';
 
 interface WishDetailModalProps {
     visible: boolean;
@@ -63,20 +62,6 @@ export function WishDetailModal({
     const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
     const isReservedByOther = !isOwner && item.reservedBy && item.reservedBy !== currentUserId;
     const isAvailable = !isOwner && !item.reservedBy;
-
-    const openLink = async (url: string) => {
-        const normalized = url.startsWith('http') ? url : `https://${url}`;
-        try {
-            const canOpen = await Linking.canOpenURL(normalized);
-            if (!canOpen) {
-                Alert.alert('Enlace no válido', 'No se pudo abrir este enlace.');
-                return;
-            }
-            await Linking.openURL(normalized);
-        } catch {
-            Alert.alert('Error', 'No se pudo abrir el enlace.');
-        }
-    };
 
     const content = (
         <>
@@ -146,17 +131,12 @@ export function WishDetailModal({
                             Enlaces
                         </Text>
                         {item.links.map((link, index) => (
-                            <Pressable
+                            <WishLinkChip
                                 key={`${link}-${index}`}
-                                onPress={() => openLink(link)}
-                                accessibilityRole="link"
-                                accessibilityLabel={`Abrir enlace ${index + 1}`}
-                                className="mb-2 px-4 py-3 rounded-2xl bg-surface-container-low active:opacity-80"
-                            >
-                                <Text className="text-primary font-sans-bold text-sm" numberOfLines={2}>
-                                    🔗 {link}
-                                </Text>
-                            </Pressable>
+                                url={link}
+                                variant="row"
+                                testID={`wish-detail-link-${index}`}
+                            />
                         ))}
                     </View>
                 ) : null}
