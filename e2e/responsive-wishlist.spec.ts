@@ -138,10 +138,8 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         await expect(card.getByText(createdFriendWish!.title, { exact: true })).toBeVisible();
         const reserveBtn = card.getByTestId('wish-reserve-button');
         await expect(reserveBtn).toBeVisible();
-        page.once('dialog', dialog => dialog.accept());
-        await reserveBtn.evaluate((el) => (el as HTMLElement).click());
-        await page.waitForTimeout(500);
-
-        await expect(card.getByText(/Reservar|Cancelar reserva/i).first()).toBeVisible({ timeout: 15000 });
+        await reserveBtn.click();
+        await expect(card.getByText(/Reservado por ti/i)).toBeVisible({ timeout: 15000 });
+        await expect(card.getByTestId('wish-cancel-reserve-button')).toBeVisible();
     });
 });

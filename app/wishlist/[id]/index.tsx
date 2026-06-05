@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, useWindowDimensions, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, useWindowDimensions, Modal } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { reserveWishlistItem, cancelWishlistReservation } from '@/lib/wish-reservation';
+import { getWishActionErrorMessage } from '@/lib/wish-action-errors';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 import { WishDetailModal } from '@/components/WishDetailModal';
 import { ProfileInfoSection } from '@/components/ProfileInfoSection';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useToast } from '@/components/Toast';
 
 export default function UserWishlistPage() {
     const router = useRouter();
@@ -20,6 +23,7 @@ export default function UserWishlistPage() {
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
+    const { showToast, ToastComponent } = useToast();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -100,49 +104,39 @@ export default function UserWishlistPage() {
     }, [targetUserId]);
 
     const handleReserve = async (item: GiftItem) => {
-        if (!user) return;
+        if (!user?.id) {
+            showToast('Inicia sesión para reservar un regalo.', 'error');
+            return;
+        }
 
         try {
-            const { error: sbError } = await supabase
-                .from('wishlist_items')
-                .update({
-                    reserved_by: user.id,
-                    reserved_at: new Date().toISOString()
-                })
-                .eq('id', item.id);
+            const reservedBy = await reserveWishlistItem(item.id, user.id);
 
-            if (sbError) throw sbError;
-
-            // Actualizar estado local
-            const update = (i: GiftItem) => (i.id === item.id ? { ...i, reservedBy: user.id } : i);
-            setItems(prev => prev.map(update));
-            setSelectedItem(prev => (prev?.id === item.id ? { ...prev, reservedBy: user.id } : prev));
-            Alert.alert('¡Reservado!', 'Has reservado este regalo con éxito.');
-        } catch (err: any) {
-            Alert.alert('Error', err.message || 'No se pudo reservar el regalo');
+            const update = (i: GiftItem) => (i.id === item.id ? { ...i, reservedBy } : i);
+            setItems((prev) => prev.map(update));
+            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservedBy } : prev));
+            showToast('¡Regalo reservado!');
+        } catch (err) {
+            console.error('Error reserving item:', err);
+            showToast(getWishActionErrorMessage(err, 'No se pudo reservar el regalo'), 'error');
         }
     };
 
     const handleCancelReserve = async (item: GiftItem) => {
-        if (!user) return;
+        if (!user?.id) {
+            showToast('Inicia sesión para gestionar la reserva.', 'error');
+            return;
+        }
 
         try {
-            const { error: sbError } = await supabase
-                .from('wishlist_items')
-                .update({
-                    reserved_by: null,
-                    reserved_at: null
-                })
-                .eq('id', item.id)
-                .eq('reserved_by', user.id); // Solo si yo lo reservé
+            await cancelWishlistReservation(item.id, user.id);
 
-            if (sbError) throw sbError;
-
-            // Actualizar estado local
-            setItems(prev => prev.map(i => (i.id === item.id ? { ...i, reservedBy: null } : i)));
-            setSelectedItem(prev => (prev?.id === item.id ? { ...prev, reservedBy: null } : prev));
-        } catch (err: any) {
-            Alert.alert('Error', err.message || 'No se pudo cancelar la reserva');
+            setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, reservedBy: null } : i)));
+            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservedBy: null } : prev));
+            showToast('Reserva cancelada', 'info');
+        } catch (err) {
+            console.error('Error canceling reservation:', err);
+            showToast(getWishActionErrorMessage(err, 'No se pudo cancelar la reserva'), 'error');
         }
     };
 
@@ -289,6 +283,7 @@ export default function UserWishlistPage() {
                     </View>
                 </View>
             </Modal>
+            {ToastComponent}
         </ResponsiveLayout>
     );
 }

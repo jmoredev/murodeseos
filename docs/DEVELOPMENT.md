@@ -75,6 +75,7 @@ Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → 
 
 ### Lista de deseos de otro usuario (`app/wishlist/[id]/index.tsx`)
 - Al pulsar una tarjeta se abre **`WishDetailModal`**: imagen, prioridad, precio, notas, enlaces y acciones de reserva/cancelar. El estado del modal se sincroniza si el usuario reserva desde la tarjeta o desde el detalle.
+- **Reservar regalo ajeno:** botones de acción fuera del área clicable de la tarjeta (evita conflictos en móvil/web). La mutación usa `lib/wish-reservation.ts` (solo `reserved_by`; no existe `reserved_at` en BD). Feedback con toast. El dueño de la lista no ve el estado de reserva; el resto sí.
 - E2E: `responsive-wishlist.spec.ts` incluye el caso “debe abrir el detalle al hacer clic en un deseo” (`wish-detail-modal`, `wish-detail-title`).
 
 ### Botón icono “+” (`PrimaryButton`, variante `icon`)
@@ -97,6 +98,7 @@ El proyecto utiliza **Vitest** como framework de pruebas unitarias y de componen
 Los tests se encuentran en el directorio `__tests__`.
 - `wish-image-upload.test.ts`: utilidades de extensión MIME, base64 y rutas de Storage para imágenes de deseos.
 - `wish-link-utils.test.ts`: normalización, truncado y deduplicación de enlaces de deseos.
+- `wish-reservation.test.ts`: reserva y cancelación en listas ajenas vía Supabase.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
 ## ♿ Checklist de Accesibilidad (antes de publicar)

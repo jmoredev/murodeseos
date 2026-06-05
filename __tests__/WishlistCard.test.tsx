@@ -63,4 +63,21 @@ describe('WishlistCard', () => {
         fireEvent.click(screen.getByText('Test Gift'));
         expect(mockOnClick).toHaveBeenCalledWith(mockItem);
     });
+
+    it('does not call onClick when reserving', () => {
+        const onReserve = vi.fn();
+        render(
+            <WishlistCard
+                item={{ ...mockItem, reservedBy: null }}
+                isOwner={false}
+                currentUserId="viewer-1"
+                onClick={mockOnClick}
+                onReserve={onReserve}
+            />
+        );
+
+        fireEvent.click(screen.getByTestId('wish-reserve-button'));
+        expect(onReserve).toHaveBeenCalledWith(expect.objectContaining({ id: mockItem.id }));
+        expect(mockOnClick).not.toHaveBeenCalled();
+    });
 });
