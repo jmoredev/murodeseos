@@ -4,3 +4,4 @@
 # esbuild comprueba y enlaza su binario de plataforma en el postinstall.
 allowBuilds:
   esbuild: true
+  unrs-resolver: true
