@@ -43,7 +43,13 @@ leer desde el navegador. Viola D3.
 La misma política no comprueba pertenencia a un grupo. Con el UUID de una persona
 —o enumerando— se obtiene su lista completa. Viola D2.
 
-### S10 — Copia de credenciales olvidada en el esquema expuesto (nuevo)
+### S10 — Copia de credenciales olvidada en el esquema expuesto (RESUELTO)
+
+> **Resuelto el 2026-09-24** con la migración `20260924140609_drop_leftover_tmp_auth_tables.sql`,
+> aplicada a producción. Verificado: las dos tablas ya no existen, ningún objeto
+> `tmp*` queda en `public`, las 8 tablas reales conservan RLS y sus políticas sin
+> cambios, hay 19/19 migraciones registradas, y los advisors pasaron de 3
+> hallazgos a 1.
 
 `public.tmp_auth_users` y `public.tmp_auth_identities` son andamiaje temporal que
 `supabase db pull` genera para resolver dependencias del esquema `auth`. Ninguna
@@ -66,10 +72,24 @@ una política añadida por error, o un `DISABLE ROW LEVEL SECURITY`, para expone
 las credenciales de 10 personas. Es una copia de `auth.users` que no debería
 existir.
 
-### S11 — Protección de contraseñas filtradas desactivada (nuevo)
+### S11 — Protección de contraseñas filtradas desactivada
 
-El advisor `auth_leaked_password_protection` está en nivel WARN. Supabase puede
-comprobar las contraseñas contra HaveIBeenPwned y está desactivado.
+El advisor `auth_leaked_password_protection` está en nivel WARN y es el único
+hallazgo que queda. Supabase puede comprobar las contraseñas contra
+HaveIBeenPwned y está desactivado.
+
+### S12 — Las rutas dinámicas devuelven 404 con el shell de la SPA (nuevo)
+
+`/wishlist/<uuid>` y `/groups/<código>` responden **404** aunque sirven el
+contenido exacto de `404.html`, que incluye el bundle. La aplicación arranca y
+enruta correctamente, así que visualmente funciona; lo incorrecto es el código de
+estado. Afecta a recargar o enlazar directamente esas páginas.
+
+El enlace de invitación `/groups/join?code=...` sí devuelve 200, así que el flujo
+de compartir no está afectado. Es comportamiento preexistente del export
+estático, no una regresión: GitHub Pages no puede reescribir un 404 a 200. La
+solución sería evitar rutas dinámicas y usar parámetros de consulta, que el
+export sí genera como rutas estáticas.
 
 ### S8 — Redirect de confirmación fijado a localhost
 
@@ -85,7 +105,7 @@ reinicar el esquema ni reescribir migraciones existentes.
 
 | # | Acción | Tipo | Riesgo |
 | --- | --- | --- | --- |
-| 1 | Revocar los permisos de `anon` y `authenticated` sobre las dos tablas `tmp_auth_*` y eliminarlas | migración | bajo: sin claves foráneas y sin uso en el código |
+| 1 | Revocar los permisos de `anon` y `authenticated` sobre las dos tablas `tmp_auth_*` y eliminarlas | migración | **hecho** |
 | 2 | Activar la protección de contraseñas filtradas | panel de Supabase | nulo |
 | 3 | Exponer la lectura de listas por una vista o función que exija grupo en común y no devuelva `reserved_by` al dueño | migración + código | medio: cambia el camino de lectura |
 | 4 | Restringir `wishlist_items` SELECT para que solo devuelva filas de grupos compartidos | migración | medio: hay que ajustar las consultas del cliente |
@@ -95,9 +115,9 @@ reinicar el esquema ni reescribir migraciones existentes.
 
 ### Orden recomendado
 
-Los puntos 1 y 2 son independientes y de riesgo bajo: se pueden hacer ya. Los
-puntos 3, 4 y 5 son el cambio de producto y conviene hacerlos juntos, porque
-tocan el mismo camino de lectura y de escritura. El 6 es independiente.
+El punto 2 es independiente y de riesgo nulo: se puede hacer ya. Los puntos 3, 4
+y 5 son el cambio de producto y conviene hacerlos juntos, porque tocan el mismo
+camino de lectura y de escritura. El 6 es independiente. El 7 es deuda.
 
 ## Restricciones
 
