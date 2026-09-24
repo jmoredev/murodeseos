@@ -98,6 +98,60 @@ Con `mailer_autoconfirm: false` en producción, ningún usuario nuevo puede
 confirmar su cuenta. `EXPO_PUBLIC_SITE_URL` está documentada en `env.example`
 pero no se usa en el código.
 
+## Diseño de la remediación de S1, S2 y D4
+
+### Lo que se descartó, y por qué
+
+El primer diseño era ocultar `reserved_by` al dueño revocando el `SELECT` de esa
+columna con privilegios a nivel de columna. **No es viable.** La documentación de
+PostgreSQL sobre privilegios dice, sobre `SELECT`:
+
+> permite leer cualquier columna… este privilegio también es necesario para
+> referenciar valores de columnas existentes en `UPDATE`, `DELETE` o `MERGE`.
+
+Las políticas de UPDATE y el trigger `check_wishlist_update_permissions`
+referencian `reserved_by`, y el trigger compara además `OLD.title`, `OLD.links`,
+etcétera. Revocar el `SELECT` de esa columna rompería las reservas para todos los
+usuarios. Supabase lo desaconseja de forma explícita:
+
+> No recomendamos usar privilegios a nivel de columna para la mayoría de
+> usuarios. Recomendamos políticas RLS combinadas con **una tabla dedicada**
+> para los datos sensibles.
+
+### Lo que se hará
+
+Mover las reservas a su propia tabla, que es la recomendación de Supabase:
+
+```sql
+create table public.wishlist_reservations (
+  item_id     uuid primary key references public.wishlist_items(id) on delete cascade,
+  reserver_id uuid not null references auth.users(id) on delete cascade,
+  reserved_at timestamptz not null default now()
+);
+```
+
+Consecuencias buscadas:
+
+| Efecto | Cómo se consigue |
+| --- | --- |
+| El dueño no puede ver quién reservó | La información deja de estar en la tabla que él lee: no hay nada que ocultar |
+| Reserva única, gana el primero | La clave primaria de `item_id` lo garantiza en la base de datos |
+| Solo miembros de un grupo común leen una lista | Política RLS sobre `wishlist_items` con pertenencia a grupo compartido |
+| Cada uno ve solo sus reservas | Política RLS sobre `wishlist_reservations`: `reserver_id = auth.uid()` |
+| El visitante sabe si un regalo está reservado | Función `SECURITY DEFINER` que devuelve solo un indicador, nunca la autoría |
+
+### Alcance real y requisito previo
+
+No es una migración pequeña. Incluye migrar los datos existentes de `reserved_by`,
+eliminar la columna, reescribir el trigger y las políticas de UPDATE, y adaptar
+`WishListTab.tsx`, `app/wishlist/[userId]/page.tsx`, `WishlistCard.tsx`,
+`WishDetailModal.tsx` y sus tests.
+
+**Requisito previo:** verificación en base de datos local. El cambio toca RLS,
+privilegios y una función `SECURITY DEFINER` sobre datos reales, y los errores en
+esta área no se ven hasta que fallan en producción. Para levantar la base local
+hace falta el demonio de Docker accesible desde el proceso.
+
 ## Plan de remediación
 
 Todo son migraciones nuevas y aditivas. Producción tiene datos reales: nada de
@@ -107,11 +161,12 @@ reinicar el esquema ni reescribir migraciones existentes.
 | --- | --- | --- | --- |
 | 1 | Revocar los permisos de `anon` y `authenticated` sobre las dos tablas `tmp_auth_*` y eliminarlas | migración | **hecho** |
 | 2 | Activar la protección de contraseñas filtradas | panel de Supabase | nulo |
-| 3 | Exponer la lectura de listas por una vista o función que exija grupo en común y no devuelva `reserved_by` al dueño | migración + código | medio: cambia el camino de lectura |
-| 4 | Restringir `wishlist_items` SELECT para que solo devuelva filas de grupos compartidos | migración | medio: hay que ajustar las consultas del cliente |
-| 5 | Garantizar reserva única con una restricción en la base de datos y un mensaje claro al segundo | migración + código | medio |
+| 3 | Mover las reservas a una tabla dedicada y exponer la lectura por función | migración + código | medio: cambia el camino de lectura y escribe datos |
+| 4 | Restringir la lectura de `wishlist_items` a grupos compartidos | migración | medio: hay que ajustar las consultas del cliente |
+| 5 | Garantizar reserva única con la clave primaria de la tabla nueva | migración | bajo |
 | 6 | Arreglar el redirect de confirmación y dar uso a `EXPO_PUBLIC_SITE_URL` | código | bajo |
 | 7 | Endurecer el lint hasta convertirlo en puerta bloqueante | código | bajo |
+| 8 | Eliminar la carpeta `database/` y dejar `supabase/migrations/` como única fuente de verdad | repositorio | bajo |
 
 ### Orden recomendado
 
