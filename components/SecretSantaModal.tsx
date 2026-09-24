@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Group, GroupMember } from './GroupCard';
+import React, { useState, useEffect, useId, useRef } from 'react';
+import { Group } from './GroupCard';
 import { getExclusions, addExclusion, removeExclusion, performDraw, endDraw } from '@/lib/draw-utils';
 import { ConfirmModal } from './ConfirmModal';
 import { useToast } from './Toast';
@@ -20,6 +20,8 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
     const [loading, setLoading] = useState(false);
     const [userA, setUserA] = useState("");
     const [userB, setUserB] = useState("");
+    const titleId = useId();
+    const previouslyFocused = useRef<HTMLElement | null>(null);
 
     const { showToast, ToastComponent } = useToast();
     const [pendingConfirm, setPendingConfirm] = useState<{
@@ -27,6 +29,8 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
         title: string;
         message: string;
     } | null>(null);
+    const pendingConfirmRef = useRef(pendingConfirm);
+    pendingConfirmRef.current = pendingConfirm;
 
     useEffect(() => {
         if (isOpen) {
@@ -120,23 +124,61 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
         }
     };
 
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape') return;
+            if (pendingConfirmRef.current) return;
+            e.preventDefault();
+            onClose();
+        };
+        document.addEventListener('keydown', onKeyDown);
+
+        const t = window.requestAnimationFrame(() => {
+            document.getElementById(titleId)?.focus?.();
+        });
+
+        return () => {
+            window.cancelAnimationFrame(t);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [isOpen, onClose, titleId]);
+
+    useEffect(() => {
+        if (isOpen) return;
+        previouslyFocused.current?.focus?.();
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const getMemberName = (id: string) => group.members.find(m => m.id === id)?.name || 'Usuario';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" role="presentation">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50">
                     <div>
-                        <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                            <span>🎁</span> Amigo Invisible
+                        <h2 id={titleId} tabIndex={-1} className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2 outline-none">
+                            <span aria-hidden>🎁</span> Amigo Invisible
                         </h2>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Configura las reglas y lanza el sorteo</p>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 transition-colors"
+                        aria-label="Cerrar Amigo Invisible"
+                    >
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
 
@@ -168,8 +210,9 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                                 <select
                                     value={userA}
                                     onChange={(e) => setUserA(e.target.value)}
-                                    className="w-full h-10 px-3 rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full h-10 px-3 rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                     required
+                                    aria-label="Primer miembro de la exclusión"
                                 >
                                     <option value="">Seleccionar miembro...</option>
                                     {group.members.map(m => (
@@ -182,8 +225,9 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                                 <select
                                     value={userB}
                                     onChange={(e) => setUserB(e.target.value)}
-                                    className="w-full h-10 px-3 rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full h-10 px-3 rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                                     required
+                                    aria-label="Segundo miembro de la exclusión"
                                 >
                                     <option value="">Seleccionar miembro...</option>
                                     {group.members.map(m => (
@@ -194,9 +238,10 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                             <button
                                 type="submit"
                                 disabled={loading || !userA || !userB}
-                                className="sm:col-span-1 h-10 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center"
+                                className="sm:col-span-1 h-10 bg-primary hover:opacity-90 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-ambient transition-all flex items-center justify-center"
+                                aria-label="Añadir exclusión"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             </button>
                         </form>
 
@@ -211,11 +256,12 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                                             <span className="text-[10px] text-zinc-400 italic">(y viceversa)</span>
                                         </div>
                                         <button
+                                            type="button"
                                             onClick={() => handleRemoveExclusion(ex.id)}
                                             className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                            title="Eliminar exclusión"
+                                            aria-label={`Eliminar exclusión entre ${getMemberName(ex.user_a_id)} y ${getMemberName(ex.user_b_id)}`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                                         </button>
                                     </div>
                                 ))
@@ -232,6 +278,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                 <div className="p-6 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-3">
                     {isDrawActive ? (
                         <button
+                            type="button"
                             onClick={handleEndDraw}
                             disabled={loading}
                             className="flex-1 py-3 px-4 rounded-2xl border border-red-200 dark:border-red-900/30 text-red-600 font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
@@ -241,9 +288,10 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                     ) : null}
 
                     <button
+                        type="button"
                         onClick={handleLaunchDraw}
                         disabled={loading || group.members.length < 2}
-                        className={`flex-[2] py-3 px-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${loading ? 'bg-zinc-300 dark:bg-zinc-700 text-zinc-500' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                        className={`flex-[2] py-3 px-4 rounded-2xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${loading ? 'bg-zinc-300 dark:bg-zinc-700 text-zinc-500' : 'bg-primary hover:opacity-90 text-white shadow-ambient'
                             }`}
                     >
                         {loading && (

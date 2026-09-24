@@ -6,6 +6,16 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        version: '1.4.0',
+        date: '2026-05-12',
+        changes: [
+            '♿ Accesibilidad: foco visible en web, documento en español, enlace «saltar al contenido», modales usables con teclado y lectores de pantalla',
+            '📋 Mis grupos: el contador de participantes coincide con el detalle del grupo',
+            '🔔 Notificaciones: cada aviso es un control accesible con nombre descriptivo',
+            '🎅 Amigo Invisible: diálogo de administración con roles ARIA y cierre con Escape',
+        ],
+    },
+    {
         version: '1.3.0',
         date: '2026-02-04',
         changes: [

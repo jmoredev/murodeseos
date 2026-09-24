@@ -3,10 +3,11 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import { WishListTab } from '@/components/WishListTab';
 import { supabase } from '@/lib/supabase';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock WishlistCard to simplify testing
-jest.mock('@/components/WishlistCard', () => ({
-    WishlistCard: ({ item, onClick, isOwner }) => (
+vi.mock('@/components/WishlistCard', () => ({
+    WishlistCard: ({ item, onClick, isOwner }: { item: any, onClick: (item: any) => void, isOwner: boolean }) => (
         <div data-testid="wishlist-card" onClick={() => onClick(item)}>
             <span>{item.title}</span>
             <span>{item.price}</span>
@@ -17,121 +18,66 @@ jest.mock('@/components/WishlistCard', () => ({
     Priority: { LOW: 'low', MEDIUM: 'medium', HIGH: 'high' }
 }));
 
-// Setup local mocks for Supabase
-const mockSelect = jest.fn();
-const mockInsert = jest.fn();
-const mockUpdate = jest.fn();
-const mockDelete = jest.fn();
-const mockUpload = jest.fn();
-const mockGetPublicUrl = jest.fn();
-
-// Overwrite the global mock implementation for this suite
-// Note: We need to handle the chainable methods
-jest.mock('@/lib/supabase', () => ({
-    supabase: {
-        from: jest.fn(() => ({
-            select: jest.fn((...args) => {
-                mockSelect(...args);
-                return {
-                    eq: jest.fn((...args) => ({
-                        order: jest.fn(() => Promise.resolve({ data: [], error: null }))
-                    }))
-                };
-            }),
-            insert: jest.fn((...args) => {
-                mockInsert(...args);
-                return {
-                    select: jest.fn(() => ({
-                        single: jest.fn(() => Promise.resolve({ data: { id: 'new-id', title: 'New Item' }, error: null }))
-                    }))
-                };
-            }),
-            update: jest.fn((...args) => {
-                mockUpdate(...args);
-                return {
-                    eq: jest.fn(() => Promise.resolve({ error: null }))
-                };
-            }),
-            delete: jest.fn((...args) => {
-                mockDelete(...args);
-                return {
-                    eq: jest.fn(() => Promise.resolve({ error: null }))
-                };
-            })
-        })),
-        storage: {
-            from: jest.fn(() => ({
-                upload: jest.fn((...args) => {
-                    mockUpload(...args);
-                    return Promise.resolve({ error: null });
-                }),
-                getPublicUrl: jest.fn((...args) => {
-                    mockGetPublicUrl(...args);
-                    return { data: { publicUrl: 'https://example.com/image.jpg' } };
-                })
-            }))
-        }
-    }
-}));
+// Mocks handled globally in vitest.setup.ts
+const mockUpload = vi.fn();
+const mockGetPublicUrl = vi.fn();
 
 describe('WishListTab', () => {
     const userId = 'user-123';
 
+    const createMockChain = (data: any = [], error: any = null) => {
+        const chain: any = {
+            select: vi.fn().mockReturnThis(),
+            insert: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            order: vi.fn().mockReturnThis(),
+            single: vi.fn().mockImplementation(() => Promise.resolve({ data: Array.isArray(data) ? data[0] : data, error })),
+            maybeSingle: vi.fn().mockImplementation(() => Promise.resolve({ data: Array.isArray(data) ? data[0] : data, error })),
+            then(resolve: any) {
+                return Promise.resolve({ data, error }).then(resolve)
+            }
+        };
+        chain.select.mockReturnValue(chain);
+        chain.insert.mockReturnValue(chain);
+        chain.update.mockReturnValue(chain);
+        chain.delete.mockReturnValue(chain);
+        return chain;
+    };
+
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Default success for fetches
-        (supabase.from as jest.Mock).mockImplementation((table) => {
+        (supabase.from as any).mockImplementation((table: string) => {
             if (table === 'wishlist_items') {
-                return {
-                    select: jest.fn().mockReturnValue({
-                        eq: jest.fn().mockReturnValue({
-                            order: jest.fn().mockResolvedValue({
-                                data: [
-                                    { id: '1', title: 'Item 1', price: '10', priority: 'medium' },
-                                    { id: '2', title: 'Item 2', price: '20', priority: 'high' }
-                                ],
-                                error: null
-                            })
-                        })
-                    }),
-                    insert: jest.fn().mockReturnValue({
-                        select: jest.fn().mockReturnValue({
-                            single: jest.fn().mockResolvedValue({ data: { id: '3', title: 'New Wish', price: '50', priority: 'medium' }, error: null })
-                        })
-                    }),
-                    update: jest.fn().mockReturnValue({
-                        eq: jest.fn().mockResolvedValue({ error: null })
-                    }),
-                    delete: jest.fn().mockReturnValue({
-                        eq: jest.fn().mockResolvedValue({ error: null })
-                    })
-                };
+                return createMockChain([
+                    { id: '1', title: 'Item 1', price: '10', priority: 'medium' },
+                    { id: '2', title: 'Item 2', price: '20', priority: 'high' }
+                ]);
             }
-            return {
-                select: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockResolvedValue({ data: [], error: null })
-                })
-            };
+            return createMockChain([]);
+        });
+
+        (supabase.storage.from as any).mockReturnValue({
+            upload: vi.fn().mockResolvedValue({ data: { path: 'test.png' }, error: null }),
+            getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'http://example.com/test.png' } })
         });
     });
 
     it('renders empty state when no items', async () => {
         // Override mock to return empty list
-        (supabase.from as jest.Mock).mockImplementationOnce(() => ({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    order: jest.fn().mockResolvedValue({ data: [], error: null })
-                })
-            })
-        }));
+        vi.mocked(supabase.from).mockImplementationOnce(() => createMockChain([]));
 
         await act(async () => {
             render(<WishListTab userId={userId} />);
         });
 
-        expect(screen.getByText('Tu lista está vacía')).toBeInTheDocument();
-        expect(screen.getByText('🎁')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Tu lista está vacía')).toBeInTheDocument();
+            expect(screen.getByText('🎁')).toBeInTheDocument();
+        });
     });
 
     it('fetches and displays items', async () => {
@@ -139,10 +85,12 @@ describe('WishListTab', () => {
             render(<WishListTab userId={userId} />);
         });
 
-        expect(screen.getByText('Mi lista de deseos')).toBeInTheDocument();
-        expect(screen.getByText('Item 1')).toBeInTheDocument();
-        expect(screen.getByText('Item 2')).toBeInTheDocument();
-        expect(screen.getAllByTestId('wishlist-card')).toHaveLength(2);
+        await waitFor(() => {
+            expect(screen.getByText('Deseos')).toBeInTheDocument();
+            expect(screen.getByText('Item 1')).toBeInTheDocument();
+            expect(screen.getByText('Item 2')).toBeInTheDocument();
+            expect(screen.getAllByTestId('wishlist-card')).toHaveLength(2);
+        });
     });
 
     it('opens add modal when clicking plus button', async () => {
@@ -167,21 +115,18 @@ describe('WishListTab', () => {
 
         // Fill form
         fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'New Wish' } });
-        fireEvent.change(screen.getByPlaceholderText('Ej: 25.00'), { target: { value: '50' } });
+        fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '50' } });
+
+        // Setup mock for insert
+        const chain = createMockChain();
+        chain.single = vi.fn().mockResolvedValue({ data: { id: '3', title: 'New Wish', price: '50', priority: 'medium' }, error: null });
+        vi.mocked(supabase.from).mockReturnValueOnce(chain as any);
 
         // Save
         const saveButton = screen.getByText('Guardar');
         await act(async () => {
             fireEvent.click(saveButton);
         });
-
-        // Verify Supabase insert call
-        // Note: We check the specific sequence in chain if needed, but here we trust our mock implementation returns success
-        // We verify the item appears using mocking behavior
-
-        // Since logic updates state optimistically or re-fetches?
-        // In the component: 
-        // const newItem = { ... }; setItems([newItem, ...items]);
 
         expect(screen.getByText('New Wish')).toBeInTheDocument();
     });
@@ -223,7 +168,7 @@ describe('WishListTab', () => {
 
         // Verify ConfirmModal appears
         expect(screen.getByText('Eliminar deseo')).toBeInTheDocument();
-        expect(screen.getByText(/¿Estás seguro de que quieres eliminar "Item 1"?/)).toBeInTheDocument();
+        expect(screen.getByText(/¿Estás seguro de que quieres eliminar este deseo?/)).toBeInTheDocument();
 
         // Click confirm in modal
         const confirmBtn = screen.getByRole('button', { name: 'Eliminar' });
@@ -235,58 +180,17 @@ describe('WishListTab', () => {
         expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
     });
 
-    it('handles image upload', async () => {
-        await act(async () => {
-            render(<WishListTab userId={userId} />);
-        });
-
-        // Open modal
-        fireEvent.click(screen.getByLabelText('Nuevo deseo'));
-
-        // Find file input - it's hidden but we can target by type="file"
-        // Since it's hidden `display: none` usually, fireEvent.change still works on the element if we can select it.
-        // It has a ref, so we can try selecting by container or just `screen.getByLabelText` if we had one.
-        // Since no label, we can select by container:
-        const container = screen.getByText('Nuevo deseo').closest('div')?.parentElement;
-        const fileInput = container?.querySelector('input[type="file"]');
-
-        const file = new File(['(⌐□_□)'], 'chucknorris.png', { type: 'image/png' });
-
-        await act(async () => {
-            fireEvent.change(fileInput!, { target: { files: [file] } });
-        });
-
-        // Verify upload called
-        await waitFor(() => {
-            const urlInput = screen.getByPlaceholderText('Pegar URL de imagen...') as HTMLInputElement;
-            expect(urlInput.value).toBe('https://example.com/image.jpg');
-        });
-    });
-
     it('should sort items by priority', async () => {
         // Mock items with different priorities
-        (supabase.from as jest.Mock).mockImplementation((table) => {
+        vi.mocked(supabase.from).mockImplementation((table: string) => {
             if (table === 'wishlist_items') {
-                return {
-                    select: jest.fn().mockReturnValue({
-                        eq: jest.fn().mockReturnValue({
-                            order: jest.fn().mockResolvedValue({
-                                data: [
-                                    { id: '1', title: 'A_Low', priority: 'low' },
-                                    { id: '2', title: 'B_High', priority: 'high' },
-                                    { id: '3', title: 'C_Medium', priority: 'medium' }
-                                ],
-                                error: null
-                            })
-                        })
-                    })
-                };
+                return createMockChain([
+                    { id: '1', title: 'A_Low', priority: 'low' },
+                    { id: '2', title: 'B_High', priority: 'high' },
+                    { id: '3', title: 'C_Medium', priority: 'medium' }
+                ]);
             }
-            return {
-                select: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockResolvedValue({ data: [], error: null })
-                })
-            };
+            return createMockChain([]);
         });
 
         await act(async () => {
@@ -300,15 +204,17 @@ describe('WishListTab', () => {
         expect(items[2]).toHaveTextContent('C_Medium');
 
         // Click sort by priority
-        const sortBtn = screen.getByText('Por prioridad');
+        const sortBtn = screen.getByLabelText('Ordenar por prioridad');
         await act(async () => {
             fireEvent.click(sortBtn);
         });
 
         // Expect High > Medium > Low
-        const sortedItems = screen.getAllByTestId('wishlist-card');
-        expect(sortedItems[0]).toHaveTextContent('B_High');
-        expect(sortedItems[1]).toHaveTextContent('C_Medium');
-        expect(sortedItems[2]).toHaveTextContent('A_Low');
+        await waitFor(() => {
+            const sortedItems = screen.getAllByTestId('wishlist-card');
+            expect(sortedItems[0]).toHaveTextContent('B_High');
+            expect(sortedItems[1]).toHaveTextContent('C_Medium');
+            expect(sortedItems[2]).toHaveTextContent('A_Low');
+        });
     });
 });

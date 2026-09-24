@@ -37,13 +37,24 @@ CREATE POLICY "Usuarios pueden crear sus propios items"
   TO authenticated
   WITH CHECK (user_id = (select auth.uid()));
 
--- 3. ACTUALIZACIÓN: Unificada (Dueño edita todo, Otros solo reservan)
--- La lógica de seguridad granular se maneja en el trigger tr_check_wishlist_update
-CREATE POLICY "Usuarios autenticados pueden actualizar items"
+-- 3. ACTUALIZACIÓN: dueño o reserva/cancelación en lista ajena (RLS). Detalle de columnas: trigger tr_check_wishlist_update.
+CREATE POLICY "Propietarios pueden actualizar sus deseos"
   ON wishlist_items FOR UPDATE
   TO authenticated
-  USING ( true )
-  WITH CHECK ( true );
+  USING (user_id = (select auth.uid()))
+  WITH CHECK (user_id = (select auth.uid()));
+
+CREATE POLICY "Reserva o cancelación en listas ajenas"
+  ON wishlist_items FOR UPDATE
+  TO authenticated
+  USING (
+    user_id IS DISTINCT FROM (select auth.uid())
+    AND (reserved_by IS NULL OR reserved_by = (select auth.uid()))
+  )
+  WITH CHECK (
+    user_id IS DISTINCT FROM (select auth.uid())
+    AND (reserved_by IS NULL OR reserved_by = (select auth.uid()))
+  );
 
 CREATE POLICY "Usuarios pueden eliminar sus propios items"
   ON wishlist_items FOR DELETE
@@ -54,7 +65,7 @@ CREATE POLICY "Usuarios pueden eliminar sus propios items"
 CREATE OR REPLACE FUNCTION public.check_wishlist_update_permissions()
 RETURNS TRIGGER 
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -85,6 +96,10 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+-- No exponer como RPC; el trigger la invoca sin depender de EXECUTE para roles de API.
+REVOKE ALL ON FUNCTION public.check_wishlist_update_permissions() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_wishlist_update_permissions() FROM anon, authenticated;
 
 DROP TRIGGER IF EXISTS tr_check_wishlist_update ON wishlist_items;
 CREATE TRIGGER tr_check_wishlist_update

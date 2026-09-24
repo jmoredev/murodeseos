@@ -2,7 +2,7 @@
  * Middleware Integration Tests
  * 
  * Nota: Los tests del middleware son complejos debido a las dependencias de Next.js
- * (Request, NextResponse, etc.) que no están disponibles en el entorno de Jest.
+ * (Request, NextResponse, etc.) que no están disponibles en el entorno de Vitest.
  * 
  * La funcionalidad del middleware está cubierta por:
  * 1. Tests E2E que verifican el flujo completo de autenticación
@@ -12,23 +12,24 @@
  */
 
 import { createServerClient } from '@supabase/ssr'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // Mock de @supabase/ssr
-jest.mock('@supabase/ssr')
+vi.mock('@supabase/ssr')
 
 describe('Middleware - Lógica de Autenticación', () => {
     let mockSupabaseClient: any
 
     beforeEach(() => {
-        jest.clearAllMocks()
+        vi.clearAllMocks()
 
         mockSupabaseClient = {
             auth: {
-                getUser: jest.fn()
+                getUser: vi.fn()
             }
         }
 
-            ; (createServerClient as jest.Mock).mockReturnValue(mockSupabaseClient)
+            ; (createServerClient as any).mockReturnValue(mockSupabaseClient)
     })
 
     describe('Identificación de rutas públicas', () => {
@@ -129,13 +130,13 @@ describe('Middleware - Lógica de Autenticación', () => {
 
         it('debe proporcionar funciones getAll y setAll para cookies', () => {
             const cookiesConfig = {
-                getAll: jest.fn(() => []),
-                setAll: jest.fn()
+                getAll: vi.fn(() => []),
+                setAll: vi.fn()
             }
 
             createServerClient('url', 'key', { cookies: cookiesConfig })
 
-            const callArgs = (createServerClient as jest.Mock).mock.calls[0]
+            const callArgs = (createServerClient as any).mock.calls[0]
             expect(callArgs[2].cookies).toHaveProperty('getAll')
             expect(callArgs[2].cookies).toHaveProperty('setAll')
             expect(typeof callArgs[2].cookies.getAll).toBe('function')

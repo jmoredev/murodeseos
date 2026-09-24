@@ -23,12 +23,11 @@ CREATE POLICY "Users can see their own notifications"
   TO authenticated
   USING (auth.uid() = user_id);
 
--- Permitir inserción (la lógica reside en el cliente/servidor que llama, pero necesitamos permiso)
--- En un entorno real, esto podría ser más restrictivo
-CREATE POLICY "Anyone can insert notifications"
+-- Solo el usuario autenticado puede insertar filas donde él es el actor (evita suplantación).
+CREATE POLICY "Users can insert notifications as actor"
   ON public.notifications FOR INSERT
   TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (actor_id = auth.uid());
 
 -- Solo el destinatario puede marcar como leída
 CREATE POLICY "Users can update their own notifications"

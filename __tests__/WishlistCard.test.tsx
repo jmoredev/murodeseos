@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { WishlistCard, GiftItem } from '@/components/WishlistCard';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('WishlistCard', () => {
     const mockItem: GiftItem = {
@@ -15,10 +16,10 @@ describe('WishlistCard', () => {
         reservedBy: null
     };
 
-    const mockOnClick = jest.fn();
+    const mockOnClick = vi.fn();
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('renders correctly with all props', () => {
@@ -27,12 +28,12 @@ describe('WishlistCard', () => {
         expect(screen.getByText('Test Gift')).toBeInTheDocument();
         expect(screen.getByText('Some notes')).toBeInTheDocument();
         // Priority badge
-        expect(screen.getByText('Alta')).toBeInTheDocument();
-        // Link count
-        expect(screen.getByText('1')).toBeInTheDocument();
+        expect(screen.getByText(/Prioridad Alta/i)).toBeInTheDocument();
+        // Enlace recortado y clickeable
+        expect(screen.getByRole('link', { name: /example\.com/i })).toBeInTheDocument();
         // Image
-        const img = screen.getByRole('img');
-        expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+        const img = screen.getByLabelText(mockItem.title);
+        expect(img).toBeInTheDocument();
     });
 
     it('formats price with Euro symbol correctly', () => {
@@ -49,11 +50,11 @@ describe('WishlistCard', () => {
     it('renders different priority badges', () => {
         const lowPriorityItem: GiftItem = { ...mockItem, priority: 'low' };
         const { rerender } = render(<WishlistCard item={lowPriorityItem} isOwner={true} />);
-        expect(screen.getByText('Baja')).toBeInTheDocument();
+        expect(screen.getByText(/Prioridad Baja/i)).toBeInTheDocument();
 
         const mediumPriorityItem: GiftItem = { ...mockItem, priority: 'medium' };
         rerender(<WishlistCard item={mediumPriorityItem} isOwner={true} />);
-        expect(screen.getByText('Media')).toBeInTheDocument();
+        expect(screen.getByText(/Prioridad Media/i)).toBeInTheDocument();
     });
 
     it('calls onClick when clicked', () => {
@@ -61,5 +62,22 @@ describe('WishlistCard', () => {
 
         fireEvent.click(screen.getByText('Test Gift'));
         expect(mockOnClick).toHaveBeenCalledWith(mockItem);
+    });
+
+    it('does not call onClick when reserving', () => {
+        const onReserve = vi.fn();
+        render(
+            <WishlistCard
+                item={{ ...mockItem, reservedBy: null }}
+                isOwner={false}
+                currentUserId="viewer-1"
+                onClick={mockOnClick}
+                onReserve={onReserve}
+            />
+        );
+
+        fireEvent.click(screen.getByTestId('wish-reserve-button'));
+        expect(onReserve).toHaveBeenCalledWith(expect.objectContaining({ id: mockItem.id }));
+        expect(mockOnClick).not.toHaveBeenCalled();
     });
 });

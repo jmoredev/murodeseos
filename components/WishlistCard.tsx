@@ -1,8 +1,8 @@
-'use client';
-
 import React from 'react';
+import { View, Text, Pressable, Image } from 'react-native';
+import { PrimaryButton } from './ui/PrimaryButton';
+import { WishLinkChip } from './WishLinkChip';
 
-// --- Types ---
 export type Priority = 'low' | 'medium' | 'high';
 
 export interface GiftItem {
@@ -13,18 +13,9 @@ export interface GiftItem {
     price?: string | number;
     notes?: string;
     priority: Priority;
-    reservedBy?: string | null; // ID of the user who reserved it
+    reservedBy?: string | null;
     excludedGroupIds?: string[];
 }
-
-// --- Icons ---
-const Icons = {
-    Link: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>,
-    Gift: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>,
-    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
-    Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
-    X: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-};
 
 interface WishlistCardProps {
     item: GiftItem;
@@ -43,170 +34,185 @@ export function WishlistCard({
     currentUserId,
     onReserve,
     onCancelReserve,
-    onDelete
+    onDelete,
 }: WishlistCardProps) {
-    const priorityColors = {
-        low: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-        medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-        high: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+    const priorityAccent = {
+        low: 'bg-tertiary',
+        medium: 'bg-secondary',
+        high: 'bg-primary',
     };
 
     const priorityLabels = {
         low: 'Baja',
         medium: 'Media',
-        high: 'Alta'
+        high: 'Alta',
     };
 
-    // --- Reservation Logic ---
     const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
     const isReservedByOther = !isOwner && item.reservedBy && item.reservedBy !== currentUserId;
     const isAvailable = !isOwner && !item.reservedBy;
 
-    // If owner, we ignore reservation state visually (privacy rule)
+    const a11yReservation = isOwner
+        ? undefined
+        : isReservedByMe
+          ? 'Reservado por ti'
+          : isReservedByOther
+            ? 'Reservado'
+            : 'Disponible';
+
+    const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
+
+    const handleOpenDetail = () => {
+        if (onClick) onClick(item);
+    };
+
+    const cardShadow = isReservedByMe ? 'shadow-ambient-lg' : 'shadow-ambient';
 
     return (
-        <div
-            onClick={() => onClick && onClick(item)}
-            className={`group relative bg-white dark:bg-zinc-900 rounded-2xl border overflow-hidden transition-all flex flex-col h-full
-                ${isReservedByMe
-                    ? 'border-green-500 dark:border-green-500 shadow-md shadow-green-500/10'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700'}
-                ${onClick ? 'cursor-pointer' : ''}
-            `}
+        <View
+            className={`bg-surface-container-lowest rounded-lg overflow-hidden flex-col h-full ${cardShadow} ${
+                isReservedByMe ? 'ring-2 ring-outline-variant/20' : ''
+            }`}
         >
-            {/* Imagen / Cover */}
-            <div className="aspect-square w-full bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
-                {item.imageUrl ? (
-                    <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className={`w-full h-full object-cover transition-transform duration-500 ${onClick ? 'group-hover:scale-105' : ''}`}
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-300 dark:text-zinc-700">
-                        <div className="transform scale-150 opacity-50">
-                            <Icons.Gift />
-                        </div>
-                    </div>
-                )}
-
-                {/* Badges superpuestos */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-sm backdrop-blur-md ${priorityColors[item.priority]}`}>
-                        {priorityLabels[item.priority]}
-                    </span>
-                </div>
-
-                {/* Reservation Overlay (if reserved by other) */}
-                {isReservedByOther && (
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
-                        <div className="bg-white/90 dark:bg-zinc-900/90 px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-bold text-zinc-600 dark:text-zinc-300 shadow-lg">
-                            <Icons.Lock />
-                            Reservado
-                        </div>
-                    </div>
-                )}
-
-                {/* Reserved by me Badge */}
-                {isReservedByMe && (
-                    <div className="absolute top-3 left-3">
-                        <span className="bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                            <Icons.Check />
-                            Reservado por ti
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* Contenido */}
-            <div className="p-4 flex flex-col flex-1">
-                <div className="flex justify-between items-start gap-2 mb-2">
-                    <h3 className="font-semibold text-zinc-900 dark:text-white line-clamp-2 leading-tight">
-                        {item.title}
-                    </h3>
-                </div>
-
-                {item.notes && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3">
-                        {item.notes}
-                    </p>
-                )}
-
-                <div className="mt-auto pt-3 flex items-center justify-between text-sm">
-                    <div className={item.price
-                        ? "font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-lg border border-amber-100 dark:border-amber-800/30 text-sm shadow-sm"
-                        : "text-zinc-400 text-sm font-normal italic pl-1"
-                    }>
-                        {item.price ? `${item.price} €` : 'Sin precio'}
-                    </div>
-
-                    {item.links.length > 0 && (
-                        <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-md text-xs font-medium">
-                            <Icons.Link />
-                            <span>{item.links.length}</span>
-                        </div>
+            <Pressable
+                testID={`wishlist-card-${item.id}`}
+                onPress={handleOpenDetail}
+                accessibilityRole="button"
+                accessibilityLabel={item.title}
+                accessibilityHint="Abrir detalle del deseo"
+                accessibilityValue={{
+                    text: `Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${a11yReservation ? `. ${a11yReservation}.` : '.'}`,
+                }}
+                className="active:opacity-95"
+            >
+                <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">
+                    {item.imageUrl ? (
+                        <Image
+                            source={{ uri: item.imageUrl }}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                            accessibilityElementsHidden
+                            importantForAccessibility="no-hide-descendants"
+                        />
+                    ) : (
+                        <Text style={{ fontSize: 40 }} className="text-on-surface/20">
+                            🎁
+                        </Text>
                     )}
-                </div>
 
-                {/* Owner Actions: Já lo tengo (Quick Delete) */}
-                {isOwner && (
-                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm('¿Ya tienes este artículo? Se eliminará de tu lista.')) {
-                                    onDelete && onDelete(item);
-                                }
-                            }}
-                            className="cursor-pointer w-full py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                    <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
+                        <View className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface-container-lowest/92 shadow-ambient backdrop-blur-md ring-1 ring-outline-variant/15">
+                            <View className={`w-1.5 h-1.5 rounded-full shrink-0 ${priorityAccent[item.priority]}`} />
+                            <Text className="text-[11px] uppercase tracking-wider text-on-background font-sans-bold">
+                                Prioridad {priorityLabels[item.priority]}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {isReservedByOther ? (
+                        <View className="absolute inset-0 bg-on-surface/45 items-center justify-center">
+                            <View className="bg-surface/85 px-4 py-2 rounded-2xl flex-row items-center shadow-ambient-lg backdrop-blur-md">
+                                <Text className="text-sm font-sans-bold text-on-surface uppercase tracking-widest">
+                                    🔒 Reservado
+                                </Text>
+                            </View>
+                        </View>
+                    ) : null}
+
+                    {isReservedByMe ? (
+                        <View className="absolute top-3 left-3">
+                            <View className="bg-tertiary px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
+                                <Text className="text-surface-container-lowest text-[10px] font-sans-bold uppercase tracking-widest">
+                                    ✓ Reservado por ti
+                                </Text>
+                            </View>
+                        </View>
+                    ) : null}
+                </View>
+
+                <View className="p-5">
+                    <Text className="font-sans-bold text-on-background text-base leading-tight mb-4" numberOfLines={2}>
+                        {item.title}
+                    </Text>
+
+                    {item.notes ? (
+                        <Text className="text-xs text-on-surface/55 font-sans mb-4" numberOfLines={2}>
+                            {item.notes}
+                        </Text>
+                    ) : null}
+
+                    <View className="flex-row items-center justify-between gap-2">
+                        <View
+                            className={`px-3 py-1.5 rounded-xl ${
+                                item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
+                            }`}
                         >
-                            <Icons.Check />
-                            Ya lo tengo
-                        </button>
-                    </div>
-                )}
-
-                {/* Reservation Actions (Only for non-owners) */}
-                {!isOwner && (
-                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                        {isAvailable && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onReserve && onReserve(item);
-                                }}
-                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            <Text
+                                className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
                             >
-                                <Icons.Gift />
-                                Reservar
-                            </button>
-                        )}
+                                {item.price ? `${item.price} €` : 'Sin precio'}
+                            </Text>
+                        </View>
 
-                        {isReservedByMe && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onCancelReserve && onCancelReserve(item);
-                                }}
-                                className="w-full py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-900/50 rounded-xl text-sm font-medium transition-all active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                <Icons.X />
+                        {item.links[0] ? (
+                            <WishLinkChip url={item.links[0]} testID={`wish-link-${item.id}`} />
+                        ) : null}
+                    </View>
+                </View>
+            </Pressable>
+
+            {isOwner ? (
+                <Pressable
+                    testID="wish-already-have"
+                    onPress={() => {
+                        if (onDelete) onDelete(item);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Marcar como ya lo tengo"
+                    className="px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
+                >
+                    <Text className="text-[10px] font-sans-bold text-tertiary uppercase tracking-[0.2em]">
+                        ✓ Ya lo tengo
+                    </Text>
+                </Pressable>
+            ) : null}
+
+            {!isOwner ? (
+                <View className="px-5 pb-5 pt-0 gap-3">
+                    {isAvailable && onReserve ? (
+                        <PrimaryButton
+                            testID="wish-reserve-button"
+                            onPress={() => onReserve(item)}
+                            accessibilityLabel="Reservar deseo"
+                            className="w-full"
+                        >
+                            Reservar
+                        </PrimaryButton>
+                    ) : null}
+
+                    {isReservedByMe && onCancelReserve ? (
+                        <Pressable
+                            testID="wish-cancel-reserve-button"
+                            onPress={() => onCancelReserve(item)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Cancelar reserva"
+                            className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
+                        >
+                            <Text className="text-on-surface/55 font-sans-bold text-[10px] uppercase tracking-widest">
                                 Cancelar reserva
-                            </button>
-                        )}
+                            </Text>
+                        </Pressable>
+                    ) : null}
 
-                        {isReservedByOther && (
-                            <button
-                                disabled
-                                className="w-full py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 rounded-xl text-sm font-medium cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                <Icons.Lock />
-                                Reservado por otro
-                            </button>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
+                    {isReservedByOther ? (
+                        <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
+                            <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                No disponible
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
+            ) : null}
+        </View>
     );
 }

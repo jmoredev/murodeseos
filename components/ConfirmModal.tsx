@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ConfirmModalProps {
@@ -26,6 +26,9 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
     const [mounted, setMounted] = useState(false);
     const [visible, setVisible] = useState(false);
+    const titleId = useId();
+    const messageId = useId();
+    const previouslyFocused = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -35,9 +38,37 @@ export function ConfirmModal({
         if (isOpen) {
             setVisible(true);
         } else {
-            const timer = setTimeout(() => setVisible(false), 300); // Match animation duration
+            const timer = setTimeout(() => setVisible(false), 300);
             return () => clearTimeout(timer);
         }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', onKeyDown);
+
+        const t = window.requestAnimationFrame(() => {
+            document.querySelector<HTMLButtonElement>('[data-confirm-cancel]')?.focus();
+        });
+
+        return () => {
+            window.cancelAnimationFrame(t);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [isOpen, onClose]);
+
+    useEffect(() => {
+        if (isOpen) return;
+        previouslyFocused.current?.focus?.();
     }, [isOpen]);
 
     if (!mounted) return null;
@@ -45,39 +76,50 @@ export function ConfirmModal({
     if (!visible && !isOpen) return null;
 
     return createPortal(
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-            {/* Backdrop */}
+        <div
+            className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+            role="presentation"
+        >
             <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default"
                 onClick={onClose}
+                aria-hidden
             />
 
-            {/* Modal Content */}
-            <div className={`relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 p-6 transform transition-all duration-300 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={messageId}
+                className={`relative z-10 w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-ambient-lg p-6 transform transition-all duration-300 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}
+            >
                 <div className="mb-6">
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+                    <h3 id={titleId} className="text-xl font-sans-bold text-on-background mb-2">
                         {title}
                     </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    <p id={messageId} className="text-on-surface/65 leading-relaxed font-sans">
                         {message}
                     </p>
                 </div>
 
                 <div className="flex gap-3 justify-end">
                     <button
+                        type="button"
+                        data-confirm-cancel
                         onClick={onClose}
-                        className="px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        className="px-4 py-2.5 rounded-full text-sm font-sans-semibold text-primary active:opacity-70 transition-colors"
                     >
                         {cancelText}
                     </button>
                     <button
+                        type="button"
                         onClick={() => {
                             onConfirm();
                             onClose();
                         }}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-all active:scale-95 ${isDestructive
+                        className={`px-4 py-2.5 rounded-full text-sm font-sans-semibold text-on-primary shadow-ambient transition-all active:scale-95 ${isDestructive
                                 ? 'bg-red-500 hover:bg-red-600'
-                                : 'bg-indigo-600 hover:bg-indigo-700'
+                                : 'bg-primary hover:opacity-90'
                             }`}
                     >
                         {confirmText}

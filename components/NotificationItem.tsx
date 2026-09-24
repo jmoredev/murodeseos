@@ -10,57 +10,112 @@ interface NotificationItemProps {
     onClick: (notification: Notification) => void;
 }
 
+function wishTitleFromNotification(notification: Notification): string {
+    const raw = notification.metadata?.wish_title;
+    if (typeof raw === 'string' && raw.trim()) return raw;
+    return notification.wish?.title || 'un deseo';
+}
+
 export function NotificationItem({ notification, onClick }: NotificationItemProps) {
-    const isWishAdded = notification.type === 'wish_added';
-
-    // Iconos y colores según el tipo
-    const icon = isWishAdded ? '✨' : '🎁';
-    const bgColor = isWishAdded ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-indigo-100 dark:bg-indigo-900/30';
-
-    // Texto de la notificación
     const actorName = notification.actor?.display_name || 'Alguien';
     const groupName = notification.group?.name || 'un grupo';
-    const wishTitle = notification.wish?.title || 'un deseo';
+    const wishTitle = wishTitleFromNotification(notification);
 
-    const content = isWishAdded ? (
-        <>
-            <span className="font-bold text-zinc-900 dark:text-white">{actorName}</span> ha añadido "
-            <span className="font-medium text-indigo-600 dark:text-indigo-400">{wishTitle}</span>" en
-            <span className="font-medium text-zinc-700 dark:text-zinc-300"> {groupName}</span>.
-        </>
-    ) : (
-        <>
-            <span className="font-bold text-zinc-900 dark:text-white">{actorName}</span> ha reservado "
-            <span className="font-medium text-indigo-600 dark:text-indigo-400">{wishTitle}</span>" en
-            <span className="font-medium text-zinc-700 dark:text-zinc-300"> {groupName}</span>.
-        </>
-    );
+    let icon: string;
+    let bgColor: string;
+    let content: React.ReactNode;
+    let summary: string;
+
+    switch (notification.type) {
+        case 'wish_added':
+            icon = '✨';
+            bgColor = 'bg-secondary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha añadido &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} añadió el deseo ${wishTitle} en ${groupName}`;
+            break;
+        case 'wish_reserved':
+            icon = '🎁';
+            bgColor = 'bg-primary/10';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha reservado &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot; en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} reservó el deseo ${wishTitle} en ${groupName}`;
+            break;
+        case 'wish_deleted_by_owner':
+            icon = '📭';
+            bgColor = 'bg-tertiary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> eliminó &quot;
+                    <span className="font-sans-semibold text-primary">{wishTitle}</span>&quot;, que tenías reservado
+                    {notification.group_id ? (
+                        <>
+                            {' '}
+                            en<span className="font-sans-medium text-on-surface/70"> {groupName}</span>
+                        </>
+                    ) : null}
+                    .
+                </>
+            );
+            summary = `${actorName} eliminó el deseo ${wishTitle} que tenías reservado`;
+            break;
+        case 'draw_performed':
+            icon = '🎅';
+            bgColor = 'bg-secondary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> ha realizado el sorteo
+                    del Amigo Invisible en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} realizó el sorteo en ${groupName}`;
+            break;
+        default:
+            icon = '🔔';
+            bgColor = 'bg-surface-container-high';
+            content = <span className="text-on-surface/70">Notificación</span>;
+            summary = 'Notificación';
+            break;
+    }
 
     return (
-        <div
+        <button
+            type="button"
             onClick={() => onClick(notification)}
-            className={`flex gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer border-b border-zinc-100 dark:border-zinc-800 last:border-0 ${!notification.is_read ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}
+            aria-label={summary}
+            className={`flex gap-4 p-4 rounded-xl mx-2 mb-1 w-[calc(100%-1rem)] text-left hover:bg-surface-container-low transition-colors cursor-pointer border-0 ${!notification.is_read ? 'bg-surface-container-low/80' : 'bg-surface-container-lowest'}`}
         >
-            <div className={`w-12 h-12 rounded-2xl ${bgColor} flex items-center justify-center text-2xl flex-shrink-0 animate-in zoom-in-50 duration-300`}>
+            <div className={`relative w-12 h-12 rounded-2xl ${bgColor} flex items-center justify-center text-2xl flex-shrink-0 animate-in zoom-in-50 duration-300`} aria-hidden>
                 {notification.actor?.avatar_url && notification.actor.avatar_url.startsWith('http') ? (
                     <img src={notification.actor.avatar_url} alt="" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                     notification.actor?.avatar_url || icon
                 )}
                 {!notification.is_read && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-600 rounded-full border-2 border-white dark:border-zinc-900" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full ring-2 ring-surface-container-lowest" />
                 )}
             </div>
 
             <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-snug mb-1.5">
+                <p className="text-sm text-on-surface/70 leading-snug mb-1.5 font-sans">
                     {content}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                <p className="text-[10px] font-sans-bold uppercase tracking-wider text-on-surface/45 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-outline-variant/40" aria-hidden />
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: es })}
                 </p>
             </div>
-        </div>
+        </button>
     );
 }

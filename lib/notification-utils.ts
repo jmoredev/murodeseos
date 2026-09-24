@@ -1,6 +1,10 @@
 import { supabase } from './supabase'
 
-export type NotificationType = 'wish_added' | 'wish_reserved' | 'draw_performed';
+export type NotificationType =
+    | 'wish_added'
+    | 'wish_reserved'
+    | 'draw_performed'
+    | 'wish_deleted_by_owner';
 
 export interface Notification {
     id: string;
@@ -9,6 +13,7 @@ export interface Notification {
     group_id?: string;
     wish_id?: string;
     type: NotificationType;
+    metadata?: Record<string, unknown> | null;
     is_read: boolean;
     created_at: string;
     // Opcionales para join
@@ -143,6 +148,44 @@ export async function notifyWishReserved(actorId: string, wishId: string) {
         }
     } catch (error) {
         console.error('Error in notifyWishReserved:', error);
+    }
+}
+
+/**
+ * Notifica al usuario que había reservado un deseo cuando el dueño lo elimina (p. ej. «Ya lo tengo»).
+ * El título se guarda en metadata porque el ítem se borra después y wish_id deja de enlazar.
+ */
+export async function notifyWishDeletedByOwner(ownerId: string, reservedById: string, wishTitle: string) {
+    if (!reservedById || ownerId === reservedById) return;
+    try {
+        const { data: ownerGroups, error: ownerErr } = await supabase
+            .from('group_members')
+            .select('group_id')
+            .eq('user_id', ownerId);
+        if (ownerErr) throw ownerErr;
+
+        const { data: reserverGroups, error: reserverErr } = await supabase
+            .from('group_members')
+            .select('group_id')
+            .eq('user_id', reservedById);
+        if (reserverErr) throw reserverErr;
+
+        const ownerGroupIds = new Set((ownerGroups || []).map((g: { group_id: string }) => g.group_id));
+        const commonGroupId =
+            (reserverGroups || []).find((g: { group_id: string }) => ownerGroupIds.has(g.group_id))
+                ?.group_id ?? null;
+
+        const { error: insertErr } = await supabase.from('notifications').insert({
+            user_id: reservedById,
+            actor_id: ownerId,
+            group_id: commonGroupId,
+            wish_id: null,
+            type: 'wish_deleted_by_owner' as NotificationType,
+            metadata: { wish_title: wishTitle },
+        });
+        if (insertErr) throw insertErr;
+    } catch (error) {
+        console.error('Error in notifyWishDeletedByOwner:', error);
     }
 }
 

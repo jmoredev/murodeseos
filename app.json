@@ -1,0 +1,51 @@
+{
+    "expo": {
+        "name": "Muro de Deseos",
+        "slug": "murodeseos",
+        "version": "1.4.0",
+        "orientation": "portrait",
+        "icon": "./public/favicon.ico",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "splash": {
+            "resizeMode": "contain",
+            "backgroundColor": "#fff4f4"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#fff4f4"
+            }
+        },
+        "web": {
+            "favicon": "./public/favicon.ico",
+            "bundler": "metro",
+            "output": "static",
+            "name": "Muro de Deseos",
+            "shortName": "MuroDeseos",
+            "themeColor": "#aa2c32",
+            "backgroundColor": "#fff4f4",
+            "display": "standalone",
+            "description": "Comparte tus sueños y organiza tus regalos."
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "La app necesita acceso a tus fotos para poner una imagen a tu deseo.",
+                    "cameraPermission": "La app puede usar la cámara si quieres hacer una foto para tu deseo."
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": true,
+            "baseUrl": "/murodeseos"
+        }
+    }
+}

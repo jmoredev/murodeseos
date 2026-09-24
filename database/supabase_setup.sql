@@ -32,9 +32,11 @@ create policy "Users can update own profile."
   on profiles for update
   using ( (select auth.uid()) = id );
 
--- This trigger automatically creates a profile entry when a new user signs up via Supabase Auth.
+-- Trigger en auth.users: función en schema `private` (no expuesta por PostgREST).
 -- See https://supabase.com/docs/guides/auth/managing-user-data#using-triggers for more details.
-create or replace function public.handle_new_user()
+create schema if not exists private;
+
+create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
 security definer
@@ -47,6 +49,19 @@ begin
 end;
 $$;
 
+revoke all on function private.handle_new_user() from public;
+
+do $body$
+begin
+  if exists (select 1 from pg_roles where rolname = 'supabase_auth_admin') then
+    grant usage on schema private to supabase_auth_admin;
+    grant execute on function private.handle_new_user() to supabase_auth_admin;
+  end if;
+end
+$body$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+
 create trigger on_auth_user_created
   after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+  for each row execute function private.handle_new_user();

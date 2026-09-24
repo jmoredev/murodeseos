@@ -47,7 +47,7 @@ export const E2E_CONFIG = {
 }
 
 // URLs base para tests
-export const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
+export const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:8081'
 
 // Timeouts para tests
 export const TIMEOUTS = {

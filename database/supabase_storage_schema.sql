@@ -3,10 +3,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('wishlist-images', 'wishlist-images', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Política de seguridad para permitir ver imágenes (público)
-CREATE POLICY "Imágenes de wishlist son públicas"
-  ON storage.objects FOR SELECT
-  USING ( bucket_id = 'wishlist-images' );
+-- Sin política SELECT amplia: bucket público + getPublicUrl en cliente; evita listado masivo vía API.
 
 -- Política de seguridad para permitir subir imágenes (usuarios autenticados)
 CREATE POLICY "Usuarios autenticados pueden subir imágenes"

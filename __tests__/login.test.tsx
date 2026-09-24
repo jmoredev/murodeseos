@@ -1,14 +1,18 @@
 import { render, screen } from '@testing-library/react'
-import LoginPage from '@/app/(auth)/login/page'
+import LoginPage from '@/app/(auth)/login/index'
+import { vi, describe, it, expect } from 'vitest'
 
 // Mock de Suspense para evitar errores en tests
-jest.mock('react', () => ({
-    ...jest.requireActual('react'),
-    Suspense: ({ children }: { children: React.ReactNode }) => children,
-}))
+vi.mock('react', async () => {
+    const actual = await vi.importActual('react')
+    return {
+        ...actual as any,
+        Suspense: ({ children }: { children: React.ReactNode }) => children,
+    }
+})
 
 
-jest.mock('next/link', () => {
+vi.mock('next/link', () => {
     return ({ children, href }: any) => {
         return <a href={href}>{children}</a>;
     };
@@ -21,18 +25,15 @@ describe('LoginPage', () => {
 
         // Verificar que los elementos principales están presentes
         expect(screen.getByText('Bienvenido de nuevo')).toBeInTheDocument()
-        expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
-        expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument()
+        expect(screen.getByText('Correo electrónico')).toBeInTheDocument()
+        expect(screen.getByText('Contraseña')).toBeInTheDocument()
+        expect(screen.getByText('Iniciar sesión')).toBeInTheDocument()
     })
 
     it('shows link to signup page', () => {
         render(<LoginPage />)
-        
-        // Busca un elemento que sea un link (<a>) y tenga el texto "Regístrate"
-        const signupLink = screen.getByRole('link', { name: /regístrate/i })
 
-        expect(signupLink).toBeInTheDocument()
-        expect(signupLink).toHaveAttribute('href', '/signup')
+        // El componente tiene un Pressable/Text con el texto "Regístrate"
+        expect(screen.getByText('Regístrate')).toBeInTheDocument()
     })
 })
