@@ -1,0 +1,6 @@
+# pnpm bloquea por defecto los scripts de ciclo de vida de las dependencias.
+# Solo se aprueba lo que la cadena de herramientas necesita de verdad.
+#
+# esbuild comprueba y enlaza su binario de plataforma en el postinstall.
+allowBuilds:
+  esbuild: true
