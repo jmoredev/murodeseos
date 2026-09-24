@@ -115,7 +115,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             id: m.user_id,
                             name: alias || profile?.display_name || 'Usuario',
                             originalName: alias ? (profile?.display_name || 'Usuario') : undefined,
-                            avatar: profile?.avatar_url
+                            avatar: profile?.avatar_url ?? undefined
                         }
                     })
 

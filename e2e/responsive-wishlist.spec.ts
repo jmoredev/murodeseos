@@ -17,7 +17,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
 });
 
 async function getUserIdByEmail(email: string) {
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 0, per_page: 100 });
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 0, perPage: 100 });
     const user = users?.find(u => u.email === email);
     if (!user?.id) throw new Error(`No se encontró userId para ${email}`);
     return user.id;

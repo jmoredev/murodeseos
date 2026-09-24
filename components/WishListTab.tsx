@@ -394,14 +394,13 @@ export function WishListTab({ userId }: WishListTabProps) {
                         enabled={!isDesktop}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         className={isDesktop ? 'w-full max-w-lg max-h-[90vh] flex flex-col min-h-0' : 'flex-1 w-full min-w-0'}
-                        style={isDesktop ? { maxHeight: '90vh' } : undefined}
                     >
                         <View
                             className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg overflow-hidden flex flex-col flex-1 min-h-0 max-h-[85vh]' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
                             style={
                                 !isDesktop
                                     ? { paddingBottom: 12 + insets.bottom }
-                                    : { maxHeight: '85vh', width: '100%' }
+                                    : { width: '100%' }
                             }
                         >
                         {/* Mobile Header with Back Button */}

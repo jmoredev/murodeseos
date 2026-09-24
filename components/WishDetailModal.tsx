@@ -8,7 +8,6 @@ import {
     Image,
     useWindowDimensions,
     BackHandler,
-    Platform,
 } from 'react-native';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
@@ -203,7 +202,6 @@ export function WishDetailModal({
                             ? 'relative z-10 w-full max-w-lg max-h-[90vh] bg-surface-container-lowest rounded-3xl shadow-ambient-lg overflow-hidden'
                             : 'bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[90%] pb-6'
                     }
-                    style={Platform.OS === 'web' && isDesktop ? { maxHeight: '90vh' } : undefined}
                 >
                     {content}
                 </View>
