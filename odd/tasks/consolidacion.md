@@ -77,13 +77,13 @@ usuario.
 | 1 | Preservar el cambio local de `.gitignore` y cambiar a `feat/pwa-adaptation` | hecho | entrada del stash "local .atl/ gitignore entry" |
 | 2 | Ignorar el directorio local de estado de Pi | hecho | `1540ba5` |
 | 3 | Registrar este diario de decisiones | hecho | `05c8928` |
-| 4 | Fusionar `feat/pwa-adaptation` en `main` y publicar | pendiente | |
-| 5 | Eliminar la rama remota `develop` | pendiente | |
+| 4 | Fusionar `feat/pwa-adaptation` en `main` y publicar | hecho | `dc3b189`, merge sin force-push; árbol idéntico a la rama |
+| 5 | Eliminar la rama remota `develop` | hecho | borrada en remoto y local, era ancestro de `main` |
 | 6 | Sustituir bun y npm por pnpm en scripts y documentación | hecho | `484bdb4`, `4a5a9ff` |
 | 7 | Eliminar `.agents/` y `skills-lock.json` | hecho | `0b9da3a` |
 | 8 | Añadir el flujo de CI: tipos y tests unitarios en cada pull request | hecho | `3ea161a` |
 | 9 | Añadir el flujo de despliegue: build y publicación en GitHub Pages | hecho | `3ea161a` |
-| 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | pendiente | acción del propietario en el panel |
+| 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | hecho | `build_type: workflow`; despliegue verificado |
 | 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | bloqueado | requiere el proyecto Supabase vinculado |
 | 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | pendiente | depende de la tarea 11 |
 | 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | pendiente | base actual: 16 errores, 21 avisos |
@@ -122,7 +122,21 @@ usuario.
 - `pnpm install --frozen-lockfile`, `pnpm run typecheck` y `pnpm run test:unit`
   pasan: 12 archivos, 115 tests, 1 pendiente.
 - `pnpm run build` genera `dist` con 12 rutas estáticas y el paso `postbuild`.
-- `git merge-base --is-ancestor origin/main origin/feat/pwa-adaptation` debe
-  indicar divergencia antes del merge y éxito después.
-- El bundle publicado por GitHub Pages debe coincidir con la salida `dist` del
-  `main` fusionado.
+- CI en verde sobre `main`.
+- Despliegue verificado de extremo a extremo: el sitio publica el bundle
+  `entry-bfc9892c64be4e952129ba66e1a93df6.js`, distinto del que servía la rama
+  `gh-pages-test`; todas las rutas responden 200; los activos de la PWA están
+  presentes; y el bundle apunta a `bztfzifafquulelcxycqk.supabase.co` con la
+  clave anónima de producción, así que los secretos son los correctos.
+
+## Consecuencia
+
+Con `build_type: workflow` las ramas `gh-pages` y `gh-pages-test` dejan de
+participar en la publicación. `gh-pages` llevaba congelada desde mayo y
+`gh-pages-test` era el sitio en producción; ambas son eliminables una vez el
+nuevo canal demuestre ser estable.
+
+## Pendiente de decisión
+
+`feat/pwa-adaptation` y `feature/ui-keepsake` ya están contenidas en `main` y
+pueden borrarse cuando se quiera.
