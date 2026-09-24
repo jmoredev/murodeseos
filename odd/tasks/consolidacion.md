@@ -105,17 +105,24 @@ usuario.
 
 ## Defectos conocidos para la fase de seguridad
 
+El detalle, la evidencia y el plan de cada uno están en
+[`endurecimiento.md`](./endurecimiento.md).
+
 | ID | Defecto | Estado |
 | --- | --- | --- |
-| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | abierto |
-| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | abierto |
-| S3 | Las notificaciones se pueden insertar en nombre de otros usuarios | pendiente de verificar contra producción |
-| S4 | La política de actualización de `wishlist_items` es permisiva y depende de un trigger | pendiente de verificar contra producción |
-| S5 | Funciones `SECURITY DEFINER` alcanzables por RPC | verificado cerrado para `anon` |
-| S6 | Listado del bucket de Storage por usuarios anónimos | no concluyente, no expone objetos |
-| S7 | `draw_performed` ausente de la restricción de tipos de notificación | pendiente de verificar contra producción |
-| S8 | **El registro tiene `emailRedirectTo` fijado a `http://localhost:8081/login`**, así que con la confirmación por correo activa ningún usuario nuevo puede confirmar su cuenta | abierto, crítico |
+| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | abierto, confirmado |
+| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | abierto, confirmado |
+| S3 | Las notificaciones se pueden insertar en nombre de otros usuarios | cerrado y verificado |
+| S4 | La política de actualización de `wishlist_items` es permisiva y depende de un trigger | cerrado y verificado |
+| S5 | Funciones `SECURITY DEFINER` alcanzables por RPC | cerrado y verificado |
+| S6 | Listado del bucket de Storage por usuarios anónimos | cerrado y verificado |
+| S7 | `draw_performed` ausente de la restricción de tipos de notificación | cerrado y verificado |
+| S8 | **El registro fija `emailRedirectTo` a `http://localhost:8081/login`**, así que con la confirmación por correo activa ningún usuario nuevo puede confirmar su cuenta | abierto, crítico |
 | S9 | `EXPO_PUBLIC_SITE_URL` se documenta en `env.example` pero no se usa en ningún sitio | abierto |
+| S10 | Copia de credenciales olvidada en `public.tmp_auth_users` y `tmp_auth_identities` | cerrado y verificado |
+| S11 | Protección de contraseñas filtradas desactivada | abierto, depende del plan de Supabase |
+| S12 | Las rutas dinámicas devuelven 404 aunque sirven el shell de la SPA | abierto, preexistente |
+| S13 | SQL antiguo en `database/` que revertiría el endurecimiento y destruiría datos | abierto |
 
 ## Verificación
 

@@ -91,6 +91,29 @@ estático, no una regresión: GitHub Pages no puede reescribir un 404 a 200. La
 solución sería evitar rutas dinámicas y usar parámetros de consulta, que el
 export sí genera como rutas estáticas.
 
+### S13 — SQL antiguo en `database/` que revertiría el endurecimiento (nuevo)
+
+Nada del repositorio usa la carpeta `database/`, pero contiene scripts SQL
+anteriores a las migraciones que las contradicen. El más peligroso empieza así:
+
+```sql
+-- database/supabase_wishlist_schema.sql
+DROP TABLE IF EXISTS wishlist_items CASCADE;
+```
+
+Ejecutarlo destruiría la tabla de deseos y volvería a crear las políticas
+permisivas antiguas: `USING (true) WITH CHECK (true)` en `wishlist_items`,
+`WITH CHECK (true)` en `notifications` y el `SELECT` público del bucket. Es decir,
+revertiría todo el endurecimiento de mayo y la migración que eliminó las tablas
+`tmp_auth_*`, y se llevaría por delante datos reales.
+
+`database/README.md` describe además tablas `wishes` y `reservations` que no
+existen y manda ejecutar `database/supabase_seed.sql`, que tampoco existe.
+
+Nada lo ejecuta automáticamente, así que hoy no hay daño: es una trampa para quien
+siga las instrucciones del README. La solución es eliminar la carpeta y dejar
+`supabase/migrations/` como única fuente de verdad.
+
 ### S8 — Redirect de confirmación fijado a localhost
 
 `app/(auth)/signup/index.tsx:49` usa `emailRedirectTo = 'http://localhost:8081/login'`.
