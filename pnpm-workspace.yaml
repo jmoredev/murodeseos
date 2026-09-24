@@ -2,6 +2,11 @@
 # Solo se aprueba lo que la cadena de herramientas necesita de verdad.
 #
 # esbuild comprueba y enlaza su binario de plataforma en el postinstall.
+# unrs-resolver lo aporta eslint-config-expo para resolver importaciones.
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+
+# Metro resuelve módulos desde node_modules. Expo documenta un árbol plano para
+# pnpm, así que se usa el enlazador hoisted en lugar del aislado por defecto.
+nodeLinker: hoisted
