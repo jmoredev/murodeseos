@@ -6,8 +6,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start --web",
-    "build": "expo export --platform web --clear",
-    "build:deploy": "cross-env EXPO_NO_DOTENV=1 dotenv -e .env.production -- expo export --platform web --clear && pnpm run postbuild",
+    "build": "expo export --platform web --clear && pnpm run postbuild",
+    "build:deploy": "cross-env EXPO_NO_DOTENV=1 dotenv -e .env.production -- pnpm run build",
     "postbuild": "node scripts/postbuild.cjs",
     "start": "expo start",
     "android": "expo start --android",
