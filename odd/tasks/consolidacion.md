@@ -9,7 +9,7 @@
 
 Dejar una única fuente de verdad para la aplicación, un único canal de entrega
 y una única convención de herramientas, de modo que el producto pueda avanzar
-sin la ambigüedad actual sobre qué rama, qué ejecutor de tareas y qué destino de
+sin la ambigüedad actual sobre qué rama, qué gestor de paquetes y qué destino de
 publicación son los reales.
 
 ## Contexto encontrado
@@ -51,7 +51,7 @@ usuario.
 | D8 | GitHub Pages se publica mediante GitHub Actions al sitio único. | Solo hay un sitio Pages por repositorio y `gh-pages-test` es producción, no una vista previa: no existe un sitio de previsualización. |
 | D9 | Convención de commits: Conventional Commits sin emoji. | Coherente con la disciplina de commits por unidad de trabajo adoptada con gentle-ai. |
 | D10 | Se eliminan `.agents/` y `skills-lock.json`. | La configuración de opencode/Cursor queda superada por la del harness. |
-| D11 | npm sustituye a bun como gestor de paquetes y ejecutor de tareas. | Docker sí es necesario para el Supabase local; bun no está instalado y añade un segundo ejecutor sin aportar nada aquí. |
+| D11 | **pnpm** sustituye a bun y a npm como gestor de paquetes y ejecutor de tareas. | bun no estaba instalado y npm acumula problemas de seguridad recientes. pnpm bloquea por defecto los scripts de ciclo de vida, lo que encaja con la política de dependencias. |
 
 ## Fuera de alcance
 
@@ -67,6 +67,8 @@ usuario.
 - El repositorio es público, así que la clave anónima del bundle publicado es
   pública por diseño y la corrección de las políticas RLS es la única frontera
   de acceso real.
+- El despliegue exige las variables de Supabase en tiempo de compilación:
+  `lib/supabase.ts` se niega a cargarse sin ellas.
 
 ## Tareas
 
@@ -74,16 +76,32 @@ usuario.
 | --- | --- | --- | --- |
 | 1 | Preservar el cambio local de `.gitignore` y cambiar a `feat/pwa-adaptation` | hecho | entrada del stash "local .atl/ gitignore entry" |
 | 2 | Ignorar el directorio local de estado de Pi | hecho | `1540ba5` |
-| 3 | Registrar este diario de decisiones | hecho | este archivo |
+| 3 | Registrar este diario de decisiones | hecho | `05c8928` |
 | 4 | Fusionar `feat/pwa-adaptation` en `main` y publicar | pendiente | |
 | 5 | Eliminar la rama remota `develop` | pendiente | |
-| 6 | Sustituir bun por npm en scripts y documentación | en curso | el script `dev` ejecutaba `next dev`, que no está instalado en esta rama |
-| 7 | Eliminar `.agents/` y `skills-lock.json` | pendiente | |
-| 8 | Añadir el flujo de CI: lint y tests unitarios en cada pull request | pendiente | |
-| 9 | Añadir el flujo de despliegue: build y publicación en GitHub Pages | pendiente | |
+| 6 | Sustituir bun y npm por pnpm en scripts y documentación | hecho | `484bdb4`, `4a5a9ff` |
+| 7 | Eliminar `.agents/` y `skills-lock.json` | hecho | `0b9da3a` |
+| 8 | Añadir el flujo de CI: tipos y tests unitarios en cada pull request | hecho | `3ea161a` |
+| 9 | Añadir el flujo de despliegue: build y publicación en GitHub Pages | hecho | `3ea161a` |
 | 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | pendiente | acción del propietario en el panel |
 | 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | bloqueado | requiere el proyecto Supabase vinculado |
 | 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | pendiente | depende de la tarea 11 |
+| 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | pendiente | base actual: 16 errores, 21 avisos |
+| 14 | Llevar los tests E2E al CI | pendiente | `supabase start` necesita Docker, que los runners no ofrecen |
+
+## Defectos encontrados y resueltos en esta feature
+
+| ID | Defecto | Evidencia |
+| --- | --- | --- |
+| R1 | `expo-font`, `expo-linear-gradient` y `expo-splash-screen` declarados en 55.x mientras Expo SDK 54 espera 14.0.x, 15.0.x y 31.0.x | `4a5a9ff` |
+| R2 | `package-lock.json` desincronizado y `bun.lock` con dos copias de `expo-font` | `4a5a9ff` |
+| R3 | `eslint.config.mjs` importaba `eslint-config-next`, que no es dependencia de esta rama | `dfc354d` |
+| R4 | Diez errores de tipos: dos por restos de Next.js y ocho por tipado de React Native Web y del SDK | `b85f8d4` |
+| R5 | `middleware.ts` y `next.config.ts` eran los últimos archivos que importaban `next` | `b046de7` |
+| R6 | `seed` y `seed:clean` apuntaban a archivos inexistentes; `dev` ejecutaba `next dev` | `484bdb4` |
+| R7 | Un `.js` compilado del script de seed estaba commiteado | `484bdb4` |
+| R8 | Cinco SVG de `create-next-app` sin usar se publicaban en cada build | `6cf6ad5` |
+| R9 | `scripts/README.md` documentaba scripts que no existen | `484bdb4` |
 
 ## Defectos conocidos para la fase de seguridad
 
@@ -96,9 +114,14 @@ usuario.
 | S5 | Funciones `SECURITY DEFINER` alcanzables por RPC | verificado cerrado para `anon` |
 | S6 | Listado del bucket de Storage por usuarios anónimos | no concluyente, no expone objetos |
 | S7 | `draw_performed` ausente de la restricción de tipos de notificación | pendiente de verificar contra producción |
+| S8 | **El registro tiene `emailRedirectTo` fijado a `http://localhost:8081/login`**, así que con la confirmación por correo activa ningún usuario nuevo puede confirmar su cuenta | abierto, crítico |
+| S9 | `EXPO_PUBLIC_SITE_URL` se documenta en `env.example` pero no se usa en ningún sitio | abierto |
 
 ## Verificación
 
+- `pnpm install --frozen-lockfile`, `pnpm run typecheck` y `pnpm run test:unit`
+  pasan: 12 archivos, 115 tests, 1 pendiente.
+- `pnpm run build` genera `dist` con 12 rutas estáticas y el paso `postbuild`.
 - `git merge-base --is-ancestor origin/main origin/feat/pwa-adaptation` debe
   indicar divergencia antes del merge y éxito después.
 - El bundle publicado por GitHub Pages debe coincidir con la salida `dist` del
