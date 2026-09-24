@@ -56,8 +56,10 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
+# Desactivado a propósito: ./seed.sql no existe. Los datos de prueba los crea
+# scripts/seed-complete-database.ts con la service_role key, que es lo que
+# ejecutan `pnpm run seed` y `pnpm run test:e2e:prepare`.
+enabled = false
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
 sql_paths = ["./seed.sql"]
