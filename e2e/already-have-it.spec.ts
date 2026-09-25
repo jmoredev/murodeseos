@@ -79,7 +79,6 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
             links: [],
             notes: '',
             priority: E2E_CONFIG.wishlistItems[2].priority,
-            reserved_by: null
         });
 
         if (insertError) throw new Error(`Error insertando wishlist para el amigo: ${insertError.message}`);

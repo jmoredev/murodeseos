@@ -59,7 +59,6 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
                 links: [],
                 notes: '',
                 priority: E2E_CONFIG.wishlistItems[2].priority,
-                reserved_by: null,
             })
             .select('id')
             .single();
