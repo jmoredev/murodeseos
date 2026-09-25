@@ -36,6 +36,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Variante sin punto: es el nombre que sugiere copiar `env.example` y no la
+# cubre el patrón anterior, así que quedaría sin ignorar con claves dentro.
+env.local
 
 # vercel
 .vercel
