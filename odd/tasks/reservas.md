@@ -92,8 +92,11 @@ emitiría nunca.
 | V2 | El orden natural del archivo era inválido: `drop column reserved_by` antes de retirar la política de reserva por terceros falla con "cannot drop column because other objects depend on it" | corregido | la política se retira antes (bloque 3 del archivo) |
 | V3 | El filtro de exclusiones duplicado en el cliente ocultaba al dueño sus propios deseos excluidos en su propia lista, y era más estricto que la política de la base en el caso de un grupo excluido no compartido | corregido | `app/wishlist/[id]/index.tsx`: se retira el filtro y `viewerGroupIds`; la regla queda solo en la política |
 | V4 | El prop `currentUserId` quedó muerto en `WishlistCard` y `WishDetailModal`, junto con sus llamadas: la autoría ya no tiene por dónde entrar a la interfaz | corregido | hallado por la verificación; retirado de los dos interfaces, de los dos puntos de llamada y de los tres renders de test |
-| V5 | `playwright.config.ts` arrancaba el servidor con `bun run web`, y bun no está instalado desde la migración a pnpm: la suite E2E no podía ni empezar | corregido | `fix(e2e)`: pasa a `pnpm run web` |
-| V6 | La suite E2E todavía no sirve como evidencia: en la primera ejecución completa se quedó colgada más de 30 minutos y dejó 13 artefactos de fallo, en su mayoría ajenos a esta feature (selectores de `create-group`, búsqueda del usuario `juan@test.com`), y no hay línea base porque la suite llevaba sin poder arrancar desde la migración a pnpm | abierto | ver la tarea pendiente de reparar el E2E; la evidencia fuerte de esta feature es la de la base de datos |
+| V5 | `playwright.config.ts` arrancaba el servidor con `bun run web`, y bun no está instalado desde la migración a pnpm: la suite E2E no podía ni empezar | corregido | `7d97e56`: pasa a `pnpm run web` |
+| V6 | La suite E2E parecía rota de forma general y no arrancaba | corregido | Eran tres causas distintas y ninguna era de las reservas: las filas crudas en `auth.users` con tokens en NULL que hacían devolver 500 a `auth.admin.listUsers()`, el canal realtime duplicado (V7) y el `testID` mal colocado (V8). Tras las tres, el spec de reserva de la vista de amigo pasa |
+| V7 | `NotificationMenu` reutilizaba el tema del canal realtime y lanzaba `cannot add postgres_changes callbacks ... after subscribe()`; el overlay de errores de Expo tapaba la pantalla y se comía todos los clics | corregido | `dfd6fa3`: el sufijo del tema sale de un contador de módulo; cero apariciones del error en 7 ejecuciones de test y 3 contextos. El primer intento con `useRef` no servía: un ref se reinicia en cada instancia, así que al navegar entre dos páginas que montan el menú volvía a colisionar |
+| V8 | `testID="wishlist-card-<id>"` estaba en el `Pressable` interno, pero los botones de acción son hermanos suyos dentro del mosaico, así que `card.getByTestId('wish-reserve-button')` no podía resolverse nunca | corregido | El hook pasa al `View` exterior del mosaico, que es lo que los dos specs de vista de amigo entienden por tarjeta |
+| V9 | Dos fallos del E2E siguen siendo ajenos a las reservas: `already-have-it.spec.ts:64` usa `getByText('Juan Perez').first()`, que resuelve a un nodo no visible, y `wishlist.spec.ts:109` compara dos posiciones de ordenación que resuelven iguales | abierto | Tarea pendiente: reparar la suite E2E y llevarla al CI |
 
 ## Verificación de la migración (hecha, en local)
 
@@ -139,9 +142,27 @@ emitiría nunca.
   estado `reserved_by_me`/`reserved_by_other`, que es el campo que devuelve la
   función de la base y no la autoría.
 
+## Verificación del flujo de reserva en navegador (hecha)
+
+- `pnpm exec playwright test e2e/responsive-wishlist.spec.ts --project=chromium`:
+  **5 de 5 en verde**, incluido «debe permitir reservar un artículo en la vista
+  de amigo», que pulsa Reservar y luego exige ver `Reservado por ti` y el botón de
+  cancelar.
+- La fila no se puede observar después de la ejecución porque el `afterEach` del
+  spec cancela la reserva y borra el deseo, y la clave foránea se lleva la
+  reserva por cascada. Que la escritura ocurrió lo sostienen dos cosas:
+  `pg_stat_user_tables` da 16 inserciones y 15 borrados en
+  `wishlist_reservations` con 1 fila viva, y la reserva del cliente no es
+  optimista —`lib/wish-reservation.ts` espera el insert y lanza si falla—, así
+  que la aserción de interfaz no podría pasar sin una inserción correcta.
+- El error de realtime aparece **cero veces** en el log del servidor y en los
+  artefactos de test.
+- `pnpm run typecheck` en 0 y `pnpm run test:unit` con 12 archivos y 118 tests en
+  verde, 1 pendiente.
+
 ## Verificación pendiente
 
-- La suite E2E, que necesita su propia reparación: ver el defecto V6.
+- El resto de la suite E2E: ver el defecto V9 y la tarea de repararla.
 - El ensayo en seco sobre producción y su aplicación (tarea 8).
 
 ## Riesgos
