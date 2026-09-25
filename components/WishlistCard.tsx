@@ -70,12 +70,12 @@ export function WishlistCard({
 
     return (
         <View
+            testID={`wishlist-card-${item.id}`}
             className={`bg-surface-container-lowest rounded-lg overflow-hidden flex-col h-full ${cardShadow} ${
                 isReservedByMe ? 'ring-2 ring-outline-variant/20' : ''
             }`}
         >
             <Pressable
-                testID={`wishlist-card-${item.id}`}
                 onPress={handleOpenDetail}
                 accessibilityRole="button"
                 accessibilityLabel={item.title}
