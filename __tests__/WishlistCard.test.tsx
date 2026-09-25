@@ -13,7 +13,7 @@ describe('WishlistCard', () => {
         price: '25',
         notes: 'Some notes',
         priority: 'high',
-        reservedBy: null
+        reservationState: 'available'
     };
 
     const mockOnClick = vi.fn();
@@ -68,9 +68,8 @@ describe('WishlistCard', () => {
         const onReserve = vi.fn();
         render(
             <WishlistCard
-                item={{ ...mockItem, reservedBy: null }}
+                item={{ ...mockItem, reservationState: 'available' }}
                 isOwner={false}
-                currentUserId="viewer-1"
                 onClick={mockOnClick}
                 onReserve={onReserve}
             />
@@ -79,5 +78,39 @@ describe('WishlistCard', () => {
         fireEvent.click(screen.getByTestId('wish-reserve-button'));
         expect(onReserve).toHaveBeenCalledWith(expect.objectContaining({ id: mockItem.id }));
         expect(mockOnClick).not.toHaveBeenCalled();
+    });
+
+    it('renders the reserved state for a viewer when another user reserved it', () => {
+        const onReserve = vi.fn();
+        render(
+            <WishlistCard
+                item={{ ...mockItem, reservationState: 'reserved_by_other' }}
+                isOwner={false}
+                onReserve={onReserve}
+            />
+        );
+
+        expect(screen.getByText('🔒 Reservado')).toBeInTheDocument();
+        expect(screen.getByText('No disponible')).toBeInTheDocument();
+        expect(screen.queryByTestId('wish-reserve-button')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('wish-cancel-reserve-button')).not.toBeInTheDocument();
+    });
+
+    it('renders the mine state and cancel action for a viewer who reserved it', () => {
+        const onCancelReserve = vi.fn();
+        render(
+            <WishlistCard
+                item={{ ...mockItem, reservationState: 'reserved_by_me' }}
+                isOwner={false}
+                onCancelReserve={onCancelReserve}
+            />
+        );
+
+        expect(screen.getByText('✓ Reservado por ti')).toBeInTheDocument();
+        expect(screen.getByTestId('wish-cancel-reserve-button')).toBeInTheDocument();
+        expect(screen.queryByTestId('wish-reserve-button')).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByTestId('wish-cancel-reserve-button'));
+        expect(onCancelReserve).toHaveBeenCalledWith(expect.objectContaining({ id: mockItem.id }));
     });
 });

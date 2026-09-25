@@ -178,6 +178,10 @@ describe('WishListTab', () => {
 
         // Verify item is gone
         expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
+
+        // El borrado va contra wishlist_items y no inserta aviso: lo hace el trigger de la base.
+        expect(vi.mocked(supabase.from)).toHaveBeenCalledWith('wishlist_items');
+        expect(vi.mocked(supabase.from).mock.calls.map(([table]) => table)).not.toContain('notifications');
     });
 
     it('should sort items by priority', async () => {

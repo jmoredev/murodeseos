@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
+import { ReservationState } from '@/lib/wish-reservation';
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -13,7 +14,7 @@ export interface GiftItem {
     price?: string | number;
     notes?: string;
     priority: Priority;
-    reservedBy?: string | null;
+    reservationState?: ReservationState;
     excludedGroupIds?: string[];
 }
 
@@ -21,7 +22,6 @@ interface WishlistCardProps {
     item: GiftItem;
     onClick?: (item: GiftItem) => void;
     isOwner: boolean;
-    currentUserId?: string;
     onReserve?: (item: GiftItem) => void;
     onCancelReserve?: (item: GiftItem) => void;
     onDelete?: (item: GiftItem) => void;
@@ -31,7 +31,6 @@ export function WishlistCard({
     item,
     onClick,
     isOwner,
-    currentUserId,
     onReserve,
     onCancelReserve,
     onDelete,
@@ -48,9 +47,10 @@ export function WishlistCard({
         high: 'Alta',
     };
 
-    const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
-    const isReservedByOther = !isOwner && item.reservedBy && item.reservedBy !== currentUserId;
-    const isAvailable = !isOwner && !item.reservedBy;
+    const reservationState = item.reservationState ?? 'available';
+    const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
+    const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
+    const isAvailable = !isOwner && reservationState === 'available';
 
     const a11yReservation = isOwner
         ? undefined

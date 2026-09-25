@@ -10,7 +10,7 @@ import {
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
-import { notifyWishAdded, notifyWishDeletedByOwner } from '@/lib/notification-utils'
+import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -89,7 +89,6 @@ export function WishListTab({ userId }: WishListTabProps) {
                     price: item.price,
                     notes: item.notes,
                     priority: item.priority as Priority,
-                    reservedBy: item.reserved_by,
                     excludedGroupIds: item.excluded_group_ids || []
                 }));
 
@@ -237,8 +236,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     imageUrl: data.image_url,
                     price: data.price,
                     notes: data.notes,
-                    priority: data.priority as Priority,
-                    reservedBy: data.reserved_by
+                    priority: data.priority as Priority
                 };
                 setItems([newItem, ...items]);
                 notifyWishAdded(userId, data.id, formData.excludedGroupIds || []);
@@ -257,13 +255,6 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (!itemToDelete) return;
         setIsSaving(true);
         try {
-            if (itemToDelete.reservedBy) {
-                await notifyWishDeletedByOwner(
-                    userId,
-                    itemToDelete.reservedBy,
-                    itemToDelete.title || ''
-                );
-            }
             const { error } = await supabase
                 .from('wishlist_items')
                 .delete()
