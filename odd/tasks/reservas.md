@@ -80,8 +80,8 @@ emitiría nunca.
 | 3 | Cliente: `lib/wish-reservation.ts` sobre la tabla nueva y lectura del estado por función | hecho | `ac4a97b`: `reserveWishlistItem` inserta en `wishlist_reservations`, `cancelWishlistReservation` borra la fila propia y `getWishlistReservationStates` lee el RPC |
 | 4 | Cliente: los cuatro componentes sobre estado de reserva, y retirada del aviso de borrado | hecho | `ac4a97b`: vocabulario `available`/`reserved_by_me`/`reserved_by_other`, `isOwner` correcto en la vista de amigo y `notifyWishDeletedByOwner` eliminado |
 | 5 | Tests unitarios de reserva y de estado de reserva | hecho | `ac4a97b`: 12 archivos, 118 tests en verde, 1 pendiente |
-| 6 | Seed y fixtures E2E sobre la tabla nueva | pendiente | |
-| 7 | Documentación: `docs/DEVELOPMENT.md` y cierre de S1, S2 y D4 en `endurecimiento.md` | pendiente | |
+| 6 | Seed y fixtures E2E sobre la tabla nueva | hecho | `caa2e3b`: el seed inserta las reservas en `wishlist_reservations` de a una por deseo para conocer el id devuelto; comprobado en la base local: 3 reservas con sus reservadores |
+| 7 | Documentación: `docs/DEVELOPMENT.md` y cierre de S1, S2 y D4 en `endurecimiento.md` | hecho | `docs/DEVELOPMENT.md` y las fichas de S1 y S2 en `endurecimiento.md` y `consolidacion.md` |
 | 8 | Ensayo en seco sobre producción y aplicación con aprobación explícita | pendiente | |
 
 ## Defectos encontrados
@@ -92,6 +92,8 @@ emitiría nunca.
 | V2 | El orden natural del archivo era inválido: `drop column reserved_by` antes de retirar la política de reserva por terceros falla con "cannot drop column because other objects depend on it" | corregido | la política se retira antes (bloque 3 del archivo) |
 | V3 | El filtro de exclusiones duplicado en el cliente ocultaba al dueño sus propios deseos excluidos en su propia lista, y era más estricto que la política de la base en el caso de un grupo excluido no compartido | corregido | `app/wishlist/[id]/index.tsx`: se retira el filtro y `viewerGroupIds`; la regla queda solo en la política |
 | V4 | El prop `currentUserId` quedó muerto en `WishlistCard` y `WishDetailModal`, junto con sus llamadas: la autoría ya no tiene por dónde entrar a la interfaz | corregido | hallado por la verificación; retirado de los dos interfaces, de los dos puntos de llamada y de los tres renders de test |
+| V5 | `playwright.config.ts` arrancaba el servidor con `bun run web`, y bun no está instalado desde la migración a pnpm: la suite E2E no podía ni empezar | corregido | `fix(e2e)`: pasa a `pnpm run web` |
+| V6 | La suite E2E todavía no sirve como evidencia: en la primera ejecución completa se quedó colgada más de 30 minutos y dejó 13 artefactos de fallo, en su mayoría ajenos a esta feature (selectores de `create-group`, búsqueda del usuario `juan@test.com`), y no hay línea base porque la suite llevaba sin poder arrancar desde la migración a pnpm | abierto | ver la tarea pendiente de reparar el E2E; la evidencia fuerte de esta feature es la de la base de datos |
 
 ## Verificación de la migración (hecha, en local)
 
@@ -139,7 +141,8 @@ emitiría nunca.
 
 ## Verificación pendiente
 
-- La suite E2E contra la base local, tras adaptar seed y fixtures (tarea 6).
+- La suite E2E, que necesita su propia reparación: ver el defecto V6.
+- El ensayo en seco sobre producción y su aplicación (tarea 8).
 
 ## Riesgos
 

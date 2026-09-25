@@ -110,8 +110,8 @@ El detalle, la evidencia y el plan de cada uno están en
 
 | ID | Defecto | Estado |
 | --- | --- | --- |
-| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | abierto, confirmado |
-| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | abierto, confirmado |
+| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | cerrado en código, verificado en local; pendiente de aplicar a producción |
+| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | cerrado en código, verificado en local; pendiente de aplicar a producción |
 | S3 | Las notificaciones se pueden insertar en nombre de otros usuarios | cerrado y verificado |
 | S4 | La política de actualización de `wishlist_items` es permisiva y depende de un trigger | cerrado y verificado |
 | S5 | Funciones `SECURITY DEFINER` alcanzables por RPC | cerrado y verificado |

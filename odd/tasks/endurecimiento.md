@@ -1,7 +1,7 @@
 # Endurecimiento de la base de datos y de la privacidad
 
 **Feature:** `endurecimiento`
-**Estado:** auditoría completada, remediación pendiente de aprobación
+**Estado:** auditoría completada; S1, S2 y D4 corregidos y verificados en local, pendientes de aplicar a producción
 **Inicio:** 2026-09-24
 **Depende de:** `consolidacion` (proyecto Supabase vinculado)
 
@@ -31,17 +31,31 @@ que el esquema remoto coincide con el repositorio: no hay deriva.
 
 ## Hallazgos abiertos
 
-### S1 — El dueño puede leer quién reservó su regalo
+### S1 — El dueño puede leer quién reservó su regalo (RESUELTO)
 
-La política SELECT de `wishlist_items` es `auth.uid() IS NOT NULL`. El cliente
-del dueño recibe todas las columnas, incluida `reserved_by`, y las consultas usan
-`select('*')`. La ocultación es solo de interfaz, así que la sorpresa se puede
+> **Resuelto el 2026-09-25** en la feature `reservas`. La reserva dejó de vivir
+> en `wishlist_items`: se movió a `public.wishlist_reservations` con
+> `supabase/migrations/20260925120000_wishlist_reservations_privacy.sql`. El
+> cliente recibe el estado por `get_wishlist_reservation_states`, que nunca
+> devuelve autoría, y el dueño no recibe estado de sus propios deseos. Verificado
+> contra la base local. Detalle en [`reservas.md`](./reservas.md). **Pendiente de
+> aplicar a producción.**
+
+La política SELECT de `wishlist_items` era `auth.uid() IS NOT NULL`. El cliente
+del dueño recibía todas las columnas, incluida `reserved_by`, y las consultas usan
+`select('*')`. La ocultación era solo de interfaz, así que la sorpresa se podía
 leer desde el navegador. Viola D3.
 
-### S2 — Cualquier usuario autenticado lee cualquier lista
+### S2 — Cualquier usuario autenticado lee cualquier lista (RESUELTO)
 
-La misma política no comprueba pertenencia a un grupo. Con el UUID de una persona
-—o enumerando— se obtiene su lista completa. Viola D2.
+> **Resuelto el 2026-09-25** en la misma migración de la feature `reservas`: la
+> política SELECT exige ahora un grupo compartido con el dueño que no esté en
+> `excluded_group_ids`. El filtro de exclusiones que el cliente aplicaba por su
+> cuenta se retiró, para que la política sea la única autoridad. Verificado contra
+> la base local con una matriz por rol. **Pendiente de aplicar a producción.**
+
+La misma política no comprobaba pertenencia a un grupo. Con el UUID de una persona
+—o enumerando— se obtenía su lista completa. Viola D2.
 
 ### S10 — Copia de credenciales olvidada en el esquema expuesto (RESUELTO)
 
@@ -184,9 +198,9 @@ reinicar el esquema ni reescribir migraciones existentes.
 | --- | --- | --- | --- |
 | 1 | Revocar los permisos de `anon` y `authenticated` sobre las dos tablas `tmp_auth_*` y eliminarlas | migración | **hecho** |
 | 2 | Activar la protección de contraseñas filtradas | panel de Supabase | nulo |
-| 3 | Mover las reservas a una tabla dedicada y exponer la lectura por función | migración + código | medio: cambia el camino de lectura y escribe datos |
-| 4 | Restringir la lectura de `wishlist_items` a grupos compartidos | migración | medio: hay que ajustar las consultas del cliente |
-| 5 | Garantizar reserva única con la clave primaria de la tabla nueva | migración | bajo |
+| 3 | Mover las reservas a una tabla dedicada y exponer la lectura por función | migración + código | **hecho** en local: `20260925120000_wishlist_reservations_privacy.sql` |
+| 4 | Restringir la lectura de `wishlist_items` a grupos compartidos | migración | **hecho** en local: política `"Veo mis deseos y los de mis grupos"` |
+| 5 | Garantizar reserva única con la clave primaria de la tabla nueva | migración | **hecho** en local: `item_id` es la clave primaria |
 | 6 | Arreglar el redirect de confirmación y dar uso a `EXPO_PUBLIC_SITE_URL` | código | bajo |
 | 7 | Endurecer el lint hasta convertirlo en puerta bloqueante | código | bajo |
 | 8 | Eliminar la carpeta `database/` y dejar `supabase/migrations/` como única fuente de verdad | repositorio | bajo |
