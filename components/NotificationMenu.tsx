@@ -6,6 +6,15 @@ import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib
 import { NotificationItem } from './NotificationItem';
 import { createPortal } from 'react-dom';
 
+// Sufijo único por suscripción. Tiene que ser único entre instancias y montajes,
+// no solo dentro de una instancia: `supabase.channel()` devuelve el canal ya
+// existente cuando el tema coincide, y un canal suscrito rechaza callbacks
+// nuevos. Con un contador por instancia, navegar entre dos páginas que montan
+// este menú volvía a producir el mismo tema —`removeChannel` es asíncrono— y
+// lanzaba "cannot add postgres_changes callbacks ... after subscribe()", con el
+// overlay de errores tapando la pantalla y ningún clic llegando a la interfaz.
+let notificationChannelSequence = 0;
+
 interface NotificationMenuProps {
     userId: string;
 }
@@ -44,8 +53,11 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
 
         loadNotifications();
 
+        // Tema único por suscripción, por lo explicado junto al contador.
+        notificationChannelSequence += 1;
+
         const channel = supabase
-            .channel(`notifications_${userId}`)
+            .channel(`notifications_${userId}_${notificationChannelSequence}`)
             .on(
                 'postgres_changes',
                 {
