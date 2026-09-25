@@ -53,41 +53,93 @@ encuentra filas que él puede ver. La visibilidad vive en un solo lugar.
 
 ### Función de lectura pública
 
-`public.get_wishlist_reservation_states(owner_id uuid)` devuelve
+`public.get_wishlist_reservation_states(owner_uuid uuid)` devuelve
 `(item_id uuid, reserved_by_me boolean)` para el dueño indicado, aplicando la
 misma regla de visibilidad dentro del cuerpo —no puede delegarla en RLS porque es
 `SECURITY DEFINER`— y sin devolver nunca `reserver_id`.
 
 ### Trigger de borrado
 
-`private.notify_wish_deleted` sobre `wishlist_items` `AFTER DELETE`: busca la
+`private.notify_wish_deleted` sobre `wishlist_items` `BEFORE DELETE`: busca la
 reserva del deseo, elige un grupo en común entre dueño y reservador, e inserta la
 notificación `wish_deleted_by_owner`. Sustituye a la llamada del cliente
 (`components/WishListTab.tsx:260-270`), que hoy necesita leer `reserved_by`.
+
+Es `BEFORE` y no `AFTER` a propósito: la cascada de `on delete cascade` la aplica
+un trigger interno cuyo nombre empieza por `RI_`, y PostgreSQL ejecuta los
+triggers `AFTER ROW` de una tabla en orden alfabético. `RI_` ordena antes que
+`tr_`, así que en un `AFTER` la reserva ya estaría borrada y el aviso no se
+emitiría nunca.
 
 ## Tareas
 
 | # | Tarea | Estado | Evidencia |
 | --- | --- | --- | --- |
-| 1 | Migración completa, en un solo archivo: tabla de reservas, copia de los datos, borrado de la columna y de su índice y clave foránea, política de visibilidad, retirada de la política de reserva por terceros, reescritura del trigger de permisos, función de estado de reserva y trigger de aviso de borrado | pendiente | |
-| 2 | Verificación local: `supabase db reset` y matriz de acceso por rol contra la base local | pendiente | |
-| 3 | Cliente: `lib/wish-reservation.ts` sobre la tabla nueva y lectura del estado por función | pendiente | |
-| 4 | Cliente: los cuatro componentes sobre estado de reserva, y retirada del aviso de borrado | pendiente | |
-| 5 | Tests unitarios de reserva y de estado de reserva | pendiente | |
+| 1 | Migración completa, en un solo archivo: tabla de reservas, copia de los datos, borrado de la columna y de su índice y clave foránea, política de visibilidad, retirada de la política de reserva por terceros, reescritura del trigger de permisos, función de estado de reserva y trigger de aviso de borrado | hecho | `2e6c11b`, `supabase/migrations/20260925120000_wishlist_reservations_privacy.sql` |
+| 2 | Verificación local: `supabase db reset` y matriz de acceso por rol contra la base local | hecho | 20 migraciones aplicadas; matriz de acceso por rol (dueño, miembro, miembro del grupo excluido, tercero), reserva única, cascada, aviso, privilegios y reejecución, todo verificado en local |
+| 3 | Cliente: `lib/wish-reservation.ts` sobre la tabla nueva y lectura del estado por función | hecho | `ac4a97b`: `reserveWishlistItem` inserta en `wishlist_reservations`, `cancelWishlistReservation` borra la fila propia y `getWishlistReservationStates` lee el RPC |
+| 4 | Cliente: los cuatro componentes sobre estado de reserva, y retirada del aviso de borrado | hecho | `ac4a97b`: vocabulario `available`/`reserved_by_me`/`reserved_by_other`, `isOwner` correcto en la vista de amigo y `notifyWishDeletedByOwner` eliminado |
+| 5 | Tests unitarios de reserva y de estado de reserva | hecho | `ac4a97b`: 12 archivos, 118 tests en verde, 1 pendiente |
 | 6 | Seed y fixtures E2E sobre la tabla nueva | pendiente | |
 | 7 | Documentación: `docs/DEVELOPMENT.md` y cierre de S1, S2 y D4 en `endurecimiento.md` | pendiente | |
 | 8 | Ensayo en seco sobre producción y aplicación con aprobación explícita | pendiente | |
 
-## Verificación prevista
+## Defectos encontrados
 
-- `supabase db reset` aplica las 20 migraciones sin error desde cero.
-- Matriz de acceso en local, ejecutada como `authenticated` con `set local role`:
-  el dueño no ve `reserver_id`; un tercero sin grupo no ve ni una fila; un
-  miembro del grupo ve el deseo pero no la autoría; un miembro del grupo excluido
-  no ve el deseo; la segunda reserva del mismo deseo falla.
-- `pnpm run typecheck`, `pnpm run test:unit` y `pnpm run build` en verde.
-- El error de violación de clave primaria se traduce al mensaje "este regalo ya
-  no está disponible".
+| ID | Defecto | Estado | Evidencia |
+| --- | --- | --- | --- |
+| V1 | La migración no era idempotente: la política `"Veo mis deseos y los de mis grupos"` se creaba sin `drop policy if exists` previo, así que una segunda ejecución fallaba con "policy already exists" | corregido | hallado por la verificación local al reejecutar el archivo; tras el arreglo, dos ejecuciones seguidas salen con código 0 |
+| V2 | El orden natural del archivo era inválido: `drop column reserved_by` antes de retirar la política de reserva por terceros falla con "cannot drop column because other objects depend on it" | corregido | la política se retira antes (bloque 3 del archivo) |
+| V3 | El filtro de exclusiones duplicado en el cliente ocultaba al dueño sus propios deseos excluidos en su propia lista, y era más estricto que la política de la base en el caso de un grupo excluido no compartido | corregido | `app/wishlist/[id]/index.tsx`: se retira el filtro y `viewerGroupIds`; la regla queda solo en la política |
+| V4 | El prop `currentUserId` quedó muerto en `WishlistCard` y `WishDetailModal`, junto con sus llamadas: la autoría ya no tiene por dónde entrar a la interfaz | corregido | hallado por la verificación; retirado de los dos interfaces, de los dos puntos de llamada y de los tres renders de test |
+
+## Verificación de la migración (hecha, en local)
+
+- `pnpm exec supabase db reset` aplica **20 migraciones** desde cero y termina con código 0.
+- Matriz de acceso ejecutada como `authenticated` con `set local role` y `request.jwt.claims`:
+  el dueño ve sus deseos y los del grupo compartido (3); el miembro del grupo ve
+  los tres; el miembro del grupo excluido ve 0; el tercero sin grupo ve 0.
+- `select reserved_by` sobre `wishlist_items` falla con `42703`: la columna ya no existe.
+- `get_wishlist_reservation_states`: 1 fila con `reserved_by_me = true` para quien
+  reservó, 0 filas para el tercero, 0 para el grupo excluido, 0 para el dueño
+  sobre sus propios deseos, y 0 para quien pregunta por sí mismo. La firma
+  devuelve exactamente `(item_id, reserved_by_me)`; `reserver_id` no es accesible.
+- Reserva: repetir la reserva falla con `23505`; el tercero, el grupo excluido y
+  el dueño sobre su propio deseo fallan con `42501`; quien puede ver el deseo
+  reserva con éxito.
+- Aviso: al borrar el dueño un deseo reservado se inserta exactamente **una**
+  notificación `wish_deleted_by_owner` para el reservador, con `actor_id` del
+  dueño y el grupo común; borrar un deseo sin reserva no inserta ninguna. El
+  trigger es `BEFORE DELETE`.
+- Privilegios: `anon` no tiene `select`, `insert` ni `delete` sobre la tabla nueva
+  ni `execute` sobre la función; `authenticated` tiene `select`, `insert`,
+  `delete` y `execute`, y no tiene `update`.
+- Reejecución: el archivo ejecutado dos veces seguidas termina con código 0 y deja
+  el estado final idéntico.
+
+## Verificación del cliente (hecha, en local)
+
+- `pnpm run typecheck` termina con código 0.
+- `pnpm run test:unit`: 12 archivos, 118 tests en verde y 1 pendiente.
+- `pnpm run lint`: 16 errores y 21 avisos, **delta cero**; ninguno está en los
+  archivos tocados. Es la misma deuda previa a esta feature.
+- `pnpm run build` genera `dist` con 12 rutas estáticas. Sin las variables de
+  entorno de Supabase falla en `lib/supabase.ts`, que es la puerta conocida del
+  proyecto y no un defecto de este cambio.
+- Los tests cubren los seis comportamientos nuevos: inserción con `item_id` y
+  `reserver_id`, `23505` y `42501` traducidos al mensaje de no disponible,
+  cancelación por `item_id` y `reserver_id`, cancelación sin fila devuelta,
+  construcción del mapa desde el RPC con el parámetro `owner_uuid`, y propagación
+  del error del RPC en lugar de un mapa vacío que pintaría todo como disponible.
+- La prueba de residuo es estricta: `grep -rnE "reserved_by([^_]|$)"` y
+  `grep -rn "reservedBy" | grep -vE "reservedBy(Me|Other)"` no devuelven nada en
+  `app/`, `components/`, `lib/` ni `__tests__/`. Lo que queda es el vocabulario de
+  estado `reserved_by_me`/`reserved_by_other`, que es el campo que devuelve la
+  función de la base y no la autoría.
+
+## Verificación pendiente
+
+- La suite E2E contra la base local, tras adaptar seed y fixtures (tarea 6).
 
 ## Riesgos
 
