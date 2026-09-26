@@ -1,6 +1,33 @@
-import { test, expect } from '@playwright/test';
-import { BASE_URL } from './config';
+import { test, expect, type Page } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 const createdIds = new Set<string>();
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseServiceRoleKey =
+    process.env.NEXT_SERVICE_ROLE_KEY ||
+    process.env.EXPO_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Faltan env vars para supabaseAdmin en E2E');
+}
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+});
+
+/**
+ * Devuelve el índice DOM relativo de la tarjeta de wishlist cuyo texto
+ * contiene `title`, o -1 si no se encuentra. Se basa en el orden del DOM
+ * (no en geometría) para que la comparación sea estable en cualquier layout responsivo.
+ */
+async function getCardIndex(page: Page, title: string): Promise<number> {
+    return page
+        .locator('[data-testid^="wishlist-card-"]')
+        .evaluateAll((cards, t) =>
+            cards.findIndex((c) => (c.textContent ?? '').includes(t)),
+        title);
+}
 
 test.describe('Funcionalidad de Lista de Deseos', () => {
     test.setTimeout(60000);
@@ -21,12 +48,17 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByLabel('Nuevo deseo')).toBeVisible();
     });
 
-    test.afterEach(async ({ request }) => {
+    test.afterEach(async () => {
         for (const id of createdIds) {
             console.log(`🧹 [Limpieza] Borrando deseo ID: ${id}`);
-            const response = await request.delete(`${BASE_URL}/api/wishlist/${id}`);
-            if (!response.ok()) {
-                console.error(`🔴 Error al borrar deseo ${id}: ${response.status()}`);
+            const { error } = await supabaseAdmin
+                .from('wishlist_items')
+                .delete()
+                .eq('id', id);
+            if (error) {
+                console.error(`🔴 Error al borrar deseo ${id}: ${error.message}`);
+            } else {
+                console.log(`✅ [Limpieza] Deseo ${id} borrado vía Supabase`);
             }
         }
         createdIds.clear();
@@ -100,32 +132,45 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByPlaceholder('¿Qué deseas?')).not.toBeVisible();
 
         // --- 3. Probar Ordenación por Nombre ---
+        // Se compara el ORDEN RELATIVO EN EL DOM (no la posición geométrica):
+        // el mosaico de 4 columnas del Desktop Chrome pone ambas tarjetas en la misma fila.
         await page.getByText(/Por Nombre/i).first().click();
-        await page.waitForTimeout(300);
-        const topTestByName = (await page.getByText(testItem.title, { exact: true }).first().boundingBox())?.y;
-        const topAnotherByName = (await page.getByText(anotherItem.title, { exact: true }).first().boundingBox())?.y;
-        expect(topTestByName).not.toBeUndefined();
-        expect(topAnotherByName).not.toBeUndefined();
-        await expect(topAnotherByName!).toBeLessThan(topTestByName!);
+        // La reordenación es asíncrona: se espera con una expectativa acotada, no con un sleep fijo.
+        await expect
+            .poll(async () => {
+                const anotherIdx = await getCardIndex(page, anotherItem.title);
+                const testIdx = await getCardIndex(page, testItem.title);
+                // Ambas tarjetas deben existir: un índice -1 falla como tarjeta faltante.
+                expect(anotherIdx, `Tarjeta "${anotherItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                expect(testIdx, `Tarjeta "${testItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                return anotherIdx < testIdx;
+            })
+            .toBe(true);
 
         // --- 4. Probar Ordenación por Precio ---
         await page.getByText(/Por Precio/i).first().click();
-        await page.waitForTimeout(300);
-        const topTestByPrice = (await page.getByText(testItem.title, { exact: true }).first().boundingBox())?.y;
-        const topAnotherByPrice = (await page.getByText(anotherItem.title, { exact: true }).first().boundingBox())?.y;
-        expect(topTestByPrice).not.toBeUndefined();
-        expect(topAnotherByPrice).not.toBeUndefined();
-        await expect(topAnotherByPrice!).toBeLessThan(topTestByPrice!);
+        await expect
+            .poll(async () => {
+                const anotherIdx = await getCardIndex(page, anotherItem.title);
+                const testIdx = await getCardIndex(page, testItem.title);
+                expect(anotherIdx, `Tarjeta "${anotherItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                expect(testIdx, `Tarjeta "${testItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                return anotherIdx < testIdx;
+            })
+            .toBe(true);
 
         // --- 5. Probar Ordenación por Prioridad ---
         await page.getByText(/Por Prioridad/i).first().click();
-        await page.waitForTimeout(300);
-        const topTestByPriority = (await page.getByText(testItem.title, { exact: true }).first().boundingBox())?.y;
-        const topAnotherByPriority = (await page.getByText(anotherItem.title, { exact: true }).first().boundingBox())?.y;
-        expect(topTestByPriority).not.toBeUndefined();
-        expect(topAnotherByPriority).not.toBeUndefined();
-        // "Alta" (testItem) debe quedar arriba
-        await expect(topTestByPriority!).toBeLessThan(topAnotherByPriority!);
+        // "Alta" (testItem) debe quedar antes en el DOM que "Baja" (anotherItem)
+        await expect
+            .poll(async () => {
+                const anotherIdx = await getCardIndex(page, anotherItem.title);
+                const testIdx = await getCardIndex(page, testItem.title);
+                expect(anotherIdx, `Tarjeta "${anotherItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                expect(testIdx, `Tarjeta "${testItem.title}" no encontrada en el DOM`).toBeGreaterThanOrEqual(0);
+                return testIdx < anotherIdx;
+            })
+            .toBe(true);
 
         // --- 6. Eliminar los items creados ---
         // Eliminar primero
