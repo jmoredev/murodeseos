@@ -87,7 +87,13 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'pnpm run web',
+        // IMPORTANTE: no usar "pnpm run web" aquí. pnpm mueve el script a su propio
+        // grupo de procesos, por lo que el servidor dev escapa del kill(-pid) con el
+        // que Playwright limpia el webServer al terminar: queda un huérfano en :8081
+        // sosteniendo los pipes de stdio y la corrida se cuelga sin resumen ni código de salida.
+        // Lanzar el CLI de Expo directo (node reemplaza al shell de "sh -c") mantiene
+        // el proceso dentro del grupo del webServer, que sí es matable.
+        command: 'node node_modules/expo/bin/cli start --web',
         url: 'http://127.0.0.1:8081',
         reuseExistingServer: !process.env.CI,
         timeout: 180 * 1000,
