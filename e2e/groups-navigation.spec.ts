@@ -18,7 +18,7 @@ test.describe('Navegación de Grupos', () => {
         await expect(page.getByText(/Mis grupos/i).first()).toBeVisible()
 
         // Verificar que el botón de crear grupo es visible
-        await expect(page.locator('a[href*="/groups/create"]').first()).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Crear grupo' }).first()).toBeVisible()
     })
 
     test('El botón "Unirse a grupo" está visible y navega correctamente', async ({ page }) => {
@@ -62,7 +62,7 @@ test.describe('Navegación de Grupos', () => {
         await expect(page.getByText(/Mis grupos/i).first()).toBeVisible()
 
         // Hacer clic en el botón de crear
-        await page.locator('a[href*="/groups/create"]').first().click()
+        await page.getByRole('button', { name: 'Crear grupo' }).first().click()
         await expect(page).toHaveURL(/.*\/groups\/create/)
 
         // Clic en volver

@@ -9,11 +9,11 @@ test.describe('PWA Capabilities', () => {
         // Verificar que el título de la app sea correcto
         await expect(page).toHaveTitle(/Muro de Deseos/);
 
-        // Verificar el color del tema
+        // Verificar el color del tema (la fuente de verdad inyectada en runtime es app/_layout.tsx)
         const themeColorEl = page.locator('meta[name="theme-color"]');
-        await expect(themeColorEl).toHaveAttribute('content', '#4F46E5', { timeout: 15000 });
+        await expect(themeColorEl).toHaveAttribute('content', '#aa2c32', { timeout: 15000 });
         const themeColor = await themeColorEl.getAttribute('content');
-        expect(themeColor).toBe('#4F46E5');
+        expect(themeColor).toBe('#aa2c32');
 
         // Verificar compatibilidad con iOS/Mobile web app
         const appleMobileWebAppCapableEl = page.locator('meta[name="apple-mobile-web-app-capable"]');
