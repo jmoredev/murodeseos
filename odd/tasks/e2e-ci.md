@@ -1,10 +1,10 @@
 # Suite E2E determinista y en CI
 
 **Feature:** `e2e-ci`
-**Estado:** en curso — la suite completa en chromium pasa **38/38 con `CI=1`** (exit 0),
-confirmada por verificación independiente; el cierre de la suite (E-4) y los cinco fallos de
-specs (E-5 a E-9) están corregidos. Quedan las tareas 8 (gate en CI) y 9 (cierre documental),
-y el defecto abierto E-10.
+**Estado:** en curso — la suite completa en chromium pasa **38/38 con `CI=1`** (exit 0) y el
+gate ya corre en CI; el cierre de la suite (E-4) y los cinco fallos de specs (E-5 a E-9) están
+corregidos. Quedan la tarea 9 (cierre documental), el defecto abierto E-10 y la decisión
+pendiente E-I (el gate detecta, no bloquea).
 **Inicio:** 2026-09-25
 **Rama:** `feat/reservas-privacidad`
 **Cierra:** V9 de [`reservas.md`](./reservas.md); el punto «E2E en CI» de
@@ -27,6 +27,8 @@ gate de CI, sin depender del estado que dejaron ejecuciones anteriores.
 | E-F | La suite completa se verifica con `CI=1`. | `CI=1` activa exactamente la rama que usará el gate: `workers: 1`, `retries: 2`, `reuseExistingServer: false` y `forbidOnly: true`. Permite verificar la ruta de CI sin un runner real. |
 | E-G | El spec que muta el fixture compartido lo restaura; el spec que lo consume no se adapta a la mutación. | `profile.spec.ts` renombraba al usuario E2E (`Usuario E2E <timestamp>`) y no lo devolvía, así que `wishlist-visibility.spec.ts:136` buscaba `E2E Test User` y agotaba el timeout. La causa es la fuga, no la dependencia: el nombre sembrado es parte del contrato de la suite. Restaurar en el origen deja la suite independiente del orden de archivos y, además, segura bajo ejecución paralela local. |
 | E-H | Al corregir una expectativa obsoleta no se debilita la aserción. | La auditoría del diff confirma que ninguna aserción se borró, comentó ni aflojó (sin `force: true` añadido, sin timeouts subidos, sin `test.skip`), y que cada cadena nueva es la que la app renderiza de verdad. |
+| E-I | El gate corre **después** del merge y **solo detecta**: no puede bloquear el merge ni el publish. | E-D lo limita a push a `main`, y `deploy.yml` es un workflow aparte con su propio disparador, así que un fallo del E2E no impide que Pages publique ese commit. Además, en los `pull_request` el job queda `skipped`, y un check omitido no bloquea un merge. Queda como señal roja legible en `main`; para que prevenga hacen falta otras dos decisiones, aún abiertas: gatear `deploy.yml` con un workflow reutilizable, o correr el E2E también en PRs. |
+| E-J | El reporter del gate es `list` además de `html` cuando corre en CI. | Con solo el reporter `html`, un fallo de CI no imprime casi nada en el log y el gate se vuelve indepurable. Se prueban las tres partes del objetivo de E-D (push a main, solo chromium, sin secretos) y además que un fallo se lea en el log. |
 
 ## Evidencia de la verificación (2026-09-26)
 
@@ -86,6 +88,40 @@ que el registro previo lo había atribuido a un locator que no usa.
 borró, comentó ni aflojó, y cada cadena nueva coincide con la que la app renderiza.
 `pnpm exec tsc --noEmit` sale con código 0.
 
+### El gate en CI (tarea 8, misma fecha)
+
+Job `e2e` en `.github/workflows/ci.yml`. Su condición es `if: github.event_name == 'push'`
+y el disparador de push del workflow ya está restringido a `main`, así que es exactamente
+«push a `main`» y nunca un pull request.
+
+**Sin secretos.** El runner genera su propio `.env.local` desde el stack que acaba de
+levantar, con una tubería medida: `grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)='` más tres
+`sed` que renombran a `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` y
+`SUPABASE_SERVICE_ROLE_KEY`. Esos tres nombres son los que leen la app (`lib/supabase.ts`), el
+seed (`scripts/seed-complete-database.ts` lee **solo** `SUPABASE_SERVICE_ROLE_KEY` y aborta si
+falta) y los specs; `NEXT_SERVICE_ROLE_KEY` y `EXPO_SERVICE_ROLE_KEY` se dejan sin definir
+para que no ensombrezcan la clave local en su cadena de respaldo. La tubería se verificó dos
+veces —contra el `.env.local` local (los tres valores coinciden) y contra una entrada
+adversaria con `LINKED_*`, `JWT_SECRET`, `MY_SERVICE_ROLE_KEY` y `SERVICE_ROLE_KEYX`— y sale de
+las dos con exactamente tres líneas. El workflow no referencia `secrets.*` en ningún punto.
+
+**Legibilidad del fallo.** `playwright.config.ts` pasa a
+`reporter: process.env.CI ? [['list'], ['html']] : 'html'`: con solo el reporter `html`, un
+fallo de CI no imprime casi nada en el log.
+
+**Orden y reverificación.** Checkout, pnpm, node 22, `pnpm install --frozen-lockfile`,
+`playwright install --with-deps chromium`, `supabase start`, generación de `.env.local`, y
+recién entonces `pnpm run test:e2e:prepare` (que reseedea y ademas es el único punto que
+define la secuencia de siembra) seguido del gate. Tras el cambio de reporter, la suite
+completa se volvió a correr: **38 passed / 0 failed / 0 flaky, exit 0**, con las 38 líneas `✓`
+del reporter `list` presentes. El YAML parsea con dos parsers independientes (`yaml` 2.9.1 y
+`js-yaml` 4.3.2) y solo usa tags de acción ya presentes en este repositorio.
+
+**Lo que no se puede probar desde aquí.** Que `ubuntu-latest` tenga Docker operativo, que
+`supabase start` entre en el timeout de 30 minutos en un runner frío, y que los tags de las
+acciones resuelvan. Son las únicas afirmaciones del gate que quedan a merced del primer push
+a `main`.
+
 ## Diseño del arreglo
 
 - `e2e/wishlist.spec.ts`: sustituir las seis lecturas de `boundingBox()` por una
@@ -111,7 +147,7 @@ borró, comentó ni aflojó, y cada cadena nueva coincide con la que la app rend
 | 5 | Corregir el cierre de la suite (E-4): sin resumen, sin código de salida y con servidor huérfano | hecho | Causa raíz medida (ver E-4) y `webServer.command` sin `pnpm`; verificado con tres corridas cortas y la suite completa, todas terminando solas |
 | 6 | Verificar la suite completa en chromium sin fallos | hecho | `CI=1`: **38 passed / 0 failed / 0 flaky / 0 did not run, exit 0**, 1,1 min, repetido por un verificador independiente sobre el mismo árbol |
 | 7 | Corregir los fallos de la suite completa (E-5 a E-9) | hecho | Cinco expectativas obsoletas y una fuga de fixture, en los cuatro specs afectados (E-5, E-6, E-7, E-8, E-9); diagnóstico con evidencia de DOM y causalidad medida para E-9 |
-| 8 | Implementar el gate E2E en CI: job en push a `main`, solo chromium | pendiente | Alcance decidido: solo `main`, solo chromium (E-D) |
+| 8 | Implementar el gate E2E en CI: job en push a `main`, solo chromium | hecho | Job `e2e` en `.github/workflows/ci.yml`: chromium, stack local, `.env.local` generado desde `supabase status -o env` (sin secretos) y el gate completo. YAML válido bajo dos parsers, filtro auditado contra entrada adversaria, y el gate re-verificado tras el cambio de reporter: 38/38, exit 0. El alcance de E-D se cumple; ver E-I para lo que el gate **no** bloquea |
 | 9 | Documentación: cerrar V9 en `reservas.md` y el punto de CI en `endurecimiento.md` y `consolidacion.md` | pendiente | |
 
 ## Defectos encontrados
@@ -139,6 +175,8 @@ borró, comentó ni aflojó, y cada cadena nueva coincide con la que la app rend
 | El arreglo de E-4 depende de que el CLI de Expo no se reagrupe en el futuro | Si una versión futura de Expo lanzara el servidor en otro grupo, el defecto volvería. La comprobación barata está en *Mediciones*, y el gate en CI pondría un techo de tiempo que lo haría visible |
 | `node node_modules/expo/bin/cli` asume el layout hoisted de pnpm | Verificado en este repo (`node_modules/expo/bin/cli` existe y `expo --version` da 54.0.27). Con un install no hoisted habría que resolver la ruta por el binario del paquete |
 | La suite deja residuo y depende del reseed previo | E-10 abierto: `test:e2e:prepare` reseedea antes de cada corrida y el gate de CI siempre lo ejecuta. Un gate que lance Playwright sin `prepare` iría acumulando grupos de prueba y volvería intermitente el orden del mosaico |
+| Un gate que no bloquea nada da falsa sensación de protección | E-I: el job avisa, no impide. Si `main` se rompe, Pages publica igual y el E2E solo deja la señal roja. Bloquear el publish exige mover el job a un workflow reutilizable invocado desde `deploy.yml`, o aceptar el costo de correrlo en PRs |
+| El primer push a `main` es la primera prueba real del job | Todo lo verificable sin runner está verificado (YAML, filtro de entorno, orden de pasos, suite local). Quedan a merced del runner: Docker y `supabase start`, la resolución de los tags de acción y el timeout de 30 minutos |
 
 ## Mediciones (trampas ya pagadas)
 
