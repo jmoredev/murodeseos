@@ -27,7 +27,7 @@ gate de CI, sin depender del estado que dejaron ejecuciones anteriores.
 | E-F | La suite completa se verifica con `CI=1`. | `CI=1` activa exactamente la rama que usará el gate: `workers: 1`, `retries: 2`, `reuseExistingServer: false` y `forbidOnly: true`. Permite verificar la ruta de CI sin un runner real. |
 | E-G | El spec que muta el fixture compartido lo restaura; el spec que lo consume no se adapta a la mutación. | `profile.spec.ts` renombraba al usuario E2E (`Usuario E2E <timestamp>`) y no lo devolvía, así que `wishlist-visibility.spec.ts:136` buscaba `E2E Test User` y agotaba el timeout. La causa es la fuga, no la dependencia: el nombre sembrado es parte del contrato de la suite. Restaurar en el origen deja la suite independiente del orden de archivos y, además, segura bajo ejecución paralela local. |
 | E-H | Al corregir una expectativa obsoleta no se debilita la aserción. | La auditoría del diff confirma que ninguna aserción se borró, comentó ni aflojó (sin `force: true` añadido, sin timeouts subidos, sin `test.skip`), y que cada cadena nueva es la que la app renderiza de verdad. |
-| E-I | El gate corre **después** del merge y **solo detecta**: no puede bloquear el merge ni el publish. | E-D lo limita a push a `main`, y `deploy.yml` es un workflow aparte con su propio disparador, así que un fallo del E2E no impide que Pages publique ese commit. Además, en los `pull_request` el job queda `skipped`, y un check omitido no bloquea un merge. Queda como señal roja legible en `main`; para que prevenga hacen falta otras dos decisiones, aún abiertas: gatear `deploy.yml` con un workflow reutilizable, o correr el E2E también en PRs. |
+| E-I | El gate corría después del merge y solo detectaba; **decisión del usuario: debe bloquear las dos cosas**. | El job se extrajo a `.github/workflows/e2e.yml` (`workflow_call`), `ci.yml` lo llama en los pull requests (gate del merge) y `deploy.yml` lo llama antes de publicar, con `deploy.needs: [build, e2e]` (gate del publish). El publish es de fallo cerrado: `deploy` no tiene `if` ni `continue-on-error`, `deploy-pages` aparece una sola vez en el repositorio y una corrida fallida **o cancelada** no es un éxito, así que la versión publicada queda en pie. Aviso importante: «bloquear el merge» depende además de una regla de protección de rama en los ajustes de GitHub, que **no vive en el repositorio**; el check a exigir es `E2E gate / Chromium suite` (llamador / job llamado) y solo se puede confirmar en la primera corrida real. |
 | E-J | El reporter del gate es `list` además de `html` cuando corre en CI. | Con solo el reporter `html`, un fallo de CI no imprime casi nada en el log y el gate se vuelve indepurable. Se prueban las tres partes del objetivo de E-D (push a main, solo chromium, sin secretos) y además que un fallo se lea en el log. |
 
 ## Evidencia de la verificación (2026-09-26)
@@ -90,9 +90,12 @@ borró, comentó ni aflojó, y cada cadena nueva coincide con la que la app rend
 
 ### El gate en CI (tarea 8, misma fecha)
 
-Job `e2e` en `.github/workflows/ci.yml`. Su condición es `if: github.event_name == 'push'`
-y el disparador de push del workflow ya está restringido a `main`, así que es exactamente
-«push a `main`» y nunca un pull request.
+El gate es un workflow reutilizable, `.github/workflows/e2e.yml` (`on: workflow_call` y
+`permissions: contents: read`, para que un llamador con más permisos no pueda ampliarlo). Lo
+invocan dos llamadores: `ci.yml` en los pull requests (gate del merge) y `deploy.yml` en cada
+push a `main` y en su `workflow_dispatch` (gate del publish), donde el job `deploy` lleva
+`needs: [build, e2e]`. La suite corre **una vez por evento**: en un pull request solo dispara
+`ci.yml`, y en un push a `main` el llamador de `ci.yml` queda omitido por su `if`.
 
 **Sin secretos.** El runner genera su propio `.env.local` desde el stack que acaba de
 levantar, con una tubería medida: `grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)='` más tres
@@ -147,7 +150,8 @@ a `main`.
 | 5 | Corregir el cierre de la suite (E-4): sin resumen, sin código de salida y con servidor huérfano | hecho | Causa raíz medida (ver E-4) y `webServer.command` sin `pnpm`; verificado con tres corridas cortas y la suite completa, todas terminando solas |
 | 6 | Verificar la suite completa en chromium sin fallos | hecho | `CI=1`: **38 passed / 0 failed / 0 flaky / 0 did not run, exit 0**, 1,1 min, repetido por un verificador independiente sobre el mismo árbol |
 | 7 | Corregir los fallos de la suite completa (E-5 a E-9) | hecho | Cinco expectativas obsoletas y una fuga de fixture, en los cuatro specs afectados (E-5, E-6, E-7, E-8, E-9); diagnóstico con evidencia de DOM y causalidad medida para E-9 |
-| 8 | Implementar el gate E2E en CI: job en push a `main`, solo chromium | hecho | Job `e2e` en `.github/workflows/ci.yml`: chromium, stack local, `.env.local` generado desde `supabase status -o env` (sin secretos) y el gate completo. YAML válido bajo dos parsers, filtro auditado contra entrada adversaria, y el gate re-verificado tras el cambio de reporter: 38/38, exit 0. El alcance de E-D se cumple; ver E-I para lo que el gate **no** bloquea |
+| 8 | Implementar el gate E2E en CI: job en push a `main`, solo chromium | hecho | Job `e2e` en `.github/workflows/ci.yml`: chromium, stack local, `.env.local` generado desde `supabase status -o env` (sin secretos) y el gate completo. YAML válido bajo dos parsers, filtro auditado contra entrada adversaria, y el gate re-verificado tras el cambio de reporter: 38/38, exit 0. El alcance de E-D se cumple; la disposición en los workflows la cambia la tarea 10, por la decisión E-I |
+| 10 | Gatear el merge y el publish con el mismo workflow reutilizable (decisión E-I) | hecho | `.github/workflows/e2e.yml` nuevo, con los 8 pasos idénticos a los del job anterior (diff vacío tras el round-trip de YAML, comentarios incluidos); `ci.yml` con el llamador bajo `if: pull_request` y `deploy.yml` con el llamador sin condición y `deploy.needs: [build, e2e]`. Un evento, una corrida de la suite. YAML válido bajo dos parsers y el gate local sigue en 38/38, exit 0 |
 | 9 | Documentación: cerrar V9 en `reservas.md` y el punto de CI en `endurecimiento.md` y `consolidacion.md` | pendiente | |
 
 ## Defectos encontrados
@@ -175,7 +179,8 @@ a `main`.
 | El arreglo de E-4 depende de que el CLI de Expo no se reagrupe en el futuro | Si una versión futura de Expo lanzara el servidor en otro grupo, el defecto volvería. La comprobación barata está en *Mediciones*, y el gate en CI pondría un techo de tiempo que lo haría visible |
 | `node node_modules/expo/bin/cli` asume el layout hoisted de pnpm | Verificado en este repo (`node_modules/expo/bin/cli` existe y `expo --version` da 54.0.27). Con un install no hoisted habría que resolver la ruta por el binario del paquete |
 | La suite deja residuo y depende del reseed previo | E-10 abierto: `test:e2e:prepare` reseedea antes de cada corrida y el gate de CI siempre lo ejecuta. Un gate que lance Playwright sin `prepare` iría acumulando grupos de prueba y volvería intermitente el orden del mosaico |
-| Un gate que no bloquea nada da falsa sensación de protección | E-I: el job avisa, no impide. Si `main` se rompe, Pages publica igual y el E2E solo deja la señal roja. Bloquear el publish exige mover el job a un workflow reutilizable invocado desde `deploy.yml`, o aceptar el costo de correrlo en PRs |
+| Un gate que no bloquea nada da falsa sensación de protección | Resuelto por E-I: el publish es de fallo cerrado (`deploy` no corre si el E2E falla o se cancela) y el merge se puede bloquear exigiendo el check `E2E gate / Chromium suite`. Esa exigencia **solo se configura en los ajustes de GitHub**, no en el repositorio, así que hoy el gate avisa en el PR pero nadie impide el merge por él |
+| El E2E en cada PR alarga cada PR | Costo aceptado por el usuario en E-I. `concurrency` de `ci.yml` es `cancel-in-progress: true`, así que un push nuevo cancela la corrida anterior del mismo PR en vez de acumularla. La medición local de la suite es 1,1 min; el costo real lo domina el arranque del stack y la instalación de chromium en un runner frío |
 | El primer push a `main` es la primera prueba real del job | Todo lo verificable sin runner está verificado (YAML, filtro de entorno, orden de pasos, suite local). Quedan a merced del runner: Docker y `supabase start`, la resolución de los tags de acción y el timeout de 30 minutos |
 
 ## Mediciones (trampas ya pagadas)

@@ -1,0 +1,64 @@
+# Reusable end-to-end workflow. It is called by `.github/workflows/ci.yml`
+# (the pull request merge gate) and by `.github/workflows/deploy.yml` (the
+# publish gate) so both gates run the identical suite.
+name: End-to-end
+
+on:
+  workflow_call:
+
+# Read-only so a caller with wider permissions (deploy.yml publishes with
+# `pages: write` and `id-token: write`) cannot widen this job.
+permissions:
+  contents: read
+
+jobs:
+  chromium:
+    name: Chromium suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Browsers are not installed by `pnpm install`; --with-deps supplies the
+      # shared libraries the runner is missing.
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start Supabase local stack
+        run: pnpm exec supabase start
+
+      - name: Generate .env.local from Supabase stack
+        # Supabase CLI 2.117.0 supports `-o env` and prints the three keys we
+        # need as KEY="value" lines. Its notices go to stderr, and the anchored
+        # patterns below keep every other stdout line (LINKED_*, JWT_SECRET, ...)
+        # out of the file. The names are chosen deliberately:
+        # lib/supabase.ts needs EXPO_PUBLIC_SUPABASE_URL / ..._ANON_KEY, and
+        # scripts/seed-complete-database.ts reads only
+        # SUPABASE_SERVICE_ROLE_KEY. Leave NEXT_SERVICE_ROLE_KEY and
+        # EXPO_SERVICE_ROLE_KEY unset so they cannot shadow the real key in
+        # the specs' fallback chain.
+        run: |
+          pnpm exec supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' \
+            | sed -e 's/^API_URL=/EXPO_PUBLIC_SUPABASE_URL=/' \
+                  -e 's/^ANON_KEY=/EXPO_PUBLIC_SUPABASE_ANON_KEY=/' \
+                  -e 's/^SERVICE_ROLE_KEY=/SUPABASE_SERVICE_ROLE_KEY=/' \
+            > .env.local
+
+      - name: Seed and run E2E (chromium only)
+        # GitHub Actions already exports CI=true, which selects the gate
+        # branch of playwright.config.ts (workers 1, retries 2,
+        # reuseExistingServer false, forbidOnly true). Do not set CI again.
+        # The suite must never run without prepare first: the seeded fixture
+        # is expected, and the suite is not self-cleaning (open defect E-10
+        # leaves test groups behind if it runs against a stale database).
+        run: pnpm run test:e2e:prepare && pnpm exec playwright test --project=chromium
