@@ -172,6 +172,14 @@ export function WishDetailModal({
                                 </Text>
                             </View>
                         ) : null}
+
+                        {reservationState === 'unknown' ? (
+                            <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
+                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                    Estado de reserva no disponible
+                                </Text>
+                            </View>
+                        ) : null}
                     </View>
                 ) : (
                     <View className="mb-8" />

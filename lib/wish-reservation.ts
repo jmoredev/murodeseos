@@ -7,7 +7,43 @@ export class WishReservationError extends Error {
     }
 }
 
-export type ReservationState = 'available' | 'reserved_by_me' | 'reserved_by_other';
+export type ReservationState = 'available' | 'reserved_by_me' | 'reserved_by_other' | 'unknown';
+
+/**
+ * Error de cliente desactualizado: el código servido ya no coincide con el
+ * esquema (migación unidireccional de reservas). Conserva el error original en
+ * `cause` para los logs y muestra un mensaje accionable al usuario.
+ */
+export class WishSchemaMismatchError extends Error {
+    constructor(message: string, cause: unknown) {
+        super(message, { cause });
+        this.name = 'WishSchemaMismatchError';
+    }
+}
+
+// 42703: columna inexistente; 42P01: tabla inexistente; 42883: función
+// inexistente. PGRST202/PGRST204: sus equivalentes en PostgREST.
+const SCHEMA_MISMATCH_CODES = new Set(['42703', '42P01', '42883', 'PGRST202', 'PGRST204']);
+
+const SCHEMA_MISMATCH_MESSAGE = 'La aplicación no está actualizada. Recarga la página para continuar.';
+
+/** Clasificador de errores "el cliente es más antiguo que el esquema". */
+export function isWishSchemaMismatchError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const { code, message } = error as { code?: unknown; message?: unknown };
+    if (typeof code === 'string' && SCHEMA_MISMATCH_CODES.has(code)) return true;
+    // Solo si la forma no trae `code`: el código explícito dentro del mensaje.
+    return (
+        typeof message === 'string' &&
+        Array.from(SCHEMA_MISMATCH_CODES).some((c) => message.includes(c))
+    );
+}
+
+function throwIfSchemaMismatch(error: unknown): void {
+    if (isWishSchemaMismatchError(error)) {
+        throw new WishSchemaMismatchError(SCHEMA_MISMATCH_MESSAGE, error);
+    }
+}
 
 /**
  * Reserva un deseo en la tabla dedicada. `item_id` es clave primaria, así que la
@@ -22,6 +58,7 @@ export async function reserveWishlistItem(itemId: string, userId: string): Promi
         });
 
     if (error) {
+        throwIfSchemaMismatch(error);
         // 23505: ya existe una reserva para ese deseo. 42501: RLS, el deseo no es
         // visible para el viewer o es su propio deseo.
         if (error.code === '23505' || error.code === '42501') {
@@ -47,7 +84,10 @@ export async function cancelWishlistReservation(itemId: string, userId: string):
         .select('item_id')
         .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+        throwIfSchemaMismatch(error);
+        throw error;
+    }
     if (!data) {
         throw new WishReservationError('No se pudo cancelar la reserva.');
     }
@@ -71,4 +111,21 @@ export async function getWishlistReservationStates(ownerUserId: string): Promise
         states.set(row.item_id, row.reserved_by_me);
     }
     return states;
+}
+
+/**
+ * Variante sin excepciones de `getWishlistReservationStates`: si la lectura
+ * falla (RPC ausente, timeout, caída puntual), devuelve `degraded: true` con
+ * un mapa vacío en lugar de abortar la pantalla completa. Un estado ausente
+ * con `degraded` debe tratarse como desconocido, nunca como disponible.
+ */
+export async function getWishlistReservationStatesSafe(
+    ownerUserId: string
+): Promise<{ states: Map<string, boolean>; degraded: boolean }> {
+    try {
+        return { states: await getWishlistReservationStates(ownerUserId), degraded: false };
+    } catch (err) {
+        console.error('No se pudo leer el estado de reservas; se muestran como desconocidas:', err);
+        return { states: new Map(), degraded: true };
+    }
 }

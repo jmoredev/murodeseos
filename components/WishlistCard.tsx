@@ -58,7 +58,9 @@ export function WishlistCard({
           ? 'Reservado por ti'
           : isReservedByOther
             ? 'Reservado'
-            : 'Disponible';
+            : reservationState === 'unknown'
+              ? 'Estado de reserva no disponible'
+              : 'Disponible';
 
     const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
 

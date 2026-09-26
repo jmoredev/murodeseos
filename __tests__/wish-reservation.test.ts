@@ -3,7 +3,10 @@ import {
     reserveWishlistItem,
     cancelWishlistReservation,
     getWishlistReservationStates,
+    getWishlistReservationStatesSafe,
+    isWishSchemaMismatchError,
     WishReservationError,
+    WishSchemaMismatchError,
 } from '@/lib/wish-reservation';
 import { supabase } from '@/lib/supabase';
 
@@ -109,5 +112,60 @@ describe('wish-reservation', () => {
         (supabase as any).rpc = rpc;
 
         await expect(getWishlistReservationStates('owner-1')).rejects.toMatchObject({ message: 'nope' });
+    });
+
+    describe('getWishlistReservationStatesSafe', () => {
+        it('returns the states without degradation when the RPC succeeds', async () => {
+            const rpc = vi.fn().mockResolvedValue({
+                data: [{ item_id: 'wish-1', reserved_by_me: true }],
+                error: null,
+            });
+            (supabase as any).rpc = rpc;
+
+            const { states, degraded } = await getWishlistReservationStatesSafe('owner-1');
+
+            expect(degraded).toBe(false);
+            expect(states.get('wish-1')).toBe(true);
+        });
+
+        it('returns degraded with no invented states when the RPC fails', async () => {
+            const rpc = vi.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST202', message: 'function not found' },
+            });
+            (supabase as any).rpc = rpc;
+
+            const { states, degraded } = await getWishlistReservationStatesSafe('owner-1');
+
+            expect(degraded).toBe(true);
+            expect(states.size).toBe(0);
+        });
+    });
+
+    describe('isWishSchemaMismatchError', () => {
+        it('recognizes the schema-mismatch codes', () => {
+            for (const code of ['42703', '42P01', '42883', 'PGRST202', 'PGRST204']) {
+                expect(isWishSchemaMismatchError({ code, message: 'x' })).toBe(true);
+            }
+        });
+
+        it('does not classify generic errors', () => {
+            expect(isWishSchemaMismatchError({ code: '23505', message: 'duplicate key' })).toBe(false);
+            expect(isWishSchemaMismatchError({ message: 'boom' })).toBe(false);
+            expect(isWishSchemaMismatchError(new Error('boom'))).toBe(false);
+        });
+    });
+
+    it('surfaces the actionable reload message on a schema mismatch', async () => {
+        const insert = vi.fn().mockResolvedValue({
+            error: { code: '42703', message: 'column "reserver_id" does not exist' },
+        });
+        vi.mocked(supabase.from).mockReturnValue({ insert } as any);
+
+        await expect(reserveWishlistItem('wish-1', 'user-2')).rejects.toBeInstanceOf(WishSchemaMismatchError);
+        await expect(reserveWishlistItem('wish-1', 'user-2')).rejects.toMatchObject({
+            message: expect.stringContaining('Recarga la página'),
+            cause: { code: '42703' },
+        });
     });
 });
