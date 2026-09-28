@@ -82,6 +82,15 @@ Lo que la verificación **no** cubre: que la carpeta `database/` desaparezca no 
 demuestra ninguna prueba, porque nada la usaba; se sostiene en la búsqueda de
 referencias, que solo la encontró en sí misma y en los documentos de tareas.
 
+## Hallazgos informativos de la revisión
+
+La revisión nativa de la unidad (tier medio, lente de fiabilidad) **aprobó** el candidato sin
+abrir corrección. Devolvió un hallazgo informativo, que no bloquea y se trabaja aparte:
+
+| ID | Lente | Ubicación | Gravedad |
+| --- | --- | --- | --- |
+| R3-001 | fiabilidad | `lib/site-url.ts:37` | aviso |
+
 ## Consecuencia
 
 Al terminar, el repositorio no contendrá ningún camino que revierta el
