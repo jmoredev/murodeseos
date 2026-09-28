@@ -122,8 +122,8 @@ El detalle, la evidencia y el plan de cada uno están en
 | S10 | Copia de credenciales olvidada en `public.tmp_auth_users` y `tmp_auth_identities` | cerrado y verificado |
 | S11 | Protección de contraseñas filtradas desactivada | abierto, depende del plan de Supabase |
 | S12 | Las rutas dinámicas devuelven 404 aunque sirven el shell de la SPA | abierto, preexistente |
-| S13 | SQL antiguo en `database/` que revertiría el endurecimiento y destruiría datos | abierto |
-| S14 | El fallback de la ruta base del sitio en `lib/site-url.ts` es el nombre del repositorio escrito a mano | abierto, sugerencia de la revisión | podría leerse de `app.json` (`experiments.baseUrl`), que ya lo declara; hoy solo entra si la URL no trae primer segmento |
+| S13 | SQL antiguo en `database/` que revertiría el endurecimiento y destruiría datos | **cerrado** el 2026-09-28: la carpeta se retiró entera en `008e646` y `supabase/migrations/` queda como única fuente de verdad |
+| S14 | El fallback de la ruta base del sitio en `lib/site-url.ts` es el nombre del repositorio escrito a mano | **cerrado** en `08d4128`: la ruta se lee de `app.json` (`expo.experiments.baseUrl`), que ya la declaraba, y una prueba la compara con esa declaración en vez de repetirla |
 
 ## Hallazgos informativos de la revisión del lint
 
