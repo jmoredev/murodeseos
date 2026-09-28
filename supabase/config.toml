@@ -168,7 +168,11 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+# Mínimo de la contraseña nueva. Tiene que coincidir con el panel de Supabase en producción
+# (Auth → Passwords), que hoy exige 8: con la comprobación de contraseñas filtradas fuera del
+# plan gratuito, la longitud es la protección que queda. Los tres sitios —el panel, este
+# archivo y `lib/password.ts`— se mueven juntos.
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""

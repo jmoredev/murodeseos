@@ -1,7 +1,7 @@
 # Consolidar el repositorio en una sola línea de trabajo
 
 **Feature:** `consolidacion`
-**Estado:** en curso — consolidación, endurecimiento y el trabajo posterior cerrados y desplegados; **S13** quedó cerrado y **S12 aceptado** el 2026-09-28, así que de esa lista solo sigue abierto **S11** (panel de Supabase)
+**Estado:** en curso — consolidación, endurecimiento y el trabajo posterior cerrados y desplegados; **S13** quedó cerrado, **S12 aceptado** y **S11 cerrado como limitación del plan** el 2026-09-28, así que de esa lista no queda nada abierto
 **Inicio:** 2026-09-24
 **Rama:** `feat/pwa-adaptation`
 
@@ -120,7 +120,7 @@ El detalle, la evidencia y el plan de cada uno están en
 | S8 | **El registro fija `emailRedirectTo` a `http://localhost:8081/login`**, así que con la confirmación por correo activa ningún usuario nuevo puede confirmar su cuenta | **cerrado** el 2026-09-28: `lib/site-url.ts` compone el enlace desde `EXPO_PUBLIC_SITE_URL` o desde el sitio actual |
 | S9 | `EXPO_PUBLIC_SITE_URL` se documenta en `env.example` pero no se usa en ningún sitio | **cerrado**: la usa `lib/site-url.ts` para los enlaces de correo, y `deploy.yml` la pasa al build desde la variable del repositorio |
 | S10 | Copia de credenciales olvidada en `public.tmp_auth_users` y `tmp_auth_identities` | cerrado y verificado |
-| S11 | Protección de contraseñas filtradas desactivada | abierto, depende del plan de Supabase |
+| S11 | Protección de contraseñas filtradas desactivada | **cerrado** el 2026-09-28 como limitación del plan: la opción no existe en el plan gratuito, y la compensa un mínimo de 8 caracteres declarado una vez en `lib/password.ts` y alineado en `supabase/config.toml` |
 | S12 | Las rutas dinámicas devuelven 404 aunque sirven el shell de la SPA | **aceptado** el 2026-09-28: el `404.html` lo genera el export estático y su estado no se puede corregir desde la página. La decisión, su alcance real y las condiciones que la revisarían están en [`endurecimiento.md`](./endurecimiento.md) |
 | S13 | SQL antiguo en `database/` que revertiría el endurecimiento y destruiría datos | **cerrado** el 2026-09-28: la carpeta se retiró entera en `008e646` y `supabase/migrations/` queda como única fuente de verdad |
 | S14 | El fallback de la ruta base del sitio en `lib/site-url.ts` es el nombre del repositorio escrito a mano | **cerrado** en `08d4128`: la ruta se lee de `app.json` (`expo.experiments.baseUrl`), que ya la declaraba, y una prueba la compara con esa declaración en vez de repetirla |

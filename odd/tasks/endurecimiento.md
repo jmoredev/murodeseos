@@ -1,7 +1,7 @@
 # Endurecimiento de la base de datos y de la privacidad
 
 **Feature:** `endurecimiento`
-**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. S8 quedó resuelto y verificado, y **S13** se cerró el 2026-09-28 retirando la carpeta `database/` (unidad [`higiene`](./higiene.md)). Queda **S11** (panel de Supabase, depende del plan) como trabajo aparte, y **S12** quedó **aceptado y documentado** el 2026-09-28 (ver su sección). S14 vive en [`consolidacion.md`](./consolidacion.md).
+**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. S8 quedó resuelto y verificado, y **S13** se cerró el 2026-09-28 retirando la carpeta `database/` (unidad [`higiene`](./higiene.md)). Queda **S11** cerrado como limitación del plan, compensada con un mínimo de 8 caracteres alineado en el cliente y en el stack local, y **S12** quedó **aceptado y documentado** el 2026-09-28 (ver su sección). Con eso no queda ningún hallazgo abierto. S14 vive en [`consolidacion.md`](./consolidacion.md).
 **Inicio:** 2026-09-24
 **Depende de:** `consolidacion` (proyecto Supabase vinculado)
 
@@ -91,7 +91,19 @@ una política añadida por error, o un `DISABLE ROW LEVEL SECURITY`, para expone
 las credenciales de 10 personas. Es una copia de `auth.users` que no debería
 existir.
 
-### S11 — Protección de contraseñas filtradas desactivada
+### S11 — Protección de contraseñas filtradas desactivada (CERRADO, LIMITACIÓN DEL PLAN)
+
+> **Cerrado el 2026-09-28 como limitación del plan.** La comprobación contra HaveIBeenPwned es
+> una opción del panel que **el plan gratuito no ofrece**, así que no se puede activar. Lo que
+> sí está en vigor es la compensación: el mínimo de la contraseña subió a **8 caracteres**, y
+> eso es lo que había que alinear en el repositorio. `lib/password.ts` declara el mínimo una
+> sola vez para las dos pantallas que lo comprobaban, `supabase/config.toml` fija el mismo
+> valor para el stack local —donde el servidor lo exige de verdad: responde `weak_password` a
+> siete caracteres— y el panel de Supabase es la fuente de verdad en producción.
+>
+> **Si el plan cambia**, lo que hay que activar es Auth → Passwords → *Prevent use of leaked
+> passwords*, y entonces el mínimo podrá volver a un valor menor; los tres sitios se mueven
+> juntos y están anotados como tales.
 
 El advisor `auth_leaked_password_protection` está en nivel WARN y es el único
 hallazgo que queda. Supabase puede comprobar las contraseñas contra

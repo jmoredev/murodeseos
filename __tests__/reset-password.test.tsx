@@ -68,7 +68,7 @@ describe('ResetPasswordPage', () => {
         fireEvent.change(screen.getByTestId('confirm-password-input'), { target: { value: 'abc' } });
         fireEvent.click(screen.getByTestId('save-password-button'));
 
-        expect(await screen.findByTestId('reset-error')).toHaveTextContent('al menos 6 caracteres');
+        expect(await screen.findByTestId('reset-error')).toHaveTextContent('al menos 8 caracteres');
         expect(supabase.auth.updateUser).not.toHaveBeenCalled();
     });
 
