@@ -46,6 +46,12 @@ test.describe('Unirse a Grupo', () => {
             // y cada corrida dejaba los grupos de prueba en la base.
             const { error } = await supabaseAdmin.from('groups').delete().eq('id', groupId);
             if (error) {
+                // Igual que en `create-group.spec.ts`: la limpieza no falla la prueba, pero
+                // queda anotada en el informe.
+                test.info().annotations.push({
+                    type: 'limpieza-fallida',
+                    description: `No se pudo borrar el grupo ${groupId}: ${error.message}`,
+                });
                 console.error(`🔴 Error al borrar grupo ${groupId}: ${error.message}`);
             } else {
                 console.log(`✅ [Limpieza] Grupo ${groupId} borrado vía Supabase`);
