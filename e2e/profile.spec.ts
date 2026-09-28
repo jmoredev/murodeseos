@@ -130,14 +130,20 @@ test.describe('Funcionalidad de Perfil', () => {
     test('debe mostrar error de validación para nombre corto', async ({ page }) => {
         const nameInput = page.getByPlaceholder('Tu nombre');
         await expect(nameInput).toBeVisible();
+
+        const saveButton = page.getByRole('button', { name: /Guardar cambios del perfil/i });
+
+        // Primero se comprueba que el botón responde con un nombre válido: sin esto, la
+        // aserción de abajo pasaría también si el botón estuviera deshabilitado por otro
+        // motivo, como un nombre que llegara vacío desde el servidor.
+        await expect(saveButton).toBeEnabled();
+
         await nameInput.clear();
         await nameInput.fill('X');
 
         // El feedback de esta UI es deshabilitar el CTA, sin mensaje literal. Se apunta al
         // botón por rol y nombre accesible: el texto visible vive dentro del botón, así que
         // no es el elemento que puede quedar deshabilitado.
-        await expect(
-            page.getByRole('button', { name: /Guardar cambios del perfil/i }),
-        ).toBeDisabled();
+        await expect(saveButton).toBeDisabled();
     });
 });
