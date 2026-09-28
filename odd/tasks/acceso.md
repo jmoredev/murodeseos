@@ -53,11 +53,19 @@ lo solicite**, y sin pantalla de destino el enlace no puede completarse aunque l
 
 | # | Tarea | Estado |
 | --- | --- | --- |
-| 1 | Añadir «Cerrar sesión» en `ProfileTab`, disponible en todos los anchos | pendiente |
-| 2 | Enlace de recuperación en el login, con mensaje neutro y `redirectTo` del sitio | pendiente |
-| 3 | Pantalla `app/(auth)/reset-password/` que atienda el enlace y fije la contraseña | pendiente |
-| 4 | Revisar en el panel de Supabase la Site URL y la lista de redirecciones | pendiente — requiere acceso al panel |
-| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | pendiente |
+| 1 | Añadir «Cerrar sesión» en `ProfileTab`, disponible en todos los anchos | **hecho** | botón `sign-out-button` al final del perfil, con `supabase.auth.signOut()`; el E2E de perfil comprueba que se renderiza |
+| 2 | Enlace de recuperación en el login, con mensaje neutro y `redirectTo` del sitio | **hecho** | `forgot-password-link` despliega el panel; al enviar llama a `resetPasswordForEmail` con `${getSiteBaseUrl()}/reset-password` y muestra un mensaje que no revela si la cuenta existe |
+| 3 | Pantalla `app/(auth)/reset-password/` que atienda el enlace y fije la contraseña | **hecho** | espera la sesión del enlace, pide la contraseña nueva, llama a `updateUser` y entra; si el enlace no vale, lo dice y explica que hay que abrirlo en el mismo dispositivo |
+| 4 | Revisar en el panel de Supabase la Site URL y la lista de redirecciones | **pendiente** — requiere acceso al panel | la Site URL de producción debe ser `https://jmoredev.github.io/murodeseos` y la lista debe incluir esa URL y `http://localhost:8081/**` |
+| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | **hecho** | 7 unitarias nuevas (login y pantalla de reset) y `e2e/reset-password.spec.ts`, que **lee el correo real** de Mailpit y verifica que el enlace trae `redirect_to=…/reset-password` |
+
+## Decisiones y hallazgos de la implementación
+
+- **El enlace hay que abrirlo en el mismo navegador.** El cliente es `createBrowserClient` de `@supabase/ssr`, así que el flujo es **PKCE**: el correo trae `?code=…` (confirmado en local: el token empieza por `pkce_`) y el verificador vive en el navegador que pidió el enlace. Por eso la pantalla avisa de ello y, si el canje falla, dice que se pida uno nuevo desde ese dispositivo en vez de dejar al usuario con un error opaco.
+- **`supabase/config.toml` también arrastraba el puerto 3000 de Next.js**: `site_url` era `http://127.0.0.1:3000` y la lista de redirecciones `https://127.0.0.1:3000` (https y puerto equivocados). Corregido a `http://127.0.0.1:8081` y a `localhost`/`127.0.0.1` en 8081: es la misma clase de defecto que S8 y es lo que hace que el enlace local caiga en la aplicación.
+- **El capturador de correo local es Mailpit**, aunque el contenedor se llame `inbucket`. Su API es `GET /api/v1/messages` y `GET /api/v1/message/{ID}`; el spec lee de ahí el cuerpo del correo.
+- **El mensaje del login es neutro a propósito**: solo se distingue el límite de envíos (429 / `over_email_send_rate_limit`), que no revela nada sobre la existencia de la cuenta.
+- La pantalla de reset cierra un defecto que encontró su propia prueba: con la sesión ya presente seguía mostrando «Comprobando el enlace…» hasta que expiraba el temporizador de 3 s.
 
 ## Fuera de alcance
 
