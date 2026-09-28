@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { parseTabParam, type Tab } from '@/lib/tabs';
 import { GroupsTab } from '@/components/GroupsTab';
 import { WishListTab } from '@/components/WishListTab';
 import { ProfileTab } from '@/components/ProfileTab';
@@ -10,14 +11,14 @@ import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import WhatsNewModal from '@/components/WhatsNewModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
-type Tab = 'groups' | 'wishlist' | 'profile';
-
 export default function LandingPage() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-    const paramTab = (params.tab as Tab) ?? null;
+    // El parámetro solo cuenta si es una de las pestañas reales: con `?tab=` vacío o con un
+    // valor desconocido, la pestaña activa se quedaba sin coincidencia y el lienzo en blanco.
+    const paramTab = parseTabParam(params.tab);
     // El estado guarda la pestaña elegida *y* el parámetro con el que se eligió: si el
     // parámetro cambia, manda el parámetro; si no, manda la elección del usuario. Así
     // no hace falta un efecto que sincronice estado.
