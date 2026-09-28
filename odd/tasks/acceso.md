@@ -67,6 +67,32 @@ lo solicite**, y sin pantalla de destino el enlace no puede completarse aunque l
 - **El mensaje del login es neutro a propósito**: solo se distingue el límite de envíos (429 / `over_email_send_rate_limit`), que no revela nada sobre la existencia de la cuenta.
 - La pantalla de reset cierra un defecto que encontró su propia prueba: con la sesión ya presente seguía mostrando «Comprobando el enlace…» hasta que expiraba el temporizador de 3 s.
 
+## Hallazgos de la revisión nativa (informativos)
+
+Linaje `review-cc3d5630511adef5`: **aprobada** con catorce hallazgos **no bloqueantes**. Ninguno
+abre corrección y ninguno es motivo para repetir la revisión: se listan aquí como trabajo
+posterior, con lo que cada uno señala.
+
+### Merecen arreglo en el código
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R4-1 | `app/(auth)/login/index.tsx:47-52` | La petición del enlace no está envuelta en `try/catch`: si `resetPasswordForEmail` **lanza** en vez de devolver error, `sendingRecovery` se queda en `true` y el botón no vuelve |
+| R4-2 | `app/(auth)/reset-password/index.tsx:64-69` | Lo mismo con `updateUser`: un fallo lanzado deja `saving` activo y el formulario bloqueado |
+| R3-recovery-rate-limit-untested | `app/(auth)/login/index.tsx:47-50` | La rama del límite de envíos (429) no tiene prueba |
+| R3-reset-update-error-untested | `app/(auth)/reset-password/index.tsx:71-74` | La rama de error al guardar la contraseña no tiene prueba |
+| R3-e2e-link-not-followed | `e2e/reset-password.spec.ts:34-45` | El E2E comprueba que el enlace **sale bien** en el correo, pero no lo sigue: abrirlo y cambiar la contraseña queda sin cubrir |
+
+### Dependen del panel o son deuda ya registrada
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R1-panel-allowlist, R3-redirect-allowlist, R2-006 | `app/(auth)/login/index.tsx:39-41`, `supabase/config.toml:152` | La lista de redirecciones del repositorio cubre el desarrollo local; la de producción vive en el panel (tarea 4) |
+| R1-fallback-repo-hardcode, R2-005 | `lib/site-url.ts:26-27` | El nombre del repositorio escrito a mano: ya registrado como **S14** |
+| R2-004 | `lib/site-url.ts:3` | Redacción del comentario de cabecera |
+| R2-003 | `env.example:14` | El valor de ejemplo podría confundirse con el de producción |
+| R2-001, R2-002 | `odd/tasks/consolidacion.md:4`, `odd/tasks/endurecimiento.md:4` | El `Estado` de ambas fichas ya no describe del todo su contenido |
+
 ## Fuera de alcance
 
 - Cambiar de proveedor de correo o de plantillas de Supabase.
