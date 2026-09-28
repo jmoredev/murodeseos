@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Cliente con la clave de servicio para preparar y limpiar datos de prueba.
@@ -33,6 +33,25 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
     );
 }
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+/**
+ * Vista de datos y administración: `auth.admin` sí, el inicio de sesión no.
+ *
+ * La instancia es **compartida** por todos los specs del mismo worker, así que una sesión
+ * iniciada aquí haría que las peticiones de los siguientes specs viajaran como ese usuario
+ * (sujetas a RLS) en vez de con la clave de servicio. Ya ocurrió una vez. El tipo lo impide:
+ * `signInWithPassword` y compañía no existen en esta vista, mientras que crear, listar y
+ * borrar usuarios —que es lo que los specs necesitan— sí.
+ */
+type DataAndAdminClient = Omit<SupabaseClient, 'auth'> & {
+    auth: { admin: SupabaseClient['auth']['admin'] };
+};
+
+export const supabaseAdmin: DataAndAdminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
 });
+
+// La guardia, comprobada: si alguien ensanchara el tipo, esta línea dejaría de fallar y
+// `@ts-expect-error` se convertiría en un error de compilación. Una prueba que no se ve
+// fallar no prueba nada.
+// @ts-expect-error La vista compartida no ofrece inicio de sesión.
+void supabaseAdmin.auth.signInWithPassword;

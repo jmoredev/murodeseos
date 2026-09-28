@@ -101,6 +101,8 @@ corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabaja
 | R3-2 | fiabilidad | `__tests__/GroupsTab.test.tsx:56` | aviso |
 | R3-3 | fiabilidad | `components/GroupsTab.tsx:145` | sugerencia |
 
+_Repasados el 2026-09-28: el veredicto de cada uno y por qué no se toca está en [`informativos.md`](./informativos.md)._
+
 ## Consecuencia
 
 Al terminar, el refactor del lint no deja deuda suya: sus tres defectos pequeños

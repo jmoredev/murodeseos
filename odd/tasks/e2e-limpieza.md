@@ -91,6 +91,8 @@ corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabaja
 | R3-001 (2.ª revisión) | fiabilidad | `e2e/profile.spec.ts:139` | aviso | Sobre el tramo de la tarea 5. No bloquea. |
 | R3-003 | fiabilidad | `odd/tasks/e2e-limpieza.md:48-51` | sugerencia | Sobre la redacción de las decisiones de este documento. |
 
+_Repasados el 2026-09-28: el veredicto y por qué no se toca está en [`informativos.md`](./informativos.md)._
+
 ## Consecuencia
 
 Al terminar, la suite no deja residuo propio y la prueba del perfil comprueba lo

@@ -28,6 +28,12 @@ test.describe('Flujo de Creación de Grupo', () => {
             const { error } = await supabaseAdmin.from('groups').delete().eq('id', idToDelete);
 
             if (error) {
+                // La limpieza no falla la prueba —un fallo de red no debe volver frágil la
+                // suite—, pero queda constancia en el informe además del registro.
+                test.info().annotations.push({
+                    type: 'limpieza-fallida',
+                    description: `No se pudo borrar el grupo ${idToDelete}: ${error.message}`,
+                });
                 console.error(`🔴 Error al borrar grupo ${idToDelete}: ${error.message}`);
             } else {
                 console.log(`✅ [Limpieza] Grupo ${idToDelete} borrado vía Supabase`);

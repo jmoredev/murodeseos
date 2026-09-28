@@ -132,6 +132,8 @@ sola vez, por **R4-001** (crítico y propio de este cambio), y aprobó la correc
 El resto de los hallazgos que devolvió son **informativos**: no bloquean, no reabren
 la revisión y se trabajan aparte. La columna «nota» es mi lectura del código, no el
 texto del revisor; la revisión entrega identificador, lente, ubicación y gravedad.
+**Repasados el 2026-09-28:** el veredicto de cada uno y por qué no se toca está en
+[`informativos.md`](./informativos.md).
 
 | ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
 | --- | --- | --- | --- | --- |
