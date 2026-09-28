@@ -3,6 +3,12 @@
 -- dedicada, cierra la lectura de una lista de deseos a quien comparte un grupo
 -- (menos los grupos excluidos) y evita que el cliente del dueño reciba autoría.
 -- Todos los cambios son idempotentes y aditivos para poder reejecutarse.
+--
+-- FASE 1 DE 2: NO borra `wishlist_items.reserved_by` (ni su índice ni su FK).
+-- La tabla nueva es la fuente de verdad; la columna queda como espejo del
+-- cliente ya cargado, sincronizada por los disparadores del bloque 10. La fase
+-- 2, posterior, borra columna, índice y FK, y eso completa el arreglo de
+-- privacidad: durante la ventana la identidad de quien reserva sigue legible.
 
 -- 1. Tabla de reservas: `item_id` como PK garantiza una sola reserva por deseo.
 create table if not exists public.wishlist_reservations (
@@ -25,17 +31,16 @@ revoke all on public.wishlist_reservations from anon, authenticated;
 revoke all on public.wishlist_reservations from public;
 grant select, insert, delete on table public.wishlist_reservations to authenticated;
 
--- 3. Retirada de la política de reserva por terceros, adelantada aquí a
--- propósito. La reserva ya no vive en `wishlist_items`: un tercero nunca debe
--- poder actualizar un deseo ajeno. Esta política referencia `reserved_by` y
--- PostgreSQL registra esa dependencia de columna, así que hay que retirarla
--- antes de borrar la columna o el `drop column` fallaría.
+-- 3. Retirada de la política de reserva por terceros: un tercero nunca debe
+-- poder actualizar un deseo ajeno. En fase 1 se sustituye por una versión más
+-- estrecha, que además exige compartir grupo con el dueño (bloque 10).
 drop policy if exists "Reserva o cancelación en listas ajenas" on public.wishlist_items;
 
--- 4. Copia de las reservas existentes y borrado de la columna vieja.
--- Guardado por la existencia de la columna: una segunda ejecución no puede fallar
--- una vez que `reserved_by` ya no existe. El conteo antes de borrar la columna es
--- la garantía de que no se pierde ninguna reserva.
+-- 4. Copia de las reservas existentes. FASE 1: se conserva `reserved_by`
+-- (columna, índice y FK `wishlist_items_reserved_by_fkey` incluidos) como
+-- espejo de compatibilidad, así que la copia solo rellena la tabla nueva con
+-- lo que la columna aún tiene. Idempotente: una segunda ejecución no copia
+-- nada, porque el `ON CONFLICT DO NOTHING` ya encontró esas filas.
 do $$
 begin
   if exists (
@@ -52,18 +57,13 @@ begin
     where reserved_by is not null
     on conflict (item_id) do nothing;
 
-    -- Aborta si el número de reservas copiadas no coincide con el origen:
-    -- así el `drop column` nunca puede perder datos.
+    -- Aborta si quedara alguna reserva en la columna sin fila en la tabla: la
+    -- copia nunca puede perder datos, y en fase 1 el bloque 10 mantiene iguales
+    -- las dos vías, así que una segunda ejecución sigue pasando.
     if (select count(*) from public.wishlist_items where reserved_by is not null)
-       <> (select count(*) from public.wishlist_reservations) then
+       > (select count(*) from public.wishlist_reservations) then
       raise exception 'La copia de reservas no coincide con reserved_by is not null';
     end if;
-
-    -- El índice se elimina solo con la columna, pero se hace explícito por claridad.
-    drop index if exists public.idx_wishlist_items_reserved_by;
-
-    -- La FK wishlist_items_reserved_by_fkey desaparece con la columna.
-    alter table public.wishlist_items drop column reserved_by;
   end if;
 end $$;
 
@@ -105,10 +105,29 @@ begin
     raise exception 'No se permite cambiar el propietario del item.';
   end if;
 
-  -- 2. Un tercero autenticado no puede editar nada; el dueño sí.
+  -- 2. El espejo de compatibilidad (bloque 10) escribe `reserved_by` en nombre
+  -- del cliente antiguo: no es una edición de usuario y no pasa este control.
+  if current_setting('muro.internal_mirror', true) = 'on' then
+    return new;
+  end if;
+
+  -- 3. Un tercero autenticado no puede editar nada; el dueño sí.
   -- auth.uid() nulo (service_role, seed) no debe bloquearse.
   if (select auth.uid()) is not null and old.user_id <> (select auth.uid()) then
-    raise exception 'No tienes permiso para editar los detalles de este regalo. Solo puedes reservarlo.';
+    -- FASE 1: el cliente antiguo reserva y cancela con un UPDATE que solo toca
+    -- `reserved_by`. Se permite eso y nada más: ninguna otra columna cambia y
+    -- el valor solo puede ser el propio, o libre si la reserva era suya.
+    if (to_jsonb(new) - 'reserved_by') is distinct from (to_jsonb(old) - 'reserved_by') then
+      raise exception 'No tienes permiso para editar los detalles de este regalo. Solo puedes reservarlo.';
+    end if;
+
+    if new.reserved_by is null then
+      if old.reserved_by is distinct from (select auth.uid()) then
+        raise exception 'Solo puedes cancelar tu propia reserva.';
+      end if;
+    elsif new.reserved_by <> (select auth.uid()) then
+      raise exception 'No puedes reservar en nombre de otra persona.';
+    end if;
   end if;
 
   return new;
@@ -246,3 +265,109 @@ create trigger tr_notify_wish_deleted
 
 -- El trigger se ejecuta por OID; los roles de API no deben invocarla como RPC.
 revoke all on function private.notify_wish_deleted() from public, anon, authenticated;
+
+-- 10. Puente de compatibilidad (fase 1). El cliente ya cargado sigue leyendo
+-- y escribiendo `reserved_by`; estos disparadores mantienen columna y tabla de
+-- acuerdo en las dos direcciones, sin recursión y sin robar la primera reserva.
+create or replace function private.mirror_reservation_to_item()
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path = public
+as $$
+begin
+  perform set_config('muro.internal_mirror', 'on', true);
+
+  if tg_op = 'INSERT' then
+    update public.wishlist_items
+       set reserved_by = new.reserver_id
+     where id = new.item_id
+       and reserved_by is distinct from new.reserver_id;
+  else
+    update public.wishlist_items
+       set reserved_by = null
+     where id = old.item_id
+       and reserved_by is not null;
+  end if;
+
+  perform set_config('muro.internal_mirror', 'off', true);
+  return null;
+end;
+$$;
+
+drop trigger if exists tr_mirror_reservation_to_item on public.wishlist_reservations;
+
+create trigger tr_mirror_reservation_to_item
+  after insert or delete on public.wishlist_reservations
+  for each row
+  execute function private.mirror_reservation_to_item();
+
+create or replace function private.mirror_item_to_reservation()
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path = public
+as $$
+begin
+  -- La tabla es la fuente de verdad: lo que la columna reciba se traduce a la
+  -- tabla, y si ya había reserva la columna se realinea con la verdad.
+  if new.reserved_by is null then
+    delete from public.wishlist_reservations where item_id = new.id;
+  else
+    insert into public.wishlist_reservations (item_id, reserver_id, reserved_at)
+    values (new.id, new.reserved_by, now())
+    on conflict (item_id) do nothing;
+
+    perform set_config('muro.internal_mirror', 'on', true);
+
+    update public.wishlist_items as i
+       set reserved_by = r.reserver_id
+      from public.wishlist_reservations as r
+     where i.id = new.id
+       and r.item_id = new.id
+       and i.reserved_by is distinct from r.reserver_id;
+
+    perform set_config('muro.internal_mirror', 'off', true);
+  end if;
+
+  return null;
+end;
+$$;
+
+drop trigger if exists tr_mirror_item_to_reservation on public.wishlist_items;
+
+create trigger tr_mirror_item_to_reservation
+  after update of reserved_by on public.wishlist_items
+  for each row
+  when (new.reserved_by is distinct from old.reserved_by)
+  execute function private.mirror_item_to_reservation();
+
+-- Reserva por la vía antigua: solo para quien ve el deseo por un grupo
+-- compartido y no excluido, y solo para tomar una reserva libre o liberar la
+-- propia. Es la política anterior sin el agujero del tercero.
+drop policy if exists "Reserva o cancelación en listas ajenas" on public.wishlist_items;
+
+create policy "Reserva o cancelación en listas ajenas"
+  on public.wishlist_items
+  for update
+  to authenticated
+  using (
+    user_id is distinct from (select auth.uid())
+    and (reserved_by is null or reserved_by = (select auth.uid()))
+    and exists (
+      select 1
+      from public.group_members as mine
+      join public.group_members as theirs on mine.group_id = theirs.group_id
+      where mine.user_id = (select auth.uid())
+        and theirs.user_id = wishlist_items.user_id
+        and not (theirs.group_id = any (coalesce(wishlist_items.excluded_group_ids, '{}'::text[])))
+    )
+  )
+  with check (
+    user_id is distinct from (select auth.uid())
+    and (reserved_by is null or reserved_by = (select auth.uid()))
+  );
+
+-- Los disparadores se ejecutan por OID; los roles de API no deben invocarlos.
+revoke all on function private.mirror_reservation_to_item() from public, anon, authenticated;
+revoke all on function private.mirror_item_to_reservation() from public, anon, authenticated;

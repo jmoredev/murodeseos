@@ -97,6 +97,7 @@ emitiría nunca.
 | V7 | `NotificationMenu` reutilizaba el tema del canal realtime y lanzaba `cannot add postgres_changes callbacks ... after subscribe()`; el overlay de errores de Expo tapaba la pantalla y se comía todos los clics | corregido | `dfd6fa3`: el sufijo del tema sale de un contador de módulo; cero apariciones del error en 7 ejecuciones de test y 3 contextos. El primer intento con `useRef` no servía: un ref se reinicia en cada instancia, así que al navegar entre dos páginas que montan el menú volvía a colisionar |
 | V8 | `testID="wishlist-card-<id>"` estaba en el `Pressable` interno, pero los botones de acción son hermanos suyos dentro del mosaico, así que `card.getByTestId('wish-reserve-button')` no podía resolverse nunca | corregido | El hook pasa al `View` exterior del mosaico, que es lo que los dos specs de vista de amigo entienden por tarjeta |
 | V9 | Dos fallos del E2E siguen siendo ajenos a las reservas: `already-have-it.spec.ts:64` usa `getByText('Juan Perez').first()`, que resuelve a un nodo no visible, y `wishlist.spec.ts:109` compara dos posiciones de ordenación que resuelven iguales | cerrado | Corregidos en la feature [`e2e-ci`](./e2e-ci.md) (tareas 2 y 3), que además reparó cinco defectos más de la suite (E-5 a E-9). La suite completa en chromium pasa 38/38 con `CI=1` y el gate corre en CI como workflow reutilizable (`.github/workflows/e2e.yml`), invocado en cada pull request y antes de publicar en Pages. Lo único que queda fuera del repositorio es exigir el check en la protección de rama |
+| V10 | El dueño puede reservar su propio deseo por la vía antigua (`reserved_by`): su política de edición es anterior a esta fase y `check_wishlist_update_permissions` no controla al dueño, así que el espejo crea la reserva. La vía nueva sí lo bloquea | abierto, heredado (no lo introduce la fase 1) | Hallado por la verificación independiente con la matriz de acceso: como dueño, `update wishlist_items set reserved_by = auth.uid()` pasa. No es fuga de privacidad (el dueño solo ve su propio id) ni explotable por terceros (la política exige ser el dueño), y el cliente antiguo no ofrece esa acción. Cerrarlo exige además controlar al dueño en el trigger de permisos |
 
 ## Verificación de la migración (hecha, en local)
 
@@ -195,10 +196,11 @@ corrección 200 (en líneas de diff). Candidato congelado: rango comiteado
   reserva antes de renderizar, y ese helper lanzaba en cualquier error del RPC, así que un
   fallo transitorio dejaba la lista del amigo **sin ningún deseo**.
 
-**Decisión del usuario**: corte inmediato con recuperación en el cliente. Se descartó el
-puente de compatibilidad porque, para que un cliente viejo renderice el estado de reserva,
-necesita *leer* la columna, y PostgreSQL no oculta columnas por fila: el dueño seguiría
-viendo la autoría, es decir, el hallazgo S1 seguiría abierto durante la ventana.
+**Decisión del usuario (revisada después, ver la subsección siguiente)**: corte inmediato con
+recuperación en el cliente. Se descartó el puente de compatibilidad porque, para que un
+cliente viejo renderice el estado de reserva, necesita *leer* la columna, y PostgreSQL no
+oculta columnas por fila: el dueño seguiría viendo la autoría, es decir, el hallazgo S1
+seguiría abierto durante la ventana. Esa lectura de la disyuntiva sigue siendo correcta.
 
 **Corrección aplicada** (`ee0d824`, 151 líneas de diff, límite 200): clasificador de los
 errores «cliente más viejo que el esquema» (`42703`, `42P01`, `42883`, `PGRST202`,
@@ -222,3 +224,18 @@ cerró la transición.
 **Consecuencia**: la revisión **no cerró** y no hay autoridad aprobada, así que la entrega
 queda bajo política ordinaria, que decide el mantenedor. Lo único bloqueante de verdad sigue
 siendo la tarea 8: la migración no está aplicada en producción.
+
+### Segunda revisión: la ventana de compatibilidad (fase 1 de 2)
+
+Linaje `review-d60bead2af9c2fc5` (tier `high`, 30 rutas, 1739 líneas): el veredicto fue
+`correction_required` con **R3-001** (fiabilidad, determinista) y **R4-001** (resiliencia,
+inferencial), ambos CRITICAL y ambos sobre el mismo punto: borrar `reserved_by` rompe a un
+cliente ya cargado, y `isWishSchemaMismatchError` vive **solo en el bundle nuevo**, así que no
+puede darle al cliente viejo la recuperación que la documentación prometía; un rollback solo
+del frontend tampoco restaura la columna.
+
+Los dos son correctos e **invalidan la corrección anterior**: no se puede proteger a un cliente
+obsoleto enviando código nuevo. Decisión del usuario: **ventana de compatibilidad** en dos
+fases: se conserva `reserved_by` con un puente de disparadores que la sincroniza, y la fase 2
+posterior borra la columna, que es lo que completa la privacidad. El diseño y la consecuencia
+aceptada están en la cabecera de la migración y en `docs/DEVELOPMENT.md`.
