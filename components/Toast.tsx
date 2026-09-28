@@ -19,7 +19,7 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         // La entrada va en el siguiente cuadro: el render inicial pinta el estado
         // oculto y el cambio dispara la transición. Hacerlo de forma síncrona en el
         // efecto encadena renders que no hacen falta.
-        const enterFrame = window.requestAnimationFrame(() => setIsVisible(true));
+        const enterFrame = requestAnimationFrame(() => setIsVisible(true));
 
         const timer = setTimeout(() => {
             setIsVisible(false);
@@ -27,7 +27,7 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         }, duration);
 
         return () => {
-            window.cancelAnimationFrame(enterFrame);
+            cancelAnimationFrame(enterFrame);
             clearTimeout(timer);
         };
     }, [duration, onClose]);
