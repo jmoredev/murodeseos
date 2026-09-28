@@ -64,6 +64,25 @@ dejar registro en git de **qué** se publicó y **cuándo**.
 
 Pendiente.
 
+## Hallazgos informativos de la revisión
+
+La revisión nativa (tier alto, cuatro lentes) **aprobó** el candidato sin abrir corrección y
+devolvió **seis** hallazgos informativos. Leídos juntos son **tres temas**, dos de ellos vistos
+por más de una lente, que es lo que pasa cuando el mismo hueco se mira desde el riesgo y desde
+la fiabilidad:
+
+| ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
+| --- | --- | --- | --- | --- |
+| R3-ROLLBACK-DOC | fiabilidad | `docs/DEVELOPMENT.md:46` | aviso | Dice que se puede republicar o revertir a mano, pero **no dice cómo**. Es el arreglo más útil de los seis: sin procedimiento escrito, una vuelta atrás se improvisa |
+| R4-ROLLBACK-GAP | resiliencia | `docs/DEVELOPMENT.md:46` | aviso | El mismo hueco visto desde la resiliencia |
+| R3-VERIFY-PENDING | fiabilidad | `odd/tasks/publicacion.md` | aviso | El disparo por etiqueta no se puede demostrar sin publicar, y está declarado como restricción; conviene además dejar la tarea de comprobarlo con la primera etiqueta real |
+| R4-UNVERIFIED-TRIGGER | resiliencia | `odd/tasks/publicacion.md` | aviso | Lo mismo desde la resiliencia: es una restricción escrita, no un olvido |
+| R4-RECORD-DRIFT | resiliencia | `odd/tasks/publicacion.md` | aviso | Sobre la redacción de las decisiones. Al registrarlo revisé las menciones a la publicación en `README`, `docs/` y los documentos de tareas: ninguna afirmaba el comportamiento anterior |
+| R2-001 | legibilidad | `odd/tasks/publicacion.md` | aviso | Sobre la tabla de tareas |
+
+**Lo que merece trabajo, y se deja para una unidad propia:** el procedimiento de vuelta atrás
+y la comprobación con la primera etiqueta real. Los otros cuatro son redacción.
+
 ## Consecuencia
 
 Al terminar, `main` sigue siendo la línea de desarrollo y lo único que cambia es **cuándo**
