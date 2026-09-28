@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import appConfig from '../app.json';
 import { getGithubPagesBasePath, getSiteBaseUrl } from '@/lib/site-url';
 
 const originalSiteUrl = process.env.EXPO_PUBLIC_SITE_URL;
@@ -31,6 +32,16 @@ describe('getGithubPagesBasePath', () => {
         vi.stubGlobal('window', undefined);
 
         expect(getGithubPagesBasePath()).toBe('');
+    });
+
+    it('cae en la ruta declarada en app.json cuando la URL no trae primer segmento', () => {
+        vi.stubGlobal('window', {
+            location: { hostname: 'jmoredev.github.io', pathname: '/' },
+        });
+
+        // La aserción va contra `app.json` y no contra un literal: si la ruta declarada
+        // cambia, esta prueba la sigue, y un literal distinto dentro del módulo falla aquí.
+        expect(getGithubPagesBasePath()).toBe(appConfig.expo.experiments.baseUrl);
     });
 });
 
