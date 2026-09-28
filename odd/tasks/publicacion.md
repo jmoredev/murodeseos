@@ -48,9 +48,11 @@ dejar registro en git de **qué** se publicó y **cuándo**.
 
 | # | Tarea | Estado | Evidencia |
 | --- | --- | --- | --- |
-| 1 | Disparadores por etiqueta y guardia de que la etiqueta está en `main` | pendiente | — |
-| 2 | Procedimiento de publicación en `docs/DEVELOPMENT.md` y la decisión en `consolidacion.md` | pendiente | — |
-| 3 | Verificación: YAML válido, guardia probada en local y gate completo | pendiente | — |
+| 1 | Disparadores por etiqueta y guardia de que la etiqueta está en `main` | **hecho** | `aaed4fd`: `deploy.yml` se dispara con `push: tags: ['v*']` y conserva `workflow_dispatch`; sin la guardia el build no arranca |
+| 2 | Procedimiento de publicación en `docs/DEVELOPMENT.md` y la decisión en `consolidacion.md` | **hecho** | `ee8963e`: la sección `Cómo se publica`, con el comando de la etiqueta y la nota de que marca cuándo se publicó, no la versión |
+| 3 | Verificación: YAML válido, guardia probada en local y gate completo | **hecho** | Los tres workflows se parsean; la guardia se probó en tres casos (un commit de `main` la pasa, el de la rama y el de otro PR sin mergear la fallan); lint, tipos y 148 unitarios en verde |
+| 4 | Procedimiento de vuelta atrás, escrito donde se lee (hallazgos R3-ROLLBACK-DOC y R4-ROLLBACK-GAP) | **hecho** | En `docs/DEVELOPMENT.md`, dentro de `### Cómo se publica`: los dos caminos —arreglar hacia adelante o republicar un estado bueno—, la advertencia de que `main` y lo publicado divergen hasta que entre el arreglo, y lo que una vuelta atrás **no** revierte |
+| 5 | Comprobar el disparo por etiqueta con la primera etiqueta real | pendiente | No se puede demostrar sin publicar: es lo único no verificado de esta unidad, y la primera etiqueta que se empuje lo demuestra |
 
 ## Restricciones
 
@@ -62,7 +64,18 @@ dejar registro en git de **qué** se publicó y **cuándo**.
 
 ## Verificación
 
-Pendiente.
+- Los tres workflows se parsean y el grafo queda como se pretendía: `verify-release → build`
+  y `deploy needs [build, e2e]`.
+- **La guardia se probó en los tres casos**: un commit de `main` la pasa; el commit de esta
+  rama y el de otro PR sin mergear la fallan. Sin esa prueba, la guardia sería una promesa.
+- `pnpm run lint` limpio, `pnpm exec tsc --noEmit` sin errores y **148** pruebas unitarias en
+  verde (el recuento de entonces; después entró la unidad del mínimo de contraseña).
+- El gate completo **no se ejecutó a propósito**: esta unidad no toca código de producto, así
+  que la suite no añade información. Se dice en lugar de fingir que se corrió.
+- **Los comandos del procedimiento de vuelta atrás se comprobaron ejecutándolos**: `git tag
+  --sort=-creatordate` lista las etiquetas por fecha y `git log --oneline --
+  supabase/migrations/` localiza las migraciones del rango. No se creó ninguna etiqueta
+  durante la verificación, porque crear una publica.
 
 ## Hallazgos informativos de la revisión
 

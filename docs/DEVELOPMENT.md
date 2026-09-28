@@ -47,6 +47,29 @@ El workflow comprueba que la etiqueta apunta a un commit de `main`, ejecuta el b
 
 La etiqueta marca **cuándo se publicó**, no la versión del producto: esa vive en `app.json` y no se repite aquí, para no tener el mismo dato en dos sitios.
 
+Para saber qué está publicado ahora mismo: `git tag --sort=-creatordate | head -1`. **El registro empieza con la primera etiqueta**: las publicaciones anteriores a este cambio se hicieron sin ninguna, así que hasta que se empuje la primera no habrá nada que consultar.
+
+**Volver atrás.** Hay dos caminos y no son equivalentes. Si el problema es del código y el arreglo está cerca, lo correcto es **arreglar hacia adelante**: un PR a `main` y una etiqueta nueva. Es el único camino que deja `main` y lo publicado contando la misma historia.
+
+Si hay que sacar de producción algo roto **ya**, se vuelve a publicar el último estado bueno etiquetando ese commit:
+
+```bash
+git switch main && git pull
+git log --oneline -10                          # localizar el último commit bueno
+git tag -a v2026.09.29-rollback <commit> -m "Volver al estado bueno del 2026-09-28"
+git push origin v2026.09.29-rollback
+```
+
+La etiqueta tiene que apuntar a un commit **de `main`**, o el workflow no construye nada. Y viene con una advertencia que importa más que el comando: **`main` y lo publicado divergen** hasta que entre el arreglo, así que la etiqueta siguiente tiene que incluirlo. Si no, el fallo vuelve tal cual.
+
+**Lo que una vuelta atrás no revierte.** No revierte datos ni migraciones, y el bundle antiguo puede no entender un esquema nuevo. Antes de republicar, mira si en el medio se aplicó alguna:
+
+```bash
+git log --oneline -- supabase/migrations/
+```
+
+Si la hubo, aplica el orden operativo de la sección de la migración de reservas: el código que tolera las dos formas va antes que la migración que las cambia. Y nunca muevas una etiqueta ya publicada: publica una nueva, porque moverla reescribe lo que el registro dice que se publicó.
+
 ### Cómo comprobar qué valores usó el build de deploy
 1. Pon en `.env.production` un valor distintivo (por ejemplo una URL de Supabase que solo exista en producción).
 2. Ejecuta `npm run build:deploy` (o `bun run build:deploy`).
