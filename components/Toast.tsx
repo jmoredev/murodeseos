@@ -22,6 +22,9 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         const enterFrame = requestAnimationFrame(() => setIsVisible(true));
 
         const timer = setTimeout(() => {
+            // Si el cierre llega antes que el cuadro de entrada —una `duration` más corta que
+            // un cuadro—, se cancela el cuadro: si no, volvería a mostrar el brindis ya cerrado.
+            cancelAnimationFrame(enterFrame);
             setIsVisible(false);
             setTimeout(onClose, 300); // Wait for transition
         }, duration);
