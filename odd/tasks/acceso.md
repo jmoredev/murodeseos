@@ -57,7 +57,7 @@ lo solicite**, y sin pantalla de destino el enlace no puede completarse aunque l
 | 2 | Enlace de recuperación en el login, con mensaje neutro y `redirectTo` del sitio | **hecho** | `forgot-password-link` despliega el panel; al enviar llama a `resetPasswordForEmail` con `${getSiteBaseUrl()}/reset-password` y muestra un mensaje que no revela si la cuenta existe |
 | 3 | Pantalla `app/(auth)/reset-password/` que atienda el enlace y fije la contraseña | **hecho** | espera la sesión del enlace, pide la contraseña nueva, llama a `updateUser` y entra; si el enlace no vale, lo dice y explica que hay que abrirlo en el mismo dispositivo |
 | 4 | Revisar en el panel de Supabase la Site URL y la lista de redirecciones | **pendiente** — requiere acceso al panel | la Site URL de producción debe ser `https://jmoredev.github.io/murodeseos` y la lista debe incluir esa URL y `http://localhost:8081/**` |
-| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | **hecho** | 7 unitarias nuevas (login y pantalla de reset) y `e2e/reset-password.spec.ts`, que **lee el correo real** de Mailpit y verifica que el enlace trae `redirect_to=…/reset-password` |
+| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | **hecho** | 8 unitarias nuevas (login y pantalla de reset) y `e2e/reset-password.spec.ts`, que **lee el correo real** de Mailpit: comprueba que el enlace trae `redirect_to=…/reset-password` y, en un segundo caso, **sigue el enlace con un usuario desechable, cambia la contraseña y verifica que la nueva sirve** |
 
 ## Decisiones y hallazgos de la implementación
 
@@ -108,6 +108,10 @@ junto con A-2d en la siguiente unidad de trabajo:
 | --- | --- | --- |
 | R3-reset-catch-scope | `app/(auth)/reset-password/index.tsx:76-80` | El `catch` envuelve también `router.replace('/')`, así que un fallo al navegar diría «no pudimos guardar la contraseña» aunque la contraseña **sí** se hubiera guardado. El `try` debe cubrir solo la llamada |
 | R3-login-generic-error-coverage | `app/(auth)/login/index.tsx:47-54` | Falta prueba de la rama de error **devuelto** que no es el límite de envíos (hay prueba del 429 y del fallo lanzado, no de un error cualquiera) |
+
+**Los dos están corregidos**, junto con A-2d: el `try` de la pantalla de reset cubre solo la llamada
+(la navegación quedó fuera, para que un fallo al navegar no diga que la contraseña no se guardó) y
+hay prueba del error devuelto genérico.
 
 ## Fuera de alcance
 

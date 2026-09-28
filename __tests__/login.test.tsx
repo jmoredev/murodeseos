@@ -105,4 +105,20 @@ describe('LoginPage — recuperación de contraseña', () => {
         expect(await screen.findByTestId('recovery-error')).toHaveTextContent('demasiados enlaces')
         expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
     })
+
+    it('avisa de un error devuelto que no es el límite de envíos', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
+            data: {},
+            error: { status: 500, code: 'unexpected_failure', message: 'boom' },
+        } as any)
+
+        render(<LoginPage />)
+
+        fireEvent.click(screen.getByTestId('forgot-password-link'))
+        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
+        fireEvent.click(screen.getByTestId('send-recovery-button'))
+
+        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('No pudimos enviar el enlace')
+        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
+    })
 })
