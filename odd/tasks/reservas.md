@@ -239,3 +239,32 @@ obsoleto enviando código nuevo. Decisión del usuario: **ventana de compatibili
 fases: se conserva `reserved_by` con un puente de disparadores que la sincroniza, y la fase 2
 posterior borra la columna, que es lo que completa la privacidad. El diseño y la consecuencia
 aceptada están en la cabecera de la migración y en `docs/DEVELOPMENT.md`.
+
+### Cierre: revisión aprobada y autoridad consumida
+
+La validación dirigida del linaje `review-d60bead2af9c2fc5` cerró en **`approved`** y su
+autoridad quedó consumida (`review.acknowledge-approved` → `authority: burned`,
+`burn_evidence: gentle-ai.review-acknowledged/v1`, `mutation_outcome: committed`). El candidato
+aprobado es el árbol `5e39babd` (commit `e10070a`).
+
+Los **12 hallazgos informativos** que acompañan a la aprobación no bloquean, no abren
+corrección y **no** son motivo para repetir la revisión sobre este candidato: son trabajo
+posterior.
+
+| ID | Lente | Ubicación | Severidad |
+| --- | --- | --- | --- |
+| R1-cutover-deploy-order | riesgo | `docs/DEVELOPMENT.md:80` | aviso |
+| R1-reload-message-ambiguous | riesgo | `lib/wish-reservation.ts:28` | sugerencia |
+| R2-1 | legibilidad | migración `:5` | aviso |
+| R2-2 | legibilidad | `lib/wish-reservation.ts:35-39` | aviso |
+| R2-3 | legibilidad | `odd/tasks/e2e-ci.md:25` | sugerencia |
+| R3-002 | fiabilidad | migración `:226-234` | aviso |
+| R3-003 | fiabilidad | `__tests__/WishListTab.test.tsx:181-183` | aviso |
+| R3-004 | fiabilidad | `lib/wish-reservation.ts:68-71` | aviso |
+| R3-005 | fiabilidad | `components/WishlistCard.tsx:52` | sugerencia |
+| R3-006 | fiabilidad | `e2e/profile.spec.ts:45-49` | aviso |
+| R4-002 | resiliencia | migración `:242-245` | aviso |
+| R4-003 | resiliencia | `lib/wish-reservation.ts:35-39` | sugerencia |
+
+La entrega —commit, push, PR, release— es política ordinaria del repositorio y **no** la
+autoriza el resultado de la revisión.
