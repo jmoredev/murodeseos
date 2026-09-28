@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useClientMounted } from '@/lib/use-client-mounted';
 import { supabase } from '@/lib/supabase';
 import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/notification-utils';
 import { NotificationItem } from './NotificationItem';
@@ -34,14 +35,10 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    // El ancho y el montaje son estados externos (falsos en el servidor), no algo que se
-    // fije con un efecto.
+    // El ancho es un estado externo (falso en el servidor), no algo que se fije con un
+    // efecto; el montaje lo resuelve el ayudante.
     const isDesktop = useSyncExternalStore(subscribeToViewport, isDesktopViewport, () => false);
-    const isMounted = useSyncExternalStore(
-        () => () => {},
-        () => true,
-        () => false,
-    );
+    const isMounted = useClientMounted();
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dialogTitleId = 'notifications-dialog-title';

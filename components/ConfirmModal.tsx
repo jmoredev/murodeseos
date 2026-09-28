@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { useClientMounted } from '@/lib/use-client-mounted';
 import { createPortal } from 'react-dom';
 
 interface ConfirmModalProps {
@@ -24,13 +25,8 @@ export function ConfirmModal({
     cancelText = "Cancelar",
     isDestructive = false
 }: ConfirmModalProps) {
-    // En el servidor no hay DOM: el modal no se pinta hasta hidratar. Es un estado
-    // externo leído con `useSyncExternalStore`, no un efecto que fija estado.
-    const mounted = useSyncExternalStore(
-        () => () => {},
-        () => true,
-        () => false,
-    );
+    // En el servidor no hay DOM: el modal no se pinta hasta hidratar.
+    const mounted = useClientMounted();
     const [visible, setVisible] = useState(false);
     const titleId = useId();
     const messageId = useId();
