@@ -1,7 +1,7 @@
 # Endurecimiento de la base de datos y de la privacidad
 
 **Feature:** `endurecimiento`
-**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. S8 quedó resuelto y verificado, y **S13** se cerró el 2026-09-28 retirando la carpeta `database/` (unidad [`higiene`](./higiene.md)). Quedan **S11** (panel de Supabase, depende del plan) y **S12** (rutas dinámicas: rediseño de producto) como trabajo aparte. S14 vive en [`consolidacion.md`](./consolidacion.md).
+**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. S8 quedó resuelto y verificado, y **S13** se cerró el 2026-09-28 retirando la carpeta `database/` (unidad [`higiene`](./higiene.md)). Queda **S11** (panel de Supabase, depende del plan) como trabajo aparte, y **S12** quedó **aceptado y documentado** el 2026-09-28 (ver su sección). S14 vive en [`consolidacion.md`](./consolidacion.md).
 **Inicio:** 2026-09-24
 **Depende de:** `consolidacion` (proyecto Supabase vinculado)
 
@@ -97,7 +97,28 @@ El advisor `auth_leaked_password_protection` está en nivel WARN y es el único
 hallazgo que queda. Supabase puede comprobar las contraseñas contra
 HaveIBeenPwned y está desactivado.
 
-### S12 — Las rutas dinámicas devuelven 404 con el shell de la SPA (nuevo)
+### S12 — Las rutas dinámicas devuelven 404 con el shell de la SPA (ACEPTADO)
+
+> **Aceptado el 2026-09-28:** no se migran las rutas. `dist/404.html` es **byte a byte idéntico a
+> `dist/index.html`**, porque lo genera el propio export estático (`web.output: "static"`): GitHub
+> Pages sirve el shell con estado 404 y ese estado no se puede corregir desde la página. El alcance
+> real es este:
+>
+> | Camino | ¿Pasa por el 404? |
+> | --- | --- |
+> | Navegar dentro de la aplicación (`router.push`, tarjetas, iconos) | **No**: es navegación de cliente |
+> | Recargar estando en `/wishlist/<id>` o `/groups/<id>` | Sí, pero la aplicación arranca y enruta bien |
+> | Enlace de invitación `/groups/join?code=…` | **No**: es ruta estática y responde 200 |
+> | Enlaces de los correos (`/reset-password`) | **No**: también estática |
+>
+> Solo hay dos rutas dinámicas (`app/wishlist/[id]` y `app/groups/[id]`), y **los enlaces que la
+> aplicación comparte para invitar no son ninguna de ellas**, así que hoy no circula ningún enlace
+> profundo. Quien lee ese estado es un rastreador o una previsualización de enlace, no una persona.
+> Migrarlas a parámetros de consulta costaría tres puntos de navegación, dos specs y el mapa de
+> rutas, a cambio de un código de estado que hoy no ve nadie.
+>
+> **Se revisará** si alguna vez se comparten enlaces profundos a un deseo o a un grupo, o si la
+> aplicación deja de publicarse como export estático y pasa a tener reescrituras en el servidor.
 
 `/wishlist/<uuid>` y `/groups/<código>` responden **404** aunque sirven el
 contenido exacto de `404.html`, que incluye el bundle. La aplicación arranca y
