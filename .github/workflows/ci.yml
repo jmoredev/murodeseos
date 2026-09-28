@@ -39,5 +39,10 @@ jobs:
         run: pnpm run lint
         continue-on-error: true
 
-      # The end-to-end suite needs Docker for `supabase start`, which GitHub
-      # runners do not provide. It stays a local gate for now.
+  # Merge gate: the pull_request trigger above is the only path this job
+  # takes; on a push to main the publish gate in deploy.yml gates the same
+  # reusable workflow instead, so the suite never runs twice for a commit.
+  e2e:
+    name: E2E gate
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/e2e.yml

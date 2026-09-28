@@ -67,7 +67,7 @@ test.describe('Flujo de Creación de Grupo', () => {
 
         // 2. Hacer clic en el botón "Crear Grupo"
         // En la UI actual el botón/enlace suele ser "Crear" y navega a `/groups/create`.
-        const createGroupButton = page.locator('a[href*="/groups/create"]').first()
+        const createGroupButton = page.getByRole('button', { name: 'Crear grupo' }).first()
         await expect(createGroupButton).toBeVisible({ timeout: 10000 })
         await createGroupButton.click()
 
@@ -83,7 +83,7 @@ test.describe('Flujo de Creación de Grupo', () => {
 
         // 5. Seleccionar un icono (opcional)
         // En esta versión el selector de icono está deshabilitado/planificado.
-        await expect(page.getByText(/Toca para cambiar el icono/i)).toBeVisible()
+        await expect(page.getByText('Icono del grupo').first()).toBeVisible()
 
         // 6. Enviar el formulario
         // El texto "Crear Grupo" aparece dos veces (header + botón submit).
@@ -152,10 +152,11 @@ test.describe('Flujo de Creación de Grupo', () => {
         await expect(page).toHaveURL(/\/groups\/create/)
     })
 
-    test('Permite seleccionar diferentes iconos para el grupo', async ({ page }) => {
+    test('Muestra la sección de icono del grupo', async ({ page }) => {
         await page.goto('/groups/create')
 
-        // El selector de iconos está en planificación para esta versión.
-        await expect(page.getByText(/Toca para cambiar el icono/i)).toBeVisible()
+        // El selector de iconos está planificado y NO está implementado en esta versión;
+        // solo verificamos que la sección de icono (etiqueta estática) sea visible.
+        await expect(page.getByText('Icono del grupo').first()).toBeVisible()
     })
 })

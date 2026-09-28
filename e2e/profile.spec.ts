@@ -1,9 +1,55 @@
 import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
+import { createClient } from '@supabase/supabase-js';
+
+// Cliente con service-role para restaurar el fixture compartido tras cada test
+// (mismo bootstrap que e2e/wishlist-visibility.spec.ts).
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseServiceRoleKey =
+    process.env.NEXT_SERVICE_ROLE_KEY ||
+    process.env.EXPO_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Faltan env vars para supabaseAdmin en E2E');
+}
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+});
+
+// Valores sembrados del usuario E2E (scripts/seed-complete-database.ts).
+// Sin esta restauración, el renombrado del perfil se filtra a specs posteriores
+// (wishlist-visibility.spec.ts espera el nombre sembrado bajo workers: 1).
+const SEEDED_PROFILE = {
+    display_name: 'E2E Test User',
+    avatar_url: '🤖',
+    shirt_size: 'L',
+    pants_size: '42',
+    shoe_size: '44',
+    favorite_brands: 'Google, Apple',
+    favorite_color: 'Gris'
+};
 
 test.describe('Funcionalidad de Perfil', () => {
     // Ejecución en serie para evitar colisiones en la base de datos con el mismo usuario
     test.describe.configure({ mode: 'serial' });
+
+    // Restaurar el fixture E2E tras cada test: antes este spec renombraba al usuario
+    // compartido de forma permanente y eso rompía wishlist-visibility.spec.ts
+    // (que busca el nombre sembrado 'E2E Test User') bajo workers: 1.
+    test.afterEach(async () => {
+        const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers({ page: 0, perPage: 100 });
+        if (usersError) throw new Error(`listUsers falló: ${usersError.message}`);
+        const e2eUser = users?.find(u => u.email === E2E_CONFIG.user.email);
+        if (!e2eUser?.id) throw new Error(`No se encontró el userId del usuario E2E (${E2E_CONFIG.user.email})`);
+
+        const { error } = await supabaseAdmin
+            .from('profiles')
+            .update(SEEDED_PROFILE)
+            .eq('id', e2eUser.id);
+        if (error) throw new Error(`No se pudo restaurar el fixture del usuario E2E: ${error.message}`);
+    });
 
     test.beforeEach(async ({ page }) => {
         // Captura de logs para depuración
@@ -16,7 +62,7 @@ test.describe('Funcionalidad de Perfil', () => {
 
         // Esperar a que la pestaña de perfil esté lista.
         // El texto del logout no es consistente entre viewports, así que evitamos depender de él.
-        await expect(page.getByText('Mi Perfil', { exact: true }).last()).toBeVisible({ timeout: 15000 });
+        await expect(page.getByText('Mi perfil', { exact: true }).last()).toBeVisible({ timeout: 15000 });
 
         // Esperar a que el spinner desaparezca
         await expect(page.getByText('🪄')).not.toBeVisible({ timeout: 10000 });
@@ -47,7 +93,7 @@ test.describe('Funcionalidad de Perfil', () => {
 
         // Esperar a que cargue
         await expect(page.getByText('🪄')).not.toBeVisible();
-        await expect(page.getByText('Mi Perfil', { exact: true }).last()).toBeVisible();
+        await expect(page.getByText('Mi perfil', { exact: true }).last()).toBeVisible();
 
         // Verificar persistencia sin depender de igualdad exacta (evita carreras entre runs móviles paralelos)
         const persistedName = page.getByPlaceholder('Tu nombre');

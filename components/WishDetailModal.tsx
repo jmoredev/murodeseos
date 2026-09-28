@@ -18,7 +18,6 @@ interface WishDetailModalProps {
     item: GiftItem | null;
     onClose: () => void;
     isOwner: boolean;
-    currentUserId?: string;
     onReserve?: (item: GiftItem) => void;
     onCancelReserve?: (item: GiftItem) => void;
 }
@@ -40,7 +39,6 @@ export function WishDetailModal({
     item,
     onClose,
     isOwner,
-    currentUserId,
     onReserve,
     onCancelReserve,
 }: WishDetailModalProps) {
@@ -58,9 +56,10 @@ export function WishDetailModal({
 
     if (!item) return null;
 
-    const isReservedByMe = !isOwner && item.reservedBy === currentUserId;
-    const isReservedByOther = !isOwner && item.reservedBy && item.reservedBy !== currentUserId;
-    const isAvailable = !isOwner && !item.reservedBy;
+    const reservationState = item.reservationState ?? 'available';
+    const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
+    const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
+    const isAvailable = !isOwner && reservationState === 'available';
 
     const content = (
         <>
@@ -170,6 +169,14 @@ export function WishDetailModal({
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
                                 <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
                                     Reservado por otro usuario
+                                </Text>
+                            </View>
+                        ) : null}
+
+                        {reservationState === 'unknown' ? (
+                            <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
+                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                    Estado de reserva no disponible
                                 </Text>
                             </View>
                         ) : null}

@@ -229,40 +229,15 @@ async function createWishlists(userMap: Map<string, string>) {
     console.log('🎁 Creando listas de deseos...\n')
 
     const allUserIds = Array.from(userMap.values())
-    const e2eUserId = userMap.get('e2e-test@test.com')
 
     for (const [email, userId] of userMap.entries()) {
-        let items = []
+        let createdCount = 0
+        let reservedCount = 0
 
         // Usuario E2E: items predecibles y sin reservas
         if (email === 'e2e-test@test.com') {
-            items = E2E_WISHLIST_ITEMS.map(item => ({
-                user_id: userId,
-                title: item.title,
-                price: item.price,
-                image_url: item.image_url,
-                links: [],
-                notes: '',
-                priority: item.priority,
-                reserved_by: null // Nunca reservado para tests
-            }))
-        } else {
-            // Usuarios normales: items aleatorios
-            const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items por usuario
-
-            for (let i = 0; i < numItems; i++) {
-                const item = WISHLIST_ITEMS[Math.floor(Math.random() * WISHLIST_ITEMS.length)]
-
-                // 30% probabilidad de estar reservado
-                let reservedBy = null
-                if (Math.random() < 0.3) {
-                    const otherUsers = allUserIds.filter(id => id !== userId)
-                    if (otherUsers.length > 0) {
-                        reservedBy = otherUsers[Math.floor(Math.random() * otherUsers.length)]
-                    }
-                }
-
-                items.push({
+            for (const item of E2E_WISHLIST_ITEMS) {
+                const { error } = await supabase.from('wishlist_items').insert({
                     user_id: userId,
                     title: item.title,
                     price: item.price,
@@ -270,19 +245,68 @@ async function createWishlists(userMap: Map<string, string>) {
                     links: [],
                     notes: '',
                     priority: item.priority,
-                    reserved_by: reservedBy
                 })
+
+                if (error) {
+                    console.error(`❌ Error creando wishlist para ${email}:`, error.message)
+                } else {
+                    createdCount++
+                }
+            }
+        } else {
+            // Usuarios normales: items aleatorios. Se insertan de a uno para
+            // conocer el id real devuelto y asociarle su reserva sin ambigüedad.
+            const numItems = Math.floor(Math.random() * 3) + 2 // 2-4 items por usuario
+
+            for (let i = 0; i < numItems; i++) {
+                const item = WISHLIST_ITEMS[Math.floor(Math.random() * WISHLIST_ITEMS.length)]
+
+                const { data: insertedItem, error: itemError } = await supabase
+                    .from('wishlist_items')
+                    .insert({
+                        user_id: userId,
+                        title: item.title,
+                        price: item.price,
+                        image_url: item.image_url,
+                        links: [],
+                        notes: '',
+                        priority: item.priority,
+                    })
+                    .select('id')
+                    .single()
+
+                if (itemError || !insertedItem?.id) {
+                    console.error(`❌ Error creando wishlist para ${email}:`, itemError?.message)
+                    continue
+                }
+
+                createdCount++
+
+                // 30% probabilidad de estar reservado
+                if (Math.random() >= 0.3) continue
+
+                const otherUsers = allUserIds.filter(id => id !== userId)
+                if (otherUsers.length === 0) continue
+
+                const reserverId = otherUsers[Math.floor(Math.random() * otherUsers.length)]
+                const { error: reservationError } = await supabase
+                    .from('wishlist_reservations')
+                    .insert({ item_id: insertedItem.id, reserver_id: reserverId })
+
+                if (reservationError) {
+                    // 23505 = el deseo ya tenía reserva (seed reejecutado): no aborta.
+                    if (reservationError.code === '23505') {
+                        reservedCount++
+                    } else {
+                        console.error(`❌ Error reservando deseo de ${email}:`, reservationError.message)
+                    }
+                } else {
+                    reservedCount++
+                }
             }
         }
 
-        const { error } = await supabase.from('wishlist_items').insert(items)
-
-        if (error) {
-            console.error(`❌ Error creando wishlist para ${email}:`, error.message)
-        } else {
-            const reserved = items.filter(i => i.reserved_by).length
-            console.log(`✅ ${email}: ${items.length} deseos (${reserved} reservados)`)
-        }
+        console.log(`✅ ${email}: ${createdCount} deseos (${reservedCount} reservados)`)
     }
 
     console.log('')

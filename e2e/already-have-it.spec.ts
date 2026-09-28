@@ -25,6 +25,21 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
         await page.waitForLoadState('networkidle');
     });
 
+    // Referencias de limpieza del deseo sembrado para el amigo en el
+    // segundo test, para poder eliminarlo y no dejar filas residuales.
+    let friendWishIdToCleanup: string | null = null;
+    let friendWishTitleToCleanup: string | null = null;
+
+    test.afterEach(async () => {
+        if (friendWishIdToCleanup) {
+            await supabaseAdmin.from('wishlist_items').delete().eq('id', friendWishIdToCleanup);
+        } else if (friendWishTitleToCleanup) {
+            await supabaseAdmin.from('wishlist_items').delete().eq('title', friendWishTitleToCleanup);
+        }
+        friendWishIdToCleanup = null;
+        friendWishTitleToCleanup = null;
+    });
+
     test('debe permitir borrar un deseo rápidamente con el botón "Ya lo tengo"', async ({ page }) => {
         // 1. Crear un deseo de prueba
         const testTitle = `Deseo de prueba ${Date.now()}`;
@@ -71,25 +86,32 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
         if (!friendUser?.id) throw new Error(`No se encontró el userId del amigo (${friendEmail})`);
 
         const seededFriendWishTitle = `Friend Wish ${Date.now()}`;
-        const { error: insertError } = await supabaseAdmin.from('wishlist_items').insert({
-            user_id: friendUser.id,
-            title: seededFriendWishTitle,
-            price: E2E_CONFIG.wishlistItems[0].price,
-            image_url: null,
-            links: [],
-            notes: '',
-            priority: E2E_CONFIG.wishlistItems[2].priority,
-            reserved_by: null
-        });
+        const { data: insertedRow, error: insertError } = await supabaseAdmin
+            .from('wishlist_items')
+            .insert({
+                user_id: friendUser.id,
+                title: seededFriendWishTitle,
+                price: E2E_CONFIG.wishlistItems[0].price,
+                image_url: null,
+                links: [],
+                notes: '',
+                priority: E2E_CONFIG.wishlistItems[2].priority,
+            })
+            .select('id, title')
+            .single();
 
         if (insertError) throw new Error(`Error insertando wishlist para el amigo: ${insertError.message}`);
+        friendWishTitleToCleanup = insertedRow!.title;
+        friendWishIdToCleanup = insertedRow!.id;
 
         // Ir a la lista de un amigo (Juan Pérez por ejemplo)
-        const groupName = E2E_CONFIG.group.name;
-        await page.goto('/?tab=groups');
-        await page.getByText(groupName).click();
-
-        await page.getByText(friendName).first().click();
+        // Se navega directo a la página del grupo (patrón ya establecido en
+        // e2e/wishlist-visibility.spec.ts): desde '/?tab=groups',
+        // `page.getByText(friendName).first()` puede resolver a un nodo no visible.
+        const groupId = E2E_CONFIG.group.id;
+        await page.goto(`/groups/${groupId}`);
+        await expect(page).toHaveURL(new RegExp(`/groups/${groupId}`));
+        await page.getByText(friendName).filter({ visible: true }).first().click();
 
         // Verificar que estamos en la lista del amigo
         await expect(page.getByText(`Lista de ${friendName}`)).toBeVisible({ timeout: 15000 });

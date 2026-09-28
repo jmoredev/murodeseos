@@ -21,7 +21,10 @@ export default defineConfig({
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: 'html',
+    /* In CI, add the list reporter so a failing gate prints per-test lines to
+       the log: the html reporter alone writes a report to disk and prints
+       almost nothing, which would make a CI failure unreadable. */
+    reporter: process.env.CI ? [['list'], ['html']] : 'html',
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
@@ -87,7 +90,13 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'bun run web',
+        // IMPORTANTE: no usar "pnpm run web" aquí. pnpm mueve el script a su propio
+        // grupo de procesos, por lo que el servidor dev escapa del kill(-pid) con el
+        // que Playwright limpia el webServer al terminar: queda un huérfano en :8081
+        // sosteniendo los pipes de stdio y la corrida se cuelga sin resumen ni código de salida.
+        // Lanzar el CLI de Expo directo (node reemplaza al shell de "sh -c") mantiene
+        // el proceso dentro del grupo del webServer, que sí es matable.
+        command: 'node node_modules/expo/bin/cli start --web',
         url: 'http://127.0.0.1:8081',
         reuseExistingServer: !process.env.CI,
         timeout: 180 * 1000,

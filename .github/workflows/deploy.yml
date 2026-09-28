@@ -47,9 +47,16 @@ jobs:
         with:
           path: dist
 
+  # Publish gate: the identical chromium suite called via the reusable
+  # workflow, so a red suite leaves the previously published version in
+  # place — that is the intent.
+  e2e:
+    name: E2E gate
+    uses: ./.github/workflows/e2e.yml
+
   deploy:
     name: Publish
-    needs: build
+    needs: [build, e2e]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

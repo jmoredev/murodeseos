@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator, useWindowDimensions, Modal } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { reserveWishlistItem, cancelWishlistReservation } from '@/lib/wish-reservation';
+import { reserveWishlistItem, cancelWishlistReservation, getWishlistReservationStatesSafe, ReservationState } from '@/lib/wish-reservation';
 import { getWishActionErrorMessage } from '@/lib/wish-action-errors';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
@@ -23,9 +23,11 @@ export default function UserWishlistPage() {
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
+    const [reservationDegraded, setReservationDegraded] = useState(false);
     const { showToast, ToastComponent } = useToast();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
+    const isOwner = !!user?.id && user.id === targetUserId;
 
     useEffect(() => {
         const loadWishlist = async () => {
@@ -38,21 +40,6 @@ export default function UserWishlistPage() {
             try {
                 const { data: { user: currentUser } } = await supabase.auth.getUser();
                 setUser(currentUser);
-
-                // Obtener grupos del viewer para filtrar deseos excluidos por grupo compartido.
-                let viewerGroupIds: string[] = [];
-                if (currentUser?.id) {
-                    const { data: viewerMemberships, error: viewerMembershipsError } = await supabase
-                        .from('group_members')
-                        .select('group_id')
-                        .eq('user_id', currentUser.id);
-
-                    if (viewerMembershipsError) {
-                        console.error('Error loading viewer groups:', viewerMembershipsError);
-                    } else {
-                        viewerGroupIds = (viewerMemberships || []).map((m: any) => m.group_id);
-                    }
-                }
 
                 // Cargar perfil del usuario objetivo
                 const { data: profileData, error: profileError } = await supabase
@@ -73,14 +60,15 @@ export default function UserWishlistPage() {
 
                 if (sbError) throw sbError;
 
-                const visibleItems = (data || []).filter((item: any) => {
-                    const excludedGroupIds = item.excluded_group_ids || [];
-                    if (!Array.isArray(excludedGroupIds) || excludedGroupIds.length === 0) return true;
-                    if (viewerGroupIds.length === 0) return true;
-                    return !excludedGroupIds.some((groupId: string) => viewerGroupIds.includes(groupId));
-                });
+                // La visibilidad (incluidas las exclusiones por grupo) la aplica la
+                // política RLS de `wishlist_items`; no debe reimplementarse aquí.
+                // Si la lectura de estados falla, la lista se pinta igual: los
+                // estados pasan a "unknown" y no se ofrece reservar (degradación
+                // honesta en lugar de abortar toda la pantalla).
+                const { states: reservationStates, degraded } = await getWishlistReservationStatesSafe(targetUserId);
+                setReservationDegraded(degraded);
 
-                const mappedItems: GiftItem[] = visibleItems.map(item => ({
+                const mappedItems: GiftItem[] = (data || []).map(item => ({
                     id: item.id,
                     title: item.title,
                     links: item.links || [],
@@ -88,7 +76,9 @@ export default function UserWishlistPage() {
                     price: item.price,
                     notes: item.notes,
                     priority: item.priority as Priority,
-                    reservedBy: item.reserved_by,
+                    reservationState: reservationStates.has(item.id)
+                        ? (reservationStates.get(item.id) ? 'reserved_by_me' : 'reserved_by_other') as ReservationState
+                        : (degraded ? 'unknown' : 'available') as ReservationState,
                 }));
 
                 setItems(mappedItems);
@@ -110,11 +100,12 @@ export default function UserWishlistPage() {
         }
 
         try {
-            const reservedBy = await reserveWishlistItem(item.id, user.id);
+            await reserveWishlistItem(item.id, user.id);
 
-            const update = (i: GiftItem) => (i.id === item.id ? { ...i, reservedBy } : i);
+            const update = (i: GiftItem): GiftItem =>
+                i.id === item.id ? { ...i, reservationState: 'reserved_by_me' } : i;
             setItems((prev) => prev.map(update));
-            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservedBy } : prev));
+            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservationState: 'reserved_by_me' } : prev));
             showToast('¡Regalo reservado!');
         } catch (err) {
             console.error('Error reserving item:', err);
@@ -131,8 +122,8 @@ export default function UserWishlistPage() {
         try {
             await cancelWishlistReservation(item.id, user.id);
 
-            setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, reservedBy: null } : i)));
-            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservedBy: null } : prev));
+            setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, reservationState: 'available' } : i)));
+            setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservationState: 'available' } : prev));
             showToast('Reserva cancelada', 'info');
         } catch (err) {
             console.error('Error canceling reservation:', err);
@@ -206,6 +197,14 @@ export default function UserWishlistPage() {
                     )}
                 </View>
 
+                {reservationDegraded ? (
+                    <View className="mb-6 rounded-2xl bg-surface-container-low px-4 py-3">
+                        <Text className="text-xs font-sans-medium text-on-surface/65">
+                            No se pudo comprobar el estado de las reservas: puede que un regalo ya esté reservado. Recarga la página para verlo con certeza.
+                        </Text>
+                    </View>
+                ) : null}
+
                 <View className={`flex-row ${isDesktop ? 'gap-10' : ''}`}>
                     {/* Main Content (Wishlist Grid) */}
                     <View className={`flex-1`}>
@@ -223,8 +222,7 @@ export default function UserWishlistPage() {
                                     <View key={item.id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                         <WishlistCard
                                             item={item}
-                                            isOwner={false}
-                                            currentUserId={user?.id}
+                                            isOwner={isOwner}
                                             onClick={setSelectedItem}
                                             onReserve={handleReserve}
                                             onCancelReserve={handleCancelReserve}
@@ -248,8 +246,7 @@ export default function UserWishlistPage() {
                 visible={!!selectedItem}
                 item={selectedItem}
                 onClose={() => setSelectedItem(null)}
-                isOwner={false}
-                currentUserId={user?.id}
+                isOwner={isOwner}
                 onReserve={handleReserve}
                 onCancelReserve={handleCancelReserve}
             />
