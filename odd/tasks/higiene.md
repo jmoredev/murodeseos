@@ -91,6 +91,8 @@ abrir corrección. Devolvió un hallazgo informativo, que no bloquea y se trabaj
 | --- | --- | --- | --- |
 | R3-001 | fiabilidad | `lib/site-url.ts:37` | aviso |
 
+_Repasados el 2026-09-28: el veredicto y por qué no se toca está en [`informativos.md`](./informativos.md)._
+
 ## Consecuencia
 
 Al terminar, el repositorio no contendrá ningún camino que revierta el

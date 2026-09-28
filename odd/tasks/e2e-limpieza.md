@@ -85,6 +85,8 @@ corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabaja
 | R3-002 | fiabilidad | `e2e/profile.spec.ts:139-141` | sugerencia | La aserción no comprueba que el botón **estuviera habilitado antes**: si el nombre llegara vacío del servidor, pasaría por el motivo equivocado. Se arregla afirmando el estado habilitado antes de rellenar. |
 | R3-003 | fiabilidad | `odd/tasks/e2e-limpieza.md:48-51` | sugerencia | Sobre la redacción de las decisiones de este documento. |
 
+_Repasados el 2026-09-28: el veredicto y por qué no se toca está en [`informativos.md`](./informativos.md)._
+
 ## Consecuencia
 
 Al terminar, la suite no deja residuo propio y la prueba del perfil comprueba lo

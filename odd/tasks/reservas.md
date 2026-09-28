@@ -296,5 +296,7 @@ posterior.
 | R4-002 | resiliencia | migración `:242-245` | aviso |
 | R4-003 | resiliencia | `lib/wish-reservation.ts:35-39` | sugerencia |
 
+_Repasados el 2026-09-28: el veredicto de cada uno y por qué no se toca está en [`informativos.md`](./informativos.md)._
+
 La entrega —commit, push, PR, release— es política ordinaria del repositorio y **no** la
 autoriza el resultado de la revisión.
