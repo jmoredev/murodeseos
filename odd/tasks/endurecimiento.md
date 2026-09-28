@@ -1,7 +1,7 @@
 # Endurecimiento de la base de datos y de la privacidad
 
 **Feature:** `endurecimiento`
-**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. Quedan S8, S11, S12 y S13 como trabajo aparte.
+**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. S8 quedó resuelto y verificado, y **S13** se cerró el 2026-09-28 retirando la carpeta `database/` (unidad [`higiene`](./higiene.md)). Quedan **S11** (panel de Supabase, depende del plan) y **S12** (rutas dinámicas: rediseño de producto) como trabajo aparte. S14 vive en [`consolidacion.md`](./consolidacion.md).
 **Inicio:** 2026-09-24
 **Depende de:** `consolidacion` (proyecto Supabase vinculado)
 
@@ -110,7 +110,13 @@ estático, no una regresión: GitHub Pages no puede reescribir un 404 a 200. La
 solución sería evitar rutas dinámicas y usar parámetros de consulta, que el
 export sí genera como rutas estáticas.
 
-### S13 — SQL antiguo en `database/` que revertiría el endurecimiento (nuevo)
+### S13 — SQL antiguo en `database/` que revertiría el endurecimiento (RESUELTO)
+
+> **Resuelto el 2026-09-28.** La carpeta `database/` se retiró entera —sus seis scripts y el
+> `README.md` que los mandaba ejecutar— en el commit `008e646`, dentro de la unidad
+> [`higiene`](./higiene.md). `supabase/migrations/` queda como única fuente de verdad del
+> esquema y la historia de git conserva lo retirado. No se cambió nada del esquema ni se
+> volvió a consultar la base.
 
 Nada del repositorio usa la carpeta `database/`, pero contiene scripts SQL
 anteriores a las migraciones que las contradicen. El más peligroso empieza así:
