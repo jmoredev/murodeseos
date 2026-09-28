@@ -1,21 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-
-const supabaseServiceRoleKey =
-    process.env.NEXT_SERVICE_ROLE_KEY ||
-    process.env.EXPO_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Faltan env vars para supabaseAdmin en E2E');
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-});
+import { supabaseAdmin } from './supabase-admin';
 
 test.describe('Funcionalidad "Ya lo tengo"', () => {
 

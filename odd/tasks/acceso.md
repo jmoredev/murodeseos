@@ -57,14 +57,14 @@ lo solicite**, y sin pantalla de destino el enlace no puede completarse aunque l
 | 2 | Enlace de recuperación en el login, con mensaje neutro y `redirectTo` del sitio | **hecho** | `forgot-password-link` despliega el panel; al enviar llama a `resetPasswordForEmail` con `${getSiteBaseUrl()}/reset-password` y muestra un mensaje que no revela si la cuenta existe |
 | 3 | Pantalla `app/(auth)/reset-password/` que atienda el enlace y fije la contraseña | **hecho** | espera la sesión del enlace, pide la contraseña nueva, llama a `updateUser` y entra; si el enlace no vale, lo dice y explica que hay que abrirlo en el mismo dispositivo |
 | 4 | Revisar en el panel de Supabase la Site URL y la lista de redirecciones | **pendiente** — requiere acceso al panel | la Site URL de producción debe ser `https://jmoredev.github.io/murodeseos` y la lista debe incluir esa URL y `http://localhost:8081/**` |
-| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | **hecho** | 7 unitarias nuevas (login y pantalla de reset) y `e2e/reset-password.spec.ts`, que **lee el correo real** de Mailpit y verifica que el enlace trae `redirect_to=…/reset-password` |
+| 5 | Pruebas: unitarias de los formularios y, si es viable, un E2E del recorrido | **hecho** | 8 unitarias nuevas (login y pantalla de reset) y `e2e/reset-password.spec.ts`, que **lee el correo real** de Mailpit: comprueba que el enlace trae `redirect_to=…/reset-password` y, en un segundo caso, **sigue el enlace con un usuario desechable, cambia la contraseña y verifica que la nueva sirve** |
 
 ## Decisiones y hallazgos de la implementación
 
 - **El enlace hay que abrirlo en el mismo navegador.** El cliente es `createBrowserClient` de `@supabase/ssr`, así que el flujo es **PKCE**: el correo trae `?code=…` (confirmado en local: el token empieza por `pkce_`) y el verificador vive en el navegador que pidió el enlace. Por eso la pantalla avisa de ello y, si el canje falla, dice que se pida uno nuevo desde ese dispositivo en vez de dejar al usuario con un error opaco.
 - **`supabase/config.toml` también arrastraba el puerto 3000 de Next.js**: `site_url` era `http://127.0.0.1:3000` y la lista de redirecciones `https://127.0.0.1:3000` (https y puerto equivocados). Corregido a `http://127.0.0.1:8081` y a `localhost`/`127.0.0.1` en 8081: es la misma clase de defecto que S8 y es lo que hace que el enlace local caiga en la aplicación.
 - **El capturador de correo local es Mailpit**, aunque el contenedor se llame `inbucket`. Su API es `GET /api/v1/messages` y `GET /api/v1/message/{ID}`; el spec lee de ahí el cuerpo del correo.
-- **El mensaje del login es neutro a propósito**: solo se distingue el límite de envíos (429 / `over_email_send_rate_limit`), que no revela nada sobre la existencia de la cuenta.
+- **El mensaje neutro se reserva para la respuesta correcta**, y los errores devueltos sí se cuentan: Supabase responde correctamente aunque la cuenta no exista, así que mostrar un error no revela nada sobre la existencia de la cuenta, mientras que callarlo dejaría al usuario esperando un correo que nunca salió.
 - La pantalla de reset cierra un defecto que encontró su propia prueba: con la sesión ya presente seguía mostrando «Comprobando el enlace…» hasta que expiraba el temporizador de 3 s.
 
 ## Hallazgos de la revisión nativa (informativos)
@@ -73,7 +73,13 @@ Linaje `review-cc3d5630511adef5`: **aprobada** con catorce hallazgos **no bloque
 abre corrección y ninguno es motivo para repetir la revisión: se listan aquí como trabajo
 posterior, con lo que cada uno señala.
 
-### Merecen arreglo en el código
+### Merecen arreglo en el código (los cuatro primeros, corregidos)
+
+Los cuatro primeros hallazgos de esta tabla están **corregidos** después de la revisión: las dos
+llamadas (`resetPasswordForEmail` y `updateUser`) van ahora dentro de `try/catch/finally`, así que
+un fallo **lanzado** libera el botón en vez de dejarlo bloqueado, y hay pruebas para el error
+devuelto al guardar, el fallo lanzado al guardar y los dos al pedir el enlace (incluido el límite
+de envíos). Queda pendiente **R3-e2e-link-not-followed** (A-2d).
 
 | Hallazgo | Ubicación | Qué señala |
 | --- | --- | --- |
@@ -92,6 +98,34 @@ posterior, con lo que cada uno señala.
 | R2-004 | `lib/site-url.ts:3` | Redacción del comentario de cabecera |
 | R2-003 | `env.example:14` | El valor de ejemplo podría confundirse con el de producción |
 | R2-001, R2-002 | `odd/tasks/consolidacion.md:4`, `odd/tasks/endurecimiento.md:4` | El `Estado` de ambas fichas ya no describe del todo su contenido |
+
+### Segunda revisión de esta feature (`review-8211d875c843855d`)
+
+La corrección de A-2c salió **aprobada** con dos hallazgos informativos más, que se atienden
+junto con A-2d en la siguiente unidad de trabajo:
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R3-reset-catch-scope | `app/(auth)/reset-password/index.tsx:76-80` | El `catch` envuelve también `router.replace('/')`, así que un fallo al navegar diría «no pudimos guardar la contraseña» aunque la contraseña **sí** se hubiera guardado. El `try` debe cubrir solo la llamada |
+| R3-login-generic-error-coverage | `app/(auth)/login/index.tsx:47-54` | Falta prueba de la rama de error **devuelto** que no es el límite de envíos (hay prueba del 429 y del fallo lanzado, no de un error cualquiera) |
+
+**Los dos están corregidos**, junto con A-2d: el `try` de la pantalla de reset cubre solo la llamada
+(la navegación quedó fuera, para que un fallo al navegar no diga que la contraseña no se guardó) y
+hay prueba del error devuelto genérico.
+
+### Tercera revisión (`review-63b23446f4094903`)
+
+La unidad de A-2d —el E2E que sigue el enlace y el acotado del `try`— salió **aprobada** con un
+hallazgo informativo:
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R3-e2e-env-gate | `e2e/reset-password.spec.ts:16-18` | **Corregido**: el arranque vive ahora en `e2e/supabase-admin.ts` —la comprobación de variables, una sola vez, con un mensaje que nombra lo que falta— y los ocho specs que lo usaban lo importan |
+
+**Lo que destapó este arreglo, y es lo importante**: al pasar a un cliente **compartido por el worker**, el `signInWithPassword` que usaba el spec de recuperación dejaba una **sesión puesta en ese cliente**, así que los specs siguientes escribían como ese usuario (sujetos a RLS) en vez de con la clave de servicio. `responsive-wishlist.spec.ts` fallaba al sembrar con «new row violates row-level security policy» y **pasaba en el reintento** porque, al borrarse el usuario de prueba, la sesión quedaba inválida y el cliente volvía a la clave de servicio. El ayudante documenta ahora ese riesgo y la comprobación de credenciales usa un cliente propio; dos corridas completas seguidas quedan en **40/40 sin inestables**.
+
+El cierre de esta revisión **no trae el texto de la reclamación**, solo id, lente, ubicación y
+severidad: se registra por su ubicación y por lo que hay en esas líneas.
 
 ## Fuera de alcance
 

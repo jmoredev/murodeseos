@@ -84,4 +84,39 @@ describe('ResetPasswordPage', () => {
         expect(await screen.findByTestId('reset-error')).toHaveTextContent('no coinciden');
         expect(supabase.auth.updateUser).not.toHaveBeenCalled();
     });
+
+    it('avisa si el guardado devuelve error y no entra', async () => {
+        vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session }, error: null } as any);
+        vi.mocked(supabase.auth.updateUser).mockResolvedValueOnce({
+            data: { user: null },
+            error: { message: 'no se pudo guardar' },
+        } as any);
+
+        render(<ResetPasswordPage />);
+
+        fireEvent.change(await screen.findByTestId('new-password-input'), { target: { value: 'nueva1234' } });
+        fireEvent.change(screen.getByTestId('confirm-password-input'), { target: { value: 'nueva1234' } });
+        fireEvent.click(screen.getByTestId('save-password-button'));
+
+        expect(await screen.findByTestId('reset-error')).toHaveTextContent('no se pudo guardar');
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+    });
+
+    it('avisa si el guardado lanza y libera el formulario', async () => {
+        vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session }, error: null } as any);
+        vi.mocked(supabase.auth.updateUser).mockRejectedValueOnce(new Error('sin red'));
+
+        render(<ResetPasswordPage />);
+
+        fireEvent.change(await screen.findByTestId('new-password-input'), { target: { value: 'nueva1234' } });
+        fireEvent.change(screen.getByTestId('confirm-password-input'), { target: { value: 'nueva1234' } });
+        fireEvent.click(screen.getByTestId('save-password-button'));
+
+        expect(await screen.findByTestId('reset-error')).toHaveTextContent('conexión');
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+
+        // El botón vuelve a responder: el fallo lanzado no lo deja bloqueado.
+        fireEvent.click(screen.getByTestId('save-password-button'));
+        await waitFor(() => expect(supabase.auth.updateUser).toHaveBeenCalledTimes(2));
+    });
 });

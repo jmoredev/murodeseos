@@ -1,20 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from './supabase-admin';
 const createdIds = new Set<string>();
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey =
-    process.env.NEXT_SERVICE_ROLE_KEY ||
-    process.env.EXPO_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Faltan env vars para supabaseAdmin en E2E');
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-});
 
 /**
  * Devuelve el índice DOM relativo de la tarjeta de wishlist cuyo texto

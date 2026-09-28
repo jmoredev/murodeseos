@@ -1,23 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { createClient } from '@supabase/supabase-js'
 import { E2E_CONFIG, BASE_URL } from './config'
+import { supabaseAdmin } from './supabase-admin'
 
 //Almacena pares de { ID_del_Test : ID_del_Dato_Creado }
 const createdIds = new Map<string, string>();
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseServiceRoleKey =
-    process.env.NEXT_SERVICE_ROLE_KEY ||
-    process.env.EXPO_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Faltan env vars para supabaseAdmin en E2E')
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-})
 
 test.describe('Flujo de Creación de Grupo', () => {
     test.setTimeout(60000)

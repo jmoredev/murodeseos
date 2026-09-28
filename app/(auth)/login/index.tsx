@@ -36,20 +36,31 @@ export default function LoginPage() {
         setSendingRecovery(true);
         setRecoveryError('');
 
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${getSiteBaseUrl()}/reset-password`,
-        });
+        try {
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${getSiteBaseUrl()}/reset-password`,
+            });
 
-        setSendingRecovery(false);
+            // Supabase responde correctamente aunque la cuenta no exista, así que un
+            // error devuelto es un fallo real y se puede contar sin revelar nada; el
+            // mensaje neutro se reserva para la respuesta correcta.
+            if (resetError) {
+                setRecoveryError(
+                    resetError.status === 429 || resetError.code === 'over_email_send_rate_limit'
+                        ? 'Se pidieron demasiados enlaces seguidos. Espera unos minutos e inténtalo otra vez.'
+                        : 'No pudimos enviar el enlace. Inténtalo otra vez en unos minutos.',
+                );
+                return;
+            }
 
-        // El límite de envíos sí se cuenta, porque no revela si el correo tiene
-        // cuenta; cualquier otro fallo se trata igual que un envío correcto.
-        if (resetError && (resetError.status === 429 || resetError.code === 'over_email_send_rate_limit')) {
-            setRecoveryError('Se pidieron demasiados enlaces seguidos. Espera unos minutos e inténtalo otra vez.');
-            return;
+            setRecoverySent(true);
+        } catch {
+            // Un fallo lanzado (la red caída, por ejemplo) no puede dejar el botón
+            // bloqueado: el estado se libera siempre, pase lo que pase.
+            setRecoveryError('No pudimos enviar el enlace. Comprueba tu conexión e inténtalo otra vez.');
+        } finally {
+            setSendingRecovery(false);
         }
-
-        setRecoverySent(true);
     };
 
     useEffect(() => {
