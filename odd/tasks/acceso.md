@@ -113,6 +113,18 @@ junto con A-2d en la siguiente unidad de trabajo:
 (la navegación quedó fuera, para que un fallo al navegar no diga que la contraseña no se guardó) y
 hay prueba del error devuelto genérico.
 
+### Tercera revisión (`review-63b23446f4094903`)
+
+La unidad de A-2d —el E2E que sigue el enlace y el acotado del `try`— salió **aprobada** con un
+hallazgo informativo:
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R3-e2e-env-gate | `e2e/reset-password.spec.ts:16-18` | La comprobación de variables de entorno **lanza al cargar el módulo**, así que una variable ausente se ve como un fallo del spec en vez de un error de preparación claro; los tres specs que usan `supabaseAdmin` repiten el mismo bloque y piden un ayudante compartido |
+
+El cierre de esta revisión **no trae el texto de la reclamación**, solo id, lente, ubicación y
+severidad: se registra por su ubicación y por lo que hay en esas líneas.
+
 ## Fuera de alcance
 
 - Cambiar de proveedor de correo o de plantillas de Supabase.
