@@ -3,6 +3,7 @@ import { View, Text, TextInput, ActivityIndicator, KeyboardAvoidingView, Platfor
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { validateNewPassword } from '@/lib/password';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 /** Margen para que el cliente canjee el código del enlace antes de darlo por inválido. */
@@ -51,8 +52,9 @@ export default function ResetPasswordPage() {
     }, []);
 
     const handleSubmit = async () => {
-        if (password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres');
+        const passwordError = validateNewPassword(password);
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
 

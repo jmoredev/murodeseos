@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, Scrol
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { validateNewPassword } from '@/lib/password';
 import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -39,8 +40,9 @@ export default function SignupPage() {
             return;
         }
 
-        if (password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres');
+        const passwordError = validateNewPassword(password);
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
 
