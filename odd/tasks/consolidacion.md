@@ -86,7 +86,7 @@ usuario.
 | 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | hecho | `build_type: workflow`; despliegue verificado |
 | 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | hecho | auditoría completa en [`endurecimiento.md`](./endurecimiento.md): 21/21 migraciones aplicadas, 9 tablas de `public` con RLS activo, advisors de 3 hallazgos a 1 |
 | 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | hecho | `20260925120000_wishlist_reservations_privacy.sql` (fase 1) y `20260928120000_drop_reserved_by_window.sql` (fase 2), aplicadas y verificadas en producción el 2026-09-28; cierran S1, S2 y D4 |
-| 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | **hecho** | De 35 problemas (16 errores, 19 avisos) a **cero**, y el gate ahora rechaza también los avisos: `eslint --max-warnings 0` en el guion y el paso de CI sin `continue-on-error`. Lo mecánico fueron avisos de variables e importaciones sin usar, dos importaciones mal colocadas, comillas sin escapar en JSX y un componente anónimo en un mock. Lo que exigió criterio fueron los diez `react-hooks/set-state-in-effect`: el estado que se sincronizaba con un parámetro de la URL (pestaña activa, código de invitación, aviso de cuenta creada) ahora se **deriva** en el render; «¿está montado?» y «¿es escritorio?» se leen con **`useSyncExternalStore`** en vez de fijarlos con un efecto; el brindis y el modal de confirmación conservan su transición de entrada arrancándola en el **siguiente cuadro** de animación; y los dos efectos que lanzan trabajo asíncrono cruzan un **límite asíncrono explícito**. Las dos advertencias de dependencias que quedan están desactivadas en línea **con su motivo escrito**. Verificado: lint limpio incluidos avisos, `tsc`, 142 tests unitarios y la suite completa de chromium **40/40 sin inestables** |
+| 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | **hecho** | De 35 problemas (16 errores, 19 avisos) a **cero**, y el gate ahora rechaza también los avisos: `eslint --max-warnings 0` en el guion y el paso de CI sin `continue-on-error`. Lo mecánico fueron avisos de variables e importaciones sin usar, dos importaciones mal colocadas, comillas sin escapar en JSX y un componente anónimo en un mock. Lo que exigió criterio fueron los diez `react-hooks/set-state-in-effect`: el estado que se sincronizaba con un parámetro de la URL (pestaña activa, código de invitación, aviso de cuenta creada) ahora se **deriva** en el render; «¿está montado?» y «¿es escritorio?» se leen con **`useSyncExternalStore`** en vez de fijarlos con un efecto; el brindis y el modal de confirmación conservan su transición de entrada arrancándola en el **siguiente cuadro** de animación; y los dos efectos que lanzan trabajo asíncrono cruzan un **límite asíncrono explícito**. Las dos advertencias de dependencias que quedan están desactivadas en línea **con su motivo escrito**. Verificado: lint limpio incluidos avisos, `tsc`, 142 tests unitarios y la suite completa de chromium **40/40 sin inestables**. La revisión nativa (tier alto, cuatro lentes) bloqueó en **R4-001**, un defecto propio: el brindis agendaba su entrada con `window.requestAnimationFrame`; corregido en `c680389` usando el global, y el validador dirigido aprobó la corrección. Commits `521087d` y `c680389` |
 | 14 | Llevar los tests E2E al CI | hecho | workflow reutilizable `.github/workflows/e2e.yml`, invocado en cada pull request y por `deploy.yml` antes de publicar. Primera corrida real verde en PR #14 (~270 s) y segunda en PR #15 (220 s). `main` exige `E2E gate / Chromium suite` y `Types and unit tests` con `enforce_admins`. El motivo que figuraba aquí era inexacto: `ubuntu-latest` sí ofrece Docker |
 
 ## Defectos encontrados y resueltos en esta feature
@@ -124,6 +124,26 @@ El detalle, la evidencia y el plan de cada uno están en
 | S12 | Las rutas dinámicas devuelven 404 aunque sirven el shell de la SPA | abierto, preexistente |
 | S13 | SQL antiguo en `database/` que revertiría el endurecimiento y destruiría datos | abierto |
 | S14 | El fallback de la ruta base del sitio en `lib/site-url.ts` es el nombre del repositorio escrito a mano | abierto, sugerencia de la revisión | podría leerse de `app.json` (`experiments.baseUrl`), que ya lo declara; hoy solo entra si la URL no trae primer segmento |
+
+## Hallazgos informativos de la revisión del lint
+
+La revisión nativa del cierre de la tarea 13 (tier alto, cuatro lentes) bloqueó una
+sola vez, por **R4-001** (crítico y propio de este cambio), y aprobó la corrección.
+El resto de los hallazgos que devolvió son **informativos**: no bloquean, no reabren
+la revisión y se trabajan aparte. La columna «nota» es mi lectura del código, no el
+texto del revisor; la revisión entrega identificador, lente, ubicación y gravedad.
+
+| ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
+| --- | --- | --- | --- | --- |
+| R1-shared-admin-client-session-guard | riesgo | `e2e/supabase-admin.ts:36-38` | sugerencia | El cliente administrativo compartido por worker no debería servir para iniciar sesión; hoy lo evita la disciplina documentada, no el código. |
+| R2-create-icon-dead-state | legibilidad | `app/groups/create/index.tsx:12` | sugerencia | `const [icon] = useState('🎁')` descarta el modificador: estado muerto, previo a este cambio. |
+| R2-groups-loading-comment | legibilidad | `components/GroupsTab.tsx:31-32` | aviso | El comentario que escribí sobre el estado de carga quedó en un punto donde ya no describe lo que pasa. |
+| R2-hydration-idiom-duplicated | legibilidad | `components/ConfirmModal.tsx:29-33` | sugerencia | El idioma de montaje con `useSyncExternalStore` está repetido en tres componentes; pide un ayudante compartido. |
+| R3-groups-loading-reset | fiabilidad | `components/GroupsTab.tsx:147-149` | aviso | Verificado: al repetirse el efecto por cambio de usuario, `loading` ya está en `false`, así que se ve contenido viejo mientras recarga. |
+| R3-tab-empty-param | fiabilidad | `app/index.tsx:20-25` | aviso | Verificado: un `?tab=` vacío no es `null`, así que `activeTab` queda en cadena vacía y no coincide con ninguna pestaña. Se arregla con `params.tab ? … : null`. |
+| R3-toast-raf-race | fiabilidad | `components/Toast.tsx:22` | aviso | Con `duration` muy corta, el temporizador de cierre puede correr antes que el cuadro de entrada. |
+| R4-002 | resiliencia | `components/GroupsTab.tsx:149` | aviso | Mismo asunto que R3-groups-loading-reset, visto desde el límite asíncrono que introduje. |
+| R4-003 | resiliencia | `app/groups/join/index.tsx:1` | aviso | Verificado: la importación de `React` no se usa en el archivo (no hay ninguna referencia a `React.`). Es anterior a este cambio. |
 
 ## Verificación
 
