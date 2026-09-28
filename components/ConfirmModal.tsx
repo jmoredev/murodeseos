@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ConfirmModalProps {
@@ -24,23 +24,28 @@ export function ConfirmModal({
     cancelText = "Cancelar",
     isDestructive = false
 }: ConfirmModalProps) {
-    const [mounted, setMounted] = useState(false);
+    // En el servidor no hay DOM: el modal no se pinta hasta hidratar. Es un estado
+    // externo leído con `useSyncExternalStore`, no un efecto que fija estado.
+    const mounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
     const [visible, setVisible] = useState(false);
     const titleId = useId();
     const messageId = useId();
     const previouslyFocused = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    useEffect(() => {
         if (isOpen) {
-            setVisible(true);
-        } else {
-            const timer = setTimeout(() => setVisible(false), 300);
-            return () => clearTimeout(timer);
+            // La entrada va en el siguiente cuadro, para que el primer render pinte el
+            // estado cerrado y el cambio dispare la transición.
+            const frame = window.requestAnimationFrame(() => setVisible(true));
+            return () => window.cancelAnimationFrame(frame);
         }
+
+        const timer = setTimeout(() => setVisible(false), 300);
+        return () => clearTimeout(timer);
     }, [isOpen]);
 
     useEffect(() => {

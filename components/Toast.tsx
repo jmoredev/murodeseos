@@ -16,13 +16,20 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        setIsVisible(true);
+        // La entrada va en el siguiente cuadro: el render inicial pinta el estado
+        // oculto y el cambio dispara la transición. Hacerlo de forma síncrona en el
+        // efecto encadena renders que no hacen falta.
+        const enterFrame = window.requestAnimationFrame(() => setIsVisible(true));
+
         const timer = setTimeout(() => {
             setIsVisible(false);
             setTimeout(onClose, 300); // Wait for transition
         }, duration);
 
-        return () => clearTimeout(timer);
+        return () => {
+            window.cancelAnimationFrame(enterFrame);
+            clearTimeout(timer);
+        };
     }, [duration, onClose]);
 
     const bgColors = {

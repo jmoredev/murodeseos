@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface UserProfileData {
@@ -21,13 +21,15 @@ interface UserProfileModalProps {
 }
 
 export function UserProfileModal({ isOpen, onClose, profile }: UserProfileModalProps) {
-    const [mounted, setMounted] = useState(false);
+    // En el servidor no hay DOM: el modal no se pinta hasta hidratar. Es un estado
+    // externo leído con `useSyncExternalStore`, no un efecto que fija estado.
+    const mounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
     const titleId = useId();
     const previouslyFocused = useRef<HTMLElement | null>(null);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     useEffect(() => {
         if (!isOpen || !profile) return;

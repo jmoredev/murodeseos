@@ -19,8 +19,6 @@ vi.mock('@/components/WishlistCard', () => ({
 }));
 
 // Mocks handled globally in vitest.setup.ts
-const mockUpload = vi.fn();
-const mockGetPublicUrl = vi.fn();
 
 describe('WishListTab', () => {
     const userId = 'user-123';

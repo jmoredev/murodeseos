@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, Pressable, TextInput, ActivityIndicator, ScrollView, Platform } from 'react-native'
+import { View, Text, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { getCssColor } from '@/lib/color-utils'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'

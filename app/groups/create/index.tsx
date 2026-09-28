@@ -9,7 +9,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 export default function CreateGroupPage() {
     const router = useRouter();
     const [name, setName] = useState('');
-    const [icon, setIcon] = useState('🎁');
+    const [icon] = useState('🎁');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 

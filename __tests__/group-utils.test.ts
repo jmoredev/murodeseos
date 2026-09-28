@@ -1,7 +1,4 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-
-vi.unmock('@/lib/group-utils')
-
 import {
     generateUniqueGroupCode,
     createGroup,
@@ -13,6 +10,8 @@ import {
     shareGroup
 } from '@/lib/group-utils'
 import { supabase } from '@/lib/supabase'
+
+vi.unmock('@/lib/group-utils')
 
 // Mock de Supabase ya está en vitest.setup.ts, pero necesitamos resetear los mocks entre tests
 

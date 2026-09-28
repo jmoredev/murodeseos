@@ -14,9 +14,10 @@ vi.mock('react', async () => {
 
 
 vi.mock('next/link', () => {
-    return ({ children, href }: any) => {
+    const MockLink = ({ children, href }: any) => {
         return <a href={href}>{children}</a>;
     };
+    return MockLink;
 })
 
 

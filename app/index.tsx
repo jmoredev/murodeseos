@@ -17,13 +17,17 @@ export default function LandingPage() {
     const params = useLocalSearchParams();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<Tab>((params.tab as Tab) || 'wishlist');
+    const paramTab = (params.tab as Tab) ?? null;
+    // El estado guarda la pestaña elegida *y* el parámetro con el que se eligió: si el
+    // parámetro cambia, manda el parámetro; si no, manda la elección del usuario. Así
+    // no hace falta un efecto que sincronice estado.
+    const [tabState, setTabState] = useState<{ tab: Tab; param: Tab | null }>({
+        tab: paramTab ?? 'wishlist',
+        param: paramTab,
+    });
 
-    useEffect(() => {
-        if (params.tab) {
-            setActiveTab(params.tab as Tab);
-        }
-    }, [params.tab]);
+    const activeTab = tabState.param === paramTab ? tabState.tab : paramTab ?? tabState.tab;
+    const setActiveTab = (tab: Tab) => setTabState({ tab, param: paramTab });
 
     useEffect(() => {
         const AUTH_SESSION_MS = 12_000;

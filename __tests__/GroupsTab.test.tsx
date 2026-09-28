@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GroupsTab } from '@/components/GroupsTab'
 import { supabase } from '@/lib/supabase'
@@ -629,7 +629,6 @@ describe('GroupsTab', () => {
                     }
                 })
 
-            const user = userEvent.setup()
             render(<GroupsTab userId={mockUserId} />)
 
             await waitFor(() => {

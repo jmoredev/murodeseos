@@ -32,12 +32,10 @@ jobs:
       - name: Unit tests
         run: pnpm run test:unit
 
-      # Not blocking yet: the repository has a pre-existing baseline of
-      # react-hooks and unused-variable findings. Reported here so the debt
-      # stays visible until it is paid down.
+      # Blocking, and strict: the script refuses warnings too. The baseline of
+      # react-hooks and unused-variable findings has been paid down.
       - name: Lint
         run: pnpm run lint
-        continue-on-error: true
 
   # Merge gate: the pull_request trigger above is the only path this job
   # takes; on a push to main the publish gate in deploy.yml gates the same

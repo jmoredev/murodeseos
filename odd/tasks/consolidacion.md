@@ -1,7 +1,7 @@
 # Consolidar el repositorio en una sola línea de trabajo
 
 **Feature:** `consolidacion`
-**Estado:** en curso — consolidación y endurecimiento cerrados y desplegados; queda la tarea 13 (lint bloqueante) y el trabajo posterior de S8, S11, S12 y S13
+**Estado:** en curso — consolidación y endurecimiento cerrados y desplegados; queda el trabajo posterior de S8, S11, S12 y S13
 **Inicio:** 2026-09-24
 **Rama:** `feat/pwa-adaptation`
 
@@ -86,7 +86,7 @@ usuario.
 | 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | hecho | `build_type: workflow`; despliegue verificado |
 | 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | hecho | auditoría completa en [`endurecimiento.md`](./endurecimiento.md): 21/21 migraciones aplicadas, 9 tablas de `public` con RLS activo, advisors de 3 hallazgos a 1 |
 | 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | hecho | `20260925120000_wishlist_reservations_privacy.sql` (fase 1) y `20260928120000_drop_reserved_by_window.sql` (fase 2), aplicadas y verificadas en producción el 2026-09-28; cierran S1, S2 y D4 |
-| 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | pendiente | base actual: 16 errores, 21 avisos |
+| 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | **hecho** | De 35 problemas (16 errores, 19 avisos) a **cero**, y el gate ahora rechaza también los avisos: `eslint --max-warnings 0` en el guion y el paso de CI sin `continue-on-error`. Lo mecánico fueron avisos de variables e importaciones sin usar, dos importaciones mal colocadas, comillas sin escapar en JSX y un componente anónimo en un mock. Lo que exigió criterio fueron los diez `react-hooks/set-state-in-effect`: el estado que se sincronizaba con un parámetro de la URL (pestaña activa, código de invitación, aviso de cuenta creada) ahora se **deriva** en el render; «¿está montado?» y «¿es escritorio?» se leen con **`useSyncExternalStore`** en vez de fijarlos con un efecto; el brindis y el modal de confirmación conservan su transición de entrada arrancándola en el **siguiente cuadro** de animación; y los dos efectos que lanzan trabajo asíncrono cruzan un **límite asíncrono explícito**. Las dos advertencias de dependencias que quedan están desactivadas en línea **con su motivo escrito**. Verificado: lint limpio incluidos avisos, `tsc`, 142 tests unitarios y la suite completa de chromium **40/40 sin inestables** |
 | 14 | Llevar los tests E2E al CI | hecho | workflow reutilizable `.github/workflows/e2e.yml`, invocado en cada pull request y por `deploy.yml` antes de publicar. Primera corrida real verde en PR #14 (~270 s) y segunda en PR #15 (220 s). `main` exige `E2E gate / Chromium suite` y `Types and unit tests` con `enforce_admins`. El motivo que figuraba aquí era inexacto: `ubuntu-latest` sí ofrece Docker |
 
 ## Defectos encontrados y resueltos en esta feature

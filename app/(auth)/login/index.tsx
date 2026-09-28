@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -13,7 +13,13 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    // El mensaje se deriva del parámetro de la URL; el estado sólo registra que el usuario
+    // ya volvió a intentar entrar, para no repetirlo.
+    const [dismissedWelcome, setDismissedWelcome] = useState(false);
+    const successMessage =
+        !dismissedWelcome && params.registered === 'true'
+            ? '¡Cuenta creada exitosamente! Por favor, inicia sesión.'
+            : '';
     const [emailError, setEmailError] = useState('');
     const [showRecovery, setShowRecovery] = useState(false);
     const [recoverySent, setRecoverySent] = useState(false);
@@ -63,15 +69,9 @@ export default function LoginPage() {
         }
     };
 
-    useEffect(() => {
-        if (params.registered === 'true') {
-            setSuccessMessage('¡Cuenta creada exitosamente! Por favor, inicia sesión.');
-        }
-    }, [params]);
-
     const handleLogin = async () => {
         setError('');
-        setSuccessMessage('');
+        setDismissedWelcome(true);
 
         if (!validateEmail(email)) {
             setEmailError('Por favor, introduce un correo electrónico válido');

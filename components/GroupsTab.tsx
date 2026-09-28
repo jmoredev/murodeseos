@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform } from 'react-native'
+import { View, Text, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native'
 import { Link, useRouter } from "expo-router"
 import { supabase } from '@/lib/supabase'
 import { GroupCard, Group } from '@/components/GroupCard'
@@ -28,6 +28,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [aliases, setAliases] = useState<Record<string, string>>({});
 
     const fetchUserGroups = async (userId: string) => {
+        // No hace falta encender `loading` aquí: arranca en `true` y este es el único punto
+        // de entrada de la carga. Fijarlo desde el efecto encadenaba renders.
         try {
             const { data: myMemberships, error: membershipError } = await supabase
                 .from('group_members')
@@ -142,8 +144,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     }
 
     useEffect(() => {
-        setLoading(true)
-        fetchUserGroups(userId)
+        // La carga arranca en un límite asíncrono explícito: no fija estado de forma
+        // síncrona, y así el análisis estático puede comprobarlo.
+        void (async () => {
+            await fetchUserGroups(userId)
+        })()
     }, [userId])
 
     const handleShare = (groupId: string) => {
@@ -175,7 +180,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     text: `Usa el código: ${selectedGroupId}`,
                     url: window.location.origin + '/groups/join?code=' + selectedGroupId
                 });
-            } catch (err) {
+            } catch {
 
             }
         } else {
@@ -481,7 +486,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                         </View>
                         <Text className="text-xl font-display text-on-background mb-2">¿Eliminar grupo?</Text>
                         <Text className="text-on-surface/65 mb-6 font-sans-medium">
-                            Estás a punto de eliminar el grupo <Text className="font-sans-bold text-on-background">"{groupToDelete?.name}"</Text>. Esta acción no se puede deshacer.
+                            Estás a punto de eliminar el grupo <Text className="font-sans-bold text-on-background">&quot;{groupToDelete?.name}&quot;</Text>. Esta acción no se puede deshacer.
                         </Text>
                         <View className="flex-row gap-3 justify-end">
                             <Pressable

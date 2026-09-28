@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -12,12 +12,6 @@ export default function JoinGroupPage() {
     const [code, setCode] = useState((initialCode as string) || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-
-    useEffect(() => {
-        if (initialCode) {
-            setCode(initialCode as string);
-        }
-    }, [initialCode]);
 
     const handleJoin = async () => {
         if (!code.trim()) {
