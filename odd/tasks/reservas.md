@@ -180,3 +180,45 @@ emitiría nunca.
 - Notificaciones push web (D6).
 - Cambios de producto en la interfaz de reserva: la reserva se sigue pidiendo y
   cancelando desde los mismos componentes.
+
+## Revisión nativa (RDD) del candidato: sin cierre
+
+Linaje `review-7095c32a765aa85f`, tier `high`, 30 rutas, 1554 líneas, presupuesto de
+corrección 200 (en líneas de diff). Candidato congelado: rango comiteado
+`7471383..2a00d8c`. Corrieron las cuatro lentes (`review-risk`, `review-resilience`,
+`review-readability`, `review-reliability`) y el veredicto fue `correction_required`:
+
+- **R4-001** (CRITICAL, determinista, introducido): la migración borra
+  `wishlist_items.reserved_by` en la misma release que mueve las reservas, así que un cliente
+  ya desplegado falla con `42703` y revertir el frontend no restaura la función.
+- **R4-002** (CRITICAL, determinista, introducido): `loadWishlist` esperaba el estado de
+  reserva antes de renderizar, y ese helper lanzaba en cualquier error del RPC, así que un
+  fallo transitorio dejaba la lista del amigo **sin ningún deseo**.
+
+**Decisión del usuario**: corte inmediato con recuperación en el cliente. Se descartó el
+puente de compatibilidad porque, para que un cliente viejo renderice el estado de reserva,
+necesita *leer* la columna, y PostgreSQL no oculta columnas por fila: el dueño seguiría
+viendo la autoría, es decir, el hallazgo S1 seguiría abierto durante la ventana.
+
+**Corrección aplicada** (`ee0d824`, 151 líneas de diff, límite 200): clasificador de los
+errores «cliente más viejo que el esquema» (`42703`, `42P01`, `42883`, `PGRST202`,
+`PGRST204`) con mensaje accionable de recarga en la reserva, loader de estado que devuelve
+`degraded` en vez de lanzar, estado `unknown` honesto sin acción de reservar y con aviso
+visible en la lista del amigo, y nota del corte unidireccional en `docs/DEVELOPMENT.md`. El
+service worker ya hacía `skipWaiting`/`clients.claim` y servía JS/CSS con red primero, así
+que una recarga sí toma el bundle nuevo: por eso no se tocó.
+
+**Verificación local de la corrección**: 123 tests unitarios en verde, `tsc` sin errores y la
+suite completa de chromium en 38/38, exit 0.
+
+**Resultado nativo**: el plan de corrección se aceptó (151 líneas declaradas, y las rutas
+verificadas por el proveedor coinciden 1:1 con los seis archivos cambiados). La validación
+dirigida posterior quedó **terminal**: estado `escalated`, `action: stop`,
+`native_stop_required`, causa `targeted_validator_rejected` para R4-001 y R4-002. La primera
+corrida del validador se abortó por una interrupción del usuario y la segunda falló de forma
+nativa; en ambos casos sin mutación y sin veredicto, pero la autoridad registró el rechazo y
+cerró la transición.
+
+**Consecuencia**: la revisión **no cerró** y no hay autoridad aprobada, así que la entrega
+queda bajo política ordinaria, que decide el mantenedor. Lo único bloqueante de verdad sigue
+siendo la tarea 8: la migración no está aplicada en producción.
