@@ -220,6 +220,18 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                 </View>
             </View>
 
+            {/* El cierre de sesión vive aquí y no en el layout porque el layout solo lo
+                ofrece en escritorio: desde el móvil no había forma de salir. */}
+            <Pressable
+                onPress={() => supabase.auth.signOut()}
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar sesión"
+                testID="sign-out-button"
+                className="mt-10 w-full py-4 rounded-full border border-primary/30 items-center active:opacity-90"
+            >
+                <Text className="text-primary font-sans-bold text-xs uppercase tracking-widest">Cerrar sesión</Text>
+            </Pressable>
+
             {showAvatarModal && (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setShowAvatarModal(false)} />
