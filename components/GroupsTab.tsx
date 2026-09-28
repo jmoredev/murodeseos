@@ -14,7 +14,10 @@ export interface GroupsTabProps {
 export function GroupsTab({ userId }: GroupsTabProps) {
     const router = useRouter();
     const [groups, setGroups] = useState<Group[]>([])
-    const [loading, setLoading] = useState(true)
+    // Para qué usuario están cargados los datos. El estado de carga se deriva de ahí, así que
+    // al cambiar de usuario vuelve a encenderse solo, sin fijarlo desde el efecto.
+    const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null)
+    const loading = loadedForUserId !== userId
     const [shareModalOpen, setShareModalOpen] = useState(false);
     const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
     const [renameModalOpen, setRenameModalOpen] = useState(false);
@@ -28,8 +31,6 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [aliases, setAliases] = useState<Record<string, string>>({});
 
     const fetchUserGroups = async (userId: string) => {
-        // No hace falta encender `loading` aquí: arranca en `true` y este es el único punto
-        // de entrada de la carga. Fijarlo desde el efecto encadenaba renders.
         try {
             const { data: myMemberships, error: membershipError } = await supabase
                 .from('group_members')
@@ -43,7 +44,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             if (!myMemberships || myMemberships.length === 0) {
                 setGroups([])
-                setLoading(false)
+                setLoadedForUserId(userId)
                 return
             }
 
@@ -139,7 +140,9 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         } catch (error) {
             console.error('Error fetching groups:', error)
         } finally {
-            setLoading(false)
+            // Los datos que quedan en pantalla son los de este cierre, tanto si salió bien
+            // como si falló.
+            setLoadedForUserId(userId)
         }
     }
 

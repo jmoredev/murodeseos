@@ -36,6 +36,32 @@ describe('GroupsTab', () => {
             expect(screen.getByText('Cargando grupos...')).toBeInTheDocument()
         })
 
+        it('vuelve a mostrar la carga cuando cambia el usuario', async () => {
+            ; (supabase.from as any).mockReturnValue({
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+                in: vi.fn().mockReturnThis()
+            })
+
+            const { rerender } = render(<GroupsTab userId={mockUserId} />)
+
+            await waitFor(() => {
+                expect(screen.getByText('Mis grupos')).toBeInTheDocument()
+            })
+
+            // Con el segundo usuario la consulta no resuelve: si el estado de carga no se
+            // volviera a encender, se seguirían viendo los grupos del usuario anterior.
+            ; (supabase.from as any).mockReturnValue({
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                in: vi.fn().mockReturnThis()
+            })
+
+            rerender(<GroupsTab userId="user-456" />)
+
+            expect(screen.getByText('Cargando grupos...')).toBeInTheDocument()
+        })
+
         it('renderiza header con título "Mis grupos"', async () => {
             ; (supabase.from as any).mockReturnValue({
                 select: vi.fn().mockReturnThis(),
