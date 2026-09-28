@@ -64,7 +64,7 @@ lo solicite**, y sin pantalla de destino el enlace no puede completarse aunque l
 - **El enlace hay que abrirlo en el mismo navegador.** El cliente es `createBrowserClient` de `@supabase/ssr`, así que el flujo es **PKCE**: el correo trae `?code=…` (confirmado en local: el token empieza por `pkce_`) y el verificador vive en el navegador que pidió el enlace. Por eso la pantalla avisa de ello y, si el canje falla, dice que se pida uno nuevo desde ese dispositivo en vez de dejar al usuario con un error opaco.
 - **`supabase/config.toml` también arrastraba el puerto 3000 de Next.js**: `site_url` era `http://127.0.0.1:3000` y la lista de redirecciones `https://127.0.0.1:3000` (https y puerto equivocados). Corregido a `http://127.0.0.1:8081` y a `localhost`/`127.0.0.1` en 8081: es la misma clase de defecto que S8 y es lo que hace que el enlace local caiga en la aplicación.
 - **El capturador de correo local es Mailpit**, aunque el contenedor se llame `inbucket`. Su API es `GET /api/v1/messages` y `GET /api/v1/message/{ID}`; el spec lee de ahí el cuerpo del correo.
-- **El mensaje del login es neutro a propósito**: solo se distingue el límite de envíos (429 / `over_email_send_rate_limit`), que no revela nada sobre la existencia de la cuenta.
+- **El mensaje neutro se reserva para la respuesta correcta**, y los errores devueltos sí se cuentan: Supabase responde correctamente aunque la cuenta no exista, así que mostrar un error no revela nada sobre la existencia de la cuenta, mientras que callarlo dejaría al usuario esperando un correo que nunca salió.
 - La pantalla de reset cierra un defecto que encontró su propia prueba: con la sesión ya presente seguía mostrando «Comprobando el enlace…» hasta que expiraba el temporizador de 3 s.
 
 ## Hallazgos de la revisión nativa (informativos)
@@ -73,7 +73,13 @@ Linaje `review-cc3d5630511adef5`: **aprobada** con catorce hallazgos **no bloque
 abre corrección y ninguno es motivo para repetir la revisión: se listan aquí como trabajo
 posterior, con lo que cada uno señala.
 
-### Merecen arreglo en el código
+### Merecen arreglo en el código (los cuatro primeros, corregidos)
+
+Los cuatro primeros hallazgos de esta tabla están **corregidos** después de la revisión: las dos
+llamadas (`resetPasswordForEmail` y `updateUser`) van ahora dentro de `try/catch/finally`, así que
+un fallo **lanzado** libera el botón en vez de dejarlo bloqueado, y hay pruebas para el error
+devuelto al guardar, el fallo lanzado al guardar y los dos al pedir el enlace (incluido el límite
+de envíos). Queda pendiente **R3-e2e-link-not-followed** (A-2d).
 
 | Hallazgo | Ubicación | Qué señala |
 | --- | --- | --- |

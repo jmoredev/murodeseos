@@ -72,4 +72,37 @@ describe('LoginPage — recuperación de contraseña', () => {
         expect(supabase.auth.resetPasswordForEmail).not.toHaveBeenCalled()
         expect(screen.getByText('Por favor, introduce un correo electrónico válido')).toBeInTheDocument()
     })
+
+    it('avisa si el envío lanza y libera el botón', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(new Error('sin red'))
+
+        render(<LoginPage />)
+
+        fireEvent.click(screen.getByTestId('forgot-password-link'))
+        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
+        fireEvent.click(screen.getByTestId('send-recovery-button'))
+
+        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('conexión')
+        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
+
+        // El botón vuelve a responder: un fallo lanzado no lo deja bloqueado.
+        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        await waitFor(() => expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledTimes(2))
+    })
+
+    it('distingue el límite de envíos de un fallo cualquiera', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
+            data: {},
+            error: { status: 429, code: 'over_email_send_rate_limit', message: 'rate limit' },
+        } as any)
+
+        render(<LoginPage />)
+
+        fireEvent.click(screen.getByTestId('forgot-password-link'))
+        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
+        fireEvent.click(screen.getByTestId('send-recovery-button'))
+
+        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('demasiados enlaces')
+        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
+    })
 })

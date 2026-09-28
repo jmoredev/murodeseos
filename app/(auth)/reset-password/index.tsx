@@ -64,17 +64,23 @@ export default function ResetPasswordPage() {
         setSaving(true);
         setError('');
 
-        const { error: updateError } = await supabase.auth.updateUser({ password });
+        try {
+            const { error: updateError } = await supabase.auth.updateUser({ password });
 
-        setSaving(false);
+            if (updateError) {
+                setError(updateError.message);
+                return;
+            }
 
-        if (updateError) {
-            setError(updateError.message);
-            return;
+            // La sesión de recuperación ya está iniciada, así que entra directamente.
+            router.replace('/');
+        } catch {
+            // Igual que al pedir el enlace: un fallo lanzado no puede dejar el
+            // formulario bloqueado.
+            setError('No pudimos guardar la contraseña. Comprueba tu conexión e inténtalo otra vez.');
+        } finally {
+            setSaving(false);
         }
-
-        // La sesión de recuperación ya está iniciada, así que entra directamente.
-        router.replace('/');
     };
 
     return (
