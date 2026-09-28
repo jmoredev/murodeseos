@@ -99,6 +99,16 @@ de envíos). Queda pendiente **R3-e2e-link-not-followed** (A-2d).
 | R2-003 | `env.example:14` | El valor de ejemplo podría confundirse con el de producción |
 | R2-001, R2-002 | `odd/tasks/consolidacion.md:4`, `odd/tasks/endurecimiento.md:4` | El `Estado` de ambas fichas ya no describe del todo su contenido |
 
+### Segunda revisión de esta feature (`review-8211d875c843855d`)
+
+La corrección de A-2c salió **aprobada** con dos hallazgos informativos más, que se atienden
+junto con A-2d en la siguiente unidad de trabajo:
+
+| Hallazgo | Ubicación | Qué señala |
+| --- | --- | --- |
+| R3-reset-catch-scope | `app/(auth)/reset-password/index.tsx:76-80` | El `catch` envuelve también `router.replace('/')`, así que un fallo al navegar diría «no pudimos guardar la contraseña» aunque la contraseña **sí** se hubiera guardado. El `try` debe cubrir solo la llamada |
+| R3-login-generic-error-coverage | `app/(auth)/login/index.tsx:47-54` | Falta prueba de la rama de error **devuelto** que no es el límite de envíos (hay prueba del 429 y del fallo lanzado, no de un error cualquiera) |
+
 ## Fuera de alcance
 
 - Cambiar de proveedor de correo o de plantillas de Supabase.
