@@ -1,25 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { E2E_CONFIG } from './config';
 import { createClient } from '@supabase/supabase-js';
+import { E2E_CONFIG } from './config';
+import { supabaseAdmin } from './supabase-admin';
 
 // En local el correo lo captura Mailpit (el contenedor se sigue llamando
 // `inbucket`, pero el servicio es Mailpit desde hace varias versiones del CLI).
 const MAILPIT_URL = process.env.E2E_MAILPIT_URL || 'http://127.0.0.1:54324';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-
-const supabaseServiceRoleKey =
-    process.env.NEXT_SERVICE_ROLE_KEY ||
-    process.env.EXPO_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Faltan env vars para supabaseAdmin en E2E');
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-});
 
 /** Último mensaje de un buzón, como identificador para detectar el nuevo. */
 async function latestMessageId(request: any, address: string): Promise<string> {
@@ -121,8 +107,17 @@ test.describe('Recuperación de contraseña', () => {
             // La sesión de recuperación ya está iniciada, así que entra directamente.
             await expect(page).toHaveURL(/\/$/, { timeout: 20000 });
 
-            // Y la contraseña nueva es la que vale.
-            const signedIn = await supabaseAdmin.auth.signInWithPassword({ email, password: newPassword });
+            // La comprobación va con un cliente propio: `supabaseAdmin` es compartido
+            // por todos los specs del worker, y dejarle una sesión haría que los
+            // siguientes specs escribieran como ese usuario (con RLS) en vez de con la
+            // clave de servicio.
+            const signInClient = createClient(
+                process.env.EXPO_PUBLIC_SUPABASE_URL!,
+                process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+                { auth: { persistSession: false, autoRefreshToken: false } },
+            );
+
+            const signedIn = await signInClient.auth.signInWithPassword({ email, password: newPassword });
             expect(signedIn.error).toBeNull();
         } finally {
             if (userId) await supabaseAdmin.auth.admin.deleteUser(userId);

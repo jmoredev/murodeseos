@@ -120,7 +120,9 @@ hallazgo informativo:
 
 | Hallazgo | Ubicación | Qué señala |
 | --- | --- | --- |
-| R3-e2e-env-gate | `e2e/reset-password.spec.ts:16-18` | La comprobación de variables de entorno **lanza al cargar el módulo**, así que una variable ausente se ve como un fallo del spec en vez de un error de preparación claro; los tres specs que usan `supabaseAdmin` repiten el mismo bloque y piden un ayudante compartido |
+| R3-e2e-env-gate | `e2e/reset-password.spec.ts:16-18` | **Corregido**: el arranque vive ahora en `e2e/supabase-admin.ts` —la comprobación de variables, una sola vez, con un mensaje que nombra lo que falta— y los ocho specs que lo usaban lo importan |
+
+**Lo que destapó este arreglo, y es lo importante**: al pasar a un cliente **compartido por el worker**, el `signInWithPassword` que usaba el spec de recuperación dejaba una **sesión puesta en ese cliente**, así que los specs siguientes escribían como ese usuario (sujetos a RLS) en vez de con la clave de servicio. `responsive-wishlist.spec.ts` fallaba al sembrar con «new row violates row-level security policy» y **pasaba en el reintento** porque, al borrarse el usuario de prueba, la sesión quedaba inválida y el cliente volvía a la clave de servicio. El ayudante documenta ahora ese riesgo y la comprobación de credenciales usa un cliente propio; dos corridas completas seguidas quedan en **40/40 sin inestables**.
 
 El cierre de esta revisión **no trae el texto de la reclamación**, solo id, lente, ubicación y
 severidad: se registra por su ubicación y por lo que hay en esas líneas.

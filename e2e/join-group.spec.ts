@@ -1,24 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { E2E_CONFIG, BASE_URL } from './config'
+import { supabaseAdmin } from './supabase-admin'
 
-// Cliente Supabase para operaciones de "backdoor" (limpieza de DB, etc)
+// Cliente con la clave anónima para las comprobaciones de este spec; el de
+// servicio, que también hace falta aquí, viene del ayudante compartido.
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-const supabaseServiceRoleKey =
-    process.env.NEXT_SERVICE_ROLE_KEY ||
-    process.env.EXPO_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Faltan env vars para supabaseAdmin en E2E')
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-})
 
 // Mapa para limpieza
 const createdGroupIds = new Set<string>()
