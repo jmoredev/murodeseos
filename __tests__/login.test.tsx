@@ -14,9 +14,10 @@ vi.mock('react', async () => {
 
 
 vi.mock('next/link', () => {
-    return ({ children, href }: any) => {
+    const MockLink = ({ children, href }: any) => {
         return <a href={href}>{children}</a>;
     };
+    return MockLink;
 })
 
 
@@ -85,8 +86,13 @@ describe('LoginPage — recuperación de contraseña', () => {
         expect(await screen.findByTestId('recovery-error')).toHaveTextContent('conexión')
         expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
 
-        // El botón vuelve a responder: un fallo lanzado no lo deja bloqueado.
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        // El botón vuelve a responder: un fallo lanzado no lo deja bloqueado. Se espera
+        // a que la etiqueta vuelva a la normalidad antes de pulsar: el error y la
+        // liberación del botón pueden llegar en dos renders distintos, y pulsar sobre
+        // un botón todavía ocupado no registra la segunda llamada.
+        const retryButton = screen.getByTestId('send-recovery-button')
+        await waitFor(() => expect(retryButton).toHaveTextContent('Enviar enlace'))
+        fireEvent.click(retryButton)
         await waitFor(() => expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledTimes(2))
     })
 

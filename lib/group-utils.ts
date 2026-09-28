@@ -184,7 +184,7 @@ export async function shareGroup(groupName: string, groupCode: string): Promise<
                 text: message,
             })
             return true
-        } catch (error) {
+        } catch {
             // Usuario canceló o error
 
             return false

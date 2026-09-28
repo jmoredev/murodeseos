@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { E2E_CONFIG } from './config'
 
 test.describe('Navegación de Grupos', () => {
     test.beforeEach(async ({ page }) => {

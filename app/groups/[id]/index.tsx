@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { shareGroup } from '@/lib/group-utils';

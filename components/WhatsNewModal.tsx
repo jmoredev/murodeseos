@@ -1,23 +1,34 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { getLatestUpdate } from '@/lib/updates';
 import packageJson from '@/package.json';
 
 export default function WhatsNewModal() {
-    const [isOpen, setIsOpen] = useState(false);
     const latestUpdate = getLatestUpdate();
     const currentVersion = packageJson.version;
     const titleRef = useRef<HTMLHeadingElement>(null);
     const previouslyFocused = useRef<HTMLElement | null>(null);
+    const [dismissed, setDismissed] = useState(false);
 
-    useEffect(() => {
-        const lastSeenVersion = localStorage.getItem('lastSeenVersion');
+    // Leer localStorage no puede ocurrir en el render del servidor, así que el snapshot
+    // del servidor dice «no anunciar» y el cliente lo decide al hidratar.
+    const shouldAnnounce = useSyncExternalStore(
+        () => () => {},
+        () => {
+            const lastSeenVersion = localStorage.getItem('lastSeenVersion');
 
-        if (latestUpdate.version === currentVersion && lastSeenVersion !== currentVersion) {
-            setIsOpen(true);
-        }
-    }, [latestUpdate.version, currentVersion]);
+            return latestUpdate.version === currentVersion && lastSeenVersion !== currentVersion;
+        },
+        () => false,
+    );
+
+    const isOpen = shouldAnnounce && !dismissed;
+
+    const handleClose = useCallback(() => {
+        setDismissed(true);
+        localStorage.setItem('lastSeenVersion', currentVersion);
+    }, [currentVersion]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -41,18 +52,12 @@ export default function WhatsNewModal() {
             window.clearTimeout(t);
             document.removeEventListener('keydown', handleKeyDown);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    }, [isOpen, handleClose]);
 
     useEffect(() => {
         if (isOpen) return;
         previouslyFocused.current?.focus?.();
     }, [isOpen]);
-
-    const handleClose = () => {
-        setIsOpen(false);
-        localStorage.setItem('lastSeenVersion', currentVersion);
-    };
 
     if (!isOpen) return null;
 

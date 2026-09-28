@@ -30,13 +30,12 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
         message: string;
     } | null>(null);
     const pendingConfirmRef = useRef(pendingConfirm);
-    pendingConfirmRef.current = pendingConfirm;
 
+    // El ref se actualiza en un efecto: escribirlo durante el render es un acceso a
+    // refs que el compilador no admite.
     useEffect(() => {
-        if (isOpen) {
-            fetchExclusions();
-        }
-    }, [isOpen, group.id]);
+        pendingConfirmRef.current = pendingConfirm;
+    }, [pendingConfirm]);
 
     const fetchExclusions = async () => {
         try {
@@ -46,6 +45,19 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
             console.error('Error fetching exclusions:', error);
         }
     };
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Al abrirse, las exclusiones se cargan en un límite asíncrono explícito: la carga
+        // no fija estado de forma síncrona.
+        void (async () => {
+            await fetchExclusions();
+        })();
+        // `fetchExclusions` sólo depende de `group.id`, que ya está en la lista; con él en
+        // las dependencias se recalcularía en cada render sin cambiar nada.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, group.id]);
 
     const handleAddExclusion = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,7 +82,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
             await removeExclusion(id);
             await fetchExclusions();
             showToast('Exclusión eliminada');
-        } catch (error) {
+        } catch {
             showToast('Error al eliminar exclusión', 'error');
         }
     };
@@ -117,7 +129,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
             showToast('Amigo Invisible finalizado');
             onDrawStatusChange();
             setTimeout(onClose, 1500);
-        } catch (error) {
+        } catch {
             showToast('Error al finalizar el sorteo', 'error');
         } finally {
             setLoading(false);

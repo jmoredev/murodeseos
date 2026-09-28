@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { E2E_CONFIG, BASE_URL } from './config'
+import { BASE_URL } from './config'
 import { supabaseAdmin } from './supabase-admin'
 
 //Almacena pares de { ID_del_Test : ID_del_Dato_Creado }

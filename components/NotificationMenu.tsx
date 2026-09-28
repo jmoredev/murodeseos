@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/notification-utils';
 import { NotificationItem } from './NotificationItem';
@@ -15,6 +15,16 @@ import { createPortal } from 'react-dom';
 // overlay de errores tapando la pantalla y ningún clic llegando a la interfaz.
 let notificationChannelSequence = 0;
 
+/** Suscripción al ancho de la ventana, para no fijar estado dentro de un efecto. */
+function subscribeToViewport(onStoreChange: () => void) {
+    window.addEventListener('resize', onStoreChange);
+    return () => window.removeEventListener('resize', onStoreChange);
+}
+
+function isDesktopViewport() {
+    return window.innerWidth >= 640;
+}
+
 interface NotificationMenuProps {
     userId: string;
 }
@@ -24,8 +34,14 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [isDesktop, setIsDesktop] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
+    // El ancho y el montaje son estados externos (falsos en el servidor), no algo que se
+    // fije con un efecto.
+    const isDesktop = useSyncExternalStore(subscribeToViewport, isDesktopViewport, () => false);
+    const isMounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dialogTitleId = 'notifications-dialog-title';
@@ -46,12 +62,11 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     };
 
     useEffect(() => {
-        setIsMounted(true);
-        const checkDesktop = () => setIsDesktop(window.innerWidth >= 640);
-        checkDesktop();
-        window.addEventListener('resize', checkDesktop);
-
-        loadNotifications();
+        // La carga arranca en un límite asíncrono explícito: no fija estado de forma
+        // síncrona, y así el análisis estático puede comprobarlo.
+        void (async () => {
+            await loadNotifications();
+        })();
 
         // Tema único por suscripción, por lo explicado junto al contador.
         notificationChannelSequence += 1;
@@ -73,9 +88,11 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
             .subscribe();
 
         return () => {
-            window.removeEventListener('resize', checkDesktop);
             supabase.removeChannel(channel);
         };
+        // `loadNotifications` sólo depende de `userId`, que ya está en la lista; se omite
+        // para no reabrir la suscripción en cada render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);
 
     // Cerrar al hacer click fuera (solo modo escritorio)
