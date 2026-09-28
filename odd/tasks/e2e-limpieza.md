@@ -2,7 +2,7 @@
 
 **Rama:** `test/e2e-limpieza`
 **Abierta:** 2026-09-28
-**Estado:** en curso
+**Estado:** cerrada el 2026-09-28 — E-10 y E-11 cerrados y verificados con el gate completo; revisión nativa aprobada
 
 ## Objetivo
 
@@ -45,10 +45,10 @@ cada corrida.
 
 | # | Tarea | Estado | Evidencia |
 | --- | --- | --- | --- |
-| 1 | E-10 — `create-group.spec.ts` limpia por `supabaseAdmin` y pierde el bloque de depuración | pendiente | — |
-| 2 | E-10 — `join-group.spec.ts` limpia por `supabaseAdmin` | pendiente | — |
-| 3 | E-11 — `profile.spec.ts` afirma que el botón está deshabilitado, no que se vea | pendiente | — |
-| 4 | Verificación: los tres specs y el gate completo de chromium | pendiente | — |
+| 1 | E-10 — `create-group.spec.ts` limpia por `supabaseAdmin` y pierde el bloque de depuración | **hecho** | `1a03a14`: la identidad del test se lee con `test.info()`, porque el patrón vacío de Playwright dispara `no-empty-pattern` |
+| 2 | E-10 — `join-group.spec.ts` limpia por `supabaseAdmin` | **hecho** | `2367c28`: `BASE_URL` quedó sin uso y se retiró del import |
+| 3 | E-11 — `profile.spec.ts` afirma que el botón está deshabilitado, no que se vea | **hecho** | `b90d589`: el botón se busca por rol y nombre accesible, y `toBeDisabled()` pasa contra el elemento real |
+| 4 | Verificación: los tres specs y el gate completo de chromium | **hecho** | ver abajo |
 
 ## Restricciones
 
@@ -61,7 +61,29 @@ cada corrida.
 
 ## Verificación
 
-Pendiente.
+- `pnpm run lint` limpio, avisos incluidos. El primer intento dejó un aviso
+  `no-empty-pattern` —el patrón vacío que Playwright necesita en el gancho— que se
+  resolvió leyendo la identidad del test con `test.info()`.
+- `pnpm exec tsc --noEmit` sin errores.
+- Los tres specs afectados, en solitario: **11/11**.
+- Gate completo de chromium: **40/40, sin inestables**.
+- **La limpieza se ve en el registro**: cinco grupos borrados vía Supabase y
+  **cero** líneas de `Status 404` o `ERROR AL BORRAR` en la corrida completa, donde
+  antes cada corrida los dejaba.
+- La aserción de E-11 se comprobó contra el elemento real: `getByRole('button', {
+  name })` con `toBeDisabled()` pasa, así que React Native Web expone el estado
+  deshabilitado a Playwright.
+
+## Hallazgos informativos de la revisión
+
+La revisión nativa (tier medio, lente de fiabilidad) **aprobó** el candidato sin abrir
+corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabajan aparte:
+
+| ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
+| --- | --- | --- | --- | --- |
+| R3-001 | fiabilidad | `e2e/create-group.spec.ts:30-34` | aviso | El borrado registra el error pero no lo convierte en fallo del spec; con el residuo ya visible en el registro es defendible, y conviene decidirlo en una unidad propia. |
+| R3-002 | fiabilidad | `e2e/profile.spec.ts:139-141` | sugerencia | La aserción no comprueba que el botón **estuviera habilitado antes**: si el nombre llegara vacío del servidor, pasaría por el motivo equivocado. Se arregla afirmando el estado habilitado antes de rellenar. |
+| R3-003 | fiabilidad | `odd/tasks/e2e-limpieza.md:48-51` | sugerencia | Sobre la redacción de las decisiones de este documento. |
 
 ## Consecuencia
 
