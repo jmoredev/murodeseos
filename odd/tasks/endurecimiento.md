@@ -19,7 +19,7 @@ deriva.
 
 | Control | Estado | Evidencia |
 | --- | --- | --- |
-| RLS activo en todas las tablas de `public` | correcto | `relrowsecurity = true` en las 9 tablas |
+| RLS activo en todas las tablas de `public` | correcto | `relrowsecurity = true` en las 9 tablas (medida del 2026-09-28); una de ellas es `wishlist_reservations`, que la fase 1 añadió |
 | `wishlist_items` UPDATE del propietario | correcto | `user_id = auth.uid()` en USING y WITH CHECK |
 | `wishlist_items` UPDATE de terceros | correcto | ya no existe política de UPDATE para terceros: solo el dueño actualiza sus deseos. La política de compatibilidad que abrió la fase 1 se retiró con la fase 2 |
 | `notifications` INSERT | correcto | `actor_id = auth.uid()` |
