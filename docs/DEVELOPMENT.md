@@ -33,6 +33,20 @@ Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrol
 - `bun run build` / `npm run build`: export web con la carga habitual de `.env` (útil en local; suele usar `.env.local`).
 - `bun run build:deploy` / `npm run build:deploy`: export para publicar, **forzando** variables desde `.env.production`.
 
+### Cómo se publica
+
+`main` es la **línea de desarrollo**: cada merge la actualiza, y el gate corre en cada pull request y en cada merge. **Publicar es un acto deliberado**: el despliegue se dispara al empujar una etiqueta, no en cada merge, porque cada publicación empuja un bundle nuevo a las PWA instaladas y el service worker lo activa de inmediato.
+
+```bash
+git switch main && git pull
+git tag -a v2026.09.28 -m "Publicar el estado de main del 2026-09-28"
+git push origin v2026.09.28
+```
+
+El workflow comprueba que la etiqueta apunta a un commit de `main`, ejecuta el build y el gate de extremo a extremo, y solo entonces publica. Para republicar o revertir sin mover etiquetas, se lanza el workflow a mano (`workflow_dispatch`) desde `main`.
+
+La etiqueta marca **cuándo se publicó**, no la versión del producto: esa vive en `app.json` y no se repite aquí, para no tener el mismo dato en dos sitios.
+
 ### Cómo comprobar qué valores usó el build de deploy
 1. Pon en `.env.production` un valor distintivo (por ejemplo una URL de Supabase que solo exista en producción).
 2. Ejecuta `npm run build:deploy` (o `bun run build:deploy`).
