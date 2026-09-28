@@ -71,6 +71,16 @@ sitios donde vive el mínimo de la contraseña.
 - Gate completo de chromium contra ese stack: **40/40, sin inestables**, y el sembrado no se
   queja porque sus contraseñas ya cumplían el mínimo.
 
+## Hallazgos informativos de la revisión
+
+La revisión nativa (tier medio, lente de fiabilidad) **aprobó** el candidato y devolvió dos
+hallazgos informativos, que no bloquean:
+
+| ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
+| --- | --- | --- | --- | --- |
+| R3-001 | fiabilidad | `__tests__/password.test.ts:10` | aviso | La expresión regular repite el `8` en vez de leer el mínimo. Es deliberado —fija el texto exacto del borde— y la prueba siguiente comprueba que el mensaje **nombre** el mínimo, así que los dos ángulos están cubiertos |
+| R3-002 | fiabilidad | `app/(auth)/signup/index.tsx:43-45` | aviso | El alta informa primero de que las contraseñas no coinciden y el restablecimiento primero de la longitud. Es el orden que ya tenían y se respetó a propósito; unificarlo —longitud primero, que es la regla que bloquea— sería una unidad propia |
+
 ## Consecuencia
 
 Al terminar, el mínimo está declarado una vez para el cliente, el stack local representa al
