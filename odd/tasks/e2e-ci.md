@@ -1,10 +1,12 @@
 # Suite E2E determinista y en CI
 
 **Feature:** `e2e-ci`
-**Estado:** en curso — la suite completa en chromium pasa **38/38 con `CI=1`** (exit 0) y el
-gate ya corre en CI; el cierre de la suite (E-4) y los cinco fallos de specs (E-5 a E-9) están
-corregidos. Quedan la tarea 9 (cierre documental), el defecto abierto E-10 y la decisión
-pendiente E-I (el gate detecta, no bloquea).
+**Estado:** **cerrada** — la suite completa pasa 38/38 y el gate E2E corre en cada pull request
+y antes de publicar en Pages. Su primera corrida real en un runner fue **verde** (PR #14, ~270 s)
+y la segunda validó la fase 2 de la migración de reservas (PR #15, 220 s). `main` exige los
+checks `E2E gate / Chromium suite` y `Types and unit tests` con `enforce_admins`, así que el
+gate **bloquea** el merge y el publish. Queda abierto E-10 (residuo de limpieza en dos specs) y
+el trabajo posterior de los hallazgos informativos.
 **Inicio:** 2026-09-25
 **Rama:** `feat/reservas-privacidad`
 **Cierra:** V9 de [`reservas.md`](./reservas.md); el punto «E2E en CI» de
@@ -152,7 +154,7 @@ a `main`.
 | 7 | Corregir los fallos de la suite completa (E-5 a E-9) | hecho | Cinco expectativas obsoletas y una fuga de fixture, en los cuatro specs afectados (E-5, E-6, E-7, E-8, E-9); diagnóstico con evidencia de DOM y causalidad medida para E-9 |
 | 8 | Implementar el gate E2E en CI: job en push a `main`, solo chromium | hecho | Job `e2e` en `.github/workflows/ci.yml`: chromium, stack local, `.env.local` generado desde `supabase status -o env` (sin secretos) y el gate completo. YAML válido bajo dos parsers, filtro auditado contra entrada adversaria, y el gate re-verificado tras el cambio de reporter: 38/38, exit 0. El alcance de E-D se cumple; la disposición en los workflows la cambia la tarea 10, por la decisión E-I |
 | 10 | Gatear el merge y el publish con el mismo workflow reutilizable (decisión E-I) | hecho | `.github/workflows/e2e.yml` nuevo, con los 8 pasos idénticos a los del job anterior (diff vacío tras el round-trip de YAML, comentarios incluidos); `ci.yml` con el llamador bajo `if: pull_request` y `deploy.yml` con el llamador sin condición y `deploy.needs: [build, e2e]`. Un evento, una corrida de la suite. YAML válido bajo dos parsers y el gate local sigue en 38/38, exit 0 |
-| 9 | Documentación: cerrar V9 en `reservas.md` y el punto de CI en `endurecimiento.md` y `consolidacion.md` | pendiente | |
+| 9 | Documentación: cerrar V9 en `reservas.md` y el punto de CI en `endurecimiento.md` y `consolidacion.md` | hecho | V9 cerrado en `reservas.md`; tarea 11 de `consolidacion.md` auditada y tarea 14 marcada como hecha; S1 y S2 cerrados en producción en `endurecimiento.md`; estado de esta feature cerrado |
 
 ## Defectos encontrados
 
@@ -181,7 +183,7 @@ a `main`.
 | La suite deja residuo y depende del reseed previo | E-10 abierto: `test:e2e:prepare` reseedea antes de cada corrida y el gate de CI siempre lo ejecuta. Un gate que lance Playwright sin `prepare` iría acumulando grupos de prueba y volvería intermitente el orden del mosaico |
 | Un gate que no bloquea nada da falsa sensación de protección | Resuelto por E-I: el publish es de fallo cerrado (`deploy` no corre si el E2E falla o se cancela) y el merge se puede bloquear exigiendo el check `E2E gate / Chromium suite`. Esa exigencia **solo se configura en los ajustes de GitHub**, no en el repositorio, así que hoy el gate avisa en el PR pero nadie impide el merge por él |
 | El E2E en cada PR alarga cada PR | Costo aceptado por el usuario en E-I. `concurrency` de `ci.yml` es `cancel-in-progress: true`, así que un push nuevo cancela la corrida anterior del mismo PR en vez de acumularla. La medición local de la suite es 1,1 min; el costo real lo domina el arranque del stack y la instalación de chromium en un runner frío |
-| El primer push a `main` es la primera prueba real del job | Todo lo verificable sin runner está verificado (YAML, filtro de entorno, orden de pasos, suite local). Quedan a merced del runner: Docker y `supabase start`, la resolución de los tags de acción y el timeout de 30 minutos |
+| ~~El primer push a `main` es la primera prueba real del job~~ Resuelto | La primera corrida real fue verde (PR #14, ~270 s) y confirmó lo que no se podía probar en local: Docker operativo en `ubuntu-latest`, `supabase start` dentro del timeout, los tags de acción resuelven y la generación de `.env.local` funciona. La segunda corrida (PR #15) validó la fase 2 de la migración de reservas |
 
 ## Mediciones (trampas ya pagadas)
 

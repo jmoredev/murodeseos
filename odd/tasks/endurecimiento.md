@@ -1,7 +1,7 @@
 # Endurecimiento de la base de datos y de la privacidad
 
 **Feature:** `endurecimiento`
-**Estado:** auditoría completada; S1, S2 y D4 corregidos y verificados en local, pendientes de aplicar a producción
+**Estado:** **cerrada** — S1, S2 y D4 corregidos, **aplicados y verificados en producción** el 2026-09-28 con las dos fases de la migración de reservas. Quedan S8, S11, S12 y S13 como trabajo aparte.
 **Inicio:** 2026-09-24
 **Depende de:** `consolidacion` (proyecto Supabase vinculado)
 
@@ -13,14 +13,15 @@ Supabase de producción, sin tocar datos existentes y con migraciones aditivas.
 ## Estado verificado de producción
 
 Proyecto `bztfzifafquulelcxycqk`, auditado con `supabase db advisors` y
-`supabase db query --linked`. Las **18 migraciones locales están aplicadas**, así
-que el esquema remoto coincide con el repositorio: no hay deriva.
+`supabase db query --linked`. Las **21 migraciones locales están aplicadas** —incluidas las dos
+de la migración de reservas— así que el esquema remoto coincide con el repositorio: no hay
+deriva.
 
 | Control | Estado | Evidencia |
 | --- | --- | --- |
-| RLS activo en todas las tablas de `public` | correcto | `relrowsecurity = true` en las 10 tablas |
+| RLS activo en todas las tablas de `public` | correcto | `relrowsecurity = true` en las 9 tablas |
 | `wishlist_items` UPDATE del propietario | correcto | `user_id = auth.uid()` en USING y WITH CHECK |
-| `wishlist_items` UPDATE de terceros | correcto | solo reserva o cancelación sobre filas libres o propias |
+| `wishlist_items` UPDATE de terceros | correcto | ya no existe política de UPDATE para terceros: solo el dueño actualiza sus deseos. La política de compatibilidad que abrió la fase 1 se retiró con la fase 2 |
 | `notifications` INSERT | correcto | `actor_id = auth.uid()` |
 | `notifications` tipos permitidos | correcto | incluye `draw_performed` y `wish_deleted_by_owner` |
 | Storage: política SELECT pública | eliminada | solo quedan INSERT, UPDATE y DELETE |
@@ -33,13 +34,17 @@ que el esquema remoto coincide con el repositorio: no hay deriva.
 
 ### S1 — El dueño puede leer quién reservó su regalo (RESUELTO)
 
-> **Resuelto el 2026-09-25** en la feature `reservas`. La reserva dejó de vivir
-> en `wishlist_items`: se movió a `public.wishlist_reservations` con
-> `supabase/migrations/20260925120000_wishlist_reservations_privacy.sql`. El
-> cliente recibe el estado por `get_wishlist_reservation_states`, que nunca
-> devuelve autoría, y el dueño no recibe estado de sus propios deseos. Verificado
-> contra la base local. Detalle en [`reservas.md`](./reservas.md). **Pendiente de
-> aplicar a producción.**
+> **Resuelto el 2026-09-25** en la feature `reservas`, y **cerrado en producción el
+> 2026-09-28**. La reserva dejó de vivir en `wishlist_items`: se movió a
+> `public.wishlist_reservations` con
+> `supabase/migrations/20260925120000_wishlist_reservations_privacy.sql` (fase 1, que además
+> conservó `reserved_by` como espejo del bundle ya desplegado), y la ventana se cerró con
+> `20260928120000_drop_reserved_by_window.sql` (fase 2: retira la columna, su índice, su clave
+> foránea, el puente de disparadores y la política de compatibilidad). El cliente recibe el
+> estado por `get_wishlist_reservation_states`, que nunca devuelve autoría, y el dueño no
+> recibe estado de sus propios deseos. Verificado en local con una matriz por rol y en
+> producción tras aplicar la fase 2: la columna ya no existe. Detalle en
+> [`reservas.md`](./reservas.md).
 
 La política SELECT de `wishlist_items` era `auth.uid() IS NOT NULL`. El cliente
 del dueño recibía todas las columnas, incluida `reserved_by`, y las consultas usan
@@ -48,11 +53,11 @@ leer desde el navegador. Viola D3.
 
 ### S2 — Cualquier usuario autenticado lee cualquier lista (RESUELTO)
 
-> **Resuelto el 2026-09-25** en la misma migración de la feature `reservas`: la
-> política SELECT exige ahora un grupo compartido con el dueño que no esté en
-> `excluded_group_ids`. El filtro de exclusiones que el cliente aplicaba por su
-> cuenta se retiró, para que la política sea la única autoridad. Verificado contra
-> la base local con una matriz por rol. **Pendiente de aplicar a producción.**
+> **Resuelto el 2026-09-25** en la misma migración de la feature `reservas`, y **cerrado en
+> producción el 2026-09-28**: la política SELECT exige ahora un grupo compartido con el dueño
+> que no esté en `excluded_group_ids`. El filtro de exclusiones que el cliente aplicaba por su
+> cuenta se retiró, para que la política sea la única autoridad. Verificado contra la base local
+> con una matriz por rol y en producción tras aplicar las dos fases.
 
 La misma política no comprobaba pertenencia a un grupo. Con el UUID de una persona
 —o enumerando— se obtenía su lista completa. Viola D2.
@@ -213,7 +218,7 @@ camino de lectura y de escritura. El 6 es independiente. El 7 es deuda.
 
 ## Restricciones
 
-- Las 18 migraciones existentes no se tocan.
+- Las migraciones ya aplicadas no se tocan: se añaden nuevas, idempotentes y aditivas.
 - Toda migración nueva debe ser idempotente y aditiva.
 - El repositorio es público: la clave anónima no es un secreto y RLS es la única
   frontera real.

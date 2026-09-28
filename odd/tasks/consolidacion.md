@@ -1,7 +1,7 @@
 # Consolidar el repositorio en una sola línea de trabajo
 
 **Feature:** `consolidacion`
-**Estado:** en curso
+**Estado:** en curso — consolidación y endurecimiento cerrados y desplegados; queda la tarea 13 (lint bloqueante) y el trabajo posterior de S8, S11, S12 y S13
 **Inicio:** 2026-09-24
 **Rama:** `feat/pwa-adaptation`
 
@@ -84,10 +84,10 @@ usuario.
 | 8 | Añadir el flujo de CI: tipos y tests unitarios en cada pull request | hecho | `3ea161a` |
 | 9 | Añadir el flujo de despliegue: build y publicación en GitHub Pages | hecho | `3ea161a` |
 | 10 | Cambiar la fuente de GitHub Pages a GitHub Actions | hecho | `build_type: workflow`; despliegue verificado |
-| 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | bloqueado | requiere el proyecto Supabase vinculado |
-| 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | pendiente | depende de la tarea 11 |
+| 11 | Auditar políticas RLS, migraciones aplicadas y privilegios de funciones contra producción | hecho | auditoría completa en [`endurecimiento.md`](./endurecimiento.md): 21/21 migraciones aplicadas, 9 tablas de `public` con RLS activo, advisors de 3 hallazgos a 1 |
+| 12 | Añadir migraciones para visibilidad por grupo, reserva única y privacidad de la reserva | hecho | `20260925120000_wishlist_reservations_privacy.sql` (fase 1) y `20260928120000_drop_reserved_by_window.sql` (fase 2), aplicadas y verificadas en producción el 2026-09-28; cierran S1, S2 y D4 |
 | 13 | Dejar el lint en verde y convertirlo en puerta bloqueante | pendiente | base actual: 16 errores, 21 avisos |
-| 14 | Llevar los tests E2E al CI | pendiente | `supabase start` necesita Docker, que los runners no ofrecen |
+| 14 | Llevar los tests E2E al CI | hecho | workflow reutilizable `.github/workflows/e2e.yml`, invocado en cada pull request y por `deploy.yml` antes de publicar. Primera corrida real verde en PR #14 (~270 s) y segunda en PR #15 (220 s). `main` exige `E2E gate / Chromium suite` y `Types and unit tests` con `enforce_admins`. El motivo que figuraba aquí era inexacto: `ubuntu-latest` sí ofrece Docker |
 
 ## Defectos encontrados y resueltos en esta feature
 
@@ -110,8 +110,8 @@ El detalle, la evidencia y el plan de cada uno están en
 
 | ID | Defecto | Estado |
 | --- | --- | --- |
-| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | cerrado en código, verificado en local; pendiente de aplicar a producción |
-| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | cerrado en código, verificado en local; pendiente de aplicar a producción |
+| S1 | El dueño del deseo puede leer `reserved_by`: la sorpresa es falsificable | **cerrado y verificado en producción** (2026-09-28): la fase 2 retiró la columna, así que la autoría ya no está en `wishlist_items` |
+| S2 | Cualquier usuario autenticado lee cualquier lista sin grupo en común | **cerrado y verificado en producción** (2026-09-28): la política SELECT exige grupo compartido no excluido |
 | S3 | Las notificaciones se pueden insertar en nombre de otros usuarios | cerrado y verificado |
 | S4 | La política de actualización de `wishlist_items` es permisiva y depende de un trigger | cerrado y verificado |
 | S5 | Funciones `SECURITY DEFINER` alcanzables por RPC | cerrado y verificado |
