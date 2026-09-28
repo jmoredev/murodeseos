@@ -25,7 +25,7 @@ Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrol
    ```env
    EXPO_PUBLIC_SUPABASE_URL=tu_url
    EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
-   EXPO_PUBLIC_SITE_URL=http://localhost:3000
+   EXPO_PUBLIC_SITE_URL=http://localhost:8081
    ```
    - **Deploy (GitHub Pages):** crea `.env.production` en la raíz con los mismos nombres de variable y los valores del **proyecto Supabase de producción** y la URL pública del sitio. Los scripts `deploy`, `deploy:test` y `deploy:prod` ejecutan `build:deploy`, que **solo** carga `.env.production` (se desactiva la carga automática de `.env` de Expo y no se usa `.env.local`), así el build no hereda tu base local.
 

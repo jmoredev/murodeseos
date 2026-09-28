@@ -118,7 +118,7 @@ El detalle, la evidencia y el plan de cada uno están en
 | S6 | Listado del bucket de Storage por usuarios anónimos | cerrado y verificado |
 | S7 | `draw_performed` ausente de la restricción de tipos de notificación | cerrado y verificado |
 | S8 | **El registro fija `emailRedirectTo` a `http://localhost:8081/login`**, así que con la confirmación por correo activa ningún usuario nuevo puede confirmar su cuenta | abierto, crítico |
-| S9 | `EXPO_PUBLIC_SITE_URL` se documenta en `env.example` pero no se usa en ningún sitio | abierto |
+| S9 | `EXPO_PUBLIC_SITE_URL` se documenta en `env.example` pero no se usa en ningún sitio | **cerrado**: la usa `lib/site-url.ts` para los enlaces de correo, y `deploy.yml` la pasa al build desde la variable del repositorio |
 | S10 | Copia de credenciales olvidada en `public.tmp_auth_users` y `tmp_auth_identities` | cerrado y verificado |
 | S11 | Protección de contraseñas filtradas desactivada | abierto, depende del plan de Supabase |
 | S12 | Las rutas dinámicas devuelven 404 aunque sirven el shell de la SPA | abierto, preexistente |

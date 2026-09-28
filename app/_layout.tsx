@@ -9,24 +9,13 @@ import {
     BeVietnamPro_600SemiBold,
     BeVietnamPro_700Bold,
 } from '@expo-google-fonts/be-vietnam-pro';
+import { getGithubPagesBasePath } from '@/lib/site-url';
 import './global.css';
 
 SplashScreen.preventAutoHideAsync();
 
 const SURFACE_BG = '#fff4f4';
 const THEME_COLOR = '#aa2c32';
-
-function getGithubPagesBasePath() {
-    if (typeof window === 'undefined') return '';
-    const isGithubPages = window.location.hostname.endsWith('github.io');
-    if (!isGithubPages) return '';
-
-    const pathname = window.location.pathname || '/';
-    const maybeRepoBase = pathname.split('/').filter(Boolean)[0];
-
-    const fallbackRepo = 'murodeseos';
-    return `/${maybeRepoBase || fallbackRepo}`;
-}
 
 function ensureWebHead() {
     if (typeof document === 'undefined') return;

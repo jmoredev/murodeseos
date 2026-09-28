@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, Scrol
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function SignupPage() {
@@ -46,7 +47,10 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            const redirectTo = 'http://localhost:8081/login';
+            // Enlace absoluto: el correo lo abre el usuario en su navegador, así que no puede
+            // apuntar a la máquina desde la que se registró. `getSiteBaseUrl` usa
+            // EXPO_PUBLIC_SITE_URL y, si no está, deriva el sitio actual.
+            const redirectTo = `${getSiteBaseUrl()}/login`;
 
             const { error: signupError } = await supabase.auth.signUp({
                 email,

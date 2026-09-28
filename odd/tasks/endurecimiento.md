@@ -133,12 +133,23 @@ Nada lo ejecuta automáticamente, así que hoy no hay daño: es una trampa para 
 siga las instrucciones del README. La solución es eliminar la carpeta y dejar
 `supabase/migrations/` como única fuente de verdad.
 
-### S8 — Redirect de confirmación fijado a localhost
+### S8 — Redirect de confirmación fijado a localhost (RESUELTO)
 
-`app/(auth)/signup/index.tsx:49` usa `emailRedirectTo = 'http://localhost:8081/login'`.
+> **Resuelto el 2026-09-28.** `lib/site-url.ts` centraliza la URL base del sitio: usa
+> `EXPO_PUBLIC_SITE_URL` —que ahora sí se usa en el código y que `deploy.yml` pasa al build
+> desde la variable del repositorio— y, si no está definida, deriva el sitio actual (el origen
+> más la ruta base de GitHub Pages), con `http://localhost:8081` como último recurso. El alta
+> compone el enlace de confirmación con ella. `getGithubPagesBasePath` se movió a ese módulo y
+> `app/_layout.tsx` lo importa, así que hay una sola fuente de verdad. Cubierto por
+> `__tests__/site-url.test.ts`.
+>
+> Queda del lado del panel de Supabase que la **Site URL** y la lista de redirecciones incluyan
+> el sitio de producción; eso no se puede leer desde el repositorio.
+
+`app/(auth)/signup/index.tsx:49` usaba `emailRedirectTo = 'http://localhost:8081/login'`.
 Con `mailer_autoconfirm: false` en producción, ningún usuario nuevo puede
-confirmar su cuenta. `EXPO_PUBLIC_SITE_URL` está documentada en `env.example`
-pero no se usa en el código.
+confirmar su cuenta. `EXPO_PUBLIC_SITE_URL` estaba documentada en `env.example`
+pero no se usaba en el código.
 
 ## Diseño de la remediación de S1, S2 y D4
 
@@ -206,7 +217,7 @@ reinicar el esquema ni reescribir migraciones existentes.
 | 3 | Mover las reservas a una tabla dedicada y exponer la lectura por función | migración + código | **hecho** en local: `20260925120000_wishlist_reservations_privacy.sql` |
 | 4 | Restringir la lectura de `wishlist_items` a grupos compartidos | migración | **hecho** en local: política `"Veo mis deseos y los de mis grupos"` |
 | 5 | Garantizar reserva única con la clave primaria de la tabla nueva | migración | **hecho** en local: `item_id` es la clave primaria |
-| 6 | Arreglar el redirect de confirmación y dar uso a `EXPO_PUBLIC_SITE_URL` | código | bajo |
+| 6 | Arreglar el redirect de confirmación y dar uso a `EXPO_PUBLIC_SITE_URL` | código | **hecho**: `lib/site-url.ts`, `deploy.yml` y `__tests__/site-url.test.ts` |
 | 7 | Endurecer el lint hasta convertirlo en puerta bloqueante | código | bajo |
 | 8 | Eliminar la carpeta `database/` y dejar `supabase/migrations/` como única fuente de verdad | repositorio | bajo |
 
