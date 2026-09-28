@@ -48,7 +48,7 @@ usuario.
 | D5 | La entrada a los grupos sigue siendo abierta por código, con unión instantánea. | Mantiene el comportamiento actual y la baja fricción que busca el producto. |
 | D6 | Notificaciones: in-app hoy, push web para la PWA instalada después. | Solo in-app no alcanza a quien tiene la aplicación cerrada. |
 | D7 | `main` se actualiza con un merge, no con force-push. | Al no ser ancestro, un force-push borraría el commit `49e31a1`. El merge produce el mismo árbol y conserva la historia. |
-| D8 | GitHub Pages se publica mediante GitHub Actions al sitio único. | Solo hay un sitio Pages por repositorio y `gh-pages-test` es producción, no una vista previa: no existe un sitio de previsualización. |
+| D8 | GitHub Pages se publica mediante GitHub Actions al sitio único. | Solo hay un sitio Pages por repositorio y `gh-pages-test` es producción, no una vista previa: no existe un sitio de previsualización. La **publicación es deliberada** desde el 2026-09-28: se dispara al empujar una etiqueta `v*`, no en cada merge, y el workflow comprueba que la etiqueta apunta a `main` (unidad [`publicacion`](./publicacion.md)). |
 | D9 | Convención de commits: Conventional Commits sin emoji. | Coherente con la disciplina de commits por unidad de trabajo adoptada con gentle-ai. |
 | D10 | Se eliminan `.agents/` y `skills-lock.json`. | La configuración de opencode/Cursor queda superada por la del harness. |
 | D11 | **pnpm** sustituye a bun y a npm como gestor de paquetes y ejecutor de tareas. | bun no estaba instalado y npm acumula problemas de seguridad recientes. pnpm bloquea por defecto los scripts de ciclo de vida, lo que encaja con la política de dependencias. |
