@@ -64,6 +64,10 @@ test.describe('Funcionalidad de Perfil', () => {
         // El texto del logout no es consistente entre viewports, así que evitamos depender de él.
         await expect(page.getByText('Mi perfil', { exact: true }).last()).toBeVisible({ timeout: 15000 });
 
+        // El cierre de sesión vive en el perfil, así que está en todos los anchos
+        // (el layout solo lo ofrecía en escritorio).
+        await expect(page.getByTestId('sign-out-button')).toBeVisible({ timeout: 15000 });
+
         // Esperar a que el spinner desaparezca
         await expect(page.getByText('🪄')).not.toBeVisible({ timeout: 10000 });
     });

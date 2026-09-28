@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, Scrol
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function LoginPage() {
@@ -14,12 +15,41 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [emailError, setEmailError] = useState('');
+    const [showRecovery, setShowRecovery] = useState(false);
+    const [recoverySent, setRecoverySent] = useState(false);
+    const [sendingRecovery, setSendingRecovery] = useState(false);
+    const [recoveryError, setRecoveryError] = useState('');
     const emailErrorId = 'login-email-error';
     const formStatusId = 'login-form-status';
 
     const validateEmail = (emailValue: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(emailValue);
+    };
+
+    const handlePasswordRecovery = async () => {
+        if (!validateEmail(email)) {
+            setEmailError('Por favor, introduce un correo electrónico válido');
+            return;
+        }
+
+        setSendingRecovery(true);
+        setRecoveryError('');
+
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${getSiteBaseUrl()}/reset-password`,
+        });
+
+        setSendingRecovery(false);
+
+        // El límite de envíos sí se cuenta, porque no revela si el correo tiene
+        // cuenta; cualquier otro fallo se trata igual que un envío correcto.
+        if (resetError && (resetError.status === 429 || resetError.code === 'over_email_send_rate_limit')) {
+            setRecoveryError('Se pidieron demasiados enlaces seguidos. Espera unos minutos e inténtalo otra vez.');
+            return;
+        }
+
+        setRecoverySent(true);
     };
 
     useEffect(() => {
@@ -163,6 +193,58 @@ export default function LoginPage() {
                                 {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
                             </PrimaryButton>
                         </View>
+
+                        {/* Recuperación de contraseña: el enlace del correo vuelve a
+                            `/reset-password`, que necesita el código que Supabase deja en
+                            este navegador, así que hay que abrirlo en el mismo dispositivo. */}
+                        <View className="mt-6">
+                            <Pressable
+                                onPress={() => {
+                                    setShowRecovery((visible) => !visible);
+                                    setRecoverySent(false);
+                                    setRecoveryError('');
+                                }}
+                                accessibilityRole="button"
+                                accessibilityLabel="¿Olvidaste tu contraseña?"
+                                testID="forgot-password-link"
+                                className="self-center"
+                            >
+                                <Text className="text-center text-sm text-on-surface/70 font-sans-medium">
+                                    ¿Olvidaste tu contraseña?
+                                </Text>
+                            </Pressable>
+                        </View>
+
+                        {showRecovery ? (
+                            <View className="mt-4 p-5 rounded-3xl bg-surface-container-low">
+                                {recoverySent ? (
+                                    <Text testID="recovery-sent-message" className="text-sm text-on-surface/80 font-sans">
+                                        Si este correo tiene cuenta, te enviamos un enlace para restablecer la
+                                        contraseña. Ábrelo en este mismo dispositivo.
+                                    </Text>
+                                ) : (
+                                    <>
+                                        <Text className="mb-3 text-sm font-sans-medium text-on-surface/70">
+                                            Te enviamos un enlace al correo que escribiste arriba.
+                                        </Text>
+                                        {recoveryError ? (
+                                            <Text testID="recovery-error" className="mb-3 text-xs text-primary font-sans-medium">
+                                                {recoveryError}
+                                            </Text>
+                                        ) : null}
+                                        <PrimaryButton
+                                            onPress={handlePasswordRecovery}
+                                            disabled={sendingRecovery}
+                                            accessibilityLabel="Enviar enlace de recuperación"
+                                            testID="send-recovery-button"
+                                            textClassName="text-on-primary font-sans-bold text-sm"
+                                        >
+                                            {sendingRecovery ? 'Enviando...' : 'Enviar enlace'}
+                                        </PrimaryButton>
+                                    </>
+                                )}
+                            </View>
+                        ) : null}
 
                         <View className="mt-8">
                             <Text className="text-center text-on-surface/65 font-sans">¿No tienes una cuenta?</Text>
