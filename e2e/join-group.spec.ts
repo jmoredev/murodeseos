@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
-import { E2E_CONFIG, BASE_URL } from './config'
+import { E2E_CONFIG } from './config'
 import { supabaseAdmin } from './supabase-admin'
 
 // Cliente con la clave anónima para las comprobaciones de este spec; el de
@@ -38,13 +38,17 @@ test.describe('Unirse a Grupo', () => {
         await expect(page).toHaveURL('/')
     })
 
-    test.afterEach(async ({ request }) => {
+    test.afterEach(async () => {
         // Limpieza de grupos creados
         for (const groupId of createdGroupIds) {
             console.log(`🧹 [Limpieza] Borrando grupo ${groupId}...`);
-            const response = await request.delete(`${BASE_URL}/api/groups/${groupId}`);
-            if (!response.ok() && response.status() !== 404) {
-                console.error(`🔴 Error al borrar grupo ${groupId}: ${response.status()}`);
+            // Se borra con la clave de servicio, no por HTTP: `/api/groups/<id>` no existe
+            // y cada corrida dejaba los grupos de prueba en la base.
+            const { error } = await supabaseAdmin.from('groups').delete().eq('id', groupId);
+            if (error) {
+                console.error(`🔴 Error al borrar grupo ${groupId}: ${error.message}`);
+            } else {
+                console.log(`✅ [Limpieza] Grupo ${groupId} borrado vía Supabase`);
             }
         }
         createdGroupIds.clear();

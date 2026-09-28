@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { BASE_URL } from './config'
 import { supabaseAdmin } from './supabase-admin'
 
 //Almacena pares de { ID_del_Test : ID_del_Dato_Creado }
@@ -15,31 +14,27 @@ test.describe('Flujo de Creación de Grupo', () => {
         await expect(page).toHaveURL(/\/$/)
     })
 
-    test.afterEach(async ({ request }, testInfo) => {
-        // RECUPERAR: Buscamos si ESTE test específico (identificado por testInfo.testId) guardó algo
-        const idToDelete = createdIds.get(testInfo.testId);
+    test.afterEach(async () => {
+        const { testId, title } = test.info();
+
+        // RECUPERAR: Buscamos si ESTE test específico guardó algo
+        const idToDelete = createdIds.get(testId);
 
         if (idToDelete) {
-            console.log(`🧹 [Limpieza] Test "${testInfo.title}" borrando ID: ${idToDelete}`);
+            console.log(`🧹 [Limpieza] Test "${title}" borrando ID: ${idToDelete}`);
 
-            // Llamada a la API para borrar
-            const response = await request.delete(`${BASE_URL}/api/groups/${idToDelete}`);
+            // Se borra con la clave de servicio, no por HTTP: `/api/groups/<id>` no existe
+            // y cada corrida dejaba los grupos de prueba en la base.
+            const { error } = await supabaseAdmin.from('groups').delete().eq('id', idToDelete);
 
-            // --- BLOQUE DE DEPURACIÓN ---
-            if (!response.ok()) {
-                console.log(`🔴 ERROR AL BORRAR: Status ${response.status()}`);
-                console.log(`🔴 Respuesta del servidor: ${await response.text()}`);
-            }
-            // -----------------------------
-
-            // Verificamos que se borró bien (opcional pero recomendado)
-            // En local, si ya se borró manualmente o por otro test, no fallamos
-            if (!response.ok() && response.status() !== 404) {
-                console.error(`🔴 Error al borrar grupo ${idToDelete}: ${response.status()}`);
+            if (error) {
+                console.error(`🔴 Error al borrar grupo ${idToDelete}: ${error.message}`);
+            } else {
+                console.log(`✅ [Limpieza] Grupo ${idToDelete} borrado vía Supabase`);
             }
 
             // LIMPIAR EL MAPA: Borramos la entrada para no ocupar memoria
-            createdIds.delete(testInfo.testId);
+            createdIds.delete(testId);
         }
     });
 

@@ -133,8 +133,11 @@ test.describe('Funcionalidad de Perfil', () => {
         await nameInput.clear();
         await nameInput.fill('X');
 
-        // Debería aparecer el mensaje de error y el botón debería deshabilitarse
-        // En esta UI el feedback es por deshabilitar el CTA (sin mensaje literal).
-        await expect(page.getByText(/Guardar Cambios/i).first()).toBeVisible();
+        // El feedback de esta UI es deshabilitar el CTA, sin mensaje literal. Se apunta al
+        // botón por rol y nombre accesible: el texto visible vive dentro del botón, así que
+        // no es el elemento que puede quedar deshabilitado.
+        await expect(
+            page.getByRole('button', { name: /Guardar cambios del perfil/i }),
+        ).toBeDisabled();
     });
 });
