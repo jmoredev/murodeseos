@@ -240,6 +240,36 @@ fases: se conserva `reserved_by` con un puente de disparadores que la sincroniza
 posterior borra la columna, que es lo que completa la privacidad. El diseño y la consecuencia
 aceptada están en la cabecera de la migración y en `docs/DEVELOPMENT.md`.
 
+### Fase 2: se cierra la ventana de compatibilidad
+
+`supabase/migrations/20260928120000_drop_reserved_by_window.sql` retira lo que la fase 1
+conservó, en este orden: la política de compatibilidad, los dos disparadores del puente, las
+dos funciones `private.mirror_*`, el índice, la columna con su clave foránea, y la vuelta del
+trigger de permisos a su forma estricta (sin la excepción del espejo ni la tolerancia a
+`reserved_by`). Es idempotente, y el orden importa: la política y las funciones referencian la
+columna, así que caen antes del `drop column` — el error que la fase 1 pagó como V2.
+
+**Aquí se cierra el hallazgo S1**: con la columna fuera, la identidad de quien reserva ya no
+está en `wishlist_items`. Consecuencia aceptada: un bundle anterior falla al reservar o
+cancelar con `42703` hasta que recargue.
+
+Verificación local: `db reset` con **21 migraciones** y dos reaplicaciones limpias; prueba
+estructural con columna, índice, FK, disparadores, funciones del puente y política de
+compatibilidad **todos ausentes**, y el trigger de permisos sin mencionar `reserved_by` ni
+`muro.internal_mirror`. Matriz de acceso por rol: el miembro reserva y cancela por la tabla
+nueva (INSERT 0 1 / DELETE 1); el dueño no puede reservar su propio deseo (42501); un
+no-dueño que intenta editar otra columna no actualiza ninguna fila — al retirar la política de
+compatibilidad ya no hay política de UPDATE que le alcance, así que la defensa queda en RLS
+antes del trigger; un tercero sin grupo ve 0 filas; y la vía antigua falla con `42703`. Además:
+123 tests unitarios, `tsc` sin errores y la suite completa de chromium **38/38** con la columna
+ya eliminada.
+
+**V10 queda cerrado por construcción**: nadie puede escribir `reserved_by` porque la columna no
+existe.
+
+**Pendiente**: aplicar la fase 2 a producción es una decisión aparte y depende de que la
+ventana haya cumplido su función (el frontend nuevo se desplegó el 2026-09-28).
+
 ### Cierre: revisión aprobada y autoridad consumida
 
 La validación dirigida del linaje `review-d60bead2af9c2fc5` cerró en **`approved`** y su
