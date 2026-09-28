@@ -49,6 +49,7 @@ cada corrida.
 | 2 | E-10 — `join-group.spec.ts` limpia por `supabaseAdmin` | **hecho** | `2367c28`: `BASE_URL` quedó sin uso y se retiró del import |
 | 3 | E-11 — `profile.spec.ts` afirma que el botón está deshabilitado, no que se vea | **hecho** | `b90d589`: el botón se busca por rol y nombre accesible, y `toBeDisabled()` pasa contra el elemento real |
 | 4 | Verificación: los tres specs y el gate completo de chromium | **hecho** | ver abajo |
+| 5 | R3-002 — afirmar que el botón está habilitado antes del nombre inválido | **hecho** | `a49d430`: primero habilitado, después deshabilitado; la prueba pasa, lo que además confirma que el botón ya estaba habilitado antes |
 
 ## Restricciones
 
@@ -73,6 +74,10 @@ cada corrida.
 - La aserción de E-11 se comprobó contra el elemento real: `getByRole('button', {
   name })` con `toBeDisabled()` pasa, así que React Native Web expone el estado
   deshabilitado a Playwright.
+- El tramo de R3-002 se verificó aparte: `e2e/profile.spec.ts` en solitario pasa
+  **4/4** y el gate completo sigue en **40/40, sin inestables**. La aserción nueva
+  de «habilitado antes» **pasa**, lo que confirma que el botón ya estaba
+  habilitado: lo que cambia es que la prueba ya no puede pasar por otro motivo.
 
 ## Hallazgos informativos de la revisión
 
@@ -82,7 +87,8 @@ corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabaja
 | ID | Lente | Ubicación | Gravedad | Nota (lectura propia) |
 | --- | --- | --- | --- | --- |
 | R3-001 | fiabilidad | `e2e/create-group.spec.ts:30-34` | aviso | El borrado registra el error pero no lo convierte en fallo del spec; con el residuo ya visible en el registro es defendible, y conviene decidirlo en una unidad propia. |
-| R3-002 | fiabilidad | `e2e/profile.spec.ts:139-141` | sugerencia | La aserción no comprueba que el botón **estuviera habilitado antes**: si el nombre llegara vacío del servidor, pasaría por el motivo equivocado. Se arregla afirmando el estado habilitado antes de rellenar. |
+| R3-002 | fiabilidad | `e2e/profile.spec.ts:139-141` | sugerencia | La aserción no comprueba que el botón **estuviera habilitado antes**: si el nombre llegara vacío del servidor, pasaría por el motivo equivocado. **Hecho** en la tarea 5 de esta unidad. |
+| R3-001 (2.ª revisión) | fiabilidad | `e2e/profile.spec.ts:139` | aviso | Sobre el tramo de la tarea 5. No bloquea. |
 | R3-003 | fiabilidad | `odd/tasks/e2e-limpieza.md:48-51` | sugerencia | Sobre la redacción de las decisiones de este documento. |
 
 ## Consecuencia
