@@ -2,7 +2,7 @@
 
 **Rama:** `fix/avisos-refactor-lint`
 **Abierta:** 2026-09-28
-**Estado:** en curso
+**Estado:** cerrada el 2026-09-28 — los tres defectos corregidos con su prueba, el idioma de montaje compartido y los dos restos retirados; revisión nativa aprobada
 
 ## Objetivo
 
@@ -60,11 +60,11 @@ comportamiento, un idioma repetido y dos restos sueltos.
 
 | # | Tarea | Estado | Evidencia |
 | --- | --- | --- | --- |
-| 1 | Pestaña activa: validar el parámetro `tab` contra las pestañas reales (vacío y desconocido) | pendiente | — |
-| 2 | Grupos: derivar el estado de carga del usuario cuyos datos están cargados | pendiente | — |
-| 3 | Brindis: el cierre cancela el cuadro de entrada si aún no llegó | pendiente | — |
-| 4 | Un solo idioma de montaje (`useClientMounted`) y los dos restos sueltos | pendiente | — |
-| 5 | Verificación: lint, tipos, unitarios y el gate completo de chromium | pendiente | — |
+| 1 | Pestaña activa: validar el parámetro `tab` contra las pestañas reales (vacío y desconocido) | **hecho** | `a33e65e`: `lib/tabs.ts` reúne la lista y el analizador; cuatro casos nuevos en `__tests__/tabs.test.ts` |
+| 2 | Grupos: derivar el estado de carga del usuario cuyos datos están cargados | **hecho** | `8198412`: `loading` se calcula contra el usuario cargado, y la prueba nueva **falla contra el componente anterior** |
+| 3 | Brindis: el cierre cancela el cuadro de entrada si aún no llegó | **hecho** | `80105f2` |
+| 4 | Un solo idioma de montaje (`useClientMounted`) y los dos restos sueltos | **hecho** | `52ae71f` (`lib/use-client-mounted.ts` y los tres componentes) y `72df94b` (la importación de `React` y el estado del icono) |
+| 5 | Verificación: lint, tipos, unitarios y el gate completo de chromium | **hecho** | ver abajo |
 
 ## Restricciones
 
@@ -75,7 +75,31 @@ comportamiento, un idioma repetido y dos restos sueltos.
 
 ## Verificación
 
-Pendiente.
+- `pnpm run lint` limpio, avisos incluidos.
+- `pnpm exec tsc --noEmit` sin errores.
+- **147** pruebas unitarias en verde: cinco nuevas (cuatro del analizador de la
+  pestaña y la de la carga al cambiar de usuario).
+- Suite completa de chromium: **40/40, sin inestables**.
+- La prueba de la carga **se comprobó contra el defecto**: revirtiendo el componente
+  a su forma anterior falla con «Unable to find an element with the text: Cargando
+  grupos...», y con el arreglo pasa. Una prueba que nunca se vio fallar no prueba
+  nada.
+
+Lo que la verificación **no** cubre: la carrera del brindis no tiene prueba
+unitaria. Su estado visible es una clase de opacidad, y decidir el ganador entre un
+cuadro de animación y un temporizador no es observable de forma fiable en jsdom. El
+arreglo es de una línea y el razonamiento queda en el mensaje del commit `80105f2`.
+
+## Hallazgos informativos de la revisión
+
+La revisión nativa (tier medio, lente de fiabilidad) **aprobó** el candidato sin abrir
+corrección. Devolvió tres hallazgos informativos, que no bloquean y se trabajan aparte:
+
+| ID | Lente | Ubicación | Gravedad |
+| --- | --- | --- | --- |
+| R3-1 | fiabilidad | `components/GroupsTab.tsx:20` | aviso |
+| R3-2 | fiabilidad | `__tests__/GroupsTab.test.tsx:56` | aviso |
+| R3-3 | fiabilidad | `components/GroupsTab.tsx:145` | sugerencia |
 
 ## Consecuencia
 
