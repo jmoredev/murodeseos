@@ -69,6 +69,7 @@ Amigo Invisible.
 | 5 | Unitarios de la capa cliente | **hecho** | `__tests__/group-notification-preferences.test.ts`; 8 en verde |
 | 6 | E2E de la configuración y del filtrado | **hecho** | `e2e/group-notification-preferences.spec.ts`; chromium 42/42 |
 | 7 | typecheck, lint y unitarios | **hecho** | `tsc --noEmit` 0; `eslint --max-warnings 0` 0; 159 unitarios en verde, 1 todo |
+| 8 | Atribución al grupo con el aviso activo (hallazgos R3-003/004/006) | **hecho** | `supabase/migrations/20260929140000_notify_reserved_enabled_group.sql`; matriz de 5 casos en verde |
 
 ## Restricciones
 
@@ -120,8 +121,32 @@ y que al reactivarlo vuelve a llegar. `npx playwright test --project=chromium`:
 - `pnpm exec tsc --noEmit` — 0 errores.
 - `pnpm run lint` (`eslint --max-warnings 0`) — 0 avisos.
 
+### Atribución al grupo activo (seguimiento de los informativos)
+
+La primera versión elegía el grupo **menor** y dejaba el descarte al `BEFORE INSERT`.
+Si el destinatario había desactivado el aviso en ese grupo pero lo tenía activo en
+otro grupo común, perdía el aviso. La migración `20260929140000` reescribe
+`notify_wish_reserved` y `notify_wish_deleted` para elegir el menor grupo con el
+aviso **activado**.
+
+| Caso | Esperado | Observado |
+| --- | --- | --- |
+| Reserva, desactivado en el grupo menor y activo en otro | 1 en el grupo activo | 1 (`WORK01`) |
+| Reserva, desactivado en todos los grupos comunes | 0 | 0 |
+| Borrado, desactivado en el grupo menor y activo en otro | 1 en el grupo activo | 1 (`WORK01`) |
+| Borrado, desactivado en todos los grupos comunes | 0 | 0 |
+| Borrado tras abandonar el grupo común | 1 con grupo nulo | 1 con grupo nulo |
+
+Validado además con `supabase db reset` (todas las migraciones desde cero) y la
+suite completa de chromium en verde (42/42).
+
 ## Consecuencia
 
 Cada miembro puede decidir, grupo a grupo, qué avisos recibe, y la decisión se
-aplica en la base en un único punto. La migración se validó con matriz de roles y
-la funcionalidad con E2E, sin tocar la forma en que cada aviso se crea.
+aplica en la base en un único punto. El aviso se atribuye al menor grupo donde el
+destinatario lo tiene activado, así que no se pierde por culpa del grupo elegido.
+
+Limitación conocida y aceptada: `wish_added` se sigue creando en el cliente, que no
+puede leer las preferencias de otros, así que su atribución de grupo no consulta la
+preferencia. Corregirlo exige moverlo a un trigger de la base; queda como trabajo
+aparte.
