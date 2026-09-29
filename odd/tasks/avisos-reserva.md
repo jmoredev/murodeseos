@@ -53,7 +53,7 @@ una notificación. Hoy ese aviso no se genera nunca.
 | # | Tarea | Estado | Evidencia |
 | --- | --- | --- | --- |
 | 1 | Migración con el trigger `private.notify_wish_reserved` | **hecho** | `supabase/migrations/20260929120000_notify_wish_reserved.sql` |
-| 2 | Retirar `notifyWishReserved` y su test | pendiente | |
+| 2 | Retirar `notifyWishReserved` y su test | **hecho** | `lib/notification-utils.ts` (nota que remite al trigger) y `__tests__/notifications.test.ts`; 5 tests en verde |
 | 3 | Verificación local contra la base (matriz de roles) | **hecho** | aplicada en local y matriz de roles en verde (ver abajo) |
 | 4 | Prueba E2E del aviso para un tercer miembro | pendiente | |
 | 5 | typecheck, lint y unitarios | pendiente | |

@@ -1,6 +1,5 @@
 import {
     notifyWishAdded,
-    notifyWishReserved,
 } from '@/lib/notification-utils';
 import { supabase } from '@/lib/supabase';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -66,31 +65,6 @@ describe('Notification Utils', () => {
             expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([
                 expect.objectContaining({ user_id: 'user-2', actor_id: actorId, wish_id: wishId }),
                 expect.objectContaining({ user_id: 'user-3', actor_id: actorId, wish_id: wishId })
-            ]));
-        });
-    });
-
-    describe('notifyWishReserved', () => {
-        it('should notify common group members but NOT the actor and NOT the owner', async () => {
-            const actorId = 'actor-1';
-            const ownerId = 'owner-1';
-            const wishId = 'wish-1';
-
-            // Configurar respuestas
-            mockSupabase.single.mockResolvedValueOnce({ data: { user_id: ownerId, title: 'Gift' }, error: null });
-
-            mockSupabase.then
-                .mockImplementationOnce((callback: any) => Promise.resolve({ data: [{ group_id: 'group-shared' }], error: null }).then(callback)) // actor groups
-                .mockImplementationOnce((callback: any) => Promise.resolve({ data: [{ group_id: 'group-shared' }], error: null }).then(callback)) // owner groups
-                .mockImplementationOnce((callback: any) => Promise.resolve({
-                    data: [{ user_id: 'user-3', group_id: 'group-shared' }],
-                    error: null
-                }).then(callback)); // members
-
-            await notifyWishReserved(actorId, wishId);
-
-            expect(mockSupabase.insert).toHaveBeenCalledWith(expect.arrayContaining([
-                expect.objectContaining({ user_id: 'user-3', actor_id: actorId, type: 'wish_reserved' })
             ]));
         });
     });

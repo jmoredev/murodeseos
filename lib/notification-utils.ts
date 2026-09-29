@@ -85,71 +85,10 @@ export async function notifyWishAdded(actorId: string, wishId: string, excludedG
     }
 }
 
-/**
- * Notifica a los miembros de grupos compartidos cuando se reserva un deseo
- */
-export async function notifyWishReserved(actorId: string, wishId: string) {
-    try {
-        // 1. Obtener el dueño del deseo
-        const { data: wish, error: wishError } = await supabase
-            .from('wishlist_items')
-            .select('user_id, title')
-            .eq('id', wishId)
-            .single();
-
-        if (wishError || !wish) throw wishError;
-        const ownerId = wish.user_id;
-
-        // 2. Obtener grupos comunes entre el actor y el dueño
-        const { data: actorGroups } = await supabase.from('group_members').select('group_id').eq('user_id', actorId);
-        const { data: ownerGroups } = await supabase.from('group_members').select('group_id').eq('user_id', ownerId);
-
-        if (!actorGroups || !ownerGroups) return;
-
-        const commonGroupIds = actorGroups
-            .map(g => g.group_id)
-            .filter(id => ownerGroups.some(og => og.group_id === id));
-
-        if (commonGroupIds.length === 0) return;
-
-        // 3. Obtener miembros de esos grupos comunes
-        // Excluimos: al actor (él ya sabe que reservó) y al dueño (SORPRESA!)
-        const { data: members, error: membersError } = await supabase
-            .from('group_members')
-            .select('user_id, group_id')
-            .in('group_id', commonGroupIds)
-            .neq('user_id', actorId)
-            .neq('user_id', ownerId);
-
-        if (membersError || !members) throw membersError;
-
-        // 4. Crear notificaciones
-        const uniqueRecipients = new Map<string, string>();
-        members.forEach(m => {
-            if (!uniqueRecipients.has(m.user_id)) {
-                uniqueRecipients.set(m.user_id, m.group_id);
-            }
-        });
-
-        const notifications = Array.from(uniqueRecipients.entries()).map(([userId, groupId]) => ({
-            user_id: userId,
-            actor_id: actorId,
-            group_id: groupId,
-            wish_id: wishId,
-            type: 'wish_reserved' as NotificationType
-        }));
-
-        if (notifications.length > 0) {
-            const { error: notifyError } = await supabase
-                .from('notifications')
-                .insert(notifications);
-
-            if (notifyError) throw notifyError;
-        }
-    } catch (error) {
-        console.error('Error in notifyWishReserved:', error);
-    }
-}
+// `wish_reserved` no se genera en el cliente a propósito: lo crea el trigger
+// `tr_notify_wish_reserved` de la base al insertar la reserva (migración
+// 20260929120000). Así el aviso es atómico con la reserva y no se pierde si el
+// navegador cierra la pestaña. No vuelvas a moverlo aquí.
 
 /**
  * Obtiene las notificaciones del usuario con datos relacionados
