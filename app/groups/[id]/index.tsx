@@ -135,8 +135,8 @@ export default function GroupDetailsPage() {
         >
             <View className="p-4">
                 {/* Header Section */}
-                <View className={`flex-row justify-between items-center mb-8 ${isDesktop ? 'px-0' : 'px-2'}`}>
-                    <View className="flex-row items-center flex-1">
+                <View className={`mb-8 ${isDesktop ? 'flex-row justify-between items-center px-0' : 'flex-col gap-4 px-2'}`}>
+                    <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
                             className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
@@ -154,7 +154,7 @@ export default function GroupDetailsPage() {
                             </Text>
                         </View>
                     </View>
-                    <View className="flex-row items-center gap-2">
+                    <View className={`flex-row items-center gap-2 ${isDesktop ? '' : 'justify-end flex-wrap'}`}>
                         <Pressable
                             onPress={() => setNotificationsOpen(true)}
                             accessibilityRole="button"

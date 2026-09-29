@@ -71,6 +71,7 @@ Amigo Invisible.
 | 7 | typecheck, lint y unitarios | **hecho** | `tsc --noEmit` 0; `eslint --max-warnings 0` 0; 159 unitarios en verde, 1 todo |
 | 8 | Atribución al grupo con el aviso activo (hallazgos R3-003/004/006) | **hecho** | `supabase/migrations/20260929140000_notify_reserved_enabled_group.sql`; matriz de 5 casos en verde |
 | 9 | Ciclo de vida y foco del modal (hallazgos R3-002/R3-003) | **hecho** | `app/groups/[id]/index.tsx` (`key={groupId}`, `onClose` con `useCallback`) y `components/GroupNotificationSettingsModal.tsx` (`onClose` por ref; efecto solo en `visible`/`titleId`) |
+| 10 | Adaptación a móvil (PWA): hoja inferior, scroll interno, área segura y cabecera responsive | **hecho** | `components/GroupNotificationSettingsModal.tsx` y `app/groups/[id]/index.tsx`; capturas pixel 5 (retrato y apaisado) y E2E Mobile Chrome |
 
 ## Restricciones
 
@@ -148,6 +149,23 @@ preferencias de otro grupo. El efecto de foco y `Escape` ya no depende de la
 identidad de `onClose` (estabilizada con `useCallback` en el padre y leída por ref
 en el modal), así que un render del padre no le roba el foco al interruptor.
 Cubierto por el E2E, que abre, alterna, cierra con `Escape` y reabre.
+
+### Adaptación a móvil (PWA)
+
+Primera versión era un diálogo centrado en todos los tamaños. En un Pixel 5 (móvil
+apaisado, 740×360) el modal se **recortaba** y no tenía scroll, y la cabecera del
+grupo colapsaba: con dos botones, el bloque de título caía a ancho cero y «DETALLES
+DEL GRUPO» se partía letra a letra.
+
+Arreglado siguiendo el patrón de `WishDetailModal`: hoja inferior con `rounded-t-[40px]`
+en móvil y diálogo centrado en escritorio, cuerpo con `overflow-y-auto`, separación
+inferior con `env(safe-area-inset-bottom)`, y cabecera del grupo en dos filas en móvil
+(título arriba, botones debajo).
+
+Verificado con capturas reales en el proyecto *Mobile Chrome* (Pixel 5): retrato y
+apaisado, cabecera y modal. Funcionalmente, el E2E de preferencias pasa también en
+*Mobile Chrome*; *Mobile Safari* no pudo ejecutarse en este entorno porque falta el
+navegador webkit instalado.
 
 ## Consecuencia
 

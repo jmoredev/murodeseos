@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Switch } from 'react-native';
+import { Switch, useWindowDimensions } from 'react-native';
 import { useClientMounted } from '@/lib/use-client-mounted';
 import { createPortal } from 'react-dom';
 import {
@@ -30,6 +30,8 @@ export function GroupNotificationSettingsModal({
 }: GroupNotificationSettingsModalProps) {
     // En el servidor no hay DOM: el modal no se pinta hasta hidratar.
     const mounted = useClientMounted();
+    const { width } = useWindowDimensions();
+    const isDesktop = width > 768;
     const [visibleState, setVisibleState] = useState(false);
     const titleId = useId();
     const subtitleId = useId();
@@ -148,9 +150,23 @@ export function GroupNotificationSettingsModal({
         }
     };
 
+    // En móvil se comporta como hoja inferior (patrón de WishDetailModal) y en
+    // escritorio como diálogo centrado. El cuerpo lleva scroll propio para que no
+    // se recorte en pantallas bajas (móvil apaisado, fuente grande).
+    const sheetLayout = isDesktop
+        ? 'max-w-md max-h-[85vh] rounded-3xl p-6'
+        : 'max-h-[90%] rounded-t-[40px] px-6 pt-6';
+    const sheetTransform = visible
+        ? isDesktop
+            ? 'scale-100 translate-y-0'
+            : 'translate-y-0'
+        : isDesktop
+            ? 'scale-95 translate-y-4'
+            : 'translate-y-full';
+
     return createPortal(
         <div
-            className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+            className={`fixed inset-0 z-50 flex transition-opacity duration-300 ${isDesktop ? 'items-center justify-center p-4' : 'items-end'} ${visible ? 'opacity-100' : 'opacity-0'}`}
             role="presentation"
         >
             <div
@@ -164,9 +180,10 @@ export function GroupNotificationSettingsModal({
                 aria-modal="true"
                 aria-labelledby={titleId}
                 aria-describedby={subtitleId}
-                className={`relative z-10 w-full max-w-md max-h-[85vh] bg-surface-container-lowest rounded-3xl shadow-ambient-lg p-6 transform transition-all duration-300 ${visible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}
+                style={isDesktop ? undefined : { paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+                className={`relative z-10 w-full flex flex-col bg-surface-container-lowest shadow-ambient-lg transform transition-all duration-300 ${sheetLayout} ${sheetTransform}`}
             >
-                <div className="mb-6">
+                <div className="mb-6 shrink-0">
                     <h3
                         id={titleId}
                         tabIndex={-1}
@@ -180,6 +197,7 @@ export function GroupNotificationSettingsModal({
                     </p>
                 </div>
 
+                <div className="flex-1 min-h-0 overflow-y-auto">
                 {loading ? (
                     <div className="py-10 text-center" role="status" aria-live="polite">
                         <p className="text-on-surface/45 font-sans">Cargando preferencias…</p>
@@ -231,6 +249,7 @@ export function GroupNotificationSettingsModal({
                             })}
                     </div>
                 )}
+                </div>
             </div>
         </div>,
         document.body
