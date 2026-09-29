@@ -167,6 +167,20 @@ apaisado, cabecera y modal. Funcionalmente, el E2E de preferencias pasa también
 *Mobile Chrome*; *Mobile Safari* no pudo ejecutarse en este entorno porque falta el
 navegador webkit instalado.
 
+## Hallazgos informativos de las revisiones
+
+Las revisiones nativas aprobaron los candidatos sin abrir corrección y devolvieron
+hallazgos **no bloqueantes**. Su disposición:
+
+| Hallazgo | Ubicación | Disposición |
+| --- | --- | --- |
+| Atribución al menor grupo sin mirar la preferencia | `20260929120000_notify_wish_reserved.sql` | **corregido** en `20260929140000` |
+| Ciclo de vida y foco del modal | `GroupNotificationSettingsModal.tsx` | **corregido**: `key={groupId}` y `onClose` estable |
+| Diálogo centrado en móvil; cabecera colapsa | `GroupNotificationSettingsModal.tsx`, `app/groups/[id]/index.tsx` | **corregido**: hoja inferior, scroll y cabecera en dos filas |
+| Carrera del toggle optimista | `GroupNotificationSettingsModal.tsx:139-150` | cerrado: converge en los cuatro cruces; residual de baja probabilidad |
+| `return null` descarta la fila en silencio | `20260929130000_group_notification_preferences.sql:113-115` | cerrado: es el silencio buscado; ningún llamador depende del resultado |
+| Correos fijos en el E2E | `e2e/group-notification-preferences.spec.ts` | **corregido**: usa `E2E_CONFIG` |
+
 ## Consecuencia
 
 Cada miembro puede decidir, grupo a grupo, qué avisos recibe, y la decisión se

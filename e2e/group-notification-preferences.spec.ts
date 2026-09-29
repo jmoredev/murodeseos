@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { E2E_CONFIG } from './config';
 import { supabaseAdmin } from './supabase-admin';
 
 /**
@@ -56,8 +57,8 @@ test.describe('Notificaciones configurables por grupo', () => {
     }
 
     test.beforeAll(async () => {
-        memberId = await getUserIdByEmail('e2e-test@test.com');
-        actorId = await getUserIdByEmail('juan@test.com');
+        memberId = await getUserIdByEmail(E2E_CONFIG.user.email);
+        actorId = await getUserIdByEmail(E2E_CONFIG.secondaryUser.email);
 
         const { error: groupError } = await supabaseAdmin.from('groups').insert({
             id: groupId,
