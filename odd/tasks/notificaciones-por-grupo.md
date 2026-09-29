@@ -64,11 +64,11 @@ Amigo Invisible.
 | --- | --- | --- |
 | 1 | Migración: tabla, RLS, helper y trigger `BEFORE INSERT` | **hecho** | `supabase/migrations/20260929130000_group_notification_preferences.sql` |
 | 2 | Verificación local contra la base (matriz de preferencias) | **hecho** | matriz en verde (ver abajo) |
-| 3 | Capa cliente de preferencias (`lib/`) | pendiente |
-| 4 | Modal de configuración y acceso desde la página de grupo | pendiente |
-| 5 | Unitarios de la capa cliente | pendiente |
-| 6 | E2E de la configuración y del filtrado | pendiente |
-| 7 | typecheck, lint y unitarios | pendiente |
+| 3 | Capa cliente de preferencias (`lib/`) | **hecho** | `lib/group-notification-preferences.ts` |
+| 4 | Modal de configuración y acceso desde la página de grupo | **hecho** | `components/GroupNotificationSettingsModal.tsx` y `app/groups/[id]/index.tsx` |
+| 5 | Unitarios de la capa cliente | **hecho** | `__tests__/group-notification-preferences.test.ts`; 8 en verde |
+| 6 | E2E de la configuración y del filtrado | **hecho** | `e2e/group-notification-preferences.spec.ts`; chromium 42/42 |
+| 7 | typecheck, lint y unitarios | **hecho** | `tsc --noEmit` 0; `eslint --max-warnings 0` 0; 159 unitarios en verde, 1 todo |
 
 ## Restricciones
 
@@ -101,6 +101,27 @@ reserva, alta y sorteo; Juan desactiva el borrado; Carlos queda por defecto.
 Las inserciones de reserva, alta y sorteo se hicieron como rol `authenticated`
 con el JWT del actor correspondiente, así que pasaron por la RLS real.
 
+### Unitarios
+
+`__tests__/group-notification-preferences.test.ts`: 8 pruebas en verde (valores por
+defecto, fila desactivada, tipo desconocido, error de carga, payload exacto del
+`upsert` con `updated_at` y `onConflict`, error de guardado).
+
+### E2E
+
+`e2e/group-notification-preferences.spec.ts`: abre la configuración del grupo desde
+la interfaz, desactiva «Se reserva un deseo», comprueba que la preferencia se
+guarda, que la base deja de insertar el aviso, que persiste tras cerrar y reabrir,
+y que al reactivarlo vuelve a llegar. `npx playwright test --project=chromium`:
+**42/42**, sin regresiones.
+
+### Estáticas
+
+- `pnpm exec tsc --noEmit` — 0 errores.
+- `pnpm run lint` (`eslint --max-warnings 0`) — 0 avisos.
+
 ## Consecuencia
 
-Pendiente.
+Cada miembro puede decidir, grupo a grupo, qué avisos recibe, y la decisión se
+aplica en la base en un único punto. La migración se validó con matriz de roles y
+la funcionalidad con E2E, sin tocar la forma en que cada aviso se crea.
