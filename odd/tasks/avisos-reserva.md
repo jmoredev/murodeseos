@@ -67,6 +67,19 @@ una notificación. Hoy ese aviso no se genera nunca.
 
 ## Verificación
 
+### Revisión nativa
+
+Aprobada sin abrir corrección (tier medio, lente de fiabilidad; autoridad quemada con
+`gentle-ai.review-acknowledged/v1`). Devolvió **dos hallazgos informativos**, que no
+bloquean y se trabajan aparte:
+
+| ID | Lente | Ubicación | Gravedad |
+| --- | --- | --- | --- |
+| R3-001 | fiabilidad | `supabase/migrations/20260929120000_notify_wish_reserved.sql:47-64` | aviso |
+| R3-002 | fiabilidad | `e2e/notification-reservation.spec.ts:69-90` | aviso |
+
+Ninguno reabre la revisión ni ofrece transición de corrección.
+
 ### Matriz de roles contra la base local
 
 Migración aplicada en el contenedor local y comprobada en una transacción revertida
@@ -89,7 +102,7 @@ pasó por la RLS real de `wishlist_reservations`, no solo por el trigger.
 
 ### Pendiente
 
-Ejecución real de `e2e/notification-reservation.spec.ts`. **Bloqueada por el entorno**: este shell no alcanza los puertos publicados de Docker. Kong responde `200` desde dentro de la red (`http://kong:8000/auth/v1/health`), pero ni `127.0.0.1:3001` ni la IP del contenedor (`172.18.0.11:8000`) devuelven un byte desde el host, y el navegador de Playwright corre en el host. No es un defecto del código: la prueba se lista con `playwright test --list` y typechequea. Se ejecuta con `pnpm run test:e2e` en un shell normal.
+Ejecución real de `e2e/notification-reservation.spec.ts`. **Bloqueada por el entorno**: este shell no alcanza los puertos publicados de Docker, con toda probabilidad por Tailscale con exit node activo (el usuario lo desactivará y avisará para correrla). Kong responde `200` desde dentro de la red (`http://kong:8000/auth/v1/health`), pero ni `127.0.0.1:3001` ni la IP del contenedor (`172.18.0.11:8000`) devuelven un byte desde el host, y el navegador de Playwright corre en el host. No es un defecto del código: la prueba se lista con `playwright test --list` y typechequea. Se ejecuta con `pnpm run test:e2e` en un shell normal.
 
 ### Comprobaciones estáticas y unitarias (hechas)
 
