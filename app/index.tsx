@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/sign-out';
 import { parseTabParam, type Tab } from '@/lib/tabs';
 import { GroupsTab } from '@/components/GroupsTab';
 import { WishListTab } from '@/components/WishListTab';
@@ -72,7 +73,7 @@ export default function LandingPage() {
                     userId={user.id}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
-                    onSignOut={() => supabase.auth.signOut()}
+                    onSignOut={signOut}
                 >
                     {activeTab === 'wishlist' && <WishListTab userId={user.id} />}
                     {activeTab === 'groups' && <GroupsTab userId={user.id} />}

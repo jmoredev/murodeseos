@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/sign-out';
 import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
@@ -131,7 +132,7 @@ export default function GroupDetailsPage() {
             userId={user?.id ?? ''}
             activeTab="groups"
             setActiveTab={(tab) => router.push(`/?tab=${tab}` as any)}
-            onSignOut={() => supabase.auth.signOut()}
+            onSignOut={signOut}
         >
             <View className="p-4">
                 {/* Header Section */}
