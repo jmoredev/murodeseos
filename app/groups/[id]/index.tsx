@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
 
@@ -22,6 +23,10 @@ export default function GroupDetailsPage() {
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    // Identidad estable: el modal la usa como dependencia de su efecto de foco y
+    // de Escape, y una función en línea la haría reejecutar en cada render.
+    const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -130,8 +135,8 @@ export default function GroupDetailsPage() {
         >
             <View className="p-4">
                 {/* Header Section */}
-                <View className={`flex-row justify-between items-center mb-8 ${isDesktop ? 'px-0' : 'px-2'}`}>
-                    <View className="flex-row items-center flex-1">
+                <View className={`mb-8 ${isDesktop ? 'flex-row justify-between items-center px-0' : 'flex-col gap-4 px-2'}`}>
+                    <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
                             className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
@@ -149,13 +154,28 @@ export default function GroupDetailsPage() {
                             </Text>
                         </View>
                     </View>
-                    <PrimaryButton
-                        onPress={handleShare}
-                        accessibilityLabel="Compartir grupo"
-                        textClassName="text-on-primary font-sans-bold"
-                    >
-                        Compartir
-                    </PrimaryButton>
+                    <View className={`flex-row items-center gap-2 ${isDesktop ? '' : 'justify-end flex-wrap'}`}>
+                        <Pressable
+                            onPress={() => setNotificationsOpen(true)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Preferencias de notificaciones del grupo ${group?.name ?? ''}`}
+                            className="px-4 py-3.5 rounded-full border border-primary/30 items-center active:opacity-80"
+                        >
+                            <Text
+                                className="text-primary font-sans-bold text-xs uppercase tracking-widest"
+                                numberOfLines={1}
+                            >
+                                Notificaciones
+                            </Text>
+                        </Pressable>
+                        <PrimaryButton
+                            onPress={handleShare}
+                            accessibilityLabel="Compartir grupo"
+                            textClassName="text-on-primary font-sans-bold"
+                        >
+                            Compartir
+                        </PrimaryButton>
+                    </View>
                 </View>
 
                 {/* Group Info Card */}
@@ -259,6 +279,15 @@ export default function GroupDetailsPage() {
                     </View>
                 )}
             </View>
+
+            <GroupNotificationSettingsModal
+                key={groupId}
+                visible={notificationsOpen}
+                onClose={closeNotifications}
+                userId={user?.id ?? ''}
+                groupId={groupId}
+                groupName={group?.name ?? ''}
+            />
         </ResponsiveLayout>
     );
 }
