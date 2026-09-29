@@ -55,7 +55,7 @@ una notificación. Hoy ese aviso no se genera nunca.
 | 1 | Migración con el trigger `private.notify_wish_reserved` | **hecho** | `supabase/migrations/20260929120000_notify_wish_reserved.sql` |
 | 2 | Retirar `notifyWishReserved` y su test | **hecho** | `lib/notification-utils.ts` (nota que remite al trigger) y `__tests__/notifications.test.ts`; 5 tests en verde |
 | 3 | Verificación local contra la base (matriz de roles) | **hecho** | aplicada en local y matriz de roles en verde (ver abajo) |
-| 4 | Prueba E2E del aviso para un tercer miembro | **escrita, ejecución bloqueada** | `e2e/notification-reservation.spec.ts` (Playwright la lista); ver bloqueo abajo |
+| 4 | Prueba E2E del aviso para un tercer miembro | **hecho** | `e2e/notification-reservation.spec.ts`; chromium 41/41 (incluye la nueva) |
 | 5 | typecheck, lint y unitarios | **hecho** | `tsc --noEmit` 0; `eslint --max-warnings 0` 0; 151 unitarios en verde, 1 todo |
 
 ## Restricciones
@@ -69,14 +69,20 @@ una notificación. Hoy ese aviso no se genera nunca.
 
 ### Revisión nativa
 
-Aprobada sin abrir corrección (tier medio, lente de fiabilidad; autoridad quemada con
-`gentle-ai.review-acknowledged/v1`). Devolvió **dos hallazgos informativos**, que no
-bloquean y se trabajan aparte:
+Dos ciclos, ambos **aprobados sin corrección** (tier medio, lente de fiabilidad;
+autoridad quemada con `gentle-ai.review-acknowledged/v1`):
+
+- `review-476369497b79b5b6` — candidato del código.
+- `review-51f5d73ae224e04d` — candidato del registro ODD. La primera ejecución
+del revisor falló por transporte (`pi-host-relay-transport-failure`, sin
+mutación); el estado reofreció el mismo slot y el reintento cerró aprobado.
+
+Hallazgos **informativos** (no bloquean, no reabren la revisión):
 
 | ID | Lente | Ubicación | Gravedad |
 | --- | --- | --- | --- |
-| R3-001 | fiabilidad | `supabase/migrations/20260929120000_notify_wish_reserved.sql:47-64` | aviso |
-| R3-002 | fiabilidad | `e2e/notification-reservation.spec.ts:69-90` | aviso |
+| R3-001 | fiabilidad | `e2e/notification-reservation.spec.ts` | aviso |
+| R3-002 | fiabilidad | `e2e/notification-reservation.spec.ts` | aviso |
 
 Ninguno reabre la revisión ni ofrece transición de corrección.
 
@@ -100,20 +106,28 @@ con ambos; Carlos en uno; el usuario E2E fuera de todo grupo común.
 La reserva de A y B se hizo como rol `authenticated` con el JWT de Juan, así que
 pasó por la RLS real de `wishlist_reservations`, no solo por el trigger.
 
-### Pendiente
+### Migraciones desde cero
 
-Ejecución real de `e2e/notification-reservation.spec.ts`. **Bloqueada por el entorno**: este shell no alcanza los puertos publicados de Docker, con toda probabilidad por Tailscale con exit node activo (el usuario lo desactivará y avisará para correrla). Kong responde `200` desde dentro de la red (`http://kong:8000/auth/v1/health`), pero ni `127.0.0.1:3001` ni la IP del contenedor (`172.18.0.11:8000`) devuelven un byte desde el host, y el navegador de Playwright corre en el host. No es un defecto del código: la prueba se lista con `playwright test --list` y typechequea. Se ejecuta con `pnpm run test:e2e` en un shell normal.
+`npx supabase db reset` aplicó las 22 migraciones en orden, la nueva incluida, sin
+errores: la migración también es válida en una base recién creada, no solo sobre
+la base ya migrada.
+
+### E2E ejecutado
+
+Con el exit node de Tailscale desconectado, `pnpm run test:e2e:prepare` sembró la
+base y `npx playwright test --project=chromium` pasó **41/41**, incluida
+`e2e/notification-reservation.spec.ts`.
 
 ### Comprobaciones estáticas y unitarias (hechas)
 
 - `pnpm exec tsc --noEmit` — 0 errores.
 - `pnpm run lint` (`eslint --max-warnings 0`) — 0 avisos.
 - `pnpm run test:unit` — 151 pruebas en verde, 1 todo.
-- `playwright test --list e2e/notification-reservation.spec.ts` — la prueba aparece.
 
 ## Consecuencia
 
 El aviso de reserva vuelve a existir, y esta vez en la base: se genera al
 insertar la reserva, respeta las exclusiones y no depende del cliente. El código
-muerto que aparentaba implementarlo queda retirado. Queda como deuda la ejecución
-del E2E, bloqueada solo por la red de este entorno.
+muerto que aparentaba implementarlo queda retirado. La migración se validó en la
+base local y desde cero, y la suite completa de chromium pasa. Quedan solo los dos
+hallazgos informativos de la revisión, para trabajo aparte.
