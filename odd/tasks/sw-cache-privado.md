@@ -63,3 +63,9 @@ derivadas de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-
 - Hallazgos informativos no bloqueantes (trabajo futuro, no reabren la revisión):
   **R3-1** (`lib/sign-out.ts:18`, sugerencia) y **R3-2** (`lib/sign-out.ts:3`,
   sugerencia).
+- El candidato resultante de registrar esa revisión (`c706f55`, solo este documento,
+  `sha256:bfaea4b8…5d`) también se revisó y aprobó (lineaje
+  `review-654a2107c27eb80d`, tier medio, lente fiabilidad, 315 líneas). Un
+  hallazgo informativo: **R3-cache-offline** (`lib/sign-out.ts:18`, aviso) — el
+  borrado de caches al cerrar sesión deja la PWA sin respaldo offline hasta la
+  próxima visita; aceptado como consecuencia natural del objetivo de privacidad.
