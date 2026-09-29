@@ -34,6 +34,10 @@ export function GroupNotificationSettingsModal({
     const titleId = useId();
     const subtitleId = useId();
     const previouslyFocused = useRef<HTMLElement | null>(null);
+    // `onClose` puede cambiar de identidad en cada render del padre; el efecto de
+    // foco y Escape no debe depender de eso, así que se lee la última versión por
+    // referencia y el efecto solo se reejecuta al abrir o cerrar.
+    const onCloseRef = useRef(onClose);
 
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -88,6 +92,10 @@ export function GroupNotificationSettingsModal({
     }, [visible, userId, groupId, retryNonce]);
 
     useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    useEffect(() => {
         if (!visible) return;
 
         previouslyFocused.current = document.activeElement as HTMLElement | null;
@@ -95,7 +103,7 @@ export function GroupNotificationSettingsModal({
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 e.preventDefault();
-                onClose();
+                onCloseRef.current();
             }
         };
         document.addEventListener('keydown', onKeyDown);
@@ -108,7 +116,7 @@ export function GroupNotificationSettingsModal({
             window.cancelAnimationFrame(t);
             document.removeEventListener('keydown', onKeyDown);
         };
-    }, [visible, onClose, titleId]);
+    }, [visible, titleId]);
 
     useEffect(() => {
         if (visible) return;

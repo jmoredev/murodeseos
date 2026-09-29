@@ -70,6 +70,7 @@ Amigo Invisible.
 | 6 | E2E de la configuración y del filtrado | **hecho** | `e2e/group-notification-preferences.spec.ts`; chromium 42/42 |
 | 7 | typecheck, lint y unitarios | **hecho** | `tsc --noEmit` 0; `eslint --max-warnings 0` 0; 159 unitarios en verde, 1 todo |
 | 8 | Atribución al grupo con el aviso activo (hallazgos R3-003/004/006) | **hecho** | `supabase/migrations/20260929140000_notify_reserved_enabled_group.sql`; matriz de 5 casos en verde |
+| 9 | Ciclo de vida y foco del modal (hallazgos R3-002/R3-003) | **hecho** | `app/groups/[id]/index.tsx` (`key={groupId}`, `onClose` con `useCallback`) y `components/GroupNotificationSettingsModal.tsx` (`onClose` por ref; efecto solo en `visible`/`titleId`) |
 
 ## Restricciones
 
@@ -139,6 +140,14 @@ aviso **activado**.
 
 Validado además con `supabase db reset` (todas las migraciones desde cero) y la
 suite completa de chromium en verde (42/42).
+
+### Ciclo de vida y foco del modal
+
+El modal se remonta por grupo (`key={groupId}`), así que no puede quedarse con las
+preferencias de otro grupo. El efecto de foco y `Escape` ya no depende de la
+identidad de `onClose` (estabilizada con `useCallback` en el padre y leída por ref
+en el modal), así que un render del padre no le roba el foco al interruptor.
+Cubierto por el E2E, que abre, alterna, cierra con `Escape` y reabre.
 
 ## Consecuencia
 

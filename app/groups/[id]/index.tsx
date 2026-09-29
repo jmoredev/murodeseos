@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +24,9 @@ export default function GroupDetailsPage() {
     const [user, setUser] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    // Identidad estable: el modal la usa como dependencia de su efecto de foco y
+    // de Escape, y una función en línea la haría reejecutar en cada render.
+    const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -278,8 +281,9 @@ export default function GroupDetailsPage() {
             </View>
 
             <GroupNotificationSettingsModal
+                key={groupId}
                 visible={notificationsOpen}
-                onClose={() => setNotificationsOpen(false)}
+                onClose={closeNotifications}
                 userId={user?.id ?? ''}
                 groupId={groupId}
                 groupName={group?.name ?? ''}
