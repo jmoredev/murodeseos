@@ -125,6 +125,8 @@ Utilidades en `lib/circle-glyph-styles.ts` (`circleGlyphTextBase`, `emojiInCircl
 ### Detalle de grupo (`app/groups/[id]/index.tsx`)
 Código del grupo en chip con `ellipsizeMode="middle"`; contador de participantes **debajo** del chip; avatares con `Image` si la URL es http(s).
 
+- **Enlace de invitación:** tanto `generateShareMessage` (`lib/group-utils.ts`) como el botón "Compartir enlace" de `GroupsTab` construyen la URL con `getSiteBaseUrl()` (`lib/site-url.ts`), de modo que el enlace de invitación conserva la ruta base `/murodeseos` en GitHub Pages (el origen solo no basta porque la app se sirve bajo `/<repo>/`).
+
 ### TypeScript (`tsconfig.json`)
 En `compilerOptions.types` se usa **`vitest/globals`** en lugar de `jest`, alineado con Vitest.
 

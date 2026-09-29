@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { GroupCard, Group } from '@/components/GroupCard'
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils'
 import { getUserAliases, setUserAlias } from '@/lib/aliases'
+import { getSiteBaseUrl } from '@/lib/site-url'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface GroupsTabProps {
@@ -181,7 +182,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 await navigator.share({
                     title: 'Únete a mi grupo en Muro de Deseos',
                     text: `Usa el código: ${selectedGroupId}`,
-                    url: window.location.origin + '/groups/join?code=' + selectedGroupId
+                    url: `${getSiteBaseUrl()}/groups/join?code=${selectedGroupId}`
                 });
             } catch {
 

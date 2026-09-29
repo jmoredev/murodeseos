@@ -8,6 +8,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // Los mocks ya están configurados en vitest.setup.ts
 
+// El enlace de invitación debe salir de `getSiteBaseUrl()` para conservar la ruta
+// base de GitHub Pages; fijamos el valor en lugar de depender del jsdom real.
+vi.mock('@/lib/site-url', () => ({
+    getGithubPagesBasePath: vi.fn(() => '/murodeseos'),
+    getSiteBaseUrl: vi.fn(() => 'https://jmoredev.github.io/murodeseos'),
+}))
+
 describe('GroupsTab', () => {
     const mockUserId = 'user-123'
 
@@ -322,6 +329,32 @@ describe('GroupsTab', () => {
 
             await waitFor(() => {
                 expect(screen.getByText('group-1')).toBeInTheDocument()
+            })
+        })
+
+        it('comparte la URL de invitación con la ruta base del sitio', async () => {
+            setupGroupsForSharing()
+            const user = userEvent.setup()
+
+            render(<GroupsTab userId={mockUserId} />)
+
+            await waitFor(() => {
+                expect(screen.getByText('Grupo Test')).toBeInTheDocument()
+            })
+
+            const shareButton = screen.getByLabelText('Compartir grupo')
+            await user.click(shareButton)
+
+            await waitFor(() => {
+                expect(screen.getByText('Invita a tus amigos')).toBeInTheDocument()
+            })
+
+            await user.click(screen.getByLabelText('Compartir enlace'))
+
+            await waitFor(() => {
+                expect(navigator.share).toHaveBeenCalledWith(expect.objectContaining({
+                    url: 'https://jmoredev.github.io/murodeseos/groups/join?code=group-1'
+                }))
             })
         })
 

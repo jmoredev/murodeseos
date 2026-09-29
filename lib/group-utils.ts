@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getSiteBaseUrl } from './site-url'
 
 // Caracteres seguros para códigos (sin confusión entre O/0, I/1/l)
 const SAFE_CHARS = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'
@@ -165,8 +166,7 @@ export async function joinGroup(params: {
  * Genera el mensaje de invitación para compartir
  */
 export function generateShareMessage(groupName: string, groupCode: string): string {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-    const deepLink = `${baseUrl}/groups/join?code=${groupCode}`
+    const deepLink = `${getSiteBaseUrl()}/groups/join?code=${groupCode}`
 
     return `¡Únete a mi grupo de regalos "${groupName}" en Muro de Deseos! 🎁\n\nUsa el código: ${groupCode}\no entra aquí: ${deepLink}`
 }
