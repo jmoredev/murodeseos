@@ -1,6 +1,6 @@
 # Cache privado del service worker (fix/sw-cache-privado)
 
-**Abierta:** 2026-09-29 · **Rama:** `fix/sw-cache-privado` (desde `main`) · **Estado:** implementada y verificada; pendiente de revisión nativa
+**Abierta:** 2026-09-29 · **Rama:** `fix/sw-cache-privado` (desde `main`) · **Estado:** implementada, verificada y revisada (aprobada). Pendiente de entrega (push/PR decisión del usuario)
 
 ## Objetivo
 
@@ -53,3 +53,13 @@ derivadas de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-
 ## Commits
 
 - `d87dc70` — fix(pwa): keep private data out of the service worker cache (unidad completa: SW v4, helper, tests, docs y este documento).
+- `09c2a1a` — docs(odd): record the sw-cache-privado work-unit commit.
+
+## Revisión nativa (RDD)
+
+- Lineaje `review-ba12c43611e5418f`, tier medio, lente fiabilidad, candidato
+  `sha256:be177b9a…a426` (10 rutas, 305 líneas). **Aprobada** sin corrección;
+  autoridad quemada (`gentle-ai.review-acknowledged/v1`).
+- Hallazgos informativos no bloqueantes (trabajo futuro, no reabren la revisión):
+  **R3-1** (`lib/sign-out.ts:18`, sugerencia) y **R3-2** (`lib/sign-out.ts:3`,
+  sugerencia).
