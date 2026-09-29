@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
 
@@ -22,6 +23,7 @@ export default function GroupDetailsPage() {
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -149,13 +151,28 @@ export default function GroupDetailsPage() {
                             </Text>
                         </View>
                     </View>
-                    <PrimaryButton
-                        onPress={handleShare}
-                        accessibilityLabel="Compartir grupo"
-                        textClassName="text-on-primary font-sans-bold"
-                    >
-                        Compartir
-                    </PrimaryButton>
+                    <View className="flex-row items-center gap-2">
+                        <Pressable
+                            onPress={() => setNotificationsOpen(true)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Preferencias de notificaciones del grupo ${group?.name ?? ''}`}
+                            className="px-4 py-3.5 rounded-full border border-primary/30 items-center active:opacity-80"
+                        >
+                            <Text
+                                className="text-primary font-sans-bold text-xs uppercase tracking-widest"
+                                numberOfLines={1}
+                            >
+                                Notificaciones
+                            </Text>
+                        </Pressable>
+                        <PrimaryButton
+                            onPress={handleShare}
+                            accessibilityLabel="Compartir grupo"
+                            textClassName="text-on-primary font-sans-bold"
+                        >
+                            Compartir
+                        </PrimaryButton>
+                    </View>
                 </View>
 
                 {/* Group Info Card */}
@@ -259,6 +276,14 @@ export default function GroupDetailsPage() {
                     </View>
                 )}
             </View>
+
+            <GroupNotificationSettingsModal
+                visible={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+                userId={user?.id ?? ''}
+                groupId={groupId}
+                groupName={group?.name ?? ''}
+            />
         </ResponsiveLayout>
     );
 }
