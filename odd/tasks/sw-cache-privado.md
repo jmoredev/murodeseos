@@ -69,3 +69,12 @@ derivadas de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-
   hallazgo informativo: **R3-cache-offline** (`lib/sign-out.ts:18`, aviso) — el
   borrado de caches al cerrar sesión deja la PWA sin respaldo offline hasta la
   próxima visita; aceptado como consecuencia natural del objetivo de privacidad.
+- El registro de esa segunda revisión (`dea7fdf`, solo este documento,
+  `sha256:a235bb45…cc`) se revisó y aprobó igualmente (lineaje
+  `review-9b9ea34f57d7ab09`, tier medio, lente fiabilidad, 321 líneas; dos
+  sugerencias informativas en `lib/sign-out.ts:13/18`, mismas áreas ya anotadas).
+- **Disposición explícita del usuario (2026-09-29):** a partir de aquí, los
+  commits puramente documentales que registren revisiones en este documento se
+  dejan **sin revisar** (edición pasiva trivial). El bucle
+  revisión→registro→revisión se cierra aquí; el código de la unidad está revisado
+  y aprobado.
