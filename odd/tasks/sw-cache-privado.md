@@ -52,4 +52,4 @@ derivadas de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-
 
 ## Commits
 
-- (pendiente de registrar)
+- `d87dc70` — fix(pwa): keep private data out of the service worker cache (unidad completa: SW v4, helper, tests, docs y este documento).
