@@ -19,40 +19,60 @@ function copyDirIfExists(srcDir, destDir) {
   return true;
 }
 
-function injectHeadLinksIfHtmlExists(htmlPath) {
-  if (!fs.existsSync(htmlPath)) return false;
-  const html = fs.readFileSync(htmlPath, 'utf8');
-
-  // Avoid duplicating on repeated builds.
-  if (html.includes('data-murodeseos-pwa="1"')) return true;
-
-  const injection =
-    '\n' +
-    '    <link data-murodeseos-pwa="1" rel="icon" href="./favicon.ico" />\n' +
-    '    <link data-murodeseos-pwa="1" rel="manifest" href="./manifest.json" />\n';
-
-  if (html.includes('</head>')) {
-    fs.writeFileSync(htmlPath, html.replace('</head>', `${injection}  </head>`), 'utf8');
-    return true;
-  }
-
-  // If head tag isn't present (unlikely), no-op.
-  return false;
+/**
+ * Normalizes the deployment base path from `app.json` (`expo.experiments.baseUrl`).
+ * '' → '' ; '/murodeseos' → '/murodeseos' ; '/murodeseos/' → '/murodeseos' ; 'murodeseos' → '/murodeseos'.
+ */
+function normalizeBasePath(raw) {
+  const base = (raw || '').trim();
+  if (!base) return '';
+  const segment = base.replace(/^\/+/, '').replace(/\/+$/, '');
+  return segment ? `/${segment}` : '';
 }
 
-function injectHtmlLangIfHtmlExists(htmlPath) {
+/**
+ * Builds the idempotent PWA link block injected into the exported HTML.
+ * Hrefs are absolute and base-aware so they also resolve correctly on deep routes
+ * served by the GitHub Pages `404.html` fallback (where relative hrefs break).
+ */
+function buildPwaHeadInjection(basePath) {
+  const base = normalizeBasePath(basePath);
+  return (
+    '\n' +
+    `    <link data-murodeseos-pwa="1" rel="icon" href="${base}/favicon.ico" />\n` +
+    `    <link data-murodeseos-pwa="1" rel="apple-touch-icon" href="${base}/apple-touch-icon.png" />\n` +
+    `    <link data-murodeseos-pwa="1" rel="manifest" href="${base}/manifest.json" />\n`
+  );
+}
+
+/**
+ * Pure injection: returns the HTML with the PWA link block before `</head>`, or
+ * the input unchanged when the block is already present (idempotent) or there is
+ * no `</head>` to inject into. Never touches `<html lang>` (it lives in `app/+html.tsx`).
+ */
+function injectPwaHeadLinks(html, basePath) {
+  if (html.includes('data-murodeseos-pwa="1"')) return html;
+  if (!html.includes('</head>')) return html;
+  return html.replace('</head>', `${buildPwaHeadInjection(basePath)}  </head>`);
+}
+
+function injectHeadLinksIfHtmlExists(htmlPath, basePath) {
   if (!fs.existsSync(htmlPath)) return false;
   const html = fs.readFileSync(htmlPath, 'utf8');
+  const updated = injectPwaHeadLinks(html, basePath);
+  if (updated === html) return false;
 
-  // If already has a lang attribute, don't touch it.
-  if (/<html[^>]*\slang=/.test(html)) return true;
+  fs.writeFileSync(htmlPath, updated, 'utf8');
+  return true;
+}
 
-  if (html.includes('<html')) {
-    fs.writeFileSync(htmlPath, html.replace('<html', '<html lang="es"'), 'utf8');
-    return true;
+function readConfiguredBasePath(root) {
+  try {
+    const appJson = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
+    return appJson?.expo?.experiments?.baseUrl || '';
+  } catch {
+    return '';
   }
-
-  return false;
 }
 
 function main() {
@@ -73,14 +93,22 @@ function main() {
   copyFileIfExists(path.join(publicDir, 'sw.js'), path.join(dist, 'sw.js'));
   copyDirIfExists(path.join(publicDir, 'AppIcons'), path.join(dist, 'AppIcons'));
 
-  // Ensure favicon/manifest are declared in the exported HTML so browsers don't request /favicon.ico.
-  injectHeadLinksIfHtmlExists(path.join(dist, 'index.html'));
-  injectHeadLinksIfHtmlExists(path.join(dist, '404.html'));
-
-  // Ensure correct document language for screen readers (WCAG 3.1.1).
-  injectHtmlLangIfHtmlExists(path.join(dist, 'index.html'));
-  injectHtmlLangIfHtmlExists(path.join(dist, '404.html'));
+  // Ensure favicon/manifest/apple-touch-icon are declared in the exported HTML with
+  // base-aware absolute hrefs, so they also resolve on deep routes served by 404.html.
+  const basePath = readConfiguredBasePath(root);
+  injectHeadLinksIfHtmlExists(path.join(dist, 'index.html'), basePath);
+  injectHeadLinksIfHtmlExists(path.join(dist, '404.html'), basePath);
 }
 
-main();
 
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  normalizeBasePath,
+  buildPwaHeadInjection,
+  injectPwaHeadLinks,
+  injectHeadLinksIfHtmlExists,
+  readConfiguredBasePath,
+};
