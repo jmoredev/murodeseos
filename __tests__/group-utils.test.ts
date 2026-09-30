@@ -540,9 +540,11 @@ describe('generateShareMessage', () => {
     })
 
     it('genera mensaje con nombre de grupo y código', () => {
-        // Mock window.location usando jsdom
+        // Mock window.location usando jsdom (getSiteBaseUrl necesita hostname y pathname)
         delete (global as any).window
-            ; (global as any).window = { location: { origin: 'http://localhost:3000' } }
+            ; (global as any).window = {
+                location: { origin: 'http://localhost:3000', hostname: 'localhost', pathname: '/groups' }
+            }
 
         const message = generateShareMessage('Grupo Navidad', 'ABC123')
 
@@ -551,13 +553,30 @@ describe('generateShareMessage', () => {
         expect(message).toContain('🎁')
     })
 
-    it('incluye deep link con código', () => {
+    it('incluye el deep link con la ruta base de GitHub Pages', () => {
         delete (global as any).window
-            ; (global as any).window = { location: { origin: 'http://localhost:3000' } }
+            ; (global as any).window = {
+                location: {
+                    origin: 'https://jmoredev.github.io',
+                    hostname: 'jmoredev.github.io',
+                    pathname: '/murodeseos/groups',
+                }
+            }
+
+        const message = generateShareMessage('Grupo Test', 'GHP123')
+
+        expect(message).toContain('https://jmoredev.github.io/murodeseos/groups/join?code=GHP123')
+    })
+
+    it('en otro host no añade ruta base al deep link', () => {
+        delete (global as any).window
+            ; (global as any).window = {
+                location: { origin: 'http://localhost:3000', hostname: 'localhost', pathname: '/groups' }
+            }
 
         const message = generateShareMessage('Grupo Test', 'XYZ789')
 
-        expect(message).toContain('/groups/join?code=XYZ789')
+        expect(message).toContain('http://localhost:3000/groups/join?code=XYZ789')
     })
 
     it('funciona en entorno sin window (SSR)', () => {
