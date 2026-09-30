@@ -152,6 +152,19 @@ Los tests se encuentran en el directorio `__tests__`.
 - `wish-reservation.test.ts`: reserva y cancelación en listas ajenas vía Supabase.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
+### E2E (Playwright en CI)
+`playwright.config.ts` define 5 proyectos (`chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`), pero CI (`.github/workflows/e2e.yml`) ejecuta solo dos:
+
+1. **`chromium`** (escritorio) — contra la base sembrada por `test:e2e:prepare`.
+2. **`Mobile Chrome`** (Pixel 5) — tras **re-sembrar** con `test:e2e:prepare` de nuevo y lanzar una invocación Playwright separada.
+
+Por qué así:
+- **Re-siembra por proyecto (defecto abierto E-10):** la suite no es auto-limpiante y deja grupos de prueba en la base. Dos proyectos sobre la misma siembra equivalen a correr la suite dos veces contra un solo fixture, con riesgo de contaminación cruzada. Re-sembrar antes de Mobile Chrome le da un fixture limpio.
+- **Mobile Chrome usa el motor Chromium** ya instalado con `playwright install --with-deps chromium`; no requiere instalación adicional.
+- **Firefox, WebKit y Mobile Safari quedan fuera de CI** deliberadamente: cada uno exigiría una descarga de navegador nueva en el runner (`playwright install firefox` / `webkit`), alargando el job. Se pueden correr localmente con `pnpm exec playwright test --project=<nombre>`.
+
+Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright-report-mobile-chrome` con `playwright-report/` (reporte HTML) y `test-results/` (capturas y trazas de fallo).
+
 ## ♿ Checklist de Accesibilidad (antes de publicar)
 
 - **Teclado (web)**: puedes navegar por toda la UI con Tab/Shift+Tab y activar con Enter/Espacio.

@@ -15,7 +15,7 @@ jobs:
   chromium:
     name: Chromium suite
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
 
@@ -62,3 +62,37 @@ jobs:
         # is expected, and the suite is not self-cleaning (open defect E-10
         # leaves test groups behind if it runs against a stale database).
         run: pnpm run test:e2e:prepare && pnpm exec playwright test --project=chromium
+
+      # Playwright cleans playwright-report/ and test-results/ at the start of
+      # every run, so each project's artifacts are uploaded immediately after
+      # its own step. The HTML reporter (enabled in CI) writes playwright-report/;
+      # failure screenshots and on-first-retry traces land in test-results/.
+      - name: Upload Chromium failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-chromium
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+
+      - name: Seed and run E2E (Mobile Chrome only)
+        # Re-seed before Mobile Chrome: defect E-10 means the suite is not
+        # self-cleaning, so a second project against the same seed would see
+        # the groups the first run left behind. `test:e2e:prepare` restarts
+        # Supabase and re-seeds, giving Mobile Chrome a fresh fixture. Mobile
+        # Chrome uses the Chromium engine installed above, so no extra
+        # `playwright install` is needed. Mobile Safari/WebKit and Firefox are
+        # deliberately out of CI (see docs/DEVELOPMENT.md).
+        run: pnpm run test:e2e:prepare && pnpm exec playwright test --project="Mobile Chrome"
+
+      - name: Upload Mobile Chrome failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mobile-chrome
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
