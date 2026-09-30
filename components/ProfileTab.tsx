@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native'
 import { supabase } from '@/lib/supabase'
+import { signOut } from '@/lib/sign-out'
 import { getCssColor } from '@/lib/color-utils'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
@@ -223,7 +224,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             {/* El cierre de sesión vive aquí y no en el layout porque el layout solo lo
                 ofrece en escritorio: desde el móvil no había forma de salir. */}
             <Pressable
-                onPress={() => supabase.auth.signOut()}
+                onPress={signOut}
                 accessibilityRole="button"
                 accessibilityLabel="Cerrar sesión"
                 testID="sign-out-button"

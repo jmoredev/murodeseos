@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator, useWindowDimensions, Modal } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/sign-out';
 import { reserveWishlistItem, cancelWishlistReservation, getWishlistReservationStatesSafe, ReservationState } from '@/lib/wish-reservation';
 import { getWishActionErrorMessage } from '@/lib/wish-action-errors';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
@@ -157,7 +158,7 @@ export default function UserWishlistPage() {
             userId={user?.id ?? ''}
             activeTab="wishlist"
             setActiveTab={(tab) => router.push(`/?tab=${tab}` as any)}
-            onSignOut={() => supabase.auth.signOut()}
+            onSignOut={signOut}
         >
             <View className="p-4">
                 {/* Header Section */}

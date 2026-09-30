@@ -96,9 +96,11 @@ bun run dev
 Si la UI en web o en el cliente de desarrollo **no refleja** los cambios (clases Tailwind antiguas, `font-display` donde ya no debería aparecer, etc.), suele ser **caché**: recarga forzada del navegador, reinicio de `expo start` con caché limpia (`npx expo start -c`) o reinstalación del build en el dispositivo.
 
 ### Service Worker (PWA en producción / GitHub Pages)
-`public/sw.js` se copia a `dist/` en el postbuild. A partir de la **v3** del SW, las peticiones **que no son navegación** (bundles JS, chunks, CSS…) usan **red primero** y solo caen en `Cache Storage` si la red falla (modo offline). Las versiones anteriores usaban **caché primero** para esos recursos: tras un deploy el navegador podía seguir sirviendo **JS antiguo** hasta vaciar caché o recargar de forma que invalidara el SW.
+`public/sw.js` se copia a `dist/` en el postbuild. Historia corta del SW: la **v3** puso las peticiones **que no son navegación** (bundles JS, chunks, CSS…) en **red primero** (antes eran caché primero y, tras un deploy, el navegador podía seguir sirviendo **JS antiguo**); la **v4** añade la restricción de **same-origin**: el handler de `fetch` solo interviene en peticiones cuyo origen coincide con el del SW (`self.location.origin`) y hace `return` para todo lo demás, así que las GET a la REST/Storage de Supabase (datos privados de deseos y grupos) **nunca entran en Cache Storage** y el navegador las gestiona con normalidad.
 
-Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.). El registro del SW está en `app/_layout.tsx`.
+Además, el cierre de sesión pasó por un único camino: `lib/sign-out.ts` hace `supabase.auth.signOut()` y, en web, borra todas las caches cuyo nombre empieza por `murodeseos-` (no todas: el origen de GitHub Pages se comparte entre repositorios y las caches de otros proyectos deben sobrevivir). Todos los botones de salir (`app/index.tsx`, `app/wishlist/[id]`, `app/groups/[id]` y `ProfileTab`) usan ese helper.
+
+Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.); el salto a **v4** purga así cualquier dato privado que bundles anteriores guardaran en `murodeseos-v3`. El registro del SW está en `app/_layout.tsx`.
 
 **Local (`bun run web`, Metro):** no se registra el SW: `hostname` no es `github.io`, `getGithubPagesBasePath()` devuelve `''` y se llama a `unregister()` por si quedó un SW de una prueba anterior. Así HMR y recargas normales no compiten con Cache Storage.
 

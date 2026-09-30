@@ -1,7 +1,10 @@
-/* PWA service worker — GitHub Pages bajo /<repo>/. v3: activos JS/CSS red-primero (evita UI antigua). */
+/* PWA service worker — GitHub Pages bajo /<repo>/. v4: solo peticiones same-origin entran en caché (los datos privados de Supabase nunca se guardan) y activos red-primero. */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE_NAME = `murodeseos-${VERSION}`;
+// El origen de GitHub Pages se comparte entre repositorios: solo tocamos las
+// caches con nuestro prefijo, nunca las de otros proyectos alojados ahí.
+const CACHE_PREFIX = 'murodeseos-';
 
 const NAV_FETCH_MS = 14_000;
 
@@ -37,7 +40,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+      await Promise.all(
+        keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k))
+      );
       await self.clients.claim();
     })()
   );
@@ -50,6 +55,11 @@ function isNavigationRequest(request) {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+
+  // El origen de GitHub Pages se comparte entre proyectos: las peticiones a otros
+  // orígenes (p. ej. la REST/Storage de Supabase con datos privados) no pasan por
+  // la caché del SW; el navegador las gestiona con normalidad.
+  if (new URL(request.url).origin !== self.location.origin) return;
 
   if (isNavigationRequest(request)) {
     event.respondWith(
