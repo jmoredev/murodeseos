@@ -115,6 +115,9 @@ La cabecera del HTML estático está partida en dos por capacidad:
 ### `ScrollView` principal (`ResponsiveLayout`)
 `contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
 
+### Punto de ruptura escritorio (`> 768`)
+La convención única de la app para separar escritorio de móvil es **`width > 768`** (Tailwind `md:`), leída con `useWindowDimensions` (`ResponsiveLayout`, `WishListTab`, `WishDetailModal`, etc.). `NotificationMenu` la sigue con `isDesktopViewport` (`useSyncExternalStore` sobre el mismo umbral): en la banda de 641–768 px se muestra la variante móvil de pantalla completa, no el bocadillo flotante.
+
 ### Lista de deseos (`WishListTab`)
 - **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
 - **Modal nuevo/editar deseo:** `KeyboardAvoidingView`, `ScrollView` con `flex-1` / `min-h-0`, `min-w-0` en inputs y filas, área segura inferior (`useSafeAreaInsets`). **Enlace (opcional):** campo propio que persiste en `wishlist_items.links` (no en `notes`). **Imagen:** URL de foto o **“Elegir de la galería”** → Supabase Storage (`wishlist-images`); plugin `expo-image-picker` en `app.json`. En tarjetas y detalle, el enlace se muestra recortado con `WishLinkChip` (`lib/wish-link-utils.ts`).
