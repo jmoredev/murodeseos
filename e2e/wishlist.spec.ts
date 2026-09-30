@@ -120,7 +120,9 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // --- 3. Probar Ordenación por Nombre ---
         // Se compara el ORDEN RELATIVO EN EL DOM (no la posición geométrica):
         // el mosaico de 4 columnas del Desktop Chrome pone ambas tarjetas en la misma fila.
-        await page.getByText(/Por Nombre/i).first().click();
+        // Las etiquetas de accesibilidad del selector de orden son estables
+        // en cualquier viewport (el copy visible «Por …» solo existe en escritorio).
+        await page.getByLabel('Ordenar por nombre').click();
         // La reordenación es asíncrona: se espera con una expectativa acotada, no con un sleep fijo.
         await expect
             .poll(async () => {
@@ -134,7 +136,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
             .toBe(true);
 
         // --- 4. Probar Ordenación por Precio ---
-        await page.getByText(/Por Precio/i).first().click();
+        await page.getByLabel('Ordenar por precio').click();
         await expect
             .poll(async () => {
                 const anotherIdx = await getCardIndex(page, anotherItem.title);
@@ -146,7 +148,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
             .toBe(true);
 
         // --- 5. Probar Ordenación por Prioridad ---
-        await page.getByText(/Por Prioridad/i).first().click();
+        await page.getByLabel('Ordenar por prioridad').click();
         // "Alta" (testItem) debe quedar antes en el DOM que "Baja" (anotherItem)
         await expect
             .poll(async () => {

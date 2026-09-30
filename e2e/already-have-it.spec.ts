@@ -37,7 +37,10 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
             r.url().includes('wishlist_items') &&
             (r.status() === 200 || r.status() === 201)
         );
-        await page.getByText('Guardar', { exact: true }).last().click({ force: true });
+        // Sin `force`: un click forzado competía con la animación de entrada
+        // del modal móvil (slide de 250 ms) y pulsaba fuera del viewport.
+        // El click por etiqueta de accesibilidad espera la estabilidad sola.
+        await page.getByLabel('Guardar deseo').click();
         await responsePromise;
 
         // 2. Verificar que el deseo aparece y tiene el botón "Ya lo tengo"
