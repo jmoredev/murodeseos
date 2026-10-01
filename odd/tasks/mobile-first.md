@@ -1,0 +1,102 @@
+# Mobile-first: layout táctil, área segura y verificación móvil (`feat/mobile-first`)
+
+**Abierta:** 2026-10-01 · **Rama:** `feat/mobile-first` (desde `main`, `de9cdc0`) · **Estado:** abierta — auditoría completada, 6 unidades autorizadas por el usuario (F, A, B, C, D, E)
+
+## Objetivo
+
+Que la app **sea** mobile-first de verdad, no solo por intención: el móvil (navegador móvil, instalada o no) es el objetivo primario; el escritorio es secundario y **no debe romperse**. Y que el harness de verificación lo refleje, para que la orientación móvil no se pierda en el futuro.
+
+## Restricción de producto (declarada por el usuario)
+
+La app es una **PWA** que existe precisamente para **no publicar en App Store / Play Store**. La mayoría de usos serán en un **móvil**, no en el navegador de escritorio. Consecuencias: las decisiones de layout, densidad, áreas táctiles, altura de viewport y área segura se toman mirando el móvil primero; la entrega real es `expo export --platform web` sobre GitHub Pages (base `/murodeseos`), así que no hay `ios/` ni `android/` y el código tras `Platform.OS !== 'web'` es **código muerto en producción**.
+
+## Decisiones (confirmadas con el usuario)
+
+1. **Mobile-first por defecto**, escritorio como degradación aceptable pero nunca regresión.
+2. **Un solo umbral de breakpoint**: `> 768` estricto, centralizado en un hook compartido; nada de `max-md:` ni de literales repetidos. Tailwind `md:`/`lg:` solo para número de columnas, y preferiblemente vía la forma `isDesktop ? 'w-1/3' : 'w-1/2'` para que ambos sistemas no puedan discrepar.
+3. **Área segura real**: `env(safe-area-inset-*)` en lo anclado abajo (dock, hojas, footers) y alturas en `dvh` mejor que en `vh`.
+4. **Táctil y tipografía**: inputs con `fontSize >= 16px` (evita el zoom de iOS al enfocar) y acciones táctiles de `>= 44px` (mínimo `24px` en secundarios). `hitSlop` no sirve: react-native-web no lo implementa para hit areas DOM, así que se arregla con padding real.
+5. **WebKit/Mobile Safari entra en CI**: es la única forma de verificar iOS en este entorno (no hay Mac ni iPhone).
+6. **La verificación móvil manda**: spec propio a 360px de ancho comprobando desborde horizontal, objetivos táctiles y tamaño de fuente de los inputs.
+
+## Auditoría (resumen; detalle en la memoria del proyecto)
+
+Auditoría read-only delegada. Hallazgos que dirigen las unidades:
+
+- **Harness**: CI solo corre `chromium` (1280×720) y `Mobile Chrome` (Pixel 5). `Mobile Safari` (`devices['iPhone 12']`), `webkit` y `firefox` están definidos en `playwright.config.ts` y **no se ejecutan nunca** → cero cobertura de iOS. La única aserción responsive es **vacua**: `e2e/responsive-wishlist.spec.ts:97` (no existe ningún `<aside>` en el código). En unit tests `useWindowDimensions` no está mockeado y jsdom mide 1024px → **todos** los tests unitarios toman la rama de escritorio.
+- **Área inferior**: dock a `bottom: 16px` fijo sin inset (`components/ResponsiveLayout.tsx:143-152`, con `SafeAreaView` excluyendo el borde inferior en `:55`); footers de hojas con padding fijo (`NotificationMenu.tsx:285`, `app/wishlist/[id]/index.tsx:263` `pb-10`, `WishDetailModal.tsx:210` `pb-6`). El patrón correcto ya existe en `WishListTab.tsx:393` y `GroupNotificationSettingsModal.tsx:289`. Nada usa `dvh`.
+- **Controles inertes en web** (APIs no-op de react-native-web, verificado en `node_modules`): `Alert.alert` (`app/groups/[id]/index.tsx:270-274`, `lib/wish-link-utils.ts:39,46,51`), `BackHandler` (`WishListTab.tsx:42-49`, `WishDetailModal.tsx:49-55`), `KeyboardAvoidingView` (`WishListTab.tsx:384-387`).
+- **Pantalla estrecha**: `GroupCard.tsx:183` reserva `w-[7.25rem]` y a 360px deja ~92px al nombre; diálogos de `GroupsTab.tsx:397-402,447-452,482-487` y `ProfileTab.tsx:271-272` sin `max-h` ni scroll y con `autoFocus`; código de invitación (UUID en grupos creados por la app) renderizado a `text-4xl tracking-widest` (`GroupsTab.tsx:417-420`, el Text del código — con el fixture 'E2E001' cabe en una línea; el defecto muerde con códigos largos); `WishlistCard` a 2 columnas con chips sin `min-w-0` (`WishlistCard.tsx:146-148`, `WishLinkChip.tsx:42`); ~35 textos por debajo de 12px, incluidos los labels del dock (`ResponsiveLayout.tsx:163,180,197`).
+- **Breakpoints duplicados**: `width > 768` literal en 7 sitios (`ResponsiveLayout.tsx:35`, `WishListTab.tsx:31`, `WishDetailModal.tsx:45`, `GroupNotificationSettingsModal.tsx:40`, `app/groups/[id]/index.tsx:31`, `app/wishlist/[id]/index.tsx:29`, y `NotificationMenu.tsx:26` con `useSyncExternalStore`), frente a Tailwind `md:` en `WishListTab.tsx:351`, `GroupsTab.tsx:353`, `app/groups/[id]/index.tsx:218`. Discrepan **exactamente a 768px** (contractura que la Unidad E elimina).
+- **Código muerto**: `DateField.tsx:41-49`, `lib/wish-image-upload.ts:81,91`, `lib/circle-glyph-styles.ts:6`, `ResponsiveLayout.tsx:76-106,148`. Y tres componentes sin enlazar: `SecretSantaModal.tsx` (con un control destructivo **solo-hover** en `:273`), `RevealModal.tsx`, `UserProfileModal.tsx`.
+- **Ya correcto, no regresar**: `app/+html.tsx:16` (`viewport-fit=cover`, sin `user-scalable=no`), `public/manifest.json` (portrait/standalone/maskable), dock con objetivos ≥44px y estado accesible, hojas inferiores con scroll interno, `useWindowDimensions` reactivo, `prefers-reduced-motion` y `:focus-visible` globales, Escape + restauración de foco en diálogos, portales a `document.body`, picking de imagen con `<input type="file">`.
+
+## Unidades de trabajo
+
+### Unidad F — Harness de verificación móvil (primera: protege el resto)
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| F1 | `e2e/mobile-layout.spec.ts` nuevo: a 360×640 por ruta, sin desborde horizontal (`scrollWidth <= clientWidth`) | **hecha** (corregida por verificación independiente) — el `ScrollView` de RNW recorta (`overflow-x: hidden`) y `app/+html.tsx` pone `body{overflow:hidden}`, así que el `scrollWidth` del documento nunca crece. Se afirman cuatro señales en home (wishlist), grupos, perfil y detalle de grupo: ofensores con contenido fuera del viewport, `scrollWidth <= clientWidth + 1` de `#muro-main-content`, y html/body; con guard de no-vacuidad. **Estado honesto**: contra los defectos auditados de C3/C4 este check es **profiláctico** — la columna fija de `GroupCard` recorta (no desborda) y ningún seed renderiza chips (`links: []`) — los detectores reales son los dos añadidos después: el nombre no ellipseado — **ROJO esperado contra HEAD**: el nombre del fixture («E2E Test Group», corto en caracteres pero no en píxeles: ~130–150px de texto a text-xl) queda recortado por la columna de ~56–60px de largura que deja la fija `w-[7.25rem]` (`GroupCard.tsx:183`); la señal es layout-nativa (`scrollWidth > clientWidth` de la caja nowrap/ellipsis, sin Range ni medidas no-clip dependientes del navegador) y su base es aritmética, con CI como prueba empírica — y las acciones del diálogo de compartir dentro del viewport — **VERDE esperado hoy**: el código del fixture es «E2E001» (6 caracteres) y cabe en una línea a text-4xl tracking-widest (`GroupsTab.tsx:417-420`); detector real de desbordamiento vertical que hace rojo con un código largo. Nada CI-verificado: la evidencia debe venir de CI |
+| F2 | En el mismo spec: objetivos táctiles (`>= 24px`, `>= 44px` en acciones primarias) y `fontSize >= 16px` en inputs | **hecha** (corregida) — 1.ª versión era sin efecto: el escaneo de inputs corría sin abrir las superficies con inputs (RNW no monta Modals cerrados). Ahora se abren de verdad: formulario de deseo (FAB), renombrar grupo (menú de GroupCard), ajustes de notificaciones (detalle de grupo), perfil (inputs inline) y /login, /signup, /reset-password (con el storage state autenticado el form se renderiza: `getSession()` resuelve sesión — nada se envía, escaneo de solo lectura). Verificador 24px con selector ampliado (también `[tabindex]`/`[aria-label]`, RNW Pressable emite `tabIndex="0"` sin rol); 44px en dock, FAB y «Guardar deseo»; ambos con guard de no-vacuidad. **Estado honesto**: el check de 16px esperado ROJO contra HEAD (el default de RNW es `font: 14px System` y ningún input escaneado fija tamaño — D1); el de 24px esperado ROJO vía el lápiz de alias de `GroupCard` (≈20×24, `GroupCard.tsx:167` — D2); los cierres de 40px pasan el scan de 24px: los caza el de 44px (D2). Nada CI-verificado: la evidencia debe venir de CI |
+| F3 | En el mismo spec (proyecto `hasTouch`): ningún elemento interactivo con `opacity: 0` en reposo (caza patrones solo-hover) | **hecha** — `test.skip` si el proyecto no es táctil; escanea home, grupos y detalle de grupo con opacity efectiva = producto de la cadena de ancestros (cubre wrappers `opacity-0`), solo elementos hit-testeables y con guard de no-vacuidad |
+| F4 | `e2e/responsive-wishlist.spec.ts:97`: sustituir la aserción vacua del `aside` por una real | **hecha** — fuera el `<aside>` inexistente; ahora: botón de info solo-móvil visible (rama móvil renderizada), «Detalles y Tallas» oculto/ausente (falsable si la rama desktop se cuela) y sin desborde horizontal con el helper corregido (ofensores + contenedor principal, no solo `scrollWidth` del documento) |
+| F5 | `.github/workflows/e2e.yml`: `playwright install --with-deps webkit` + run acotado de `--project="Mobile Safari"` | **hecha** — paso `Install WebKit for Playwright` + run acotado a `mobile-layout.spec.ts` + `responsive-wishlist.spec.ts` con su propio re-seed y artefactos de fallo; los pasos con `if: always()` para que un Mobile Chrome rojo no se coma la única señal iOS (trade-off: minutos extra en corrida ya roja) |
+
+### Unidad A — Área segura inferior y viewport
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| A1 | Dock inferior (`ResponsiveLayout.tsx:143-152`): inset inferior real + reserva del `ScrollView` coherente | pendiente |
+| A2 | Footer del panel de notificaciones (`NotificationMenu.tsx:285`): inset inferior | pendiente |
+| A3 | Hojas `app/wishlist/[id]/index.tsx:263` (`pb-10`) y `WishDetailModal.tsx:210` (`pb-6`): inset real | pendiente |
+| A4 | Alturas `vh` → `dvh` en `WishListTab.tsx:387,390`, `WishDetailModal.tsx:209`, `GroupNotificationSettingsModal.tsx:263` | pendiente |
+| A5 | `Toast.tsx:57-58`: no tapar el dock, `max-w` de viewport y sin `min-w` rígido en pantallas estrechas | pendiente |
+
+### Unidad B — Controles inertes en web
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| B1 | `app/groups/[id]/index.tsx:270-274`: `Alert.alert` → aviso visible (toast de la casa) | pendiente |
+| B2 | `lib/wish-link-utils.ts:39,46,51`: `Alert.alert` → aviso visible | pendiente |
+| B3 | `BackHandler` gateado a no-web (`WishListTab.tsx:42-49`, `WishDetailModal.tsx:49-55`) y cierre del formulario alcanzable en web | pendiente |
+| B4 | Footer del formulario de deseo alcanzable con el teclado abierto en iOS (`WishListTab.tsx:384-393,591-616`) | pendiente |
+
+### Unidad C — Pantalla estrecha
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| C1 | Diálogos de `GroupsTab.tsx:397-402,447-452,482-487` y `ProfileTab.tsx:271-272`: `max-h` + scroll interno + inset + campo enfocado visible | pendiente |
+| C2 | Código de invitación (texto en `GroupsTab.tsx:417-420`): legible y copiable en una mano | pendiente |
+| C3 | `GroupCard.tsx:183`: quitar la columna fija de 116px sin romper la alineación de escritorio; revisar `:141` | pendiente |
+| C4 | `WishlistCard` a 360px: badge, precio y chip de enlace con `min-w-0`/shrink | pendiente |
+| C5 | Suelo tipográfico: subir los textos < 12px (navegación, tarjetas, notificaciones, `text-[8px]` de `app/groups/[id]/index.tsx:248`) | pendiente |
+
+### Unidad D — Táctil y tipografía
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| D1 | `fontSize >= 16px` en los inputs de formularios (`login`, `signup`, `reset-password`, `groups/create`, `GroupsTab`, `WishListTab`, `GroupCard`) | pendiente |
+| D2 | Objetivos táctiles a `>= 44px`: ✎ de alias (`GroupCard.tsx:167,278-279`), "Ya lo tengo" (`WishlistCard.tsx:174-176`), cierres de 40px, `Toast.tsx:63`, `WishLinkChip.tsx:42`, `ConfirmModal.tsx:110,116` | pendiente |
+| D3 | Componentes sin enlazar (`SecretSantaModal`, `RevealModal`, `UserProfileModal`): decidir borrar o arreglar; el control solo-hover de `SecretSantaModal.tsx:273` no puede quedar así | pendiente |
+
+### Unidad E — Una sola verdad de breakpoint + convención escrita
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| E1 | `lib/use-is-desktop.ts` (o equivalente): hook único con `> 768` estricto; adoptarlo en los 6 sitios y en `NotificationMenu` conservando su test | pendiente |
+| E2 | `WishListTab.tsx:351` y `app/groups/[id]/index.tsx:218`: columnas vía `isDesktop`, no vía `md:` | pendiente |
+| E3 | `docs/DEVELOPMENT.md`: sección mobile-first (breakpoint único, insets, `dvh`, 16px, 44px, WebKit en CI) y corregir el drift «641–768 px» de `:121` | pendiente |
+| E4 | Test unitario del hook de breakpoint (y del mock de `useWindowDimensions`) | pendiente |
+
+## Verificación
+
+- **Local**: `pnpm run typecheck`, `pnpm run lint`, `pnpm test:unit`. Nada de esto valida el harness móvil: solo el E2E en CI lo es. **Estado honesto por check**: 16px → ROJO esperado (default `14px System` de RNW); 24px → ROJO esperado vía el lápiz de alias (≈20×24); overflow por rect/scrollWidth → profiláctico frente a los defectos auditados (truncamiento ≠ desborde; no hay chips en el seed); los dos detectores nuevos son la señal real: el nombre ellipseado — ROJO esperado (el nombre del fixture «E2E Test Group» a text-xl rinde ~130–150px frente a ~56–60px de columna, `GroupCard.tsx:183`; aritmética, no medición, con CI como prueba) — y las acciones del share dentro del viewport — VERDE esperado hoy (el código «E2E001» cabe en una línea a text-4xl; detector real que muerde con códigos largos). Nada CI-verificado.
+- **CI**: `Types and unit tests` + `E2E gate` en `chromium`, `Mobile Chrome` y (nuevo) `Mobile Safari`.
+- **Limitación conocida**: el E2E (incluido `--list`) no puede ejecutarse localmente (requiere `.env.local` generado con `supabase start`/Docker, no disponible); el `--list` solo puede probarse con env dummies inertes. La verificación E2E ocurre en CI.
+- **No verificado en dispositivo**: comportamiento real de iOS Safari (viewport/ICB, toolbar), resultado del `KeyboardAvoidingView` no-op, cascada final RNW vs Tailwind preflight y medidas reales de tarjetas/chips. La unidad F5 es la vía empírica para iOS.
+- Al cerrar la rama: **una sola** revisión nativa (regla adoptada: el registro `docs(odd)` va antes de la revisión final).
+
+## Commits
+
+- (pendiente) un work-unit commit por unidad, con la actualización de esta ficha incluida.

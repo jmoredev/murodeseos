@@ -83,8 +83,9 @@ jobs:
         # the groups the first run left behind. `test:e2e:prepare` restarts
         # Supabase and re-seeds, giving Mobile Chrome a fresh fixture. Mobile
         # Chrome uses the Chromium engine installed above, so no extra
-        # `playwright install` is needed. Mobile Safari/WebKit and Firefox are
-        # deliberately out of CI (see docs/DEVELOPMENT.md).
+        # `playwright install` is needed. Mobile Safari runs bounded to the
+        # mobile specs below; Firefox remains deliberately out of CI (see
+        # docs/DEVELOPMENT.md).
         run: pnpm run test:e2e:prepare && pnpm exec playwright test --project="Mobile Chrome"
 
       - name: Upload Mobile Chrome failure artifacts
@@ -92,6 +93,41 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-mobile-chrome
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+
+      # WebKit is a separate engine: it is the only CI approximation of iOS
+      # Safari, which no other project in this workflow exercises.
+      # `if: always()` is deliberate: if Mobile Chrome turns red, skipping the
+      # WebKit steps would drop the ONLY iOS signal of the whole gate, while
+      # running them anyway costs a few extra CI minutes on an already-red
+      # job. Each step re-seeds (`test:e2e:prepare`), the iOS run never sees
+      # a stale fixture from the failed previous run.
+      - name: Install WebKit for Playwright
+        if: always()
+        run: pnpm exec playwright install --with-deps webkit
+
+      - name: Seed and run E2E (Mobile Safari, bounded to the mobile specs)
+        if: always()
+        # Same rationale as the Mobile Chrome step: defect E-10 means the suite
+        # is not self-cleaning, so this project needs its own `test:e2e:prepare`
+        # re-seed on top of the fresh fixture the scheduler left behind. The run
+        # is bounded to e2e/mobile-layout.spec.ts and
+        # e2e/responsive-wishlist.spec.ts to keep the extra engine's cost down
+        # while still deciding what only Mobile Safari can decide: iOS Safari
+        # viewport/keyboard/safe-area behaviour (exactly the checks the
+        # mobile-layout spec contains: focus zoom and touch tap targets; the
+        # safe-area layout itself is fixed by units A–E and proven there). The
+        # full WebKit desktop suite stays out of CI on cost grounds.
+        run: pnpm run test:e2e:prepare && pnpm exec playwright test --project="Mobile Safari" e2e/mobile-layout.spec.ts e2e/responsive-wishlist.spec.ts
+
+      - name: Upload Mobile Safari failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mobile-safari
           path: |
             playwright-report/
             test-results/
