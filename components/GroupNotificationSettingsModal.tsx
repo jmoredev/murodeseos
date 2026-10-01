@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Switch, useWindowDimensions } from 'react-native';
+import { Switch, TextInput, useWindowDimensions } from 'react-native';
 import { useClientMounted } from '@/lib/use-client-mounted';
 import { createPortal } from 'react-dom';
 import {
@@ -12,6 +12,13 @@ import {
     getGroupNotificationPreferences,
     setGroupNotificationPreference,
 } from '@/lib/group-notification-preferences';
+import {
+    DEFAULT_REMINDER_LEAD_DAYS,
+    MAX_REMINDER_LEAD_DAYS,
+    MIN_REMINDER_LEAD_DAYS,
+    getGroupReminderLeadDays,
+    setGroupReminderLeadDays,
+} from '@/lib/reminder-utils';
 
 interface GroupNotificationSettingsModalProps {
     visible: boolean;
@@ -50,6 +57,23 @@ export function GroupNotificationSettingsModal({
     const [rowError, setRowError] = useState<GroupNotificationType | null>(null);
     // Cambiar la clave reejecuta la carga: lo usa el botón "Reintentar".
     const [retryNonce, setRetryNonce] = useState(0);
+
+    // Antelación de los avisos (lead days): estado propio e independiente de las
+    // preferencias. El efecto de las preferencias reinicia su estado en cada
+    // apertura/reintento, así que acoplar ambos haría que un fallo de carga
+    // ocultara el otro.
+    const [leadDaysText, setLeadDaysText] = useState('');
+    const [leadDaysLoading, setLeadDaysLoading] = useState(false);
+    const [leadDaysLoadError, setLeadDaysLoadError] = useState<string | null>(null);
+    const [leadDaysSaving, setLeadDaysSaving] = useState(false);
+    const [leadDaysSaveError, setLeadDaysSaveError] = useState<string | null>(null);
+    const [leadDaysSaved, setLeadDaysSaved] = useState(false);
+    // Cambiar la clave reejecuta la carga del propio control.
+    const [leadDaysRetryNonce, setLeadDaysRetryNonce] = useState(0);
+    // Último valor conocido persistido: línea base para habilitar el guardado y
+    // para revertir el valor visible si el guardado falla. Va en estado (no en
+    // ref) porque el render lo lee para decidir si el botón está habilitado.
+    const [persistedLeadDays, setPersistedLeadDays] = useState<number | null>(null);
 
     useEffect(() => {
         if (visible) {
@@ -92,6 +116,43 @@ export function GroupNotificationSettingsModal({
             cancelled = true;
         };
     }, [visible, userId, groupId, retryNonce]);
+
+    useEffect(() => {
+        if (!visible || !userId || !groupId) return;
+
+        // Misma protección que la carga de preferencias: si el grupo cambia con
+        // el modal abierto, la respuesta anterior se descarta.
+        let cancelled = false;
+        const run = async () => {
+            setLeadDaysLoading(true);
+            setLeadDaysLoadError(null);
+            // A (re)open always starts from a neutral state: the parent keeps
+            // the modal mounted (only `visible` changes), so without this a
+            // previous save error or success would reappear next to a freshly
+            // loaded value. The persisted baseline is discarded too, so a group
+            // change that somehow avoids a remount cannot inherit another
+            // group's baseline. Keystroke clearing below stays as-is.
+            setLeadDaysSaved(false);
+            setLeadDaysSaveError(null);
+            setPersistedLeadDays(null);
+            try {
+                const days = await getGroupReminderLeadDays(userId, groupId);
+                if (cancelled) return;
+                setPersistedLeadDays(days);
+                setLeadDaysText(String(days));
+            } catch {
+                if (cancelled) return;
+                setLeadDaysLoadError('No se ha podido cargar la antelación de los avisos. Inténtalo de nuevo.');
+            } finally {
+                if (!cancelled) setLeadDaysLoading(false);
+            }
+        };
+        run();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, userId, groupId, leadDaysRetryNonce]);
 
     useEffect(() => {
         onCloseRef.current = onClose;
@@ -150,6 +211,51 @@ export function GroupNotificationSettingsModal({
         }
     };
 
+    const handleLeadDaysTextChange = (text: string) => {
+        setLeadDaysText(text);
+        setLeadDaysSaveError(null);
+        setLeadDaysSaved(false);
+    };
+
+    const handleSaveLeadDays = async () => {
+        if (!leadDaysDirty || leadDaysSaving) return;
+        const days = parsedLeadDays;
+        setLeadDaysSaving(true);
+        setLeadDaysSaveError(null);
+        setLeadDaysSaved(false);
+        try {
+            await setGroupReminderLeadDays(userId, groupId, days);
+            setPersistedLeadDays(days);
+            setLeadDaysText(String(days));
+            setLeadDaysSaved(true);
+        } catch {
+            // El guardado ha fallado: se vuelve al último valor que la base conoce.
+            setLeadDaysText(persistedLeadDays === null ? '' : String(persistedLeadDays));
+            setLeadDaysSaveError('No se ha podido guardar. Comprueba tu conexión y prueba otra vez.');
+        } finally {
+            setLeadDaysSaving(false);
+        }
+    };
+
+    // Validación en cliente antes de llamar al setter: entero en 1..365. Un
+    // valor inválido muestra el error en línea y no llega a tocar Supabase.
+    const trimmedLeadDays = leadDaysText.trim();
+    const parsedLeadDays = Number.parseInt(trimmedLeadDays, 10);
+    const leadDaysIsValid =
+        /^\d+$/.test(trimmedLeadDays) &&
+        parsedLeadDays >= MIN_REMINDER_LEAD_DAYS &&
+        parsedLeadDays <= MAX_REMINDER_LEAD_DAYS;
+    const leadDaysInvalidError =
+        trimmedLeadDays !== '' && !leadDaysIsValid
+            ? `Introduce un número entero entre ${MIN_REMINDER_LEAD_DAYS} y ${MAX_REMINDER_LEAD_DAYS}.`
+            : null;
+    // Solo se permite guardar con una línea base persistida conocida y cuando el
+    // valor nuevo difiere de ella.
+    const leadDaysDirty =
+        leadDaysIsValid &&
+        persistedLeadDays !== null &&
+        parsedLeadDays !== persistedLeadDays;
+
     // En móvil se comporta como hoja inferior (patrón de WishDetailModal) y en
     // escritorio como diálogo centrado. El cuerpo lleva scroll propio para que no
     // se recorte en pantallas bajas (móvil apaisado, fuente grande).
@@ -198,26 +304,97 @@ export function GroupNotificationSettingsModal({
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                {loading ? (
-                    <div className="py-10 text-center" role="status" aria-live="polite">
-                        <p className="text-on-surface/45 font-sans">Cargando preferencias…</p>
-                    </div>
-                ) : loadError ? (
-                    <div className="py-6 flex flex-col gap-4">
-                        <p className="text-sm text-primary font-sans-bold text-center">{loadError}</p>
-                        <button
-                            type="button"
-                            onClick={() => setRetryNonce((n) => n + 1)}
-                            className="py-3 rounded-full border border-primary/30 active:opacity-80 transition-opacity"
-                        >
-                            <span className="text-primary font-sans-bold text-xs uppercase tracking-widest">
-                                Reintentar
-                            </span>
-                        </button>
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {preferences &&
+                <div className="flex flex-col gap-3">
+                        <div className="p-4 rounded-2xl bg-surface-container-low">
+                            <p className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                Antelación de los avisos (días)
+                            </p>
+                            <p className="text-xs text-on-surface/50 font-sans leading-snug">
+                                Con cuántos días de antelación recibes tú los avisos de cumpleaños y
+                                onomástico en este grupo. Por defecto, {DEFAULT_REMINDER_LEAD_DAYS}.
+                            </p>
+                            {leadDaysLoading ? (
+                                <p className="mt-3 text-xs text-on-surface/45 font-sans">Cargando…</p>
+                            ) : leadDaysLoadError ? (
+                                <div className="mt-3 flex flex-col gap-2">
+                                    <p className="text-xs text-primary font-sans-bold" role="status" aria-live="polite">
+                                        {leadDaysLoadError}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLeadDaysRetryNonce((n) => n + 1)}
+                                        className="self-start py-2 rounded-full border border-primary/30 active:opacity-80 transition-opacity"
+                                    >
+                                        <span className="text-primary font-sans-bold text-xs uppercase tracking-widest">
+                                            Reintentar
+                                        </span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        handleSaveLeadDays();
+                                    }}
+                                    className="mt-3 flex items-end gap-3"
+                                >
+                                    <TextInput
+                                        value={leadDaysText}
+                                        onChangeText={handleLeadDaysTextChange}
+                                        keyboardType="numeric"
+                                        placeholder={String(DEFAULT_REMINDER_LEAD_DAYS)}
+                                        editable={!leadDaysSaving}
+                                        aria-label="Antelación de los avisos (días)"
+                                        className="flex-1 min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
+                                    />
+                                    <button
+                                        type="submit"
+                                        aria-label="Guardar antelación de los avisos"
+                                        disabled={!leadDaysDirty || leadDaysSaving}
+                                        className={`py-3 px-4 rounded-full border border-primary/30 active:opacity-80 transition-opacity ${!leadDaysDirty || leadDaysSaving ? 'opacity-50' : ''}`}
+                                    >
+                                        <span className="text-primary font-sans-bold text-xs uppercase tracking-widest">
+                                            {leadDaysSaving ? 'Guardando…' : 'Guardar'}
+                                        </span>
+                                    </button>
+                                </form>
+                            )}
+                            {leadDaysInvalidError && (
+                                <p className="mt-2 text-xs text-primary font-sans-bold" role="status" aria-live="polite">
+                                    {leadDaysInvalidError}
+                                </p>
+                            )}
+                            {leadDaysSaveError && (
+                                <p className="mt-2 text-xs text-primary font-sans-bold" role="status" aria-live="polite">
+                                    {leadDaysSaveError}
+                                </p>
+                            )}
+                            {leadDaysSaved && !leadDaysSaveError && !leadDaysInvalidError && (
+                                <p className="mt-2 text-xs text-on-surface/50 font-sans" role="status" aria-live="polite">
+                                    Guardado.
+                                </p>
+                            )}
+                        </div>
+                        {loading ? (
+                            <div className="py-10 text-center" role="status" aria-live="polite">
+                                <p className="text-on-surface/45 font-sans">Cargando preferencias…</p>
+                            </div>
+                        ) : loadError ? (
+                            <div className="py-6 flex flex-col gap-4">
+                                <p className="text-sm text-primary font-sans-bold text-center">{loadError}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setRetryNonce((n) => n + 1)}
+                                    className="py-3 rounded-full border border-primary/30 active:opacity-80 transition-opacity"
+                                >
+                                    <span className="text-primary font-sans-bold text-xs uppercase tracking-widest">
+                                        Reintentar
+                                    </span>
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {preferences &&
                             GROUP_NOTIFICATION_OPTIONS.map((option) => {
                                 const value = preferences[option.type];
                                 const hasError = rowError === option.type;
@@ -247,8 +424,9 @@ export function GroupNotificationSettingsModal({
                                     </div>
                                 );
                             })}
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
                 </div>
             </div>
         </div>,
