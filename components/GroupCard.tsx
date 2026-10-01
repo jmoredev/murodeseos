@@ -168,7 +168,7 @@ export const GroupCard = memo(function GroupCard({
                                     {group.name}
                                 </Text>
                                 {onGroupAliasEdit && (
-                                    <Pressable onPress={startEditingGroupName} className="p-1 ml-1 shrink-0">
+                                    <Pressable onPress={startEditingGroupName} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
                                         <Text className="text-on-surface/40 text-xs">✎</Text>
                                     </Pressable>
                                 )}
@@ -271,7 +271,7 @@ export const GroupCard = memo(function GroupCard({
                                 </View>
                             ) : (
                                 <View className="flex-row items-center flex-1">
-                                    <Text className="text-sm font-sans-bold text-on-background" numberOfLines={1}>
+                                    <Text className="text-sm font-sans-bold text-on-background min-w-0 shrink" numberOfLines={1}>
                                         {member.name}
                                     </Text>
                                     {member.originalName && (
@@ -280,7 +280,7 @@ export const GroupCard = memo(function GroupCard({
                                         </Text>
                                     )}
                                     {onMemberEdit && (
-                                        <Pressable onPress={() => startEditing(member)} className="p-1 ml-1">
+                                        <Pressable onPress={() => startEditing(member)} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
                                             <Text className="text-on-surface/35 text-[10px]">✎</Text>
                                         </Pressable>
                                     )}

@@ -171,7 +171,7 @@ export function WishlistCard({
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="Marcar como ya lo tengo"
-                    className="px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
+                    className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
                     <Text className="text-[10px] font-sans-bold text-tertiary uppercase tracking-[0.2em]">
                         ✓ Ya lo tengo

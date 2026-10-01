@@ -39,7 +39,7 @@ export function WishLinkChip({ url, variant = 'chip', testID }: WishLinkChipProp
             onPress={handlePress}
             accessibilityRole="link"
             accessibilityLabel={`Abrir enlace: ${label}`}
-            className="max-w-[55%] px-2.5 py-1.5 rounded-xl bg-surface-container-low active:opacity-80"
+            className="max-w-[55%] min-h-[44px] px-2.5 py-1.5 rounded-xl bg-surface-container-low active:opacity-80 justify-center"
         >
             <Text className="text-primary text-xs font-sans-bold" numberOfLines={1}>
                 🔗 {label}

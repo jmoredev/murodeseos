@@ -77,7 +77,7 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
                     {icons[type]}
                 </div>
                 <p className="text-sm font-bold flex-1">{message}</p>
-                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-3.5 -mr-2 hover:bg-white/20 rounded-lg transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>

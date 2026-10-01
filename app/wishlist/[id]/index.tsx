@@ -166,7 +166,7 @@ export default function UserWishlistPage() {
                     <View className="flex-row items-center flex-1">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
+                            className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
                             <Text className="text-on-surface font-sans-bold">←</Text>
                         </Pressable>
@@ -277,7 +277,7 @@ export default function UserWishlistPage() {
                             <Text className="text-2xl font-display text-on-background">Información</Text>
                             <Pressable
                                 onPress={() => setShowInfo(false)}
-                                className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center"
+                                className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center"
                             >
                                 <Text className="text-on-surface/55 font-sans-bold">✕</Text>
                             </Pressable>
