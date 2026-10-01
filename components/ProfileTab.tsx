@@ -276,7 +276,12 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             {showAvatarModal && (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setShowAvatarModal(false)} />
-                    <View className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg">
+                    {/* C1: panel con max-h y scroll interno (mismo patrón que los diálogos
+                    de GroupsTab): con el teclado abierto el cierre sigue alcanzable. */}
+                <View
+                    className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg"
+                    style={{ maxHeight: '85dvh' } as any}
+                >
                         <Text className="text-xl font-display text-on-background mb-8 text-center uppercase tracking-widest">
                             Elige tu avatar
                         </Text>

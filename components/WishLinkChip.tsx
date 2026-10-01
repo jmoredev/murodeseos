@@ -33,13 +33,16 @@ export function WishLinkChip({ url, variant = 'chip', testID }: WishLinkChipProp
         );
     }
 
+    {/* C4: `min-w-0 shrink` — el chip puede encoger (la altura la fija
+        `min-h-[44px]`, intacta como objetivo táctil) y el texto recorta
+        con ellipsis en vez de desbordar la fila a 360px. */}
     return (
         <Pressable
             testID={testID}
             onPress={handlePress}
             accessibilityRole="link"
             accessibilityLabel={`Abrir enlace: ${label}`}
-            className="max-w-[55%] min-h-[44px] px-2.5 py-1.5 rounded-xl bg-surface-container-low active:opacity-80 justify-center"
+            className="min-w-0 shrink max-w-[55%] min-h-[44px] px-2.5 py-1.5 rounded-xl bg-surface-container-low active:opacity-80 justify-center"
         >
             <Text className="text-primary text-xs font-sans-bold" numberOfLines={1}>
                 🔗 {label}

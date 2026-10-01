@@ -143,13 +143,17 @@ export function WishlistCard({
                         </Text>
                     ) : null}
 
+                    {/* C4: los dos chips pueden encoger (`min-w-0 shrink`) y recortar con
+                            ellipsis en vez de forzar la fila más ancha que la tarjeta a 360px.
+                            Sin cambios de ancho: solo se permite encoger. */}
                     <View className="flex-row items-center justify-between gap-2">
                         <View
-                            className={`px-3 py-1.5 rounded-xl ${
+                            className={`min-w-0 shrink px-3 py-1.5 rounded-xl ${
                                 item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
                             }`}
                         >
                             <Text
+                                numberOfLines={1}
                                 className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
                             >
                                 {item.price ? `${item.price} €` : 'Sin precio'}

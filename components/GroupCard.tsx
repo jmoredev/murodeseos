@@ -130,7 +130,10 @@ export const GroupCard = memo(function GroupCard({
             accessibilityHint="Abrir detalle del grupo"
             className="bg-surface-container-lowest rounded-lg p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
         >
-            {/* Header: ancho fijo para acciones → misma columna de título en web; min-w-0 evita desbordes en flex */}
+            {/* Header: la columna fija de acciones (compartir + menú) es solo de
+                escritorio: alinea la columna de título entre tarjetas en el grid
+                `md:`; en pantalla estrecha el ancho es el del contenido, para no
+                dejar solo ~56px al nombre (defecto C3). min-w-0 evita desbordes. */}
             <View className="flex-row justify-between items-start mb-6 min-w-0">
                 <View className="flex-row items-start flex-1 min-w-0 pr-2">
                     <View className="w-14 h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
@@ -184,7 +187,7 @@ export const GroupCard = memo(function GroupCard({
                     </View>
                 </View>
 
-                <View className="w-[7.25rem] shrink-0 flex-row justify-end items-start">
+                <View className="md:w-[7.25rem] shrink-0 flex-row justify-end items-start">
                     <Pressable
                         onPress={handleShareClick}
                         accessibilityRole="button"
