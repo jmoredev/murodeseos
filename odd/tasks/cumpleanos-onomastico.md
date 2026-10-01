@@ -1,6 +1,6 @@
 # Cumpleaños y onomástico: perfil, recordatorios y notificaciones por grupo (feat/cumpleanos-onomastico)
 
-**Abierta:** 2026-09-30 · **Rama:** `feat/cumpleanos-onomastico` (desde `main`) · **Estado:** abierta — Unidad A cerrada (commit `9567f2b`) y Unidad B cerrada (commits `b4eeae9` + `5128010`), ambas con revisión nativa aprobada y autoridad quemada; Unidad C pendiente
+**Abierta:** 2026-09-30 · **Rama:** `feat/cumpleanos-onomastico` (desde `main`, empujada) · **Estado:** cerrada — Unidades A, B y C completadas, verificadas y con revisión nativa aprobada y autoridad quemada (C: linaje `review-139eb5be6114e444`). PR **#34** abierta con CI verde; solo queda la decisión de merge (del usuario). Pendiente menor de entorno: `supabase db reset` en vivo (sin Docker/CLI de Supabase).
 
 ## Objetivo
 
@@ -65,20 +65,23 @@
 
 | # | Tarea | Estado |
 | --- | --- | --- |
-| C1 | `components/GroupNotificationSettingsModal.tsx`: campo `lead_days` por grupo (defecto 15) leyendo/escribiendo `group_reminder_settings`; los dos toggles nuevos se renderizan desde `GROUP_NOTIFICATION_OPTIONS` | pendiente |
-| C2 | `components/NotificationItem.tsx`: casos `birthday` (🎂) y `name_day` (🕯️) con copy | pendiente |
-| C3 | Gate a nivel de sesión: `app/index.tsx` redirige a `/profile/setup` si `display_name` vacío (además del gate de login) | pendiente |
-| C4 | Cablear `ensureBirthdayReminders()` en el punto único de carga de notificaciones | pendiente |
-| C5 | Tests unitarios (NotificationItem, modal de ajustes) | pendiente |
-| C6 | E2E: recordatorio generado + toggle por grupo + antelación | pendiente |
-| C7 | `docs/DEVELOPMENT.md` (cumpleaños/onomástico, generación al abrir, antelación por grupo) | pendiente |
+| C1 | `components/GroupNotificationSettingsModal.tsx`: campo `lead_days` por grupo (defecto 15) leyendo/escribiendo `group_reminder_settings`; los dos toggles nuevos se renderizan desde `GROUP_NOTIFICATION_OPTIONS` | hecha (`getReminderLeadDays`/`setReminderLeadDays` en `lib/reminder-utils.ts`; el modal persiste el valor y lo lee por grupo; commit `b82ad1f`) |
+| C2 | `components/NotificationItem.tsx`: casos `birthday` (🎂) y `name_day` (🕯️) con copy | hecha (`68c6ba1`, + tests propios) |
+| C3 | Gate a nivel de sesión: `app/index.tsx` redirige a `/profile/setup` si `display_name` vacío (además del gate de login) | hecha (`8229975`) |
+| C4 | Cablear `ensureBirthdayReminders()` en el punto único de carga de notificaciones | hecha (`components/NotificationMenu.tsx`, único punto de carga; `8229975`) |
+| C5 | Tests unitarios (NotificationItem, modal de ajustes) | hecha (en `68c6ba1` y `b82ad1f`) |
+| C6 | E2E: recordatorio generado + toggle por grupo + antelación | hecha (`e2e/birthday-reminders.spec.ts`, 5 tests; `acd41a8`) + arreglo del fixture de `e2e/reset-password.spec.ts` que el gate nuevo invalidaba (`bd6b17d`) |
+| C7 | `docs/DEVELOPMENT.md` (cumpleaños/onomástico, generación al abrir, antelación por grupo) | hecha (`acd41a8`) |
 
 ## Verificación
 
 - Unidad A: writer self-verification (pass) + independent verifier (**PASS**, 0 bloqueantes, 5 informativos: I1 LF/CRLF cosmético, I2 `updated_at` sin trigger, I3/I4 fuera de ámbito, I5 dedupe anti-join sin índice único — carrera solo con invocaciones concurrentes) + native RDD review (**aprobada**, linaje `review-8876fa94915e4e84`, tier medio, lente `review-reliability`, candidato `sha256:701421ec…`, sin corrección; autoridad quemada `gentle-ai.review-acknowledged/v1` el 2026-09-30).
 - Unidad B: dos work-units committeados por separado (`b4eeae9` perfil — 4 ficheros; `5128010` capa de datos — 5 ficheros, 293 inserciones totales). Verificación independiente **PASS** en los dos, 0 bloqueantes. En B-1 el verificador señaló que la aserción de valor no probaba de verdad que el input estuviera controlado (I6) → se reforzó con `expect(input.value).toBe('1990-04-12')` antes del commit. `pnpm run typecheck`, `pnpm run lint` y `pnpm test:unit` verdes (19 ficheros, 168 tests + 1 todo).
 - Unidad B, revisión nativa RDD: **aprobada**, linaje `review-c12961d16ffe1eee`, tier **medio**, 1 lente (`review-reliability`), 11 ficheros / 687 líneas, sin corrección; autoridad quemada (`gentle-ai.review-acknowledged/v1`, `consumed_revision sha256:85a9600a…`). Nota operativa: el controlador solo ofrece la proyección `main..HEAD`, así que el candidato re-incluyó la migración de la Unidad A (ya aprobada); no hay forma de revisar una unidad de forma aislada en esta versión, así que **conviene una sola revisión por rama y no una por unidad**.
-- Unidad C: (pendiente) writer self-verification + independent verifier + native RDD review.
+- Unidad C: cuatro sub-units implementadas (C-1 antelación, C-2/C-3 avisos + gate, C-4 cableado) con **dos verificaciones independientes PASS, 0 bloqueantes** (una por C-1 y otra por C-2/C-3/C-4). Sus hallazgos no bloqueantes abrieron una **ronda de endurecimiento** (el control nuevo quedaba oculto si fallaban las preferencias, el E2E no probaba de verdad la antelación, el gate podía quedarse colgado); la verificación enfocada de esa ronda encontró **un bloqueante real** (`expect.poll(...).toBe(0)` en la pata de causalidad de `lead_days` acierta en la primera muestra) que se corrigió antes de commitear. C5/C6/C7 se cerraron después y su evidencia es el CI de la PR (no verificador independiente).
+- Unidad C, CI (PR #34, run `36834514229` sobre `bd6b17d`): *Types and unit tests* **pass**; *E2E gate* **pass** con **44 tests en chromium y 44 en Mobile Chrome**, incluidos los 5 de `e2e/birthday-reminders.spec.ts` (que incluye la comprobación de que el aviso no llega si el tipo está desactivado en ese grupo). El primer run con el gate nuevo falló en `e2e/reset-password.spec.ts` porque su fixture creaba un usuario sin `display_name` (el gate lo mandaba, correctamente, a `/profile/setup`): el defecto era del test → `bd6b17d`.
+- Unidad C, revisión nativa RDD: **aprobada**, linaje `review-139eb5be6114e444`, tier **medio**, 1 lente (`review-reliability`), 19 ficheros / 1676 líneas, candidato `sha256:c98a8466…` (base `main` = `3ed93932…`, candidato `8b257f65…`), sin corrección; autoridad quemada (`gentle-ai.review-acknowledged/v1`, `consumed_revision sha256:0aba8899…`). 6 hallazgos advisory **no bloqueantes** (→ trabajo posterior, sección siguiente).
+- Nota de proceso: el `start` de esta revisión quedó interrumpido por una suspensión del equipo y **no creó linaje** (sin residuo en `.git/gentle-ai/review-transactions/v2/`); un `inspect` fresco bastó para reconducir, sin RESET/RECOVER.
 
 ### Hallazgos informativos de la revisión de la Unidad A (trabajo posterior, no bloqueantes)
 
@@ -94,6 +97,15 @@
 - **R3-003** (WARNING, `supabase/migrations/20260930160000_birthday_name_day_reminders.sql:32-36`): CHECKs de tipo de notificación en la migración de la Unidad A.
 - **R3-004** (WARNING, `supabase/migrations/20260930160000_birthday_name_day_reminders.sql:268-275`): el dedupe por anti-join de la Unidad A (mismo punto que el `R3-001` de la revisión de A: carrera solo con invocaciones concurrentes del RPC).
 
+### Hallazgos informativos de la revisión de la Unidad C (trabajo posterior, no bloqueantes)
+
+- **R3-001** (WARNING, `supabase/migrations/20260930160000_birthday_name_day_reminders.sql:268-275`): dedupe por anti-join (mismo punto que `R3-001`/`R3-004` de las revisiones de A y B).
+- **R3-002** (WARNING, `components/GroupNotificationSettingsModal.tsx:220-238`): localización y severidad dadas por la revisión; texto no expuesto por la fachada.
+- **R3-003** (WARNING, `app/profile/setup/index.tsx:36`): mismo punto ya señalado en la revisión de la Unidad B.
+- **R3-004** (SUGGESTION, `components/ui/DateField.tsx:41-48`): rama no-web del componente de fecha (ya señalada en B).
+- **R3-005** (WARNING, `e2e/birthday-reminders.spec.ts:83`): localización y severidad dadas por la revisión; texto no expuesto por la fachada.
+- **R3-006** (SUGGESTION, `app/index.tsx:78`): localización y severidad dadas por la revisión; texto no expuesto por la fachada.
+
 Notas de verificación de la Unidad B (informativas): `assess` nativo devuelve `risk: unassessable` con `schema-incompatible` y sin diagnóstico en este entorno → se aplica el camino fail-closed (self-verification + verificador independiente), que es el que se siguió. El mock global de `vitest.setup.ts` no define `rpc`, así que los tests de RPC deben stubearlo por fichero.
 
 ## Commits
@@ -101,4 +113,10 @@ Notas de verificación de la Unidad B (informativas): `assess` nativo devuelve `
 - Unidad A: `9567f2b` `feat(db): add birthday/name-day profile fields and group reminder RPC` (1 fichero: `supabase/migrations/20260930160000_birthday_name_day_reminders.sql`, 302 líneas).
 - Unidad B-1: `b4eeae9` `feat(profile): capture optional birthday and name-day dates` (4 ficheros: `app/profile/setup/index.tsx`, `components/ProfileTab.tsx`, `components/ui/DateField.tsx`, `__tests__/DateField.test.tsx`).
 - Unidad B-2: `5128010` `feat(notifications): add birthday and name-day types and reminder RPC helper` (5 ficheros: `lib/group-notification-preferences.ts`, `lib/notification-utils.ts`, `lib/reminder-utils.ts`, `__tests__/group-notification-preferences.test.ts`, `__tests__/reminder-utils.test.ts`).
-- (pendiente) un commit por unidad C en `feat/cumpleanos-onomastico`.
+- Unidad C-1: `b82ad1f` `feat(notifications): let each member set the reminder lead time per group` (3 ficheros: `lib/reminder-utils.ts`, `components/GroupNotificationSettingsModal.tsx`, `__tests__/reminder-utils.test.ts` — 374 inserciones/24 borrados, incluye la ronda de endurecimiento del modal).
+- Unidad C-2: `68c6ba1` `feat(notifications): render birthday and name-day notices` (2 ficheros: `components/NotificationItem.tsx`, `__tests__/NotificationItem.test.tsx`).
+- Unidad C-3/C-4: `8229975` `feat(notifications): generate reminders on mount and gate the first access` (2 ficheros: `app/index.tsx`, `components/NotificationMenu.tsx`).
+- Unidad C-6/C-7: `acd41a8` `test(e2e): cover the birthday reminder, its toggle and the lead time` (2 ficheros: `e2e/birthday-reminders.spec.ts`, `docs/DEVELOPMENT.md`).
+- Unidad C, arreglo de CI: `bd6b17d` `test(e2e): give the recovery fixture a name for the new first-access gate` (1 fichero: `e2e/reset-password.spec.ts`).
+- Registro ODD de la Unidad C: commit `docs(odd)` de esta misma actualización.
+- Nota de revisión nativa: el candidato `review-139eb5be6114e444` se congeló sobre el árbol de `bd6b17d` (`8b257f65…`), por lo que este registro documental es posterior a la revisión y queda cubierto por la exención de **edición documental pasiva trivial** (misma disposición que los registros de A y B).
