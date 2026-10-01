@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { signOut } from '@/lib/sign-out'
 import { getCssColor } from '@/lib/color-utils'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { DateField } from '@/components/ui/DateField'
 
 export interface ProfileTabProps {
     userId: string;
@@ -12,6 +13,8 @@ export interface ProfileTabProps {
 export function ProfileTab({ userId }: ProfileTabProps) {
     const [displayName, setDisplayName] = useState('')
     const [selectedAvatar, setSelectedAvatar] = useState('👤')
+    const [birthDate, setBirthDate] = useState('')
+    const [nameDay, setNameDay] = useState('')
     const [showAvatarModal, setShowAvatarModal] = useState(false)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -30,7 +33,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('display_name, avatar_url, shirt_size, pants_size, shoe_size, favorite_brands, favorite_color')
+                    .select('display_name, avatar_url, birth_date, name_day, shirt_size, pants_size, shoe_size, favorite_brands, favorite_color')
                     .eq('id', userId)
                     .single()
 
@@ -39,6 +42,8 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                 if (data) {
                     setDisplayName(data.display_name || '')
                     setSelectedAvatar(data.avatar_url || '👤')
+                    setBirthDate(data.birth_date || '')
+                    setNameDay(data.name_day || '')
                     setShirtSize(data.shirt_size || '')
                     setPantsSize(data.pants_size || '')
                     setShoeSize(data.shoe_size || '')
@@ -63,6 +68,15 @@ export function ProfileTab({ userId }: ProfileTabProps) {
         setError('')
         setSuccess(false)
 
+        // Guard for the non-web path: the browser date input already guarantees
+        // YYYY-MM-DD on web, but the native fallback is free text.
+        const isValidDate = (value: string) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value)
+        if (!isValidDate(birthDate) || !isValidDate(nameDay)) {
+            setError('Las fechas deben tener el formato AAAA-MM-DD')
+            setSaving(false)
+            return
+        }
+
         try {
             const { error: updateError } = await supabase
                 .from('profiles')
@@ -70,6 +84,9 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                     id: userId,
                     display_name: displayName,
                     avatar_url: selectedAvatar,
+                    // Postgres date columns: empty must be null, never ''.
+                    birth_date: birthDate === '' ? null : birthDate,
+                    name_day: nameDay === '' ? null : nameDay,
                     shirt_size: shirtSize,
                     pants_size: pantsSize,
                     shoe_size: shoeSize,
@@ -144,6 +161,23 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                             className="w-full px-6 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                             placeholder="Tu nombre"
                         />
+                    </View>
+
+                    <DateField
+                        label="Tu cumpleaños (opcional)"
+                        value={birthDate}
+                        onChange={setBirthDate}
+                    />
+
+                    <View>
+                        <DateField
+                            label="Tu onomástico o día del santo (opcional)"
+                            value={nameDay}
+                            onChange={setNameDay}
+                        />
+                        <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mt-2 ml-1">
+                            Solo importan el día y el mes; el año no se tiene en cuenta
+                        </Text>
                     </View>
 
                     <View className="pt-8 mt-2 bg-surface-container-low -mx-2 px-2 py-6 rounded-2xl">

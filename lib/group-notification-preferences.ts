@@ -11,7 +11,9 @@ export type GroupNotificationType =
     | 'wish_reserved'
     | 'wish_added'
     | 'wish_deleted_by_owner'
-    | 'draw_performed';
+    | 'draw_performed'
+    | 'birthday'
+    | 'name_day';
 
 export interface GroupNotificationOption {
     type: GroupNotificationType;
@@ -40,6 +42,16 @@ export const GROUP_NOTIFICATION_OPTIONS: GroupNotificationOption[] = [
         label: 'Se realiza el sorteo',
         description: 'Cuando el administrador sortea el Amigo Invisible del grupo.',
     },
+    {
+        type: 'birthday',
+        label: 'Cumpleaños',
+        description: 'Cuando se acerca el cumpleaños de otro miembro del grupo.',
+    },
+    {
+        type: 'name_day',
+        label: 'Onomástico',
+        description: 'Cuando llega el día del santo (onomástico) de otro miembro del grupo.',
+    },
 ];
 
 export type GroupNotificationPreferences = Record<GroupNotificationType, boolean>;
@@ -51,6 +63,8 @@ export function defaultGroupNotificationPreferences(): GroupNotificationPreferen
         wish_added: true,
         wish_deleted_by_owner: true,
         draw_performed: true,
+        birthday: true,
+        name_day: true,
     };
 }
 

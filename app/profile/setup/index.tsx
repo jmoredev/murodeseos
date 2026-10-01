@@ -4,11 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { DateField } from '@/components/ui/DateField';
 
 export default function ProfileSetupPage() {
     const router = useRouter();
     const [displayName, setDisplayName] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState('👤');
+    const [birthDate, setBirthDate] = useState('');
+    const [nameDay, setNameDay] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -28,6 +31,14 @@ export default function ProfileSetupPage() {
             return;
         }
 
+        // Guard for the non-web path: the browser date input already guarantees
+        // YYYY-MM-DD on web, but the native fallback is free text.
+        const isValidDate = (value: string) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value);
+        if (!isValidDate(birthDate) || !isValidDate(nameDay)) {
+            setError('Las fechas deben tener el formato AAAA-MM-DD');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
@@ -41,6 +52,9 @@ export default function ProfileSetupPage() {
                     id: user.id,
                     display_name: displayName.trim(),
                     avatar_url: selectedAvatar,
+                    // Postgres date columns: empty must be null, never ''.
+                    birth_date: birthDate === '' ? null : birthDate,
+                    name_day: nameDay === '' ? null : nameDay,
                     updated_at: new Date().toISOString(),
                 });
 
@@ -94,6 +108,23 @@ export default function ProfileSetupPage() {
                         />
                         <Text className="text-[10px] text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
                             Mínimo 3 caracteres
+                        </Text>
+                    </View>
+
+                    <DateField
+                        label="Tu cumpleaños (opcional)"
+                        value={birthDate}
+                        onChange={setBirthDate}
+                    />
+
+                    <View>
+                        <DateField
+                            label="Tu onomástico o día del santo (opcional)"
+                            value={nameDay}
+                            onChange={setNameDay}
+                        />
+                        <Text className="text-[10px] text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
+                            Solo importan el día y el mes; el año no se tiene en cuenta
                         </Text>
                     </View>
 

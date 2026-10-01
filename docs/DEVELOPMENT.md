@@ -1,6 +1,6 @@
 # Guía de Desarrollo - Muro de Deseos
 
-> **Última revisión de contenido:** 2026-05-13
+> **Última revisión de contenido:** 2026-10-01
 
 Esta guía proporciona instrucciones detalladas sobre cómo configurar, desarrollar y mantener el proyecto "Muro de Deseos".
 
@@ -145,12 +145,21 @@ Código del grupo en chip con `ellipsizeMode="middle"`; contador de participante
 ### TypeScript (`tsconfig.json`)
 En `compilerOptions.types` se usa **`vitest/globals`** en lugar de `jest`, alineado con Vitest.
 
+### Avisos de cumpleaños y onomástico (`lib/reminder-utils.ts`)
+- **El nombre sigue siendo el único dato obligatorio:** `profiles.birth_date` y `profiles.name_day` (`supabase/migrations/20260930160000_birthday_name_day_reminders.sql`) son **opcionales** y se recogen en `app/profile/setup/index.tsx` y se editan en `components/ProfileTab.tsx` (ambos con `components/ui/DateField.tsx`). La app redirige a `/profile/setup` solo cuando el `display_name` está vacío; una fecha ausente nunca bloquea la sesión.
+- **Los avisos se generan al abrir las notificaciones, no en segundo plano:** no hay cron, ni push, ni correo. Al montar el menú (`components/NotificationMenu.tsx`) se llama a `ensureBirthdayReminders()` (`lib/reminder-utils.ts`) justo antes del primer `fetch`, y esa llamada invoca `public.generate_birthday_reminders()` (idempotente), que inserta una fila por (destinatario, homenajeado, grupo, tipo) y año del evento. Como el RPC corre **con tu sesión**, el aviso aparece en tu siguiente visita a la app; si el primer `fetch` aún no lo ve, la suscripción realtime del propio menú lo trae.
+- **La antelación es por miembro y grupo:** `group_reminder_settings.lead_days` (defecto **15**, válida **1–365**) se configura en el modal de notificaciones del grupo (`components/GroupNotificationSettingsModal.tsx`, campo “Antelación de los avisos (días)”). Es la antelación con la que **ese usuario** recibe los avisos de cumpleaños y onomástico **en ese grupo**: cambiarla no afecta a los demás miembros ni a otros grupos.
+- **Iconos 🎂 / 🕯️, pero el avatar gana:** `components/NotificationItem.tsx` muestra el cumpleaños con 🎂 y el onomástico con 🕯️, pero si el homenajeado tiene avatar se muestra **la imagen en lugar del icono** (decisión deliberada, no un fallo). El nombre accesible de la tarjeta es su resumen ("Miguel cumple años pronto en …"), sin edad ni año: no ates pruebas ni código al carácter del emoji.
+- **Un aviso que no llega no es un error:** cuando el tipo está desactivado en `group_notification_preferences`, el trigger `tr_enforce_notification_preference` descarta la fila en silencio (ausencia de fila = activado), y `ensureBirthdayReminders()` es *best-effort* a propósito: un fallo del RPC nunca rompe la pantalla de notificaciones.
+
 ## 🧪 Testing
 
 El proyecto utiliza **Vitest** como framework de pruebas unitarias y de componentes.
 
 ### Estructura de pruebas
 Los tests se encuentran en el directorio `__tests__`.
+- `NotificationItem.test.tsx`: tipos de aviso nuevos (cumpleaños y onomástico), su resumen como nombre accesible y el tipo antiguo desconocido.
+- `reminder-utils.test.ts`: RPC de avisos de cumpleaños/onomástico best-effort y antelación por grupo (`lead_days`).
 - `wish-image-upload.test.ts`: utilidades de extensión MIME, base64 y rutas de Storage para imágenes de deseos.
 - `wish-link-utils.test.ts`: normalización, truncado y deduplicación de enlaces de deseos.
 - `wish-reservation.test.ts`: reserva y cancelación en listas ajenas vía Supabase.

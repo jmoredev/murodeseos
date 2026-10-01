@@ -81,6 +81,33 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
             );
             summary = `${actorName} realizó el sorteo en ${groupName}`;
             break;
+        case 'birthday':
+            icon = '🎂';
+            bgColor = 'bg-primary/10';
+            // `actor` es el homenajeado: la notificación sólo existe dentro de un
+            // grupo. No se muestra ninguna edad ni año: `metadata.event_date` es
+            // la próxima ocurrencia, no la fecha de nacimiento.
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> cumple años pronto
+                    en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} cumple años pronto en ${groupName}`;
+            break;
+        case 'name_day':
+            icon = '🕯️';
+            bgColor = 'bg-tertiary/15';
+            content = (
+                <>
+                    <span className="font-sans-bold text-on-background">{actorName}</span> celebra su onomástica
+                    pronto en
+                    <span className="font-sans-medium text-on-surface/70"> {groupName}</span>.
+                </>
+            );
+            summary = `${actorName} celebra su onomástica pronto en ${groupName}`;
+            break;
         default:
             icon = '🔔';
             bgColor = 'bg-surface-container-high';
