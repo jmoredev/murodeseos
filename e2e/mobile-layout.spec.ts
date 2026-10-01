@@ -51,6 +51,10 @@ interface InteractiveReport {
     width: number;
     height: number;
     fontSize: string;
+    // For <input> elements, the resolved `type` ('' for every other tag). The
+    // text-size check only cares about controls a user types into: a checkbox or
+    // a radio carries no text to zoom, so it must not turn that check red.
+    inputType: string;
     // Product of the computed opacity of the element and all its ancestors up
     // to body: a wrapper with `opacity: 0` hides the subtree just as surely as
     // opacity on the element itself, so the scan uses the chain product.
@@ -229,6 +233,7 @@ function getInteractiveBoxes(page: Page): Promise<InteractiveReport[]> {
                 width: rect.width,
                 height: rect.height,
                 fontSize: style.fontSize,
+                inputType: el instanceof HTMLInputElement ? el.type || 'text' : '',
                 opacityProduct: opacityChainProduct(el),
             });
         }
@@ -256,9 +261,28 @@ async function expectTapTargetsAtLeast24(page: Page, route: string) {
 
 /** Visible form controls must render at ≥ 16px or iOS Safari zooms on focus. */
 async function expectFormFontSizeAtLeast16(page: Page, route: string) {
+    // Only controls a user types into can trigger the iOS focus zoom: a
+    // checkbox, radio, range, colour or file input has no text to zoom, so
+    // measuring its font-size would fail for a reason that does not exist on a
+    // phone. `select` stays in scope: it renders text the user reads and picks.
+    const NON_TEXT_INPUT_TYPES = new Set([
+        'checkbox',
+        'radio',
+        'range',
+        'color',
+        'file',
+        'button',
+        'submit',
+        'reset',
+        'image',
+    ]);
     await expect(async () => {
         const boxes = await getInteractiveBoxes(page);
-        const formControls = boxes.filter((box) => /^(input|select|textarea)([.#[]|$)/.test(box.name));
+        const formControls = boxes.filter(
+            (box) =>
+                /^(input|select|textarea)([.#[]|$)/.test(box.name) &&
+                !NON_TEXT_INPUT_TYPES.has(box.inputType),
+        );
         // Anti-vacuity guard: with no form open this route holds zero form
         // controls and the check would be a green no-op — the blocker the
         // independent verifier caught. Every caller must have opened its

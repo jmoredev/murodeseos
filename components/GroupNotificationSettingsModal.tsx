@@ -349,6 +349,7 @@ export function GroupNotificationSettingsModal({
                                         placeholder={String(DEFAULT_REMINDER_LEAD_DAYS)}
                                         editable={!leadDaysSaving}
                                         aria-label="Antelación de los avisos (días)"
+                                        style={{ fontSize: 16 }}
                                         className="flex-1 min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                     <button

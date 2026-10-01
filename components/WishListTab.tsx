@@ -453,6 +453,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
                                     placeholder="¿Qué deseas?"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -490,6 +491,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
                                         placeholder="0.00"
                                         keyboardType="numeric"
+                                        style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                 </View>
@@ -536,6 +538,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.imageUrl || ''}
                                     onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
                                     placeholder="URL de la foto (opcional)"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
                                 {Platform.OS === 'web' ? (
@@ -575,6 +578,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     keyboardType="url"
                                     autoCapitalize="none"
                                     autoCorrect={false}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -587,6 +591,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     placeholder="Talla, color, detalles..."
                                     multiline
                                     numberOfLines={3}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background"
                                 />
                             </View>

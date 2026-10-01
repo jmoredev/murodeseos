@@ -158,6 +158,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                         <TextInput
                             value={displayName}
                             onChangeText={setDisplayName}
+                            style={{ fontSize: 16 }}
                             className="w-full px-6 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                             placeholder="Tu nombre"
                         />
@@ -190,6 +191,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={shirtSize}
                                     onChangeText={setShirtSize}
                                     placeholder="M, L, XL..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -199,6 +201,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={pantsSize}
                                     onChangeText={setPantsSize}
                                     placeholder="42, 32..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -211,6 +214,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={shoeSize}
                                     onChangeText={setShoeSize}
                                     placeholder="Ej: 43..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -221,6 +225,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                         value={favoriteColor}
                                         onChangeText={setFavoriteColor}
                                         placeholder="Azul, Rojo..."
+                                        style={{ fontSize: 16 }}
                                         className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                     <View
@@ -239,6 +244,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                 placeholder="Ej: Nike, Apple, Levi's..."
                                 multiline
                                 numberOfLines={2}
+                                style={{ fontSize: 16 }}
                                 className="w-full px-5 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                             />
                         </View>

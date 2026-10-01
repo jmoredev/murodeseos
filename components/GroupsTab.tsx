@@ -456,6 +456,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             onChangeText={setNewName}
                             accessibilityLabel="Nuevo nombre del grupo"
                             className="w-full px-4 py-3 rounded-full bg-surface-container-highest text-on-background font-sans-semibold mb-6"
+                            style={{ fontSize: 16 }}
                             placeholder="Nuevo nombre"
                             autoFocus
                         />

@@ -144,6 +144,10 @@ export const GroupCard = memo(function GroupCard({
                                 <TextInput
                                     value={groupNameInput}
                                     onChangeText={setGroupNameInput}
+                                    // 20px y no 16: este campo ya se renderizaba a
+                                    // `text-xl` (20px). El check de CI es un mínimo
+                                    // (≥16px), no una bajada de tamaño.
+                                    style={{ fontSize: 20 }}
                                     className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 min-w-0 ring-2 ring-primary/20"
                                     autoFocus
                                 />
@@ -254,6 +258,7 @@ export const GroupCard = memo(function GroupCard({
                                     <TextInput
                                         value={aliasInput}
                                         onChangeText={setAliasInput}
+                                        style={{ fontSize: 16 }}
                                         className="flex-1 px-2 py-1 bg-surface-container-highest rounded-md text-sm text-on-background"
                                         autoFocus
                                     />

@@ -68,6 +68,7 @@ export default function CreateGroupPage() {
                             placeholder="Ej: Amigos de la Uni, Familia..."
                             placeholderTextColor="#4c212b88"
                             className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
+                            style={{ fontSize: 16 }}
                         />
                     </View>
 
