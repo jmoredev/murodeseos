@@ -65,6 +65,11 @@ test.describe('Recuperación de contraseña', () => {
             email,
             password: originalPassword,
             email_confirm: true,
+            // `handle_new_user` copia esto a `profiles.display_name`. Sin nombre, el
+            // gate de primer acceso de la app manda a `/profile/setup` —correcto para
+            // un usuario nuevo—, y este spec espera aterrizar en `/`: su objeto es la
+            // recuperación de contraseña, no ese gate, así que el fixture lleva nombre.
+            user_metadata: { display_name: 'Usuario de recuperación E2E' },
         });
 
         const userId = created.data.user?.id;
@@ -120,7 +125,15 @@ test.describe('Recuperación de contraseña', () => {
             const signedIn = await signInClient.auth.signInWithPassword({ email, password: newPassword });
             expect(signedIn.error).toBeNull();
         } finally {
-            if (userId) await supabaseAdmin.auth.admin.deleteUser(userId);
+            if (userId) {
+                // `profiles.id` referencia `auth.users(id)` SIN `on delete cascade`
+                // (20260102122206_estructura_inicial.sql), así que el perfil se borra
+                // antes: sin este paso `deleteUser` falla con la FK 23503 y el usuario
+                // desechable se queda en la base en cada ejecución. No se lanza aquí
+                // a propósito, para no enmascarar el fallo original de un `finally`.
+                await supabaseAdmin.from('profiles').delete().eq('id', userId);
+                await supabaseAdmin.auth.admin.deleteUser(userId);
+            }
         }
     });
 });
