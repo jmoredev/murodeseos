@@ -35,13 +35,25 @@ describe('Group Notification Preferences', () => {
     });
 
     describe('GROUP_NOTIFICATION_OPTIONS', () => {
-        it('incluye los cuatro tipos en el orden reserva, alta, borrado y sorteo', () => {
+        it('incluye los seis tipos en el orden reserva, alta, borrado, sorteo, cumpleaños y onomástico', () => {
             expect(GROUP_NOTIFICATION_OPTIONS.map((option) => option.type)).toEqual([
                 'wish_reserved',
                 'wish_added',
                 'wish_deleted_by_owner',
-                'draw_performed'
+                'draw_performed',
+                'birthday',
+                'name_day'
             ]);
+        });
+
+        it('describe los tipos nuevos con etiqueta y descripción en español', () => {
+            const birthday = GROUP_NOTIFICATION_OPTIONS.find((option) => option.type === 'birthday');
+            const nameDay = GROUP_NOTIFICATION_OPTIONS.find((option) => option.type === 'name_day');
+
+            expect(birthday).toMatchObject({ label: 'Cumpleaños' });
+            expect(birthday?.description).toContain('miembro del grupo');
+            expect(nameDay).toMatchObject({ label: 'Onomástico' });
+            expect(nameDay?.description).toContain('miembro del grupo');
         });
     });
 
@@ -51,7 +63,9 @@ describe('Group Notification Preferences', () => {
                 wish_reserved: true,
                 wish_added: true,
                 wish_deleted_by_owner: true,
-                draw_performed: true
+                draw_performed: true,
+                birthday: true,
+                name_day: true
             });
         });
     });
@@ -81,7 +95,9 @@ describe('Group Notification Preferences', () => {
                 wish_reserved: true,
                 wish_added: false,
                 wish_deleted_by_owner: true,
-                draw_performed: true
+                draw_performed: true,
+                birthday: true,
+                name_day: true
             });
         });
 
@@ -90,7 +106,8 @@ describe('Group Notification Preferences', () => {
                 Promise.resolve({
                     data: [
                         { notification_type: 'tipo_futuro', enabled: false },
-                        { notification_type: 'draw_performed', enabled: false }
+                        { notification_type: 'draw_performed', enabled: false },
+                        { notification_type: 'birthday', enabled: false }
                     ],
                     error: null
                 }).then(callback)
@@ -102,7 +119,9 @@ describe('Group Notification Preferences', () => {
                 wish_reserved: true,
                 wish_added: true,
                 wish_deleted_by_owner: true,
-                draw_performed: false
+                draw_performed: false,
+                birthday: false,
+                name_day: true
             });
         });
 

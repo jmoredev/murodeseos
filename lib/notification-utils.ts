@@ -4,7 +4,9 @@ export type NotificationType =
     | 'wish_added'
     | 'wish_reserved'
     | 'draw_performed'
-    | 'wish_deleted_by_owner';
+    | 'wish_deleted_by_owner'
+    | 'birthday'
+    | 'name_day';
 
 export interface Notification {
     id: string;
