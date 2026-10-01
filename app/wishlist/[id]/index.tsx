@@ -260,7 +260,15 @@ export default function UserWishlistPage() {
                 onRequestClose={() => setShowInfo(false)}
             >
                 <View className="flex-1 justify-end bg-on-surface/40">
-                    <View className="bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[80%] pb-10">
+                    <View
+                        className="bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[80%]"
+                        style={{
+                            // Antes `pb-10` fijo (40px): menos que 34px de barra + 24px de
+                            // aire. En escritorio `env()` = 0px → 2.5rem, el valor de hoy.
+                            // Cast `as any`: calc CSS de RNW fuera de `DimensionValue`.
+                            paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' as any,
+                        }}
+                    >
                         <View className="items-center py-4">
                             <View className="w-12 h-1.5 bg-outline-variant/30 rounded-full" />
                         </View>

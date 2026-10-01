@@ -282,7 +282,16 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
                         </div>
                     </div>
 
-                    <div className="p-6 bg-surface-container-low pb-safe shrink-0">
+                    <div
+                        className="p-6 bg-surface-container-low shrink-0"
+                        style={{
+                            // `pb-safe` no existe en este proyecto (no emite nada): el patrón
+                            // real es este calc, como en GroupNotificationSettingsModal. En
+                            // escritorio `env()` = 0px → el calc reduce a 1.5rem, el valor
+                            // actual de p-6.
+                            paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+                        }}
+                    >
                         <button
                             onClick={() => setIsOpen(false)}
                             className="w-full py-4 bg-on-background text-surface-container-lowest rounded-2xl font-sans-bold text-lg shadow-ambient-lg active:scale-95 transition-all"

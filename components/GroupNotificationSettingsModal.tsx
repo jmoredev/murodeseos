@@ -286,7 +286,11 @@ export function GroupNotificationSettingsModal({
                 aria-modal="true"
                 aria-labelledby={titleId}
                 aria-describedby={subtitleId}
-                style={isDesktop ? undefined : { paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+                style={
+                    isDesktop
+                        ? { maxHeight: '85dvh' as any } // fallback: la clase queda en `max-h-[85vh]`
+                        : { paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }
+                }
                 className={`relative z-10 w-full flex flex-col bg-surface-container-lowest shadow-ambient-lg transform transition-all duration-300 ${sheetLayout} ${sheetTransform}`}
             >
                 <div className="mb-6 shrink-0">
