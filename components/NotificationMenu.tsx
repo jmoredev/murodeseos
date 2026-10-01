@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react'
 import { useClientMounted } from '@/lib/use-client-mounted';
 import { supabase } from '@/lib/supabase';
 import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/notification-utils';
+import { ensureBirthdayReminders } from '@/lib/reminder-utils';
 import { NotificationItem } from './NotificationItem';
 import { createPortal } from 'react-dom';
 
@@ -59,6 +60,13 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     };
 
     useEffect(() => {
+        // Reminder generation for birthdays/name days: once per mount, not inside
+        // `loadNotifications`, which also runs on every realtime INSERT (one RPC
+        // per row would be wasteful). Fire-and-forget so the first paint of the
+        // list is not delayed: the subscription on `user_id` picks up the rows the
+        // RPC inserts on its next reload.
+        void ensureBirthdayReminders();
+
         // La carga arranca en un límite asíncrono explícito: no fija estado de forma
         // síncrona, y así el análisis estático puede comprobarlo.
         void (async () => {
