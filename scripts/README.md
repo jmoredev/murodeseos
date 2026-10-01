@@ -23,7 +23,7 @@ desarrollo local y nunca contra el proyecto de producción.
 | --- | --- |
 | `seed-complete-database.ts` | Reinicia y puebla la base de datos de prueba: usuarios, perfiles, grupos, membresías y listas de deseos. |
 | `setup-e2e-user.ts` | Borra y recrea el usuario de pruebas E2E con su perfil completo. |
-| `postbuild.cjs` | Paso posterior al export web: genera `404.html`, `.nojekyll`, copia los activos de la PWA e inyecta el manifiesto y el idioma del documento en el HTML. |
+| `postbuild.cjs` | Paso posterior al export web: genera `404.html`, `.nojekyll`, copia los activos de la PWA e inyecta los enlaces del manifiesto, favicon e `apple-touch-icon` con base path absoluto en el HTML. El idioma vive en `app/+html.tsx`. |
 
 ## Uso
 

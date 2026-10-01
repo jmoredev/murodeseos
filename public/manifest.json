@@ -1,6 +1,8 @@
 {
   "name": "Muro de Deseos",
   "short_name": "MuroDeseos",
+  "lang": "es",
+  "orientation": "portrait",
   "display": "standalone",
   "start_url": "./",
   "scope": "./",
@@ -25,7 +27,12 @@
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "./AppIcons/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
-

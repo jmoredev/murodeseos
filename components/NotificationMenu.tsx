@@ -23,7 +23,7 @@ function subscribeToViewport(onStoreChange: () => void) {
 }
 
 function isDesktopViewport() {
-    return window.innerWidth >= 640;
+    return window.innerWidth > 768;
 }
 
 interface NotificationMenuProps {

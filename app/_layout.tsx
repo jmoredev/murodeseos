@@ -22,6 +22,8 @@ function ensureWebHead() {
 
     if (document.title !== 'Muro de Deseos') document.title = 'Muro de Deseos';
 
+    // `app/+html.tsx` ya aporta `lang="es"` y el viewport en el HTML estático; este
+    // ajuste en runtime queda como red de seguridad para `expo start --web` y SSR.
     document.documentElement.lang = 'es';
 
     const ensureMeta = (name: string, content: string) => {
@@ -35,6 +37,7 @@ function ensureWebHead() {
     };
 
     ensureMeta('theme-color', THEME_COLOR);
+    // Idempotente: si el HTML estático ya trae estas meta/links (postbuild), no se duplican.
     ensureMeta('apple-mobile-web-app-capable', 'yes');
 
     const base = getGithubPagesBasePath();
@@ -54,6 +57,15 @@ function ensureWebHead() {
         document.head.appendChild(link);
     }
     link.setAttribute('href', `${base}/manifest.json`);
+
+    // apple-touch-icon: en export estático lo inyecta el postbuild; aquí cubre el dev.
+    let appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    if (!appleTouchIcon) {
+        appleTouchIcon = document.createElement('link');
+        appleTouchIcon.setAttribute('rel', 'apple-touch-icon');
+        document.head.appendChild(appleTouchIcon);
+    }
+    appleTouchIcon.setAttribute('href', `${base}/apple-touch-icon.png`);
 }
 
 /** En redes móviles lentas las fuentes pueden tardar mucho; no bloquear toda la app indefinidamente. */

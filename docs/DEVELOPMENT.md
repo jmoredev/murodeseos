@@ -104,8 +104,21 @@ Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → 
 
 **Local (`bun run web`, Metro):** no se registra el SW: `hostname` no es `github.io`, `getGithubPagesBasePath()` devuelve `''` y se llama a `unregister()` por si quedó un SW de una prueba anterior. Así HMR y recargas normales no compiten con Cache Storage.
 
+### Cabecera estática de la PWA (`+html.tsx` + postbuild)
+
+La cabecera del HTML estático está partida en dos por capacidad:
+
+- **Meta tags** — `app/+html.tsx` (web-only, se usa en export estático y en `expo start --web`): `lang="es"`, `viewport` con `viewport-fit=cover` (pantallas con notch) y las meta de Apple (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`). No lleva ningún `<link href>`: los href dependen de la ruta base de despliegue y aquí los romperían.
+- **Links con href** — `scripts/postbuild.cjs`: tras el export, inyecta un bloque idempotente (`data-murodeseos-pwa="1"`) con favicon, `apple-touch-icon` y manifest en **`dist/index.html` y `dist/404.html`**, leyendo la base de `app.json` (`expo.experiments.baseUrl`, hoy `/murodeseos`) y generando hrefs absolutos. Es necesario en `404.html` porque GitHub Pages la sirve para rutas profundas, donde los href relativos (`./favicon.ico`) resuelven mal. El atributo `lang` ya no se toca en el postbuild: viene de `+html.tsx`.
+- **Runtime** — `ensureWebHead()` (`app/_layout.tsx`) solo completa lo que falta tras la hidratación (título, `theme-color`, icono/manifest con la base detectada en el navegador); con los checks de existencia no duplica etiquetas que ya trae el HTML estático. En `expo start --web` (donde el postbuild no corre) es quien aporta los links.
+
+**Iconos de instalación:** `public/manifest.json` declara los iconos `any` (192/512/1024) más `public/AppIcons/maskable-icon-512.png` con `"purpose": "maskable"` — glifo escalado al ~60% central sobre fondo `#fff4f4` (zona segura de ~40% que exige la spec maskable). `public/apple-touch-icon.png` (180x180) es el icono que usa iOS al instalar. El manifest además declara `lang: "es"` y `orientation: "portrait"`.
+
 ### `ScrollView` principal (`ResponsiveLayout`)
 `contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
+
+### Punto de ruptura escritorio (`> 768`)
+La convención única de la app para separar escritorio de móvil es **`width > 768`** (Tailwind `md:`), leída con `useWindowDimensions` (`ResponsiveLayout`, `WishListTab`, `WishDetailModal`, etc.). `NotificationMenu` la sigue con `isDesktopViewport` (`useSyncExternalStore` sobre el mismo umbral): en la banda de 641–768 px se muestra la variante móvil de pantalla completa, no el bocadillo flotante.
 
 ### Lista de deseos (`WishListTab`)
 - **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
@@ -143,6 +156,19 @@ Los tests se encuentran en el directorio `__tests__`.
 - `wish-reservation.test.ts`: reserva y cancelación en listas ajenas vía Supabase.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
+### E2E (Playwright en CI)
+`playwright.config.ts` define 5 proyectos (`chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`), pero CI (`.github/workflows/e2e.yml`) ejecuta solo dos:
+
+1. **`chromium`** (escritorio) — contra la base sembrada por `test:e2e:prepare`.
+2. **`Mobile Chrome`** (Pixel 5) — tras **re-sembrar** con `test:e2e:prepare` de nuevo y lanzar una invocación Playwright separada.
+
+Por qué así:
+- **Re-siembra por proyecto (defecto abierto E-10):** la suite no es auto-limpiante y deja grupos de prueba en la base. Dos proyectos sobre la misma siembra equivalen a correr la suite dos veces contra un solo fixture, con riesgo de contaminación cruzada. Re-sembrar antes de Mobile Chrome le da un fixture limpio.
+- **Mobile Chrome usa el motor Chromium** ya instalado con `playwright install --with-deps chromium`; no requiere instalación adicional.
+- **Firefox, WebKit y Mobile Safari quedan fuera de CI** deliberadamente: cada uno exigiría una descarga de navegador nueva en el runner (`playwright install firefox` / `webkit`), alargando el job. Se pueden correr localmente con `pnpm exec playwright test --project=<nombre>`.
+
+Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright-report-mobile-chrome` con `playwright-report/` (reporte HTML) y `test-results/` (capturas y trazas de fallo).
+
 ## ♿ Checklist de Accesibilidad (antes de publicar)
 
 - **Teclado (web)**: puedes navegar por toda la UI con Tab/Shift+Tab y activar con Enter/Espacio.
@@ -153,7 +179,7 @@ Los tests se encuentran en el directorio `__tests__`.
   - Al cerrar, el foco vuelve al elemento que lo abrió.
 - **Mensajes dinámicos**: errores/éxitos (login/registro) se anuncian sin tener que “buscar” el texto.
 - **Zoom 200%**: el contenido sigue siendo usable sin solaparse.
-- **Idioma**: el documento web está en español (`lang="es"` en `app/_layout.tsx`, función `ensureWebHead`).
+- **Idioma**: el documento web está en español (`lang="es"` en `app/+html.tsx`; `ensureWebHead` lo reafirma en runtime como red de seguridad).
 
 ### Implementación en código (referencia rápida)
 
