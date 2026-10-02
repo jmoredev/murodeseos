@@ -140,7 +140,7 @@ export default function GroupDetailsPage() {
                     <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
+                            className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
                             <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
                                 ←

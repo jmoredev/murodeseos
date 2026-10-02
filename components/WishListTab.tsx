@@ -385,13 +385,18 @@ export function WishListTab({ userId }: WishListTabProps) {
                         enabled={!isDesktop}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         className={isDesktop ? 'w-full max-w-lg max-h-[90vh] flex flex-col min-h-0' : 'flex-1 w-full min-w-0'}
+                        style={
+                            // Fallback: navegadores sin `dvh` descartan la declaración
+                            // inline y se quedan con el `max-h-[90vh]` de la clase.
+                            isDesktop ? { maxHeight: '90dvh' as any } : undefined
+                        }
                     >
                         <View
                             className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg overflow-hidden flex flex-col flex-1 min-h-0 max-h-[85vh]' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
                             style={
                                 !isDesktop
                                     ? { paddingBottom: 12 + insets.bottom }
-                                    : { width: '100%' }
+                                    : { width: '100%', maxHeight: '85dvh' as any } // fallback: la clase queda en `max-h-[85vh]`
                             }
                         >
                         {/* Mobile Header with Back Button */}
@@ -448,6 +453,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
                                     placeholder="¿Qué deseas?"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -485,6 +491,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
                                         placeholder="0.00"
                                         keyboardType="numeric"
+                                        style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                 </View>
@@ -531,6 +538,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.imageUrl || ''}
                                     onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
                                     placeholder="URL de la foto (opcional)"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
                                 {Platform.OS === 'web' ? (
@@ -570,6 +578,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     keyboardType="url"
                                     autoCapitalize="none"
                                     autoCorrect={false}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -582,6 +591,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     placeholder="Talla, color, detalles..."
                                     multiline
                                     numberOfLines={3}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background"
                                 />
                             </View>

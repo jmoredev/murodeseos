@@ -79,7 +79,7 @@ export function WishDetailModal({
                     onPress={onClose}
                     accessibilityRole="button"
                     accessibilityLabel="Cerrar detalle"
-                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center shrink-0"
+                    className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center shrink-0"
                 >
                     <Text className="text-on-surface/55 font-sans-bold">✕</Text>
                 </Pressable>
@@ -207,7 +207,17 @@ export function WishDetailModal({
                     className={
                         isDesktop
                             ? 'relative z-10 w-full max-w-lg max-h-[90vh] bg-surface-container-lowest rounded-3xl shadow-ambient-lg overflow-hidden'
-                            : 'bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[90%] pb-6'
+                            : 'bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[90%]'
+                    }
+                    style={
+                        isDesktop
+                            ? { maxHeight: '90dvh' as any } // fallback: la clase queda en `max-h-[90vh]`
+                            : {
+                                  // Antes `pb-6` (24px) no cubría la barra de inicio de un iPhone
+                                  // (~34px). En escritorio `env()` = 0px → 1.5rem, el valor de hoy.
+                                  // Cast `as any`: calc CSS de RNW fuera de `DimensionValue`.
+                                  paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' as any,
+                              }
                     }
                 >
                     {content}

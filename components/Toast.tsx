@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { createPortal } from 'react-dom';
 
 export type ToastType = 'success' | 'error' | 'info';
@@ -14,6 +15,10 @@ interface ToastProps {
 
 export function Toast({ message, type = 'success', duration = 3000, onClose }: ToastProps) {
     const [isVisible, setIsVisible] = useState(false);
+    const { width } = useWindowDimensions();
+    // Mismo umbral que el resto de la app (>768): por encima no hay dock y el
+    // toast mantiene el `bottom-6` (24px) de siempre; por debajo debe despegarse
+    // del dock, que tras el inset ancla a `16px + env(safe-area-inset-bottom)`.
 
     useEffect(() => {
         // La entrada va en el siguiente cuadro: el render inicial pinta el estado
@@ -54,13 +59,25 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
     };
 
     return createPortal(
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-            <div className={`${bgColors[type]} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 min-w-[280px]`}>
+        <div
+            className={`fixed left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+            style={{
+                // El dock (bottom 16px + inset) deja su borde superior en ~85px + inset,
+                // medido desde sus clases (px-2 py-2 + etiqueta de 10px): es una estimación,
+                // no una medición — revisar el número si cambia el padding o el tamaño
+                // de etiqueta del dock. 6.5rem + inset despeja con ~19px de aire.
+                // En escritorio: 24px, idéntico al `bottom-6` de antes.
+                bottom: width > 768 ? 24 : 'calc(6.5rem + env(safe-area-inset-bottom))',
+            }}
+        >
+            <div
+                className={`${bgColors[type]} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 min-w-[min(280px,calc(100vw_-_2rem))] max-w-[calc(100vw_-_2rem)]`}
+            >
                 <div className="shrink-0">
                     {icons[type]}
                 </div>
                 <p className="text-sm font-bold flex-1">{message}</p>
-                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-3.5 -mr-2 hover:bg-white/20 rounded-lg transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>

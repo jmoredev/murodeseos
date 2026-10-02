@@ -158,6 +158,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                         <TextInput
                             value={displayName}
                             onChangeText={setDisplayName}
+                            style={{ fontSize: 16 }}
                             className="w-full px-6 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                             placeholder="Tu nombre"
                         />
@@ -190,6 +191,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={shirtSize}
                                     onChangeText={setShirtSize}
                                     placeholder="M, L, XL..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -199,6 +201,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={pantsSize}
                                     onChangeText={setPantsSize}
                                     placeholder="42, 32..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -211,6 +214,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                     value={shoeSize}
                                     onChangeText={setShoeSize}
                                     placeholder="Ej: 43..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -221,6 +225,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                         value={favoriteColor}
                                         onChangeText={setFavoriteColor}
                                         placeholder="Azul, Rojo..."
+                                        style={{ fontSize: 16 }}
                                         className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                     <View
@@ -239,6 +244,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                 placeholder="Ej: Nike, Apple, Levi's..."
                                 multiline
                                 numberOfLines={2}
+                                style={{ fontSize: 16 }}
                                 className="w-full px-5 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                             />
                         </View>
@@ -270,7 +276,12 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             {showAvatarModal && (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setShowAvatarModal(false)} />
-                    <View className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg">
+                    {/* C1: panel con max-h y scroll interno (mismo patrón que los diálogos
+                    de GroupsTab): con el teclado abierto el cierre sigue alcanzable. */}
+                <View
+                    className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg"
+                    style={{ maxHeight: '85dvh' } as any}
+                >
                         <Text className="text-xl font-display text-on-background mb-8 text-center uppercase tracking-widest">
                             Elige tu avatar
                         </Text>

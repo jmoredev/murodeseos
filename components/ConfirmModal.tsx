@@ -108,7 +108,7 @@ export function ConfirmModal({
                         type="button"
                         data-confirm-cancel
                         onClick={onClose}
-                        className="px-4 py-2.5 rounded-full text-sm font-sans-semibold text-primary active:opacity-70 transition-colors"
+                        className="px-4 py-3.5 rounded-full text-sm font-sans-semibold text-primary active:opacity-70 transition-colors"
                     >
                         {cancelText}
                     </button>
@@ -118,7 +118,7 @@ export function ConfirmModal({
                             onConfirm();
                             onClose();
                         }}
-                        className={`px-4 py-2.5 rounded-full text-sm font-sans-semibold text-on-primary shadow-ambient transition-all active:scale-95 ${isDestructive
+                        className={`px-4 py-3.5 rounded-full text-sm font-sans-semibold text-on-primary shadow-ambient transition-all active:scale-95 ${isDestructive
                                 ? 'bg-red-500 hover:bg-red-600'
                                 : 'bg-primary hover:opacity-90'
                             }`}

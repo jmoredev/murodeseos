@@ -399,7 +399,14 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={closeShareModal} />
-                    <View className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg">
+                    {/* C1: max-h con scroll interno — con el teclado abierto los botones
+                        siguen alcanzables (el foco desplaza el scroll hasta el campo). La
+                        clase conserva el fallback `vh` y el override inline usa `dvh`, el
+                        patrón de la Unidad A4 (WishListTab/WishDetailModal). */}
+                    <View
+                        className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <View className="items-center mb-8">
                             <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center mb-4">
                                 <Text style={{ fontSize: 32 }}>↗</Text>
@@ -414,7 +421,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             onPress={copyToClipboard}
                             className="bg-surface-container-low rounded-3xl p-6 mb-8 items-center justify-center active:opacity-90"
                         >
-                            <Text className="text-4xl font-mono font-sans-bold text-on-background tracking-widest uppercase">
+                            {/* C2: abajo de `md` el código baja de tamaño y usa `break-all`
+                                con tracking reducido: un UUID de 36 caracteres no parte el
+                                panel en 3–4 líneas a text-4xl tracking-widest. Escritorio
+                                igual que siempre. */}
+                            <Text className="text-xl md:text-4xl font-mono font-sans-bold text-on-background tracking-wider md:tracking-widest uppercase break-all">
                                 {selectedGroupId}
                             </Text>
                             <Text className="text-[10px] font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
@@ -449,13 +460,18 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={() => setRenameModalOpen(false)} />
-                    <View className="w-full max-w-md bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg">
+                    {/* C1: mismo patrón max-h/scroll que el diálogo de compartir. */}
+                    <View
+                        className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <Text className="text-xl font-display text-on-background mb-4">Cambiar nombre del grupo</Text>
                         <TextInput
                             value={newName}
                             onChangeText={setNewName}
                             accessibilityLabel="Nuevo nombre del grupo"
                             className="w-full px-4 py-3 rounded-full bg-surface-container-highest text-on-background font-sans-semibold mb-6"
+                            style={{ fontSize: 16 }}
                             placeholder="Nuevo nombre"
                             autoFocus
                         />
@@ -484,7 +500,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={() => setDeleteModalOpen(false)} />
-                    <View className="w-full max-w-md bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg">
+                    {/* C1: mismo patrón max-h/scroll que el diálogo de compartir. */}
+                    <View
+                        className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <View className="w-12 h-12 rounded-full bg-primary/12 items-center justify-center mb-4">
                             <Text style={{ fontSize: 24 }}>🗑</Text>
                         </View>

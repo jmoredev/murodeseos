@@ -143,13 +143,17 @@ export function WishlistCard({
                         </Text>
                     ) : null}
 
+                    {/* C4: los dos chips pueden encoger (`min-w-0 shrink`) y recortar con
+                            ellipsis en vez de forzar la fila más ancha que la tarjeta a 360px.
+                            Sin cambios de ancho: solo se permite encoger. */}
                     <View className="flex-row items-center justify-between gap-2">
                         <View
-                            className={`px-3 py-1.5 rounded-xl ${
+                            className={`min-w-0 shrink px-3 py-1.5 rounded-xl ${
                                 item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
                             }`}
                         >
                             <Text
+                                numberOfLines={1}
                                 className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
                             >
                                 {item.price ? `${item.price} €` : 'Sin precio'}
@@ -171,7 +175,7 @@ export function WishlistCard({
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="Marcar como ya lo tengo"
-                    className="px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
+                    className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
                     <Text className="text-[10px] font-sans-bold text-tertiary uppercase tracking-[0.2em]">
                         ✓ Ya lo tengo
