@@ -330,38 +330,79 @@ async function expectPrimaryActionAtLeast44(route: string, label: string, locato
 }
 
 /**
- * Truncation state of a text that is clamped with `numberOfLines={1}`
- * (`ellipsizeMode="tail"`, e.g. the group-card name in `GroupCard.tsx:161-165`).
+ * Caja medible del elemento que realmente pinta el nombre del grupo fixture
+ * (`GroupCard.tsx`, Text con clamp de líneas — 1 línea en escritorio, 2 en
+ * móvil desde la decisión del propietario).
  *
- * A rect scan cannot see this defect: RNW ellipses the text instead of letting
- * it overflow, so nothing sticks out of the viewport, and the fixture name's
- * character count says nothing either (short words still ellipsis in a narrow
- * column). The layout-native truncation signal is:
- *   clamp element (nowrap / text-overflow: ellipsis).scrollWidth > clientWidth
- * which the browser keeps in sync for ANY clamped text — no Range filing or
- * browser-dependent unclipped measurement to second-guess.
+ * Historia: la primera versión de este detector buscaba un estilo de clamp
+ * concreto (`white-space: nowrap` / `text-overflow: ellipsis`) y medía el
+ * `scrollWidth` de esa caja. Con el clamp de 2 líneas de RNW (`display:
+ * -webkit-box`, `overflow: clip`, `-webkit-line-clamp`) ese lookup se
+ * desactiva — y su propio comentario prohibía confiarse como pase —, así que
+ * esta versión NO depende de ningún estilo concreto: localiza el elemento
+ * con el nombre y mide ambos ejes contra su propia caja.
+ *
+ * Verificado empíricamente en Chromium Edge (mismo motor Blink que el
+ * proyecto `chromium` de CI) con una página de prueba: una caja con
+ * `-webkit-line-clamp: 2` y `overflow: clip` cuyo texto necesita 3+ líneas
+ * reporta `scrollHeight` (168) > `clientHeight` (48); una caja con ellipsis
+ * de 1 línea reporta `scrollWidth` (222) > `clientWidth` (100); y cuando el
+ * texto cabe, ambos ejes empatan. `scrollWidth`/`scrollHeight` exponen el
+ * overflow de layout aunque el navegador recorte el pintado.
  */
-function groupNameTruncationState(page: Page, name: string) {
+interface GroupNameBoxState {
+    found: number;
+    hint: string;
+    text: string;
+    scrollWidth: number;
+    clientWidth: number;
+    scrollHeight: number;
+    clientHeight: number;
+    rectWidth: number;
+    rectHeight: number;
+}
+
+function groupNameBoxState(page: Page, name: string): Promise<GroupNameBoxState> {
     return page.evaluate((name) => {
+        const describeElement = (el: Element) =>
+            `${el.tagName.toLowerCase()}.${(el.getAttribute('class') ?? '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 3)
+                .join('.')}`;
+        // El elemento que pinta el nombre: RNW renderiza Text como un div
+        // con el texto directamente dentro, así que la hoja con el nombre
+        // exacto es la propia caja del clamp.
         const leaves = Array.from(document.querySelectorAll('*')).filter(
             (el) => el.children.length === 0 && (el.textContent ?? '').trim() === name,
         );
-        if (leaves.length === 0) return { found: 0, clampScrollWidth: -1, clampClientWidth: -1, clampHint: '' };
-        // The clamp can live on the leaf itself (RNW Text div with
-        // overflow:hidden) or on an ancestor: walk the chain until the style
-        // that visually truncates the text is found.
-        for (let node: Element | null = leaves[0]; node; node = node.parentElement) {
-            const style = getComputedStyle(node);
-            if (style.whiteSpace === 'nowrap' || style.textOverflow === 'ellipsis') {
-                return {
-                    found: leaves.length,
-                    clampScrollWidth: node.scrollWidth,
-                    clampClientWidth: node.clientWidth,
-                    clampHint: `${node.tagName.toLowerCase()}.${((node.getAttribute('class') ?? '').split(/\s+/).filter(Boolean).slice(0, 3).join('.'))}`,
-                };
-            }
+        if (leaves.length === 0) {
+            return {
+                found: 0,
+                hint: '',
+                text: '',
+                scrollWidth: -1,
+                clientWidth: -1,
+                scrollHeight: -1,
+                clientHeight: -1,
+                rectWidth: 0,
+                rectHeight: 0,
+            } satisfies GroupNameBoxState;
         }
-        return { found: leaves.length, clampScrollWidth: -1, clampClientWidth: -1, clampHint: '' };
+        const el = leaves[0] as HTMLElement;
+        const rect = el.getBoundingClientRect();
+        return {
+            found: leaves.length,
+            hint: describeElement(el),
+            text: (el.textContent ?? '').trim(),
+            scrollWidth: el.scrollWidth,
+            clientWidth: el.clientWidth,
+            scrollHeight: el.scrollHeight,
+            clientHeight: el.clientHeight,
+            rectWidth: rect.width,
+            rectHeight: rect.height,
+        } satisfies GroupNameBoxState;
     }, name);
 }
 
@@ -462,10 +503,32 @@ test.describe('Diseño móvil a 360px', () => {
 
         // 3) /?tab=groups: open the rename dialog through the group menu, the
         //    same path a user follows (admin fixture user has the menu).
+        //    Each hop is self-diagnosing — this exact flow is how CI run
+        //    36934213771 ended on another member's wishlist silently (tap on
+        //    the ⋮ and on the menu item bubbled to the card / landed on the
+        //    member row underneath): if any hop misbehaves the failure names
+        //    it instead of looking like a missing input.
         await waitAppShellLoaded(page, '/?tab=groups');
         await page.getByLabel('Opciones de grupo').first().click();
-        await page.getByText('Cambiar nombre', { exact: true }).first().click();
-        await expect(page.getByLabel('Nuevo nombre del grupo')).toBeVisible({ timeout: 10000 });
+        // Hop 1: the tap must open the MENU, never navigate.
+        const renameItem = page.getByText('Cambiar nombre', { exact: true }).first();
+        await expect(
+            renameItem,
+            `/?tab=groups: tras tocar «Opciones de grupo» el menú del grupo no abrió («Cambiar nombre» no visible) — el tap navegó, cerró la tarjeta o el menú no se renderizó (fallo de propagación de taps en GroupCard).`,
+        ).toBeVisible({ timeout: 10000 });
+        await renameItem.click();
+        // Hop 2: the menu-item tap must open the DIALOG, never navigate (CI
+        // run 36934213771 ended on the public wishlist of the other member
+        // here). Assert the route first: if the app navigated, the failure
+        // says so plainly instead of looking like a missing input.
+        await expect(
+            page,
+            `/?tab=groups: tocar «Cambiar nombre» navegó fuera de la pestaña de grupos (mis-tap: el tap burbujeó al onPress de la tarjeta o aterrizó en la fila de miembro que el desplegable pisa) en vez de abrir el diálogo de renombrado — evidencia CI: run 36934213771 terminó en «Lista de Juan Perez».`,
+        ).toHaveURL(/tab=groups/);
+        await expect(
+            page.getByLabel('Nuevo nombre del grupo'),
+            `/?tab=groups: el diálogo de renombrado no abrió tras tocar «Cambiar nombre» (siguiendo en la pestaña de grupos).`,
+        ).toBeVisible({ timeout: 10000 });
         await expectFormFontSizeAtLeast16(page, '/?tab=groups (renombrar abierto)');
 
         // 4) Group detail: open the notification settings modal (same flow the
@@ -497,31 +560,61 @@ test.describe('Diseño móvil a 360px', () => {
         await expectFormFontSizeAtLeast16(page, '/reset-password');
     });
 
-    test('group list names are not ellipsised at 360px (C3 detector)', async ({ page }) => {
+    test('group list names render unclipped at 360px (C3 detector)', async ({ page }) => {
         await waitAppShellLoaded(page, '/?tab=groups');
 
-        // GroupCard.tsx:161-165 clamps the name with numberOfLines={1} and
-        // GroupCard.tsx:183 reserves a fixed `w-[7.25rem]` action column: the
-        // bug shows up as truncation, never as overflow, so only a
-        // text-vs-clamp-box assertion can catch it.
-        const state = await groupNameTruncationState(page, E2E_CONFIG.group.name);
+        // GroupCard.tsx clamps the name with numberOfLines (1 line on desktop,
+        // 2 on mobile — owner decision after CI measured ~56–60px of column
+        // against ~145px of fixture text: not even a zero-width action column
+        // fits it in one line). The defect can take two shapes, both red:
+        //   - one-line clamp that ellipsises (old C3 state, scrollWidth >
+        //     clientWidth); or a line clamp that clips (scrollHeight >
+        //     clientHeight — e.g. the fixture name needs three lines and the
+        //     two-line clamp cuts it off, or any future clamp change that is
+        //     too tight for the text it holds).
+        // The detector does not look for a particular clamp style and has no
+        // early-return: a missing element or a missing measurement fails
+        // loudly (paragraph below). This repo has already shipped two
+        // checks that could not fail and removed them.
+        const state = await groupNameBoxState(page, E2E_CONFIG.group.name);
         expect(
             state.found,
             `/?tab=groups: el nombre de grupo «${E2E_CONFIG.group.name}» no está en la lista (drift del fixture o del selector).`,
         ).toBeGreaterThan(0);
-        if (state.clampClientWidth === -1) {
-            // No element in the chain visually clamps the text: nothing can be
-            // truncated under the current architecture. Honest note: if unit
-            // C3 changes how the name is handled (removing the clamping
-            // style), this lookup deactivates and must be re-written with the
-            // new layout — this early-return must never be trusted as a pass
-            // signal.
-            return;
-        }
+        // The located element must really carry the fixture name as its text:
+        // guards against a future locator drifting into substring/fuzzy
+        // matching and measuring a different element than the one claimed.
         expect(
-            state.clampScrollWidth,
-            `/?tab=groups: el texto del nombre NO cabe en su caja de recorte (${state.clampHint}): scrollWidth=${state.clampScrollWidth} > clientWidth=${state.clampClientWidth} — el nombre se ellipsea a 360px (defecto C3: la columna fija w-[7.25rem] de GroupCard.tsx:183 deja solo ~56–60px de nombre). ROJO esperado contra HEAD: el nombre del fixture («${E2E_CONFIG.group.name}», corto en caracteres pero no en píxeles — ~130–150px de texto a text-xl frente a esa columna); la aritmética es la base de la expectativa y el CI es la prueba empírica.`,
-        ).toBeLessThanOrEqual(state.clampClientWidth + 1);
+            state.text,
+            `/?tab=groups: el elemento localizado pinta «${state.text}» y no «${E2E_CONFIG.group.name}» (drift de la medición del nombre en ${state.hint}).`,
+        ).toBe(E2E_CONFIG.group.name);
+        // Measurement presence: if the element is not rendered (display:none,
+        // detached) there is no box to compare and a missing measurement must
+        // fail loudly — never be trusted as a pass signal.
+        expect(
+            state.rectWidth,
+            `/?tab=groups: el elemento que pinta «${E2E_CONFIG.group.name}» (${state.hint}) tiene caja de anchura ${state.rectWidth}px — no renderizado o medición ausente (drift de la estructura del Text).`,
+        ).toBeGreaterThan(0);
+        expect(
+            state.rectHeight,
+            `/?tab=groups: el elemento que pinta «${E2E_CONFIG.group.name}» (${state.hint}) tiene caja de altura ${state.rectHeight}px — no renderizado o medición ausente (drift de la estructura del Text).`,
+        ).toBeGreaterThan(0);
+        // Horizontal axis: catches the one-line clamp that ellipsises (the
+        // layout-native signal of the ORIGINAL C3 defect: fixed
+        // w-[7.25rem]-class column leaving ~56–60px for a 145px text).
+        expect(
+            state.scrollWidth,
+            `/?tab=groups: el texto del nombre NO cabe en su caja en horizontal (${state.hint}): scrollWidth=${state.scrollWidth} > clientWidth+1=${state.clientWidth + 1} — un clamp de 1 línea está ellipsando el nombre (estado roto C3: el nombre del fixture, ~145px a text-xl, no cabe en la columna).`,
+        ).toBeLessThanOrEqual(state.clientWidth + 1);
+        // Vertical axis: catches a line clamp too tight for the text it
+        // holds (the layout-native signal of the state CI measured: the
+        // name needs ~145px/line-hint and would be clipped to fewer lines
+        // than it needs — scrollHeight exposes layout overflow even when
+        // the browser only paints the clamped lines, verified in Chromium).
+        expect(
+            state.scrollHeight,
+            `/?tab=groups: el texto del nombre NO cabe en su caja en vertical (${state.hint}): scrollHeight=${state.scrollHeight} > clientHeight+1=${state.clientHeight + 1} — el clamp de líneas del nombre está cortando texto (estado roto C3: un nombre que necesita más líneas de las que el clamp permite queda recortado sin elipsis visible: nunca debe pasar).`,
+        ).toBeLessThanOrEqual(state.clientHeight + 1);
     });
 
     test('share dialog actions stay within the viewport at 360px (C2 detector)', async ({ page }) => {
