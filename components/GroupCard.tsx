@@ -153,13 +153,28 @@ export const GroupCard = memo(function GroupCard({
     const displayMembers = group.members.slice(0, 3);
     const remainingCount = group.members.length - 3;
 
+    // Recuperación de ancho C3 (medición CI run 36968601205, 360×640):
+            // con text-xl el nombre del fixture necesita 3 líneas (scrollHeight=84
+            // vs clientHeight=57, clamp de 2 líneas = 56px). La fila deja ~56–60px
+            // por línea y 2 líneas exigen ≥ ~73px, así que se recupera ancho en
+            // móvil SIN tocar clamp, escala tipográfica ni targets táctiles:
+            //   - padding interior `p-6` → `p-4 md:p-6`  → +16px al contenido;
+            //   - bloque de icono `w-14`/`ml-4` → `w-12`/`ml-3` en móvil → +12px.
+            // Aritmética con clases Tailwind + medidas CI: contenido pasa de
+            // ~280px (medido CI) a ~296px; columna del nombre pasa de ~104px
+            // (~280 − pr-2 8 − icono 72 − columna compartir/menú ≥96, medida CI)
+            // a ≥132px y el nombre tras el lápiz (44+4, target táctil intacto)
+            // de ~56px a ≥84px por línea → 2 líneas ≥168 ≥ 145px del fixture.
+            // Escritorio (≥768px): `md:p-6`, `md:w-14 h-14`, `md:ml-4` — las
+            // clases puestas en móvil solo reemplazan las de siempre por debajo
+            // de `md`; a ≥768px aplica exactamente las mismas reglas de antes.
     return (
         <Pressable
             onPress={handleCardClick}
             accessibilityRole="button"
             accessibilityLabel={`${group.name}, ${participantCount} participantes`}
             accessibilityHint="Abrir detalle del grupo"
-            className="bg-surface-container-lowest rounded-lg p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
+            className="bg-surface-container-lowest rounded-lg p-4 md:p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
         >
             {/* Header: la columna fija de acciones (compartir + menú) es solo de
                 escritorio: alinea la columna de título entre tarjetas en el grid
@@ -167,12 +182,17 @@ export const GroupCard = memo(function GroupCard({
                 dejar solo ~56px al nombre (defecto C3). min-w-0 evita desbordes. */}
             <View className="flex-row justify-between items-start mb-6 min-w-0">
                 <View className="flex-row items-start flex-1 min-w-0 pr-2">
-                    <View className="w-14 h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
+                    {/* C3: 56→48 en móvil (+8). El glifo del icono es 30px
+                        (`emojiInCircle(30)`) y cabe en la caja de 48 con aire;
+                        escritorio: md:w-14/md:h-14 de siempre. */}
+                    <View className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
                         <Text className="text-3xl" style={emojiInCircle(30)}>
                             {group.icon}
                         </Text>
                     </View>
-                    <View className="ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
+                    {/* C3: 16→12 en móvil (+4): 44 del lápiz + 4 ya caben a
+                        text-xs en la fila; escritorio: md:ml-4 de siempre. */}
+                    <View className="ml-3 md:ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
                         {isEditingGroupName ? (
                             <View className="flex-row items-center min-w-0">
                                 <TextInput
@@ -197,13 +217,21 @@ export const GroupCard = memo(function GroupCard({
                                 <Text
                                     className="font-display text-xl text-on-background min-w-0 flex-1 shrink"
                                     numberOfLines={isDesktop ? 1 : 2}
-                                    // Un móvil: el nombre puede ocupar 2 líneas (decisión
-                                    // del propietario — a 360px el texto del fixture mide
-                                    // ~145px frente a ~104–108px de columna, no cabe en
-                                    // una línea ni con columna cero). Escritorio: 1 línea
-                                    // como siempre. Defecto C3. `ellipsizeMode` mantiene
-                                    // truncamiento seguro: si aun así no cabe, elipsis y
-                                    // nunca un empujón de layout.
+                                    // Un móvil: el nombre puede ocupar 2 líneas
+                                    // (decisión del propietario). Desde run
+                                    // 36968601205 el embotellamiento es de ANCHO:
+                                    // clampado a 2 líneas el navegador reporta
+                                    // scrollHeight=84 > clientHeight=57 (3 líneas
+                                    // vs clamp de 2), así que el fix no relaja el
+                                    // clamp sino que recupera ancho a la fila
+                                    // (padding del marco p-4 md:p-6, icono
+                                    // w-12 h-12 md:w-14 md:h-14, ml-3 md:ml-4):
+                                    // la columna del nombre pasa de ~56–60px a
+                                    // ≥84px por línea → 2 líneas ≥168px ≥145px
+                                    // del fixture. Escritorio: 1 línea como
+                                    // siempre. Defecto C3. `ellipsizeMode`
+                                    // mantiene truncamiento seguro: si aun así no
+                                    // cabe, elipsis y nunca un empujón de layout.
                                     ellipsizeMode="tail"
                                 >
                                     {group.name}
