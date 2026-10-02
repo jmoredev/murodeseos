@@ -93,6 +93,7 @@ Auditoría read-only delegada. Hallazgos que dirigen las unidades:
 
 ## Verificación
 
+- **CI VERDE (PR #36, run `36981330502`, commit `33dc436`, 2026-10-02)** — las tres unidades que la medición pedía ya están cerradas y el harness completo pasa: `Types and unit tests` pass; `E2E gate` **pass con `chromium` (50 passed, 1 skipped: el check de opacidad en un proyecto no táctil, por diseño)**, **`Mobile Chrome` (51 passed, incluido el check táctil)** y **`Mobile Safari` (12 passed)**. Es la primera vez que el proyecto tiene cobertura de **WebKit/iOS**. Lo que prueba: el harness ya no está rojo porque los defectos que medía estén arreglados — los 5 controles a 14px pasaron a 16px, el lápiz de alias dejó de medir 18×24, y el nombre del grupo cabe en dos líneas (la medición de CI pasó de `scrollHeight=84 > clientHeight=57` a caber; hizo falta devolver ancho a la tarjeta en móvil, no relajar el clamp).
 - **Evidencia de CI (PR #36 en borrador, run `36902536537`, commit `73f8453`, 2026-10-01)**: `Types and unit tests` **pass**; `E2E gate` **rojo con exactamente los 3 rojos esperados**, y no por otra razón:
   1. **Objetivos táctiles** (`interactive tap targets are at least 24px`): los dos lápices de alias de `GroupCard` medidos a 360px → **18.0×24.0px** y **16.0×19.0px** (`GroupCard.tsx:167`, `:278-279`).
   2. **Tipografía de formularios** (`form controls render at least 16px`): **5 controles a 14px** (4 `input` + 1 `textarea`) en el formulario de deseo abierto — el default `font: 14px System` de react-native-web.
