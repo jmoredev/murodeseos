@@ -8,6 +8,7 @@ import {
     Image,
     useWindowDimensions,
     BackHandler,
+    Platform,
 } from 'react-native';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
@@ -46,7 +47,8 @@ export function WishDetailModal({
     const isDesktop = width > 768;
 
     useEffect(() => {
-        if (!visible || isDesktop) return undefined;
+        // `BackHandler` no existe en web: RNW ignora (y registra error en consola).
+        if (Platform.OS === 'web' || !visible || isDesktop) return undefined;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
             onClose();
             return true;

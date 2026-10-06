@@ -8,6 +8,7 @@ import {
     resolveWishImageUploadPayload,
 } from '@/lib/wish-image-upload'
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
+import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
@@ -31,6 +32,10 @@ export function WishListTab({ userId }: WishListTabProps) {
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
     const insets = useSafeAreaInsets();
+    // En web `KeyboardAvoidingView` no encoge: estimamos el solape del teclado
+    // con `visualViewport` y lo sumamos al padding inferior del formulario móvil.
+    // En desktop (y fuera de web) devuelve 0, así que el padding queda intacto.
+    const keyboardInset = useKeyboardInset(Platform.OS === 'web' && !isDesktop);
 
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
     const { showToast, ToastComponent } = useToast();
@@ -39,7 +44,8 @@ export function WishListTab({ userId }: WishListTabProps) {
     const webImageInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        if (isDesktop || !isFormOpen) return undefined;
+        // `BackHandler` no existe en web: RNW ignora (y registra error en consola).
+        if (Platform.OS === 'web' || isDesktop || !isFormOpen) return undefined;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
             if (isSaving) return true;
             setIsFormOpen(false);
@@ -395,7 +401,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg overflow-hidden flex flex-col flex-1 min-h-0 max-h-[85vh]' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
                             style={
                                 !isDesktop
-                                    ? { paddingBottom: 12 + insets.bottom }
+                                    ? { paddingBottom: 12 + insets.bottom + keyboardInset }
                                     : { width: '100%', maxHeight: '85dvh' as any } // fallback: la clase queda en `max-h-[85vh]`
                             }
                         >
@@ -404,7 +410,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             <View className="flex-row items-center mb-4 min-w-0">
                                 <Pressable
                                     onPress={() => !isSaving && setIsFormOpen(false)}
-                                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
+                                    className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
                                 >
                                     <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
                                         ←

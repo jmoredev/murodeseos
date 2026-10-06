@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/sign-out';
@@ -7,6 +7,7 @@ import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useToast } from '@/components/Toast';
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
 
 function isHttpUrl(value: string | undefined | null): boolean {
@@ -28,6 +29,7 @@ export default function GroupDetailsPage() {
     // Identidad estable: el modal la usa como dependencia de su efecto de foco y
     // de Escape, y una función en línea la haría reejecutar en cada render.
     const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
+    const { showToast, ToastComponent } = useToast();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -270,7 +272,7 @@ export default function GroupDetailsPage() {
                         </Text>
                         <PrimaryButton
                             onPress={() => {
-                                Alert.alert('Próximamente', 'La función de Amigo Invisible estará disponible pronto.');
+                                showToast('La función de Amigo Invisible estará disponible pronto.', 'info');
                             }}
                             textClassName="text-on-primary font-sans-bold text-lg"
                             accessibilityLabel="Sortear amigo invisible"
@@ -289,6 +291,7 @@ export default function GroupDetailsPage() {
                 groupId={groupId}
                 groupName={group?.name ?? ''}
             />
+            {ToastComponent}
         </ResponsiveLayout>
     );
 }

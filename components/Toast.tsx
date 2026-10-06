@@ -59,8 +59,33 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
     };
 
     return createPortal(
+        // `z-[10000]` no es una afirmación estética: RNW monta el envoltorio de
+        // sus `Modal` con `position: fixed; zIndex: 9999`
+        // (react-native-web/dist/exports/Modal/ModalAnimation.js, `styles.container`,
+        // envuelto por ModalContent.js), y por encima cae la hoja completa
+        // `z-[200]` de NotificationMenu.tsx; el `z-[100]` anterior dejaba el
+        // brindis —p. ej. el aviso de un enlace roto en el modal de detalle de
+        // un deseo— pintado detrás del propio modal, invisible: un silencio
+        // fingido. Los diálogos propios usan `z-[100]`, así que el nuevo valor
+        // también los sobrepasa.
+        //
+        // Límite de verificación: aquí solo se leyó el código fuente de RNW y se
+        // fijaron los dos valores de z-index — no se tomó ninguna medición. El
+        // apilamiento es observable por hit-testing en e2e (`click({ trial: true })`
+        // falla con «intercepts pointer events», `elementFromPoint` devuelve el
+        // elemento superior); lo ciego ante oclusión es `toBeVisible()` y las
+        // capturas. Medirlo aquí no fue posible: la pila de e2e (Docker/Supabase)
+        // no está disponible, así que queda sin comprobar en dispositivo real.
+        //
+        // Guardia de clics: al sobrepasar ahora todo, durante su ~3 s la caja
+        // queda encima de los pies de los modales (botones de acción en centro
+        // inferior). `pointer-events-none` en el posicionador y en la burbuja
+        // concentra los toques solo en el botón de cerrar (`pointer-events-auto`;
+        // un hijo reactiva bajo un ancestro `none`, patrón ya usado en
+        // RevealModal). No simplificar: sin esta guardia, el brindis traga toques
+        // ajenos; con ella, el fondo permanece interactivo.
         <div
-            className={`fixed left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+            className={`fixed left-1/2 -translate-x-1/2 z-[10000] transition-all duration-300 transform pointer-events-none ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
             style={{
                 // El dock (bottom 16px + inset) deja su borde superior en ~85px + inset,
                 // medido desde sus clases (px-2 py-2 + etiqueta de 10px): es una estimación,
@@ -71,13 +96,13 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
             }}
         >
             <div
-                className={`${bgColors[type]} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 min-w-[min(280px,calc(100vw_-_2rem))] max-w-[calc(100vw_-_2rem)]`}
+                className={`${bgColors[type]} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 min-w-[min(280px,calc(100vw_-_2rem))] max-w-[calc(100vw_-_2rem)] pointer-events-none`}
             >
                 <div className="shrink-0">
                     {icons[type]}
                 </div>
                 <p className="text-sm font-bold flex-1">{message}</p>
-                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-3.5 -mr-2 hover:bg-white/20 rounded-lg transition-colors">
+                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-3.5 -mr-2 hover:bg-white/20 rounded-lg transition-colors pointer-events-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
