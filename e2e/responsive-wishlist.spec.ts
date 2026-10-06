@@ -168,7 +168,8 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
     test('debe mostrar la barra lateral integrada en escritorio', async ({ page }) => {
         // Forzar viewport de escritorio
         await page.setViewportSize({ width: 1280, height: 800 });
-        // El layout depende de `useWindowDimensions`; recargamos para que se recalculen los breakpoints.
+        // El layout depende del umbral de breakpoint (`useIsDesktop`, suscrito a `resize`);
+        // recargamos para recalcularlo desde cero.
         await page.reload();
 
         // En desktop, la ficha de perfil lateral debe estar visible.

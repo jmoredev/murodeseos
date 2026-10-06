@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { createPortal } from 'react-dom';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -15,7 +15,7 @@ interface ToastProps {
 
 export function Toast({ message, type = 'success', duration = 3000, onClose }: ToastProps) {
     const [isVisible, setIsVisible] = useState(false);
-    const { width } = useWindowDimensions();
+    const isDesktop = useIsDesktop();
     // Mismo umbral que el resto de la app (>768): por encima no hay dock y el
     // toast mantiene el `bottom-6` (24px) de siempre; por debajo debe despegarse
     // del dock, que tras el inset ancla a `16px + env(safe-area-inset-bottom)`.
@@ -96,7 +96,7 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
                 // plausible de crecimiento de la etiqueta. (El 6.5rem anterior daba 15–18px,
                 // por debajo del aire previsto cuando la etiqueta pasó de 10px a 12px.)
                 // En escritorio: 24px, idéntico al `bottom-6` de antes.
-                bottom: width > 768 ? 24 : 'calc(6.75rem + env(safe-area-inset-bottom))',
+                bottom: isDesktop ? 24 : 'calc(6.75rem + env(safe-area-inset-bottom))',
             }}
         >
             <div

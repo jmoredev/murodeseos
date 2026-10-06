@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, useWindowDimensions, ScrollView, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
 import { GlassBar } from './ui/GlassBar';
@@ -32,8 +33,7 @@ function TabLabel({
 }
 
 export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, onSignOut }: ResponsiveLayoutProps) {
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
 
     const scrollToMain = () => {
         if (Platform.OS !== 'web' || typeof document === 'undefined') return;

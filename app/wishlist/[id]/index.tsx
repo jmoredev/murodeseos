@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, ActivityIndicator, useWindowDimensions, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/sign-out';
@@ -26,8 +27,7 @@ export default function UserWishlistPage() {
     const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
     const [reservationDegraded, setReservationDegraded] = useState(false);
     const { showToast, ToastComponent } = useToast();
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
     const isOwner = !!user?.id && user.id === targetUserId;
 
     useEffect(() => {

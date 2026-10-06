@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/sign-out';
@@ -30,8 +31,7 @@ export default function GroupDetailsPage() {
     // de Escape, y una función en línea la haría reejecutar en cada render.
     const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
     const { showToast, ToastComponent } = useToast();
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
 
     useEffect(() => {
         const loadGroupData = async () => {
@@ -217,7 +217,7 @@ export default function GroupDetailsPage() {
 
                     <View className="flex-row flex-wrap -m-2">
                         {members.map((member) => (
-                            <View key={member.user_id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
+                            <View key={member.user_id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                 <Pressable
                                     onPress={() => router.push({
                                         pathname: "/wishlist/[id]",

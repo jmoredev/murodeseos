@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useClientMounted } from '@/lib/use-client-mounted';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { supabase } from '@/lib/supabase';
 import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/notification-utils';
 import { ensureBirthdayReminders } from '@/lib/reminder-utils';
@@ -17,16 +18,6 @@ import { createPortal } from 'react-dom';
 // overlay de errores tapando la pantalla y ningún clic llegando a la interfaz.
 let notificationChannelSequence = 0;
 
-/** Suscripción al ancho de la ventana, para no fijar estado dentro de un efecto. */
-function subscribeToViewport(onStoreChange: () => void) {
-    window.addEventListener('resize', onStoreChange);
-    return () => window.removeEventListener('resize', onStoreChange);
-}
-
-function isDesktopViewport() {
-    return window.innerWidth > 768;
-}
-
 interface NotificationMenuProps {
     userId: string;
 }
@@ -36,9 +27,9 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    // El ancho es un estado externo (falso en el servidor), no algo que se fije con un
-    // efecto; el montaje lo resuelve el ayudante.
-    const isDesktop = useSyncExternalStore(subscribeToViewport, isDesktopViewport, () => false);
+    // El ancho es un estado externo (falso en el servidor) vía `useIsDesktop`;
+    // no algo que se fije con un efecto.
+    const isDesktop = useIsDesktop();
     const isMounted = useClientMounted();
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);

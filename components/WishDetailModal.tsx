@@ -6,10 +6,10 @@ import {
     Modal,
     ScrollView,
     Image,
-    useWindowDimensions,
     BackHandler,
     Platform,
 } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
@@ -43,8 +43,7 @@ export function WishDetailModal({
     onReserve,
     onCancelReserve,
 }: WishDetailModalProps) {
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
 
     useEffect(() => {
         // `BackHandler` no existe en web: RNW ignora (y registra error en consola).

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useTransition } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView, BackHandler } from 'react-native'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, KeyboardAvoidingView, BackHandler } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/lib/wish-image-upload'
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
+import { useIsDesktop } from '@/lib/use-is-desktop'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
@@ -29,8 +30,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
     const insets = useSafeAreaInsets();
     // En web `KeyboardAvoidingView` no encoge: estimamos el solape del teclado
     // con `visualViewport` y lo sumamos al padding inferior del formulario móvil.
@@ -354,7 +354,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 {sortedItems.length > 0 ? (
                     <View className="flex-row flex-wrap -m-2">
                         {sortedItems.map(item => (
-                            <View key={item.id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
+                            <View key={item.id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                 <WishlistCard
                                     item={item}
                                     onClick={openForm}

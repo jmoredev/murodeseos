@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Switch, TextInput, useWindowDimensions } from 'react-native';
+import { Switch, TextInput } from 'react-native';
 import { useClientMounted } from '@/lib/use-client-mounted';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { createPortal } from 'react-dom';
 import {
     GROUP_NOTIFICATION_OPTIONS,
@@ -37,8 +38,7 @@ export function GroupNotificationSettingsModal({
 }: GroupNotificationSettingsModalProps) {
     // En el servidor no hay DOM: el modal no se pinta hasta hidratar.
     const mounted = useClientMounted();
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
     const [visibleState, setVisibleState] = useState(false);
     const titleId = useId();
     const subtitleId = useId();

@@ -118,7 +118,18 @@ La cabecera del HTML estático está partida en dos por capacidad:
 `contentContainerStyle` usa `alignItems: 'center'`, lo que en React Native **no estira** los hijos al ancho del viewport. El `View` que envuelve `{children}` lleva **`self-stretch`** y **`max-w-full`** en móvil para que pestañas como la lista de deseos ocupen todo el ancho (p. ej. filtros en fila con `flex: 1`).
 
 ### Punto de ruptura escritorio (`> 768`)
-La convención única de la app para separar escritorio de móvil es **`width > 768`** (Tailwind `md:`), leída con `useWindowDimensions` (`ResponsiveLayout`, `WishListTab`, `WishDetailModal`, etc.). `NotificationMenu` la sigue con `isDesktopViewport` (`useSyncExternalStore` sobre el mismo umbral): en la banda de 641–768 px se muestra la variante móvil de pantalla completa, no el bocadillo flotante.
+La convención única de la app para separar escritorio de móvil es **`width > 768` estricto** (768 incluido pertenece a la banda móvil). Vive en un único sitio del código: `lib/use-is-desktop.ts`, cuyo hook `useIsDesktop()` (basado en `useSyncExternalStore`, captura de servidor `false`) leen `ResponsiveLayout`, `WishListTab`, `WishDetailModal`, `GroupNotificationSettingsModal`, `GroupCard`, `GroupsTab`, `Toast`, el menú de notificaciones y las dos pantallas que comparaban ancho a mano (`app/groups/[id]` y `app/wishlist/[id]`); a 768 exactos se muestra la variante móvil de pantalla completa, no el bocadillo flotante.
+
+Las variantes `md:`/`lg:` de Tailwind (`min-width: 768px` / `1024px`) **no deben usarse para el número de columnas**: se aplican también *en* 768 px, justo donde el hook todavía devuelve móvil, y se partían en ese borde exacto (rejilla multi-columna mientras el JS seguía creyéndose móvil). Las columnas se escriben con la forma `isDesktop ? '…' : '…'` (p. ej. `` className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`} ``); la banda de cuatro columnas ≥1024px sólo existía vía `lg:` y queda deliberadamente fuera (decisión del propietario: un solo umbral). El resto de variantes `md:` de apariencia (`md:p-6`, `md:w-14`, `md:ml-4`, …) no afecta a este umbral de layout y sigue tal cual.
+
+### Reglas mobile-first
+- **Áreas seguras:** las superficies ancladas abajo (dock, hojas modales, pies y `Toast`) despegan del borde con `env(safe-area-inset-bottom)`, escritas como `calc` inline porque `pb-safe` no emite nada en este proyecto (patrón real: `calc(1.5rem + env(safe-area-inset-bottom))`). El arranque del viewport viene de `viewport-fit=cover` en `app/+html.tsx`.
+- **Unidades de altura:** se prefiere `dvh`; como NativeWind no lo admite en `className`, el patrón es clase con `vh` + estilo inline con `dvh` como respaldo (p. ej. `max-h-[90vh]` + `{ maxHeight: '90dvh' }` en el modal de deseos).
+- **Controles de formulario:** `fontSize >= 16px` en inputs; por debajo, iOS enfoca con zoom automático sobre el campo.
+- **Objetivos táctiles:** ≥ 44px (≥ 24px en controles secundarios), conseguido con padding real: react-native-web no implementa `hitSlop` para las áreas de toque del DOM.
+- **Suelo tipográfico de 12px:** ningún texto por debajo de 12px; lo protege `__tests__/typography-floor.test.ts`.
+- **Señal móvil:** el arnés a 360×640 es `e2e/mobile-layout.spec.ts` (fija ese viewport con `test.use`); `e2e/responsive-wishlist.spec.ts` es otra cosa —fija 1280×800 y 375×667 para comparar escritorio y móvil— y ambos corren también sobre WebKit (`Mobile Safari`) como única señal de iOS/Safari (ver `### E2E (Playwright en CI)`).
+- **Rama móvil en tests de componentes:** jsdom arranca por defecto con `window.innerWidth = 1024`, así que los tests de componentes toman la rama de escritorio salvo que fijen el ancho; basta con `Object.defineProperty(window, 'innerWidth', …)` y, para cambiar de rama en caliente, disparar `resize` (así funciona `__tests__/NotificationMenu.test.tsx`, incluido su caso exacto de 768px). Por eso no hace falta —y conviene evitar— un mock global de anchura en `vitest.setup.ts`: el hook lee `window.innerWidth`, de modo que cada test elige su rama, y un mock global cambiaría la rama que toman hoy todos los tests existentes.
 
 ### Lista de deseos (`WishListTab`)
 - **Filtros de ordenación:** fila `width: '100%'`, cada chip con `style={{ flex: 1, minWidth: 0 }}`; en pantalla estrecha las etiquetas son **Nombre / Precio / Prioridad**; en escritorio se mantienen **Por nombre / …**. Los `accessibilityLabel` siguen siendo “Ordenar por …”.
@@ -166,17 +177,19 @@ Los tests se encuentran en el directorio `__tests__`.
 - Nombramiento: `Componente.test.tsx` o `utilidad.test.ts`.
 
 ### E2E (Playwright en CI)
-`playwright.config.ts` define 5 proyectos (`chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`), pero CI (`.github/workflows/e2e.yml`) ejecuta solo dos:
+`playwright.config.ts` define 5 proyectos de prueba (`chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`, más el proyecto `setup` de autenticación); CI (`.github/workflows/e2e.yml`) ejecuta tres invocaciones Playwright separadas, cada una con su propia re-siembra:
 
 1. **`chromium`** (escritorio) — contra la base sembrada por `test:e2e:prepare`.
 2. **`Mobile Chrome`** (Pixel 5) — tras **re-sembrar** con `test:e2e:prepare` de nuevo y lanzar una invocación Playwright separada.
+3. **`Mobile Safari`** (WebKit) — tras re-sembrar otra vez y **acotada** a `e2e/mobile-layout.spec.ts` y `e2e/responsive-wishlist.spec.ts`; la instalación de WebKit y su corrida llevan `if: always()` (la subida de artefactos usa `if: failure()`), así que la señal iOS no se pierde aunque Mobile Chrome se haya puesto en rojo.
 
 Por qué así:
 - **Re-siembra por proyecto (defecto abierto E-10):** la suite no es auto-limpiante y deja grupos de prueba en la base. Dos proyectos sobre la misma siembra equivalen a correr la suite dos veces contra un solo fixture, con riesgo de contaminación cruzada. Re-sembrar antes de Mobile Chrome le da un fixture limpio.
 - **Mobile Chrome usa el motor Chromium** ya instalado con `playwright install --with-deps chromium`; no requiere instalación adicional.
-- **Firefox, WebKit y Mobile Safari quedan fuera de CI** deliberadamente: cada uno exigiría una descarga de navegador nueva en el runner (`playwright install firefox` / `webkit`), alargando el job. Se pueden correr localmente con `pnpm exec playwright test --project=<nombre>`.
+- **WebKit/Mobile Safari están en CI de forma acotada:** es el único motor distinto de Chromium que corre en CI y la única aproximación a iOS Safari, así que el job instala WebKit (siempre, con `if: always()`) y Mobile Safari corre únicamente los dos specs móviles; el resto de la suite WebKit queda fuera por coste.
+- **Firefox queda fuera de CI** deliberadamente por coste: exigiría una descarga de navegador nueva en el runner (`playwright install firefox`), alargando el job, y Chromium ya cubre el motor Blink. Se puede correr localmente con `pnpm exec playwright test --project=firefox`.
 
-Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright-report-mobile-chrome` con `playwright-report/` (reporte HTML) y `test-results/` (capturas y trazas de fallo).
+Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright-report-mobile-chrome` / `playwright-report-mobile-safari` con `playwright-report/` (reporte HTML) y `test-results/` (capturas y trazas de fallo).
 
 ## ♿ Checklist de Accesibilidad (antes de publicar)
 

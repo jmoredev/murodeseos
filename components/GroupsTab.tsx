@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native'
 import { Link, useRouter } from "expo-router"
 import { supabase } from '@/lib/supabase'
+import { useIsDesktop } from '@/lib/use-is-desktop'
 import { GroupCard, Group } from '@/components/GroupCard'
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils'
 import { getUserAliases, setUserAlias } from '@/lib/aliases'
@@ -14,6 +15,9 @@ export interface GroupsTabProps {
 
 export function GroupsTab({ userId }: GroupsTabProps) {
     const router = useRouter();
+    // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
+    // número de columnas de la rejilla de grupos más abajo.
+    const isDesktop = useIsDesktop();
     const [groups, setGroups] = useState<Group[]>([])
     // Para qué usuario están cargados los datos. El estado de carga se deriva de ahí, así que
     // al cambiar de usuario vuelve a encenderse solo, sin fijarlo desde el efecto.
@@ -350,7 +354,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 {groups.length > 0 ? (
                     <View className="flex-row flex-wrap -m-3 items-stretch">
                         {groups.map(group => (
-                            <View key={group.id} className="w-full md:w-1/2 lg:w-1/3 p-3 flex">
+                            <View key={group.id} className={`${isDesktop ? 'w-1/3' : 'w-full'} p-3 flex`}>
                                 <GroupCard
                                     group={group}
                                     isAdmin={userRoles.get(group.id) === 'admin'}

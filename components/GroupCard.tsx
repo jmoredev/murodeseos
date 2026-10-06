@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react';
-import { View, Text, Pressable, TextInput, Image, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, TextInput, Image } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 // Tipo del evento de `onPress`: `GestureResponderEvent` extiende
 // `React.BaseSyntheticEvent`, así que `stopPropagation()` existe tipado —
 // sin casts.
@@ -51,17 +52,14 @@ export const GroupCard = memo(function GroupCard({
     const router = useRouter();
     const [menuOpen, setMenuOpen] = useState(false);
 
-    // Restricción de producto (decisión del propietario): móvil primero.
-    // `width > 768` estricto es el umbral vigente de la app (Unidad E lo
-    // centralizará en un hook cuando aterrice; ResponsiveLayout.tsx:35-36 usa
-    // exactamente el mismo literal). `useWindowDimensions` es el patrón global
-    // de la app y no inutiliza el `memo`: la memoización compara props y el
-    // hook se suscribe por su cuenta al store de dimensiones — los cambios de
-    // viewport repintan la tarjeta por la suscripción, no rompiendo el
-    // bail-out de props, y un re-render del padre por estado ajeno (p. ej.
-    // aliases de GroupsTab) sigue saltándose la tarjeta.
-    const { width: viewportWidth } = useWindowDimensions();
-    const isDesktop = viewportWidth > 768;
+    // Umbral de producto (decisión del propietario, móvil primero): el literal
+    // `> 768` estricto vive hoy solo en `lib/use-is-desktop.ts`, del que aquí se
+    // lee. El hook se suscribe por su cuenta a los cambios de viewport, así que
+    // no inutiliza el `memo`: la memoización compara props y el re-render que
+    // necesita la tarjeta llega por la suscripción, sin romper el bail-out de
+    // props; un re-render del padre por estado ajeno (p. ej. aliases de
+    // GroupsTab) sigue saltándose la tarjeta.
+    const isDesktop = useIsDesktop();
 
     /**
      * `stopPropagation` antes de cada control interno: la tarjeta entera es
