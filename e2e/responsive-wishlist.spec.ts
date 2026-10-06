@@ -198,7 +198,7 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         // horizontally at this viewport.
         const infoButton = page.getByTestId('wishlist-profile-info-button');
         await expect(infoButton).toBeVisible({ timeout: 10000 });
-        await expect(page.getByText('Detalles y Tallas')).toBeHidden();
+        await expect(page.getByText('Detalles y Tallas', { exact: true })).toHaveCount(0);
         await expectNoHorizontalOverflow(page, '/wishlist/[id] (rama móvil)');
 
         // Abrir el Bottom Sheet

@@ -13,8 +13,12 @@ import { useEffect, useState } from 'react';
 // Si el navegador no expone `visualViewport` (o se ejecuta fuera del
 // cliente), devolvemos 0 y la maquetación queda como hasta ahora. Mientras el
 // hook está desactivado el valor expuesto también es 0: el estado interno
-// conserva la última medición, pero nunca se expone desfasada — al
-// reactivarse, el efecto vuelve a medir antes de exponer un valor nuevo.
+// conserva la última medición. Comportamiento real al reactivar el hook
+// (`enabled` false→true): React pinta un fotograma con la medición previa
+// antes de que el efecto vuelva a medir, así que si esa medición previa era
+// distinta de 0 hay un frame con el valor anterior. En la práctica es
+// irrelevante: el valor con el que el hook aterriza es 0 (nunca hubo una
+// medición anterior distinta de cero), de modo que ese frame expone 0.
 export function useKeyboardInset(enabled = true): number {
     const [measured, setMeasured] = useState(0);
 

@@ -208,7 +208,7 @@ Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright
 - **Foco visible (web):** reglas `:focus-visible` en `app/global.css` (dentro de `@layer base`).
 - **Saltar al contenido (solo web):** `components/ResponsiveLayout.tsx` — `Pressable` con clase `skip-to-main`; región principal `ScrollView` con `nativeID="muro-main-content"`; `scroll-margin-top` en `app/global.css` para cabecera fija.
 - **Navegación principal:** escritorio usa `role="tablist"` / `role="tab"` (web); móvil: pestañas inferiores con `importantForAccessibility="no-hide-descendants"` en el contenido decorativo para no duplicar el nombre con el emoji.
-- **Diálogos web (`createPortal`):** `ConfirmModal`, `UserProfileModal`, `RevealModal`, `SecretSantaModal` — `role="dialog"`, `aria-modal`, título vinculado, `Escape`, foco inicial y restauración; `NotificationItem` es `<button type="button">` con `aria-label` descriptivo.
+- **Diálogos web (`createPortal`):** `ConfirmModal` — `role="dialog"`, `aria-modal`, título vinculado, `Escape`, foco inicial y restauración; `NotificationItem` es `<button type="button">` con `aria-label` descriptivo. (Los tres modales del Amigo Invisible — `SecretSantaModal`, `RevealModal`, `UserProfileModal` — se **borraron** el 2026-10-06 junto con `lib/draw-utils.ts`: nunca estuvieron enlazados, así que no había UI que los montara.)
 - **`PrimaryButton`:** si no pasas `accessibilityLabel` y `children` es un string, se usa como etiqueta accesible.
 
 ### Limitaciones conocidas
