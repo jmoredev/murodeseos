@@ -6,9 +6,10 @@ import {
     Modal,
     ScrollView,
     Image,
-    useWindowDimensions,
     BackHandler,
+    Platform,
 } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
@@ -42,11 +43,11 @@ export function WishDetailModal({
     onReserve,
     onCancelReserve,
 }: WishDetailModalProps) {
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
 
     useEffect(() => {
-        if (!visible || isDesktop) return undefined;
+        // `BackHandler` no existe en web: RNW ignora (y registra error en consola).
+        if (Platform.OS === 'web' || !visible || isDesktop) return undefined;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
             onClose();
             return true;
@@ -79,7 +80,7 @@ export function WishDetailModal({
                     onPress={onClose}
                     accessibilityRole="button"
                     accessibilityLabel="Cerrar detalle"
-                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center shrink-0"
+                    className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center shrink-0"
                 >
                     <Text className="text-on-surface/55 font-sans-bold">✕</Text>
                 </Pressable>
@@ -159,7 +160,7 @@ export function WishDetailModal({
                                 accessibilityLabel="Cancelar reserva"
                                 className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                             >
-                                <Text className="text-on-surface/55 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
                                     Cancelar reserva
                                 </Text>
                             </Pressable>
@@ -167,7 +168,7 @@ export function WishDetailModal({
 
                         {isReservedByOther ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
                                     Reservado por otro usuario
                                 </Text>
                             </View>
@@ -175,7 +176,7 @@ export function WishDetailModal({
 
                         {reservationState === 'unknown' ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
                                     Estado de reserva no disponible
                                 </Text>
                             </View>
@@ -207,7 +208,17 @@ export function WishDetailModal({
                     className={
                         isDesktop
                             ? 'relative z-10 w-full max-w-lg max-h-[90vh] bg-surface-container-lowest rounded-3xl shadow-ambient-lg overflow-hidden'
-                            : 'bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[90%] pb-6'
+                            : 'bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[90%]'
+                    }
+                    style={
+                        isDesktop
+                            ? { maxHeight: '90dvh' as any } // fallback: la clase queda en `max-h-[90vh]`
+                            : {
+                                  // Antes `pb-6` (24px) no cubría la barra de inicio de un iPhone
+                                  // (~34px). En escritorio `env()` = 0px → 1.5rem, el valor de hoy.
+                                  // Cast `as any`: calc CSS de RNW fuera de `DimensionValue`.
+                                  paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' as any,
+                              }
                     }
                 >
                     {content}

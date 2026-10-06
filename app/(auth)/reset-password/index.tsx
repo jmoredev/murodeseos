@@ -145,6 +145,7 @@ export default function ResetPasswordPage() {
                                         </Text>
                                         <TextInput
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
+                                            style={{ fontSize: 16 }}
                                             placeholder="••••••••"
                                             placeholderTextColor="#4c212b88"
                                             value={password}
@@ -161,6 +162,7 @@ export default function ResetPasswordPage() {
                                         </Text>
                                         <TextInput
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
+                                            style={{ fontSize: 16 }}
                                             placeholder="••••••••"
                                             placeholderTextColor="#4c212b88"
                                             value={confirmPassword}

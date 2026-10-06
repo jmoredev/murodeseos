@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert, useWindowDimensions, Image } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/sign-out';
@@ -7,6 +8,7 @@ import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useToast } from '@/components/Toast';
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
 
 function isHttpUrl(value: string | undefined | null): boolean {
@@ -28,8 +30,8 @@ export default function GroupDetailsPage() {
     // Identidad estable: el modal la usa como dependencia de su efecto de foco y
     // de Escape, y una función en línea la haría reejecutar en cada render.
     const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const { showToast, ToastComponent } = useToast();
+    const isDesktop = useIsDesktop();
 
     useEffect(() => {
         const loadGroupData = async () => {
@@ -140,7 +142,7 @@ export default function GroupDetailsPage() {
                     <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
+                            className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
                             <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
                                 ←
@@ -150,7 +152,7 @@ export default function GroupDetailsPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 {group?.name}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Detalles del grupo
                             </Text>
                         </View>
@@ -193,7 +195,7 @@ export default function GroupDetailsPage() {
                         <View className="mt-3 gap-2">
                             <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
                                 <Text
-                                    className="text-[10px] font-sans-bold text-on-surface/55 uppercase tracking-widest"
+                                    className="text-xs font-sans-bold text-on-surface/55 uppercase tracking-widest"
                                     numberOfLines={1}
                                     ellipsizeMode="middle"
                                 >
@@ -215,7 +217,7 @@ export default function GroupDetailsPage() {
 
                     <View className="flex-row flex-wrap -m-2">
                         {members.map((member) => (
-                            <View key={member.user_id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
+                            <View key={member.user_id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                 <Pressable
                                     onPress={() => router.push({
                                         pathname: "/wishlist/[id]",
@@ -245,7 +247,7 @@ export default function GroupDetailsPage() {
                                         </View>
                                         {member.role === 'admin' && (
                                             <View className="absolute top-0 right-0 bg-secondary rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
-                                                <Text className="text-[8px] font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
+                                                <Text className="text-xs font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
                                             </View>
                                         )}
                                     </View>
@@ -253,7 +255,7 @@ export default function GroupDetailsPage() {
                                         {member.profiles?.display_name || 'Usuario'}
                                         {member.user_id === user?.id && <Text className="text-primary"> (Tú)</Text>}
                                     </Text>
-                                    <Text className="text-center text-[10px] text-on-surface/45 font-sans-bold uppercase tracking-tighter">
+                                    <Text className="text-center text-xs text-on-surface/45 font-sans-bold uppercase tracking-tighter">
                                         Ver deseos ›
                                     </Text>
                                 </Pressable>
@@ -270,7 +272,7 @@ export default function GroupDetailsPage() {
                         </Text>
                         <PrimaryButton
                             onPress={() => {
-                                Alert.alert('Próximamente', 'La función de Amigo Invisible estará disponible pronto.');
+                                showToast('La función de Amigo Invisible estará disponible pronto.', 'info');
                             }}
                             textClassName="text-on-primary font-sans-bold text-lg"
                             accessibilityLabel="Sortear amigo invisible"
@@ -289,6 +291,7 @@ export default function GroupDetailsPage() {
                 groupId={groupId}
                 groupName={group?.name ?? ''}
             />
+            {ToastComponent}
         </ResponsiveLayout>
     );
 }

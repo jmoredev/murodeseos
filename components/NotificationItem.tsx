@@ -138,7 +138,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
                 <p className="text-sm text-on-surface/70 leading-snug mb-1.5 font-sans">
                     {content}
                 </p>
-                <p className="text-[10px] font-sans-bold uppercase tracking-wider text-on-surface/45 flex items-center gap-1.5">
+                <p className="text-xs font-sans-bold uppercase tracking-wider text-on-surface/45 flex items-center gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-outline-variant/40" aria-hidden />
                     {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: es })}
                 </p>

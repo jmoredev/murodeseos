@@ -1,4 +1,4 @@
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
 
 export function normalizeWishLink(url: string): string | null {
     const trimmed = url.trim();
@@ -33,21 +33,24 @@ export function truncateWishLink(url: string, maxLength = 36): string {
     }
 }
 
-export async function openWishLink(url: string): Promise<void> {
+// Resultado discriminado: el módulo no puede mostrar UI (no hay hooks aquí),
+// así que informa al llamador y la vista decide cómo avisar (p. ej. un toast).
+export type WishLinkOpenResult = { ok: true } | { ok: false; message: string };
+
+export async function openWishLink(url: string): Promise<WishLinkOpenResult> {
     const normalized = normalizeWishLink(url);
     if (!normalized) {
-        Alert.alert('Enlace no válido', 'No se pudo abrir este enlace.');
-        return;
+        return { ok: false, message: 'No se pudo abrir este enlace.' };
     }
 
     try {
         const canOpen = await Linking.canOpenURL(normalized);
         if (!canOpen) {
-            Alert.alert('Enlace no válido', 'No se pudo abrir este enlace.');
-            return;
+            return { ok: false, message: 'No se pudo abrir este enlace.' };
         }
         await Linking.openURL(normalized);
+        return { ok: true };
     } catch {
-        Alert.alert('Error', 'No se pudo abrir el enlace.');
+        return { ok: false, message: 'No se pudo abrir el enlace.' };
     }
 }

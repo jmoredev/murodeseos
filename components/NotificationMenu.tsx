@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useClientMounted } from '@/lib/use-client-mounted';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { supabase } from '@/lib/supabase';
 import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/notification-utils';
 import { ensureBirthdayReminders } from '@/lib/reminder-utils';
@@ -17,16 +18,6 @@ import { createPortal } from 'react-dom';
 // overlay de errores tapando la pantalla y ningún clic llegando a la interfaz.
 let notificationChannelSequence = 0;
 
-/** Suscripción al ancho de la ventana, para no fijar estado dentro de un efecto. */
-function subscribeToViewport(onStoreChange: () => void) {
-    window.addEventListener('resize', onStoreChange);
-    return () => window.removeEventListener('resize', onStoreChange);
-}
-
-function isDesktopViewport() {
-    return window.innerWidth > 768;
-}
-
 interface NotificationMenuProps {
     userId: string;
 }
@@ -36,9 +27,9 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    // El ancho es un estado externo (falso en el servidor), no algo que se fije con un
-    // efecto; el montaje lo resuelve el ayudante.
-    const isDesktop = useSyncExternalStore(subscribeToViewport, isDesktopViewport, () => false);
+    // El ancho es un estado externo (falso en el servidor) vía `useIsDesktop`;
+    // no algo que se fije con un efecto.
+    const isDesktop = useIsDesktop();
     const isMounted = useClientMounted();
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -202,7 +193,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
             >
                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
                 {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-primary text-on-primary text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-surface-container-lowest animate-in zoom-in-50 duration-300">
+                    <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-primary text-on-primary text-xs font-bold rounded-full flex items-center justify-center ring-2 ring-surface-container-lowest animate-in zoom-in-50 duration-300">
                         {unreadCount > 9 ? '+9' : unreadCount}
                     </span>
                 )}
@@ -236,7 +227,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
 
                     {notifications.length > 0 && (
                         <div className="p-3 bg-surface-container-low text-center shrink-0">
-                            <span className="text-[10px] uppercase tracking-widest font-sans-bold text-on-surface/45">Sólo las últimas 20</span>
+                            <span className="text-xs uppercase tracking-widest font-sans-bold text-on-surface/45">Sólo las últimas 20</span>
                         </div>
                     )}
                 </div>
@@ -282,7 +273,16 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
                         </div>
                     </div>
 
-                    <div className="p-6 bg-surface-container-low pb-safe shrink-0">
+                    <div
+                        className="p-6 bg-surface-container-low shrink-0"
+                        style={{
+                            // `pb-safe` no existe en este proyecto (no emite nada): el patrón
+                            // real es este calc, como en GroupNotificationSettingsModal. En
+                            // escritorio `env()` = 0px → el calc reduce a 1.5rem, el valor
+                            // actual de p-6.
+                            paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+                        }}
+                    >
                         <button
                             onClick={() => setIsOpen(false)}
                             className="w-full py-4 bg-on-background text-surface-container-lowest rounded-2xl font-sans-bold text-lg shadow-ambient-lg active:scale-95 transition-all"

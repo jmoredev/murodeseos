@@ -159,6 +159,7 @@ export default function LoginPage() {
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Correo electrónico</Text>
                                 <TextInput
                                     className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${emailError ? 'ring-2 ring-primary/30' : ''}`}
+                                    style={{ fontSize: 16 }}
                                     placeholder="tu@ejemplo.com"
                                     placeholderTextColor="#4c212b88"
                                     value={email}
@@ -184,6 +185,7 @@ export default function LoginPage() {
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Contraseña</Text>
                                 <TextInput
                                     className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
+                                    style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={password}

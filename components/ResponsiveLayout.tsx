@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, useWindowDimensions, ScrollView, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
 import { GlassBar } from './ui/GlassBar';
@@ -32,8 +33,7 @@ function TabLabel({
 }
 
 export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, onSignOut }: ResponsiveLayoutProps) {
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
 
     const scrollToMain = () => {
         if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -133,7 +133,18 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                     nativeID="muro-main-content"
                     className="flex-1 bg-surface"
                     contentContainerStyle={{
-                        paddingBottom: isDesktop ? 40 : 112,
+                        // La reserva crece con el inset solo donde el CSS lo entiende
+                        // (`env()`); en nativo `SafeAreaView` ya gestiona el borde inferior
+                        // y el número puro sigue siendo el valor correcto. El calc es CSS
+                        // válido para react-native-web pero no entra en `DimensionValue`
+                        // de RN: cast al estilo de la casa (`position: 'fixed' as any`).
+                        paddingBottom: (Platform.OS === 'web'
+                            ? (isDesktop
+                                  ? 40
+                                  : ('calc(112px + env(safe-area-inset-bottom))' as any))
+                            : (isDesktop
+                                  ? 40
+                                  : 112)),
                         alignItems: 'center',
                     }}
                 >
@@ -145,7 +156,12 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                 <View
                     className="absolute left-0 right-0 items-center pointer-events-box-none"
                     style={{
-                        bottom: Platform.select({ ios: 20, android: 16, default: 16 }),
+                        // Web: dock anclado sobre la barra de inicio. `env()` vale 0px en
+                        // escritorio así que el `calc` reduce a 16px, el valor de hoy. Cast
+                        // `as any`: el calc es CSS de RNW, no entra en `DimensionValue`.
+                        bottom: (Platform.OS === 'web'
+                            ? 'calc(16px + env(safe-area-inset-bottom))'
+                            : Platform.select({ ios: 20, android: 16, default: 16 })) as any,
                     }}
                     pointerEvents="box-none"
                 >
@@ -160,7 +176,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>🎁</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Deseos
                                 </Text>
@@ -177,7 +193,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>👥</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Grupos
                                 </Text>
@@ -194,7 +210,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>👤</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Perfil
                                 </Text>

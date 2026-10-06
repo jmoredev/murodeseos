@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useTransition } from 'react'
-import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, useWindowDimensions, KeyboardAvoidingView, BackHandler } from 'react-native'
+import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, KeyboardAvoidingView, BackHandler } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '@/lib/supabase'
 import {
@@ -8,6 +8,8 @@ import {
     resolveWishImageUploadPayload,
 } from '@/lib/wish-image-upload'
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
+import { useKeyboardInset } from '@/lib/use-keyboard-inset'
+import { useIsDesktop } from '@/lib/use-is-desktop'
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
@@ -28,9 +30,12 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
     const insets = useSafeAreaInsets();
+    // En web `KeyboardAvoidingView` no encoge: estimamos el solape del teclado
+    // con `visualViewport` y lo sumamos al padding inferior del formulario móvil.
+    // En desktop (y fuera de web) devuelve 0, así que el padding queda intacto.
+    const keyboardInset = useKeyboardInset(Platform.OS === 'web' && !isDesktop);
 
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
     const { showToast, ToastComponent } = useToast();
@@ -39,7 +44,8 @@ export function WishListTab({ userId }: WishListTabProps) {
     const webImageInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        if (isDesktop || !isFormOpen) return undefined;
+        // `BackHandler` no existe en web: RNW ignora (y registra error en consola).
+        if (Platform.OS === 'web' || isDesktop || !isFormOpen) return undefined;
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
             if (isSaving) return true;
             setIsFormOpen(false);
@@ -287,7 +293,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
+                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
                 <PrimaryButton
                     onPress={() => openForm()}
@@ -324,7 +330,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             className={`px-2 py-2.5 rounded-full items-center justify-center ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
                         >
                             <Text
-                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-[10px] tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
+                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
                                 numberOfLines={1}
                             >
                                 {isDesktop
@@ -348,7 +354,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 {sortedItems.length > 0 ? (
                     <View className="flex-row flex-wrap -m-2">
                         {sortedItems.map(item => (
-                            <View key={item.id} className="w-1/2 md:w-1/3 lg:w-1/4 p-2">
+                            <View key={item.id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                 <WishlistCard
                                     item={item}
                                     onClick={openForm}
@@ -385,13 +391,18 @@ export function WishListTab({ userId }: WishListTabProps) {
                         enabled={!isDesktop}
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         className={isDesktop ? 'w-full max-w-lg max-h-[90vh] flex flex-col min-h-0' : 'flex-1 w-full min-w-0'}
+                        style={
+                            // Fallback: navegadores sin `dvh` descartan la declaración
+                            // inline y se quedan con el `max-h-[90vh]` de la clase.
+                            isDesktop ? { maxHeight: '90dvh' as any } : undefined
+                        }
                     >
                         <View
                             className={`bg-surface-container-lowest ${isDesktop ? 'w-full rounded-3xl p-8 shadow-ambient-lg overflow-hidden flex flex-col flex-1 min-h-0 max-h-[85vh]' : 'flex-1 min-w-0 w-full px-4 pt-12'}`}
                             style={
                                 !isDesktop
-                                    ? { paddingBottom: 12 + insets.bottom }
-                                    : { width: '100%' }
+                                    ? { paddingBottom: 12 + insets.bottom + keyboardInset }
+                                    : { width: '100%', maxHeight: '85dvh' as any } // fallback: la clase queda en `max-h-[85vh]`
                             }
                         >
                         {/* Mobile Header with Back Button */}
@@ -399,7 +410,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             <View className="flex-row items-center mb-4 min-w-0">
                                 <Pressable
                                     onPress={() => !isSaving && setIsFormOpen(false)}
-                                    className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
+                                    className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
                                 >
                                     <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
                                         ←
@@ -448,6 +459,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
                                     placeholder="¿Qué deseas?"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -485,6 +497,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
                                         placeholder="0.00"
                                         keyboardType="numeric"
+                                        style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                 </View>
@@ -502,7 +515,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                                 className={`flex-1 min-w-0 py-3 rounded-xl items-center justify-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                             >
                                                 <Text
-                                                    className={`text-[10px] font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
+                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
                                                     numberOfLines={1}
                                                 >
                                                     {p.label}
@@ -531,6 +544,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     value={formData.imageUrl || ''}
                                     onChangeText={(text) => setFormData({ ...formData, imageUrl: text })}
                                     placeholder="URL de la foto (opcional)"
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background mb-3"
                                 />
                                 {Platform.OS === 'web' ? (
@@ -570,6 +584,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     keyboardType="url"
                                     autoCapitalize="none"
                                     autoCorrect={false}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -582,6 +597,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     placeholder="Talla, color, detalles..."
                                     multiline
                                     numberOfLines={3}
+                                    style={{ fontSize: 16 }}
                                     className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background"
                                 />
                             </View>

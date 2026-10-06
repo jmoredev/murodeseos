@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, ActivityIndicator, useWindowDimensions, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { useIsDesktop } from '@/lib/use-is-desktop';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/sign-out';
@@ -26,8 +27,7 @@ export default function UserWishlistPage() {
     const [selectedItem, setSelectedItem] = useState<GiftItem | null>(null);
     const [reservationDegraded, setReservationDegraded] = useState(false);
     const { showToast, ToastComponent } = useToast();
-    const { width } = useWindowDimensions();
-    const isDesktop = width > 768;
+    const isDesktop = useIsDesktop();
     const isOwner = !!user?.id && user.id === targetUserId;
 
     useEffect(() => {
@@ -166,7 +166,7 @@ export default function UserWishlistPage() {
                     <View className="flex-row items-center flex-1">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center mr-4"
+                            className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
                             <Text className="text-on-surface font-sans-bold">←</Text>
                         </Pressable>
@@ -174,7 +174,7 @@ export default function UserWishlistPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Wishlist pública
                             </Text>
                         </View>
@@ -260,7 +260,15 @@ export default function UserWishlistPage() {
                 onRequestClose={() => setShowInfo(false)}
             >
                 <View className="flex-1 justify-end bg-on-surface/40">
-                    <View className="bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[80%] pb-10">
+                    <View
+                        className="bg-surface/95 backdrop-blur-xl rounded-t-[40px] max-h-[80%]"
+                        style={{
+                            // Antes `pb-10` fijo (40px): menos que 34px de barra + 24px de
+                            // aire. En escritorio `env()` = 0px → 2.5rem, el valor de hoy.
+                            // Cast `as any`: calc CSS de RNW fuera de `DimensionValue`.
+                            paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' as any,
+                        }}
+                    >
                         <View className="items-center py-4">
                             <View className="w-12 h-1.5 bg-outline-variant/30 rounded-full" />
                         </View>
@@ -269,7 +277,7 @@ export default function UserWishlistPage() {
                             <Text className="text-2xl font-display text-on-background">Información</Text>
                             <Pressable
                                 onPress={() => setShowInfo(false)}
-                                className="w-10 h-10 rounded-full bg-surface-container-low items-center justify-center"
+                                className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center"
                             >
                                 <Text className="text-on-surface/55 font-sans-bold">✕</Text>
                             </Pressable>

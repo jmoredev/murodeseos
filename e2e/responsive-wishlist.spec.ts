@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import { supabaseAdmin } from './supabase-admin';
 
@@ -7,6 +7,94 @@ async function getUserIdByEmail(email: string) {
     const user = users?.find(u => u.email === email);
     if (!user?.id) throw new Error(`No se encontró userId para ${email}`);
     return user.id;
+}
+
+/**
+ * Same mobile-first overflow check as `e2e/mobile-layout.spec.ts` (Unit F),
+ * kept local here: spec files cannot import each other without Playwright
+ * re-collecting the imported file's tests, and a shared helper module is not
+ * part of this unit's edit surfaces. Fails naming which surface (html/body)
+ * scrolled and which elements stick out, same reporting as the harness spec.
+ */
+async function expectNoHorizontalOverflow(page: Page, route: string) {
+    const state = await page.evaluate(() => {
+        function describeElement(el: Element): string {
+            let name = el.tagName.toLowerCase();
+            if (el.id) name += `#${el.id}`;
+            const cls = (el.getAttribute('class') ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 3).join('.');
+            if (cls) name += `.${cls}`;
+            const label = el.getAttribute('aria-label') ?? el.getAttribute('data-testid');
+            if (label) name += `[${label.slice(0, 40)}]`;
+            const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
+            if (text) name += ` ${JSON.stringify(text)}`;
+            return name;
+        }
+
+        function isContentful(el: Element): boolean {
+            if (['IMG', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'A'].includes(el.tagName)) return true;
+            return el.children.length === 0 && (el.textContent ?? '').trim().length > 0;
+        }
+
+        const vw = window.innerWidth;
+        const main = document.getElementById('muro-main-content');
+        const offenders: string[] = [];
+        let scanned = 0;
+        for (const el of document.querySelectorAll('body *')) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) continue;
+            scanned++;
+            if (!isContentful(el)) continue;
+            if (rect.right <= vw + 1 && rect.left >= -1) continue;
+            let insideScrollContainer = false;
+            for (let ancestor = el.parentElement; ancestor; ancestor = ancestor.parentElement) {
+                const sx = getComputedStyle(ancestor).overflowX;
+                if (sx === 'auto' || sx === 'scroll') {
+                    insideScrollContainer = true;
+                    break;
+                }
+            }
+            if (insideScrollContainer) continue;
+            offenders.push(`${describeElement(el)} (box ${Math.round(rect.left)}…${Math.round(rect.right)}px, width=${Math.round(rect.width)}px)`);
+            if (offenders.length >= 10) break;
+        }
+        return {
+            innerWidth: vw,
+            documentScrollWidth: document.documentElement.scrollWidth,
+            bodyScrollWidth: document.body.scrollWidth,
+            mainFound: !!main,
+            mainScrollWidth: main?.scrollWidth ?? -1,
+            mainClientWidth: main?.clientWidth ?? -1,
+            scanned,
+            offenders,
+        };
+    });
+    const offenderHeader = state.offenders.length
+        ? `\nElementos con contenido fuera del viewport: ${state.offenders.join('; ')}`
+        : '';
+    expect(
+        state.scanned,
+        `${route}: el escáner de overflow no vio ningún elemento renderizado (drift de ruta o selector).`,
+    ).toBeGreaterThan(0);
+    expect(
+        state.mainFound,
+        `${route}: el contenedor principal #muro-main-content no existe (drift del layout).`,
+    ).toBe(true);
+    expect(
+        state.offenders,
+        `${route}: hay contenido que se sale del viewport.${offenderHeader}`,
+    ).toEqual([]);
+    expect(
+        state.mainScrollWidth,
+        `${route}: #muro-main-content.scrollWidth (${state.mainScrollWidth}) > clientWidth + 1 (${state.mainClientWidth + 1}) (contenido recortado por el ScrollView).${offenderHeader}`,
+    ).toBeLessThanOrEqual(state.mainClientWidth + 1);
+    expect(
+        state.documentScrollWidth,
+        `${route}: document.documentElement.scrollWidth (${state.documentScrollWidth}) > window.innerWidth + 1 (${state.innerWidth + 1}).${offenderHeader}`,
+    ).toBeLessThanOrEqual(state.innerWidth + 1);
+    expect(
+        state.bodyScrollWidth,
+        `${route}: document.body.scrollWidth (${state.bodyScrollWidth}) > window.innerWidth + 1 (${state.innerWidth + 1}).${offenderHeader}`,
+    ).toBeLessThanOrEqual(state.innerWidth + 1);
 }
 
 test.describe('Lista de Deseos de Amigo Responsiva', () => {
@@ -80,7 +168,8 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
     test('debe mostrar la barra lateral integrada en escritorio', async ({ page }) => {
         // Forzar viewport de escritorio
         await page.setViewportSize({ width: 1280, height: 800 });
-        // El layout depende de `useWindowDimensions`; recargamos para que se recalculen los breakpoints.
+        // El layout depende del umbral de breakpoint (`useIsDesktop`, suscrito a `resize`);
+        // recargamos para recalcularlo desde cero.
         await page.reload();
 
         // En desktop, la ficha de perfil lateral debe estar visible.
@@ -93,12 +182,24 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         await page.setViewportSize({ width: 375, height: 667 });
         await page.reload();
 
-        // La barra lateral debería estar oculta en móvil (display: none por Tailwind)
-        await expect(page.locator('aside')).not.toBeVisible();
-
-        // Botón de información del perfil (móvil)
+        // Original intent of the removed `aside` assertion: the desktop branch
+        // of the layout must not render on mobile. It was vacuous — there is no
+        // `<aside>` anywhere in app/ or components/ (the desktop sidebar is a
+        // `w-80` div inside an `isDesktop &&` gate in app/wishlist/[id]/index.tsx),
+        // so `not.toBeVisible()` on a locator with zero matches can never fail.
+        // The intent is asserted for real, without test-only hooks, in two parts:
+        // 1) the mobile-only info button (rendered only when `!isDesktop`) is
+        // present, proving the mobile branch is the one rendered;
+        // 2) the desktop sidebar's content ('Detalles y Tallas', only rendered
+        // by the desktop `w-80` sidebar while the mobile bottom sheet is still
+        // closed here) does not appear at all — falsifiable because if that
+        // branch ever leaked into mobile, this exact line turns the test red.
+        // 3) plus the shared mobile-first check: the route must not scroll
+        // horizontally at this viewport.
         const infoButton = page.getByTestId('wishlist-profile-info-button');
-        await expect(infoButton).toBeVisible();
+        await expect(infoButton).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText('Detalles y Tallas')).toBeHidden();
+        await expectNoHorizontalOverflow(page, '/wishlist/[id] (rama móvil)');
 
         // Abrir el Bottom Sheet
         await infoButton.click({ force: true });

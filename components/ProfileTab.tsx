@@ -122,7 +122,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mi perfil</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">Personaliza cómo te ven los demás</Text>
+                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Personaliza cómo te ven los demás</Text>
                 </View>
             </View>
 
@@ -149,7 +149,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                             <Text style={{ color: 'white', fontSize: 12 }}>🖋️</Text>
                         </View>
                     </Pressable>
-                    <Text className="mt-4 text-[10px] text-on-surface/45 font-sans-bold uppercase tracking-[0.2em]">Avatar personal</Text>
+                    <Text className="mt-4 text-xs text-on-surface/45 font-sans-bold uppercase tracking-[0.2em]">Avatar personal</Text>
                 </View>
 
                 <View className="space-y-6">
@@ -158,6 +158,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                         <TextInput
                             value={displayName}
                             onChangeText={setDisplayName}
+                            style={{ fontSize: 16 }}
                             className="w-full px-6 py-4 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                             placeholder="Tu nombre"
                         />
@@ -175,30 +176,32 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                             value={nameDay}
                             onChange={setNameDay}
                         />
-                        <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mt-2 ml-1">
+                        <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mt-2 ml-1">
                             Solo importan el día y el mes; el año no se tiene en cuenta
                         </Text>
                     </View>
 
                     <View className="pt-8 mt-2 bg-surface-container-low -mx-2 px-2 py-6 rounded-2xl">
-                        <Text className="text-[10px] font-sans-bold text-primary uppercase tracking-[0.3em] mb-6">Tallas y estilo</Text>
+                        <Text className="text-xs font-sans-bold text-primary uppercase tracking-[0.3em] mb-6">Tallas y estilo</Text>
 
                         <View className="flex-row gap-4 mb-4">
                             <View className="flex-1">
-                                <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Camiseta</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Camiseta</Text>
                                 <TextInput
                                     value={shirtSize}
                                     onChangeText={setShirtSize}
                                     placeholder="M, L, XL..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Pantalón</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Pantalón</Text>
                                 <TextInput
                                     value={pantsSize}
                                     onChangeText={setPantsSize}
                                     placeholder="42, 32..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
@@ -206,21 +209,23 @@ export function ProfileTab({ userId }: ProfileTabProps) {
 
                         <View className="flex-row gap-4 mb-4">
                             <View className="flex-1">
-                                <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Zapatos</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Zapatos</Text>
                                 <TextInput
                                     value={shoeSize}
                                     onChangeText={setShoeSize}
                                     placeholder="Ej: 43..."
+                                    style={{ fontSize: 16 }}
                                     className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Color favorito</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Color favorito</Text>
                                 <View className="relative">
                                     <TextInput
                                         value={favoriteColor}
                                         onChangeText={setFavoriteColor}
                                         placeholder="Azul, Rojo..."
+                                        style={{ fontSize: 16 }}
                                         className="w-full px-5 py-3.5 rounded-full bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                     <View
@@ -232,13 +237,14 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                         </View>
 
                         <View>
-                            <Text className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Marcas favoritas</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Marcas favoritas</Text>
                             <TextInput
                                 value={favoriteBrands}
                                 onChangeText={setFavoriteBrands}
                                 placeholder="Ej: Nike, Apple, Levi's..."
                                 multiline
                                 numberOfLines={2}
+                                style={{ fontSize: 16 }}
                                 className="w-full px-5 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                             />
                         </View>
@@ -270,7 +276,12 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             {showAvatarModal && (
                 <View className="absolute inset-0 z-[100] items-center justify-center px-4 bg-black/60" style={Platform.OS === 'web' ? { position: 'fixed' as any } : {}}>
                     <Pressable className="absolute inset-0" onPress={() => setShowAvatarModal(false)} />
-                    <View className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg">
+                    {/* C1: panel con max-h y scroll interno (mismo patrón que los diálogos
+                    de GroupsTab): con el teclado abierto el cierre sigue alcanzable. */}
+                <View
+                    className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg"
+                    style={{ maxHeight: '85dvh' } as any}
+                >
                         <Text className="text-xl font-display text-on-background mb-8 text-center uppercase tracking-widest">
                             Elige tu avatar
                         </Text>

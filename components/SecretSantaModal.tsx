@@ -175,6 +175,13 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                 aria-modal="true"
                 aria-labelledby={titleId}
                 className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                style={{
+                    // Fallback: navegadores sin `dvh` descartan la declaración inline
+                    // y se quedan con el `max-h-[90vh]` de la clase. Mismo patrón que
+                    // `WishDetailModal.tsx`. Cast `as any`: `dvh` no está en
+                    // `DimensionValue` de RN.
+                    maxHeight: '90dvh' as any,
+                }}
             >
                 {/* Header */}
                 <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -213,7 +220,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                     {/* Exclusions Section */}
                     <section>
                         <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center text-[10px]">🚫</span>
+                            <span className="w-5 h-5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center text-xs">🚫</span>
                             Exclusiones (Parejas que no pueden regalarse)
                         </h3>
 
@@ -265,12 +272,12 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                                             <span>{getMemberName(ex.user_a_id)}</span>
                                             <span className="text-zinc-400">no puede regalar a</span>
                                             <span>{getMemberName(ex.user_b_id)}</span>
-                                            <span className="text-[10px] text-zinc-400 italic">(y viceversa)</span>
+                                            <span className="text-xs text-zinc-400 italic">(y viceversa)</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveExclusion(ex.id)}
-                                            className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                            className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                             aria-label={`Eliminar exclusión entre ${getMemberName(ex.user_a_id)} y ${getMemberName(ex.user_b_id)}`}
                                         >
                                             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>

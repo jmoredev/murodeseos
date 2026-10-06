@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, Pressable, TextInput, ActivityIndicator, Platform } from 'react-native'
 import { Link, useRouter } from "expo-router"
 import { supabase } from '@/lib/supabase'
+import { useIsDesktop } from '@/lib/use-is-desktop'
 import { GroupCard, Group } from '@/components/GroupCard'
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils'
 import { getUserAliases, setUserAlias } from '@/lib/aliases'
@@ -14,6 +15,9 @@ export interface GroupsTabProps {
 
 export function GroupsTab({ userId }: GroupsTabProps) {
     const router = useRouter();
+    // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
+    // número de columnas de la rejilla de grupos más abajo.
+    const isDesktop = useIsDesktop();
     const [groups, setGroups] = useState<Group[]>([])
     // Para qué usuario están cargados los datos. El estado de carga se deriva de ahí, así que
     // al cambiar de usuario vuelve a encenderse solo, sin fijarlo desde el efecto.
@@ -325,7 +329,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             <View className="flex-row justify-between items-end mb-10 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mis grupos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">Gestiona tus intercambios</Text>
+                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
@@ -350,7 +354,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 {groups.length > 0 ? (
                     <View className="flex-row flex-wrap -m-3 items-stretch">
                         {groups.map(group => (
-                            <View key={group.id} className="w-full md:w-1/2 lg:w-1/3 p-3 flex">
+                            <View key={group.id} className={`${isDesktop ? 'w-1/3' : 'w-full'} p-3 flex`}>
                                 <GroupCard
                                     group={group}
                                     isAdmin={userRoles.get(group.id) === 'admin'}
@@ -399,7 +403,14 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={closeShareModal} />
-                    <View className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg">
+                    {/* C1: max-h con scroll interno — con el teclado abierto los botones
+                        siguen alcanzables (el foco desplaza el scroll hasta el campo). La
+                        clase conserva el fallback `vh` y el override inline usa `dvh`, el
+                        patrón de la Unidad A4 (WishListTab/WishDetailModal). */}
+                    <View
+                        className="w-full max-w-sm max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-8 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <View className="items-center mb-8">
                             <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center mb-4">
                                 <Text style={{ fontSize: 32 }}>↗</Text>
@@ -414,10 +425,14 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             onPress={copyToClipboard}
                             className="bg-surface-container-low rounded-3xl p-6 mb-8 items-center justify-center active:opacity-90"
                         >
-                            <Text className="text-4xl font-mono font-sans-bold text-on-background tracking-widest uppercase">
+                            {/* C2: abajo de `md` el código baja de tamaño y usa `break-all`
+                                con tracking reducido: un UUID de 36 caracteres no parte el
+                                panel en 3–4 líneas a text-4xl tracking-widest. Escritorio
+                                igual que siempre. */}
+                            <Text className="text-xl md:text-4xl font-mono font-sans-bold text-on-background tracking-wider md:tracking-widest uppercase break-all">
                                 {selectedGroupId}
                             </Text>
-                            <Text className="text-[10px] font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
                         </Pressable>
 
                         <PrimaryButton
@@ -449,13 +464,18 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={() => setRenameModalOpen(false)} />
-                    <View className="w-full max-w-md bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg">
+                    {/* C1: mismo patrón max-h/scroll que el diálogo de compartir. */}
+                    <View
+                        className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <Text className="text-xl font-display text-on-background mb-4">Cambiar nombre del grupo</Text>
                         <TextInput
                             value={newName}
                             onChangeText={setNewName}
                             accessibilityLabel="Nuevo nombre del grupo"
                             className="w-full px-4 py-3 rounded-full bg-surface-container-highest text-on-background font-sans-semibold mb-6"
+                            style={{ fontSize: 16 }}
                             placeholder="Nuevo nombre"
                             autoFocus
                         />
@@ -484,7 +504,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     accessibilityViewIsModal
                 >
                     <Pressable className="absolute inset-0" onPress={() => setDeleteModalOpen(false)} />
-                    <View className="w-full max-w-md bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg">
+                    {/* C1: mismo patrón max-h/scroll que el diálogo de compartir. */}
+                    <View
+                        className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-surface-container-lowest rounded-3xl p-6 shadow-ambient-lg"
+                        style={{ maxHeight: '85dvh' } as any}
+                    >
                         <View className="w-12 h-12 rounded-full bg-primary/12 items-center justify-center mb-4">
                             <Text style={{ fontSize: 24 }}>🗑</Text>
                         </View>
