@@ -152,7 +152,7 @@ export default function GroupDetailsPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 {group?.name}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Detalles del grupo
                             </Text>
                         </View>
@@ -195,7 +195,7 @@ export default function GroupDetailsPage() {
                         <View className="mt-3 gap-2">
                             <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
                                 <Text
-                                    className="text-[10px] font-sans-bold text-on-surface/55 uppercase tracking-widest"
+                                    className="text-xs font-sans-bold text-on-surface/55 uppercase tracking-widest"
                                     numberOfLines={1}
                                     ellipsizeMode="middle"
                                 >
@@ -247,7 +247,7 @@ export default function GroupDetailsPage() {
                                         </View>
                                         {member.role === 'admin' && (
                                             <View className="absolute top-0 right-0 bg-secondary rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
-                                                <Text className="text-[8px] font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
+                                                <Text className="text-xs font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
                                             </View>
                                         )}
                                     </View>
@@ -255,7 +255,7 @@ export default function GroupDetailsPage() {
                                         {member.profiles?.display_name || 'Usuario'}
                                         {member.user_id === user?.id && <Text className="text-primary"> (Tú)</Text>}
                                     </Text>
-                                    <Text className="text-center text-[10px] text-on-surface/45 font-sans-bold uppercase tracking-tighter">
+                                    <Text className="text-center text-xs text-on-surface/45 font-sans-bold uppercase tracking-tighter">
                                         Ver deseos ›
                                     </Text>
                                 </Pressable>

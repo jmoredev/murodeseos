@@ -72,7 +72,7 @@ export function RevealModal({ isOpen, onClose, groupName, receiverName, receiver
                 </p>
 
                 <div className="w-full bg-surface-container-low rounded-2xl p-6 flex flex-col items-center mb-8">
-                    <p className="text-[10px] font-sans-bold text-on-surface/45 uppercase tracking-widest mb-4">Te ha tocado regalar a:</p>
+                    <p className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-4">Te ha tocado regalar a:</p>
 
                     <div className="w-24 h-24 rounded-full bg-surface-container-lowest ring-2 ring-primary/25 shadow-ambient flex items-center justify-center mb-4 overflow-hidden">
                         {receiverAvatar && receiverAvatar.startsWith('http') ? (
@@ -97,7 +97,7 @@ export function RevealModal({ isOpen, onClose, groupName, receiverName, receiver
                     ¡Entendido!
                 </button>
 
-                <p className="mt-4 text-[10px] text-on-surface/45 text-center font-sans">
+                <p className="mt-4 text-xs text-on-surface/45 text-center font-sans">
                     Podrás volver a consultar este resultado en el detalle del grupo.
                 </p>
             </div>

@@ -87,12 +87,16 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         <div
             className={`fixed left-1/2 -translate-x-1/2 z-[10000] transition-all duration-300 transform pointer-events-none ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
             style={{
-                // El dock (bottom 16px + inset) deja su borde superior en ~85px + inset,
-                // medido desde sus clases (px-2 py-2 + etiqueta de 10px): es una estimación,
-                // no una medición — revisar el número si cambia el padding o el tamaño
-                // de etiqueta del dock. 6.5rem + inset despeja con ~19px de aire.
+                // El dock (bottom 16px + inset) mide `54 + labelLineBox` px de alto, deducido
+                // de sus clases (px-2 py-2 + etiqueta text-xs con line-height 1rem): su borde
+                // superior queda en `70 + L` px + inset, con L la caja de línea de la etiqueta.
+                // Es una estimación aritmética, no una medición — revisar el número si cambia
+                // el padding o el tamaño de etiqueta del dock. Con el offset a 6.75rem (108px)
+                // el aire es `38 − L` px: 22px con L = 16px, y sigue ≥19px en todo el rango
+                // plausible de crecimiento de la etiqueta. (El 6.5rem anterior daba 15–18px,
+                // por debajo del aire previsto cuando la etiqueta pasó de 10px a 12px.)
                 // En escritorio: 24px, idéntico al `bottom-6` de antes.
-                bottom: width > 768 ? 24 : 'calc(6.5rem + env(safe-area-inset-bottom))',
+                bottom: width > 768 ? 24 : 'calc(6.75rem + env(safe-area-inset-bottom))',
             }}
         >
             <div

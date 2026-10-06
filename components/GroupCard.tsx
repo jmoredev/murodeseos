@@ -344,13 +344,13 @@ export const GroupCard = memo(function GroupCard({
                                         {member.name}
                                     </Text>
                                     {member.originalName && (
-                                        <Text className="ml-2 text-[10px] text-on-surface/45 italic">
+                                        <Text className="ml-2 text-xs text-on-surface/45 italic">
                                             ({member.originalName})
                                         </Text>
                                     )}
                                     {onMemberEdit && (
                                         <Pressable onPress={stopAnd(() => startEditing(member))} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                            <Text className="text-on-surface/35 text-[10px]">✎</Text>
+                                            <Text className="text-on-surface/35 text-xs">✎</Text>
                                         </Pressable>
                                     )}
                                 </View>

@@ -176,7 +176,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>🎁</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Deseos
                                 </Text>
@@ -193,7 +193,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>👥</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Grupos
                                 </Text>
@@ -210,7 +210,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <Text style={emojiInCircle(20)}>👤</Text>
                                 <Text
-                                    className={`text-[10px] mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
                                 >
                                     Perfil
                                 </Text>

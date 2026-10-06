@@ -106,7 +106,7 @@ export default function ProfileSetupPage() {
                             placeholderTextColor="#4c212b88"
                             className="bg-surface-container-highest p-4 rounded-full text-on-background text-lg font-sans"
                         />
-                        <Text className="text-[10px] text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
+                        <Text className="text-xs text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
                             Mínimo 3 caracteres
                         </Text>
                     </View>
@@ -123,7 +123,7 @@ export default function ProfileSetupPage() {
                             value={nameDay}
                             onChange={setNameDay}
                         />
-                        <Text className="text-[10px] text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
+                        <Text className="text-xs text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
                             Solo importan el día y el mes; el año no se tiene en cuenta
                         </Text>
                     </View>

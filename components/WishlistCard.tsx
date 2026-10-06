@@ -105,7 +105,7 @@ export function WishlistCard({
                     <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
                         <View className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface-container-lowest/92 shadow-ambient backdrop-blur-md ring-1 ring-outline-variant/15">
                             <View className={`w-1.5 h-1.5 rounded-full shrink-0 ${priorityAccent[item.priority]}`} />
-                            <Text className="text-[11px] uppercase tracking-wider text-on-background font-sans-bold">
+                            <Text className="text-xs uppercase tracking-wider text-on-background font-sans-bold">
                                 Prioridad {priorityLabels[item.priority]}
                             </Text>
                         </View>
@@ -124,7 +124,7 @@ export function WishlistCard({
                     {isReservedByMe ? (
                         <View className="absolute top-3 left-3">
                             <View className="bg-tertiary px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
-                                <Text className="text-surface-container-lowest text-[10px] font-sans-bold uppercase tracking-widest">
+                                <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
                                     ✓ Reservado por ti
                                 </Text>
                             </View>
@@ -177,7 +177,7 @@ export function WishlistCard({
                     accessibilityLabel="Marcar como ya lo tengo"
                     className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
-                    <Text className="text-[10px] font-sans-bold text-tertiary uppercase tracking-[0.2em]">
+                    <Text className="text-xs font-sans-bold text-tertiary uppercase tracking-[0.2em]">
                         ✓ Ya lo tengo
                     </Text>
                 </Pressable>
@@ -204,7 +204,7 @@ export function WishlistCard({
                             accessibilityLabel="Cancelar reserva"
                             className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                         >
-                            <Text className="text-on-surface/55 font-sans-bold text-[10px] uppercase tracking-widest">
+                            <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
                                 Cancelar reserva
                             </Text>
                         </Pressable>
@@ -212,7 +212,7 @@ export function WishlistCard({
 
                     {isReservedByOther ? (
                         <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                            <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                            <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
                                 No disponible
                             </Text>
                         </View>

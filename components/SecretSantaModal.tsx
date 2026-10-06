@@ -220,7 +220,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                     {/* Exclusions Section */}
                     <section>
                         <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center text-[10px]">🚫</span>
+                            <span className="w-5 h-5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center text-xs">🚫</span>
                             Exclusiones (Parejas que no pueden regalarse)
                         </h3>
 
@@ -272,7 +272,7 @@ export function SecretSantaModal({ isOpen, onClose, group, adminId, isDrawActive
                                             <span>{getMemberName(ex.user_a_id)}</span>
                                             <span className="text-zinc-400">no puede regalar a</span>
                                             <span>{getMemberName(ex.user_b_id)}</span>
-                                            <span className="text-[10px] text-zinc-400 italic">(y viceversa)</span>
+                                            <span className="text-xs text-zinc-400 italic">(y viceversa)</span>
                                         </div>
                                         <button
                                             type="button"

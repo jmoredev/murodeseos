@@ -161,7 +161,7 @@ export function WishDetailModal({
                                 accessibilityLabel="Cancelar reserva"
                                 className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                             >
-                                <Text className="text-on-surface/55 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
                                     Cancelar reserva
                                 </Text>
                             </Pressable>
@@ -169,7 +169,7 @@ export function WishDetailModal({
 
                         {isReservedByOther ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
                                     Reservado por otro usuario
                                 </Text>
                             </View>
@@ -177,7 +177,7 @@ export function WishDetailModal({
 
                         {reservationState === 'unknown' ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-[10px] uppercase tracking-widest">
+                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
                                     Estado de reserva no disponible
                                 </Text>
                             </View>

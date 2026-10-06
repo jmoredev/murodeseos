@@ -112,19 +112,19 @@ export function UserProfileModal({ isOpen, onClose, profile }: UserProfileModalP
                                         <div className="grid grid-cols-3 gap-3">
                                             {profile.shirt_size && (
                                                 <div className="p-3 bg-surface-container-low rounded-xl">
-                                                    <p className="text-[10px] text-on-surface/45 mb-1 font-sans">Camiseta</p>
+                                                    <p className="text-xs text-on-surface/45 mb-1 font-sans">Camiseta</p>
                                                     <p className="font-sans-bold text-on-background uppercase">{profile.shirt_size}</p>
                                                 </div>
                                             )}
                                             {profile.pants_size && (
                                                 <div className="p-3 bg-surface-container-low rounded-xl">
-                                                    <p className="text-[10px] text-on-surface/45 mb-1 font-sans">Pantalón</p>
+                                                    <p className="text-xs text-on-surface/45 mb-1 font-sans">Pantalón</p>
                                                     <p className="font-sans-bold text-on-background uppercase">{profile.pants_size}</p>
                                                 </div>
                                             )}
                                             {profile.shoe_size && (
                                                 <div className="p-3 bg-surface-container-low rounded-xl">
-                                                    <p className="text-[10px] text-on-surface/45 mb-1 font-sans">Calzado</p>
+                                                    <p className="text-xs text-on-surface/45 mb-1 font-sans">Calzado</p>
                                                     <p className="font-sans-bold text-on-background uppercase">{profile.shoe_size}</p>
                                                 </div>
                                             )}

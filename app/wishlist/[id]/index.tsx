@@ -174,7 +174,7 @@ export default function UserWishlistPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">
+                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Wishlist pública
                             </Text>
                         </View>

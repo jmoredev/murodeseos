@@ -293,7 +293,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
+                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
                 <PrimaryButton
                     onPress={() => openForm()}
@@ -330,7 +330,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             className={`px-2 py-2.5 rounded-full items-center justify-center ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
                         >
                             <Text
-                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-[10px] tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
+                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
                                 numberOfLines={1}
                             >
                                 {isDesktop
@@ -515,7 +515,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                                 className={`flex-1 min-w-0 py-3 rounded-xl items-center justify-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                             >
                                                 <Text
-                                                    className={`text-[10px] font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
+                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
                                                     numberOfLines={1}
                                                 >
                                                     {p.label}

@@ -325,7 +325,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             <View className="flex-row justify-between items-end mb-10 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mis grupos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-[10px] tracking-widest mt-2">Gestiona tus intercambios</Text>
+                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
@@ -428,7 +428,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text className="text-xl md:text-4xl font-mono font-sans-bold text-on-background tracking-wider md:tracking-widest uppercase break-all">
                                 {selectedGroupId}
                             </Text>
-                            <Text className="text-[10px] font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
                         </Pressable>
 
                         <PrimaryButton
