@@ -5,7 +5,7 @@ import { supabaseAdmin } from './supabase-admin';
 
 // En local el correo lo captura Mailpit (el contenedor se sigue llamando
 // `inbucket`, pero el servicio es Mailpit desde hace varias versiones del CLI).
-const MAILPIT_URL = process.env.E2E_MAILPIT_URL || 'http://127.0.0.1:54324';
+const MAILPIT_URL = process.env.E2E_MAILPIT_URL || 'http://127.0.0.1:54524';
 
 /** Último mensaje de un buzón, como identificador para detectar el nuevo. */
 async function latestMessageId(request: any, address: string): Promise<string> {
