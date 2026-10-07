@@ -105,7 +105,7 @@ export default function GroupDetailsPage() {
         return (
             <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
-                <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
+                <Text className="text-2xl font-display text-on-background mb-2">No se pudo cargar el grupo</Text>
                 <Text className="text-on-surface/70 text-center font-sans-medium mb-8">{error}</Text>
                 <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
                     Volver al inicio

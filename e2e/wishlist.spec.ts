@@ -72,7 +72,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
 
         await page.getByPlaceholder('¿Qué deseas?').fill(testItem.title);
-        await page.getByPlaceholder('0.00').fill(testItem.price);
+        await page.getByPlaceholder('0,00').fill(testItem.price);
         await page.getByPlaceholder('https://tienda.com/articulo').fill(testItem.link);
         await page.getByPlaceholder('Talla, color, detalles...').fill(testItem.notes);
         await page.getByPlaceholder('URL de la foto (opcional)').fill(testItem.imageUrl);
@@ -95,14 +95,16 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // Verificar que aparece en la lista (anclado por título único)
         const title1 = page.getByText(testItem.title, { exact: true }).first();
         await expect(title1).toBeVisible();
-        await expect(page.getByText(`${testItem.price} €`).first()).toBeVisible();
+        // El precio se guarda como texto `10.00` pero la app lo pinta con coma
+        // decimal (`10,00 €`): `lib/format-price.ts`, formato español.
+        await expect(page.getByText(`${testItem.price.replace('.', ',')} €`).first()).toBeVisible();
         await expect(page.getByText(/Prioridad Alta/i).first()).toBeVisible();
         await expect(page.getByRole('link', { name: /example\.com/i }).first()).toBeVisible();
 
         // --- 2. Crear Segundo Item (para probar ordenación) ---
         await page.getByLabel('Nuevo deseo').click();
         await page.getByPlaceholder('¿Qué deseas?').fill(anotherItem.title);
-        await page.getByPlaceholder('0.00').fill(anotherItem.price);
+        await page.getByPlaceholder('0,00').fill(anotherItem.price);
         await page.getByText(anotherItem.priority, { exact: true }).first().click();
 
         const responsePromise2 = page.waitForResponse(r =>

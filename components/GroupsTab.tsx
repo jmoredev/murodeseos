@@ -7,6 +7,7 @@ import { GroupCard, Group } from '@/components/GroupCard'
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils'
 import { getUserAliases, setUserAlias } from '@/lib/aliases'
 import { getSiteBaseUrl } from '@/lib/site-url'
+import { useToast } from '@/components/Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface GroupsTabProps {
@@ -34,6 +35,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [groupToDelete, setGroupToDelete] = useState<{ id: string, name: string } | null>(null);
     const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+    const { showToast, ToastComponent } = useToast();
 
     // Almacenamos aliases localmente para refresco rápido
     const [aliases, setAliases] = useState<Record<string, string>>({});
@@ -176,7 +178,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         if (selectedGroupId && Platform.OS === 'web') {
             try {
                 await navigator.clipboard.writeText(selectedGroupId);
-                alert('¡Código copiado al portapapeles!');
+                showToast('Código copiado al portapapeles');
             } catch (err) {
                 console.error('Failed to copy', err);
             }
@@ -219,7 +221,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             setGroupToRename(null);
         } catch (error) {
             console.error('Error renaming group:', error);
-            alert('Error al renombrar el grupo');
+            showToast('No se pudo renombrar el grupo', 'error');
         }
     };
 
@@ -240,7 +242,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             setGroupToDelete(null);
         } catch (error) {
             console.error('Error deleting group:', error);
-            alert('Error al eliminar el grupo');
+            showToast('No se pudo eliminar el grupo', 'error');
         }
     };
 
@@ -540,6 +542,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     </View>
                 </View>
             ) : null}
+            {ToastComponent}
         </View>
     );
 }

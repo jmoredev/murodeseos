@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
+import { formatPrice } from '@/lib/format-price';
 import { ReservationState } from '@/lib/wish-reservation';
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -51,6 +52,8 @@ export function WishlistCard({
     const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
     const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
     const isAvailable = !isOwner && reservationState === 'available';
+    const a11yPriceText = formatPrice(item.price);
+    const priceText = a11yPriceText ? `${a11yPriceText} €` : null;
 
     const a11yReservation = isOwner
         ? undefined
@@ -62,7 +65,7 @@ export function WishlistCard({
               ? 'Estado de reserva no disponible'
               : 'Disponible';
 
-    const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
+    const a11yPrice = a11yPriceText ?? 'Sin precio';
 
     const handleOpenDetail = () => {
         if (onClick) onClick(item);
@@ -163,7 +166,7 @@ export function WishlistCard({
                                 numberOfLines={1}
                                 className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}
                             >
-                                {item.price ? `${item.price} €` : 'Sin precio'}
+                                {priceText ?? 'Sin precio'}
                             </Text>
                         </View>
 

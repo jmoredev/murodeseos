@@ -1,6 +1,6 @@
 # Pulido de interfaz: contraste, semántica de color, truncamientos y cromo (`fix/ui-polish`)
 
-**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1, U2 y U3 cerradas; pendientes U4–U7
+**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U4 cerradas; pendientes U5, U6 y U7
 
 ## Objetivo
 
@@ -92,7 +92,7 @@ Distinción importante, verificada en el código:
 | U1 | Contraste: llevar todo el texto informativo a ≥4,5:1. Subir los usos de `text-on-surface/NN` por debajo del umbral a `/70` | **hecha** — **89 usos** subidos a `/70` en **22 ficheros**; `tailwind.config.cjs` intacto y ningún otro cambio en el diff (verificado: `git diff` filtrado no devuelve ni una línea que no sea `text-on-surface/NN`). Cuatro usos (`/20` ×2, `/30` ×2) se subieron también en lugar de eximirse: los dos placeholders 🎁 son emoji, y en un emoji la propiedad `color` no pinta nada, así que la clase era inerte; el chevron `›` y la inicial de reserva del avatar simplemente se leen mejor al suelo |
 | U2 | **Guardián de contraste**: función pura `contrastRatio`/`minAlphaFor` que **calcule** el umbral a partir de los tokens reales, y escáner de fuentes con guarda de no-vacuidad | **hecha** — `__tests__/contrast-floor.test.ts` (9 tests). Deriva el suelo **de `tailwind.config.cjs`**, no de constantes: barre los seis tokens de superficie, se queda con el que más exige y concluye `/70` (el que manda es `surface-container-highest` `#ecd8e0`, el relleno de inputs, el más oscuro de la familia). Se prueba a sí mismo con un control negativo (`/65` falla, `/66` pasa, `/45` falla) y lleva dos guardas de no-vacuidad (ficheros > 20 y usos vistos > 80) |
 | U3 | Truncamientos y CTA: títulos de deseos legibles a 360px y «✓ Ya lo tengo» sin partirse en dos líneas | **hecha** — dos cambios en `components/WishlistCard.tsx`: el título pasa de `numberOfLines={2}` a `{3}` (a 360px la tarjeta da ~116px de texto y un título real necesita 3 líneas: `scrollHeight 60 / clientHeight 40` medidos), y el CTA baja su `tracking-[0.2em]` a `[0.05em]` — ese tracking sumaba ~31px sobre 13 caracteres y era la causa del corte, no el texto. Resultado medido en los **5 usuarios sembrados**: ningún título recortado (incluido «Auriculares Sony WH-1000XM5», el que acreditó el defecto, ahora en 3 líneas completas) y el CTA en **una sola línea** (`103×16`, antes `116×32`) con objetivo táctil de 44px intacto |
-| U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | pendiente |
+| U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | **hecha** — (1) **copy directo en 7 sitios**: `'Oops!'` era el título de la pantalla 404, `'¡Vaya!'` el encabezado de error de dos pantallas, y cuatro mensajes de éxito llevaban exclamación. (2) **Los tres `alert()` de navegador de `GroupsTab`** (bloqueantes, en una PWA) pasan al brindis de la casa; `ToastComponent` **no estaba montado** y ahora sí. (3) **`lib/format-price.ts`** nuevo: `formatPrice` **no destructivo** —lo que no entiende lo devuelve verbatim— y `parsePriceForSort`, que **cierra un defecto real**: `parseFloat('349,00')` devolvía `349` soltando los decimales en silencio y un valor no numérico producía `NaN` en el comparador (orden indefinido). Placeholder `0,00`. (4) El **clamp de notas no se tocó**: el seed inserta `notes: ''`, así que no hay nada que recortar — hallazgo de datos, no visual |
 | U5 | Semántica de color: separar los dos tokens sobrecargados en tokens con un significado único, sin cambiar los colores | pendiente |
 | U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | pendiente |
 | U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | pendiente |
@@ -117,7 +117,24 @@ Distinción importante, verificada en el código:
 ## Commits
 
 - **`78a29be`** — `fix(a11y): bring secondary text up to WCAG AA and guard the floor` (U1+U2): 89 usos a `/70` en 22 ficheros + `__tests__/contrast-floor.test.ts`.
-- _(U3, pendiente de commit)_ — `components/WishlistCard.tsx`: límite de líneas del título y tracking del CTA.
+- **`7ac4094`** — `fix(mobile): stop cutting wish titles and wrapping the card CTA` (U3).
+- _(U4, pendiente de commit)_ — copy, brindis de `GroupsTab`, `lib/format-price.ts`, orden por precio y tres specs E2E.
+
+## Verificación de U4 (2026-10-07)
+
+**En navegador (medido por el orquestador, no por el writer):**
+- **Precio con coma**: los precios del usuario `ana` se pintan `["349,00 €","349,00 €","120,00 €"]` — ninguno en formato inglés.
+- **El brindis se ve de verdad** al copiar el código del grupo, y está en la capa **z=10000**, por encima de los 9999 con los que react-native-web monta sus modales. Sin montar el `ToastComponent` no se habría visto nada.
+
+**Y un fallo que fue del orquestador, no del writer:** la primera corrida de la suite dio **7 fallos** (línea base 51 passed / 1 skipped). Causa: **no incluí `e2e/` en las superficies del writer**, así que cuatro puntos de los specs seguían esperando el texto viejo — el placeholder `'0.00'` en `wishlist.spec.ts` (dos veces), la aserción del precio mostrado en el mismo spec, `'¡Regalo reservado!'` en `notification-reservation.spec.ts` y `'¡Perfil actualizado!'` en `profile.spec.ts` (dos veces). Corregidos → **51 passed / 1 skipped**, línea base restaurada.
+
+**Lección**: al cambiar una cadena visible o un placeholder, los specs E2E que la usan **son parte del cambio**. El writer no podía verlo (le pedí explícitamente no correr el E2E para no cargarlo), así que la omisión fue mía al definir la superficie.
+
+**Estado estático y de suite**: `typecheck` y `lint` limpios; `test:unit` **29 ficheros / 232 passed + 1 todo** (antes 28/221; el fichero y sus 11 tests son del formateador).
+
+**Dos ediciones del writer fuera de su superficie**, ambas necesarias y declaradas por él: `__tests__/WishListTab.test.tsx:116` (la consulta del placeholder) y el stub muerto `global.alert = vi.fn()` en `__tests__/GroupsTab.test.tsx:370`, que ya no se usa porque `GroupsTab` no llama a `alert`.
+
+**Sobre el hallazgo R3-003 de la revisión (clamp de notas)**: no se cambió porque el seed inserta `notes: ''` en todos los items (`scripts/seed-complete-database.ts:246,272`), así que no hay notas que renderizar ni recortar. Es un hallazgo **de datos**, no visual: con notas reales de más de dos líneas volvería a plantearse.
 
 ## Verificación de U3 (2026-10-07)
 

@@ -367,7 +367,6 @@ describe('GroupsTab', () => {
                 writable: true,
                 configurable: true
             })
-            global.alert = vi.fn()
 
             render(<GroupsTab userId={mockUserId} />)
 

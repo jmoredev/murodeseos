@@ -15,6 +15,7 @@ import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
+import { parsePriceForSort } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface WishListTabProps {
@@ -113,8 +114,11 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
         } else if (sortBy === 'price') {
-            const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
-            const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
+            // El campo es texto libre: se normaliza la coma decimal (parseFloat la
+            // trunca: «349,00» → 349) y los no numéricos reciben una clave estable
+            // (∞) para que el comparador nunca devuelva NaN.
+            const priceA = parsePriceForSort(a.price) ?? Number.POSITIVE_INFINITY;
+            const priceB = parsePriceForSort(b.price) ?? Number.POSITIVE_INFINITY;
             return priceA - priceB;
         } else {
             const priorityValues = { high: 3, medium: 2, low: 1 };
@@ -495,7 +499,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     <TextInput
                                         value={formData.price?.toString() || ''}
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
-                                        placeholder="0.00"
+                                        placeholder="0,00"
                                         keyboardType="numeric"
                                         style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"

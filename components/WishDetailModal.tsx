@@ -13,6 +13,7 @@ import { useIsDesktop } from '@/lib/use-is-desktop';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
+import { formatPrice } from '@/lib/format-price';
 
 interface WishDetailModalProps {
     visible: boolean;
@@ -110,7 +111,7 @@ export function WishDetailModal({
                     </View>
                     <View className={`px-4 py-2 rounded-full ${item.price ? 'bg-secondary/12' : 'bg-surface-container-low'}`}>
                         <Text className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}>
-                            {item.price ? `${item.price} €` : 'Sin precio'}
+                            {formatPrice(item.price) ? `${formatPrice(item.price)} €` : 'Sin precio'}
                         </Text>
                     </View>
                 </View>

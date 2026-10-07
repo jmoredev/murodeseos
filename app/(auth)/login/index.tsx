@@ -18,7 +18,7 @@ export default function LoginPage() {
     const [dismissedWelcome, setDismissedWelcome] = useState(false);
     const successMessage =
         !dismissedWelcome && params.registered === 'true'
-            ? '¡Cuenta creada exitosamente! Por favor, inicia sesión.'
+            ? 'Cuenta creada. Inicia sesión.'
             : '';
     const [emailError, setEmailError] = useState('');
     const [showRecovery, setShowRecovery] = useState(false);
