@@ -27,8 +27,20 @@ comment on column public.wishlist_items.price_numeric is
     'renombra a `price` en el paso 2, después de revisar qué filas no parsearon. '
     'Ver odd/tasks/price-numeric.md.';
 
+-- El patrón por sí solo NO basta, y esto lo encontró el refutador de la revisión
+-- nativa: acepta números de magnitud arbitraria, pero `price_numeric` es
+-- `numeric(12, 2)` — 10 dígitos enteros como máximo. Un valor como
+-- `9999999999.995` casa el patrón, pasa el `::numeric` (que no tiene límite) y
+-- **falla al asignar** con `22003 numeric field overflow`. Con la migración en
+-- una sola transacción, el UPDATE no rellena nada y el paso 1 aborta entero:
+-- justo lo contrario de degradar y dejar la fila para revisión.
+-- Por eso la magnitud se acota ANTES de convertir: fuera de rango queda NULL y
+-- el texto original se conserva, que es el contrato de este paso.
 update public.wishlist_items
-   set price_numeric = replace(btrim(price), ',', '.')::numeric
+   set price_numeric = case
+         when (replace(btrim(price), ',', '.')::numeric) <= 9999999999.99
+           then (replace(btrim(price), ',', '.')::numeric)::numeric(12, 2)
+       end
  where price_numeric is null
    -- `btrim` TAMBIÉN en el predicado: sin él, un valor con espacios alrededor
    -- («  7.5  ») no casaba el patrón anclado y quedaba en NULL aunque el cast
