@@ -8,7 +8,6 @@ import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { useToast } from '@/components/Toast';
 import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
 
 function isHttpUrl(value: string | undefined | null): boolean {
@@ -25,12 +24,10 @@ export default function GroupDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     // Identidad estable: el modal la usa como dependencia de su efecto de foco y
     // de Escape, y una función en línea la haría reejecutar en cada render.
     const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
-    const { showToast, ToastComponent } = useToast();
     const isDesktop = useIsDesktop();
 
     useEffect(() => {
@@ -84,10 +81,6 @@ export default function GroupDetailsPage() {
                     }));
 
                     setMembers(enrichedMembers);
-
-                    // Verificar si es admin
-                    const userMember = enrichedMembers.find(m => m.user_id === currentUser?.id);
-                    setIsAdmin(userMember?.role === 'admin');
                 } else {
                     setMembers([]);
                 }
@@ -264,23 +257,6 @@ export default function GroupDetailsPage() {
                     </View>
                 </View>
 
-                {/* Admin Actions */}
-                {isAdmin && (
-                    <View className="mt-12 p-6 bg-surface-container-low rounded-3xl shadow-ambient">
-                        <Text className="text-xs font-sans-bold text-primary uppercase tracking-widest mb-4 text-center">
-                            Zona de administrador
-                        </Text>
-                        <PrimaryButton
-                            onPress={() => {
-                                showToast('La función de Amigo Invisible estará disponible pronto.', 'info');
-                            }}
-                            textClassName="text-on-primary font-sans-bold text-lg"
-                            accessibilityLabel="Sortear amigo invisible"
-                        >
-                            Sortear Amigo Invisible
-                        </PrimaryButton>
-                    </View>
-                )}
             </View>
 
             <GroupNotificationSettingsModal
@@ -291,7 +267,6 @@ export default function GroupDetailsPage() {
                 groupId={groupId}
                 groupName={group?.name ?? ''}
             />
-            {ToastComponent}
         </ResponsiveLayout>
     );
 }
