@@ -13,12 +13,13 @@ const FLOOR_PX = 12;
  * token citado en un comentario explicativo (p. ej. «antes usábamos
  * text-[8px]») no dispare un falso positivo.
  *
- * Limitación conocida: no entiende literales de cadena. Un `//` dentro de una
- * cadena (una URL, un esquema) trunca el resto de su línea, y un `/*` dentro
- * de una cadena abre un bloque hasta el siguiente `*\/`. Es inofensivo para
- * este chequeo: el escáner solo busca los tokens `text-[Npx]` y `fontSize: N`,
- * y truncar o unir trozos de una línea que no los contiene no puede
- * fabricarlos con un valor numérico falso.
+ * Limitación conocida, en dirección de falsos NEGATIVOS: no entiende
+ * literales de cadena. Un `//` dentro de una cadena (una URL, un esquema)
+ * trunca el resto de su línea, y un `/*` dentro de una cadena abre un bloque
+ * hasta el siguiente `*\/`: un `text-[10px]` genuino situado en esa línea o
+ * dentro de ese bloque NO se reporta. El riesgo no es fabricar un falso
+ * positivo — truncar no puede inventar un token —, sino que un sub-suelo real
+ * pase desapercibido. Es un punto ciego documentado, no una cobertura.
  */
 export function stripComments(source: string): string {
   return source
@@ -101,6 +102,16 @@ describe('suelo tipográfico de 12px', () => {
       '// legado: esto era text-[8px] antes del suelo',
       '/* y esto otro text-[11px] en un bloque */',
     ].join('\n');
+
+    expect(findSubFloorTextSizes(source)).toEqual([]);
+  });
+
+  it('punto ciego documentado: un `//` dentro de una cadena oculta un token real posterior en su línea', () => {
+    // Punto ciego conocido, NO conducta deseada: `stripComments` no entiende
+    // literales de cadena, así que el `//` de la URL trunca el resto de la
+    // línea y el `text-[10px]` genuino que la sigue nunca se reporta. El test
+    // documenta la limitación; no la aprueba.
+    const source = "const u = 'https://x'; const c = 'text-[10px]';";
 
     expect(findSubFloorTextSizes(source)).toEqual([]);
   });

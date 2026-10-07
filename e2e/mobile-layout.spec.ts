@@ -670,7 +670,7 @@ test.describe('Diseño móvil a 360px', () => {
         test.skip(!test.info().project.use?.hasTouch, 'Solo tiene sentido en proyectos táctiles (hasTouch).');
 
         const offenders: string[] = [];
-        for (const route of ['/' as const]) {
+        for (const route of ['/', '/?tab=groups'] as const) {
             await waitAppShellLoaded(page, route);
             const boxes = await getInteractiveBoxes(page);
             // Anti-vacuity guard: if the scanner found nothing the route is

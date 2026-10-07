@@ -22,6 +22,9 @@ import { useSyncExternalStore } from 'react';
 type OnStoreChange = () => void;
 
 function subscribe(onStoreChange: OnStoreChange) {
+    // React nunca llama a `subscribe` durante SSR, pero cerramos la asimetría
+    // con `getClientSnapshot` a propósito.
+    if (typeof window === 'undefined') return () => {};
     window.addEventListener('resize', onStoreChange);
     window.addEventListener('orientationchange', onStoreChange);
     return () => {

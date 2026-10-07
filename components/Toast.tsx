@@ -81,9 +81,9 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         // queda encima de los pies de los modales (botones de acción en centro
         // inferior). `pointer-events-none` en el posicionador y en la burbuja
         // concentra los toques solo en el botón de cerrar (`pointer-events-auto`;
-        // un hijo reactiva bajo un ancestro `none`, patrón ya usado en
-        // RevealModal). No simplificar: sin esta guardia, el brindis traga toques
-        // ajenos; con ella, el fondo permanece interactivo.
+        // un hijo reactiva bajo un ancestro `none`). No simplificar: sin esta
+        // guardia, el brindis traga toques ajenos; con ella, el fondo permanece
+        // interactivo.
         <div
             className={`fixed left-1/2 -translate-x-1/2 z-[10000] transition-all duration-300 transform pointer-events-none ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
             style={{
