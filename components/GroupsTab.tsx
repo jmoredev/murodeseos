@@ -16,7 +16,10 @@ export interface GroupsTabProps {
 export function GroupsTab({ userId }: GroupsTabProps) {
     const router = useRouter();
     // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
-    // número de columnas de la rejilla de grupos más abajo.
+    // número de columnas de la rejilla de grupos más abajo (2 columnas en
+    // escritorio: con 3 quedaba ~240px de tarjeta, menos que un teléfono, y el
+    // chrome fijo de la tarjeta colapsaba el nombre a 0px — ver
+    // odd/tasks/group-name-visible.md).
     const isDesktop = useIsDesktop();
     const [groups, setGroups] = useState<Group[]>([])
     // Para qué usuario están cargados los datos. El estado de carga se deriva de ahí, así que
@@ -354,7 +357,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 {groups.length > 0 ? (
                     <View className="flex-row flex-wrap -m-3 items-stretch">
                         {groups.map(group => (
-                            <View key={group.id} className={`${isDesktop ? 'w-1/3' : 'w-full'} p-3 flex`}>
+                            <View key={group.id} className={`${isDesktop ? 'w-1/2' : 'w-full'} p-3 flex`}>
                                 <GroupCard
                                     group={group}
                                     isAdmin={userRoles.get(group.id) === 'admin'}
