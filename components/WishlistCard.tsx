@@ -133,7 +133,14 @@ export function WishlistCard({
                 </View>
 
                 <View className="p-5">
-                    <Text className="font-sans-bold text-on-background text-base leading-tight mb-4" numberOfLines={2}>
+                    <Text
+                        className="font-sans-bold text-on-background text-base leading-tight mb-4"
+                        // 3 y no 2: a 360px la tarjeta da ~116px de ancho de texto y un
+                        // título real como «Auriculares Sony WH-1000XM5» necesita 3
+                        // líneas (scrollHeight 60 vs clientHeight 40 medidos), así que
+                        // con 2 se cortaba el contenido del propio usuario.
+                        numberOfLines={3}
+                    >
                         {item.title}
                     </Text>
 
@@ -177,7 +184,12 @@ export function WishlistCard({
                     accessibilityLabel="Marcar como ya lo tengo"
                     className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
-                    <Text className="text-xs font-sans-bold text-tertiary uppercase tracking-[0.2em]">
+                    <Text
+                        // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
+                        // sobre 13 caracteres y partía la etiqueta en dos líneas a
+                        // 360px. A 0.05em cabe en una sola y conserva el aire.
+                        className="text-xs font-sans-bold text-tertiary uppercase tracking-[0.05em]"
+                    >
                         ✓ Ya lo tengo
                     </Text>
                 </Pressable>

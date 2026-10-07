@@ -1,6 +1,6 @@
 # Pulido de interfaz: contraste, semántica de color, truncamientos y cromo (`fix/ui-polish`)
 
-**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1 y U2 cerradas; pendientes U3–U7
+**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1, U2 y U3 cerradas; pendientes U4–U7
 
 ## Objetivo
 
@@ -91,7 +91,7 @@ Distinción importante, verificada en el código:
 | --- | --- | --- |
 | U1 | Contraste: llevar todo el texto informativo a ≥4,5:1. Subir los usos de `text-on-surface/NN` por debajo del umbral a `/70` | **hecha** — **89 usos** subidos a `/70` en **22 ficheros**; `tailwind.config.cjs` intacto y ningún otro cambio en el diff (verificado: `git diff` filtrado no devuelve ni una línea que no sea `text-on-surface/NN`). Cuatro usos (`/20` ×2, `/30` ×2) se subieron también en lugar de eximirse: los dos placeholders 🎁 son emoji, y en un emoji la propiedad `color` no pinta nada, así que la clase era inerte; el chevron `›` y la inicial de reserva del avatar simplemente se leen mejor al suelo |
 | U2 | **Guardián de contraste**: función pura `contrastRatio`/`minAlphaFor` que **calcule** el umbral a partir de los tokens reales, y escáner de fuentes con guarda de no-vacuidad | **hecha** — `__tests__/contrast-floor.test.ts` (9 tests). Deriva el suelo **de `tailwind.config.cjs`**, no de constantes: barre los seis tokens de superficie, se queda con el que más exige y concluye `/70` (el que manda es `surface-container-highest` `#ecd8e0`, el relleno de inputs, el más oscuro de la familia). Se prueba a sí mismo con un control negativo (`/65` falla, `/66` pasa, `/45` falla) y lleva dos guardas de no-vacuidad (ficheros > 20 y usos vistos > 80) |
-| U3 | Truncamientos y CTA: títulos de deseos legibles a 360px y «✓ Ya lo tengo» sin partirse en dos líneas | pendiente |
+| U3 | Truncamientos y CTA: títulos de deseos legibles a 360px y «✓ Ya lo tengo» sin partirse en dos líneas | **hecha** — dos cambios en `components/WishlistCard.tsx`: el título pasa de `numberOfLines={2}` a `{3}` (a 360px la tarjeta da ~116px de texto y un título real necesita 3 líneas: `scrollHeight 60 / clientHeight 40` medidos), y el CTA baja su `tracking-[0.2em]` a `[0.05em]` — ese tracking sumaba ~31px sobre 13 caracteres y era la causa del corte, no el texto. Resultado medido en los **5 usuarios sembrados**: ningún título recortado (incluido «Auriculares Sony WH-1000XM5», el que acreditó el defecto, ahora en 3 líneas completas) y el CTA en **una sola línea** (`103×16`, antes `116×32`) con objetivo táctil de 44px intacto |
 | U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | pendiente |
 | U5 | Semántica de color: separar los dos tokens sobrecargados en tokens con un significado único, sin cambiar los colores | pendiente |
 | U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | pendiente |
@@ -116,7 +116,27 @@ Distinción importante, verificada en el código:
 
 ## Commits
 
-- _(U1+U2, pendiente de commit)_ — contraste AA: 89 usos a `/70` en 22 ficheros + `__tests__/contrast-floor.test.ts`.
+- **`78a29be`** — `fix(a11y): bring secondary text up to WCAG AA and guard the floor` (U1+U2): 89 usos a `/70` en 22 ficheros + `__tests__/contrast-floor.test.ts`.
+- _(U3, pendiente de commit)_ — `components/WishlistCard.tsx`: límite de líneas del título y tracking del CTA.
+
+## Verificación de U3 (2026-10-07)
+
+**Detector**: elementos con `line-clamp` (que es como react-native-web implementa `numberOfLines`) medidos por `scrollHeight` vs `clientHeight`, más la altura del CTA. Sobre los **cinco usuarios sembrados** a 360×640:
+
+| Caso | Antes | Ahora |
+| --- | --- | --- |
+| «Auriculares Sony WH-1000XM5» | `60 / 40` recortado a 2 líneas | **`60 / 60`**, 3 líneas completas |
+| «Libro: El Archivo de las Tormentas» | recortado | **`60 / 60`** |
+| «Cafetera Italiana Bialetti» | recortado | **`60 / 60`** |
+| CTA «✓ Ya lo tengo» | `116×32` = **2 líneas** | **`103×16` = 1 línea**, objetivo 44px |
+
+**0 incumplimientos** (ni recortes ni CTA partido). A 1280px el comportamiento es el mismo que antes: títulos a 1 línea y CTA a 1 línea.
+
+**Matiz honesto**: el título largo cabe **justo** en 3 líneas, sin holgura. Un título más largo seguiría recortándose, porque una tarjeta de ancho fijo no puede renderizar texto arbitrario; lo que se ha cerrado es el defecto real (títulos corrientes cortados a 3 líneas por un límite de 2), no la imposibilidad general.
+
+**Estado estático y de suite**: `typecheck` y `lint` limpios; `test:unit` 28 ficheros / 221 + 1 todo; suite E2E chromium **51 passed / 1 skipped**, idéntica a la línea base.
+
+**Nota de proceso**: U3 se hizo en línea y no delegada. El writer anterior falló sin informe y el previo entró en bucle; la unidad resultó ser **un solo fichero con dos cambios pequeños**, por debajo del disparador de delegación multifichero, y el padre ya tenía el arnés de medida montado.
 
 ## Verificación de U1+U2 (2026-10-07)
 
