@@ -321,7 +321,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
-                <Text className="mt-4 text-on-surface/55 font-sans-medium">Cargando grupos...</Text>
+                <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando grupos...</Text>
             </View>
         );
     }
@@ -332,7 +332,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             <View className="flex-row justify-between items-end mb-10 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mis grupos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
+                    <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
@@ -376,7 +376,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text style={{ fontSize: 40 }}>🎁</Text>
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">No tienes grupos aún</Text>
-                        <Text className="text-on-surface/55 font-sans-medium max-w-xs mb-8">
+                        <Text className="text-on-surface/70 font-sans-medium max-w-xs mb-8">
                             Crea un nuevo grupo para empezar a organizar tus intercambios de regalos.
                         </Text>
                         <View className="flex-row gap-4 w-full max-w-xs">
@@ -419,7 +419,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                                 <Text style={{ fontSize: 32 }}>↗</Text>
                             </View>
                             <Text className="text-2xl font-display text-on-background mb-2">Invita a tus amigos</Text>
-                            <Text className="text-on-surface/55 font-sans-medium text-center">
+                            <Text className="text-on-surface/70 font-sans-medium text-center">
                                 Comparte este código para que puedan unirse al grupo.
                             </Text>
                         </View>
@@ -435,7 +435,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text className="text-xl md:text-4xl font-mono font-sans-bold text-on-background tracking-wider md:tracking-widest uppercase break-all">
                                 {selectedGroupId}
                             </Text>
-                            <Text className="text-xs font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/70 mt-2 uppercase tracking-widest">Toca para copiar</Text>
                         </Pressable>
 
                         <PrimaryButton
@@ -516,7 +516,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text style={{ fontSize: 24 }}>🗑</Text>
                         </View>
                         <Text className="text-xl font-display text-on-background mb-2">¿Eliminar grupo?</Text>
-                        <Text className="text-on-surface/65 mb-6 font-sans-medium">
+                        <Text className="text-on-surface/70 mb-6 font-sans-medium">
                             Estás a punto de eliminar el grupo <Text className="font-sans-bold text-on-background">&quot;{groupToDelete?.name}&quot;</Text>. Esta acción no se puede deshacer.
                         </Text>
                         <View className="flex-row gap-3 justify-end">

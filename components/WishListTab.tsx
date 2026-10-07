@@ -283,7 +283,7 @@ export function WishListTab({ userId }: WishListTabProps) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
-                <Text className="mt-4 text-on-surface/55 font-sans-medium">Cargando deseos...</Text>
+                <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando deseos...</Text>
             </View>
         );
     }
@@ -293,7 +293,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
+                    <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
                 <PrimaryButton
                     onPress={() => openForm()}
@@ -330,7 +330,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             className={`px-2 py-2.5 rounded-full items-center justify-center ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
                         >
                             <Text
-                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
+                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/70'}`}
                                 numberOfLines={1}
                             >
                                 {isDesktop
@@ -370,7 +370,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             <Text style={emojiInCircle(40)}>🎁</Text>
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">Tu lista está vacía</Text>
-                        <Text className="text-on-surface/55 font-sans-medium">Añade cosas que te ilusionen.</Text>
+                        <Text className="text-on-surface/70 font-sans-medium">Añade cosas que te ilusionen.</Text>
                     </View>
                 )}
             </View>
@@ -454,7 +454,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         >
                             <View className="w-full min-w-0 max-w-full">
                             <View className="mb-4">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Título</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Título</Text>
                                 <TextInput
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
@@ -467,7 +467,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             {/* Exclusión de deseos por grupos (web): los e2e buscan `label` + `input[type="checkbox"]`. */}
                             {Platform.OS === 'web' && userGroups.length > 0 ? (
                                 <View className="mb-4">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Excluir de grupos</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Excluir de grupos</Text>
                                     <View>
                                         {userGroups.map(group => {
                                             const excluded = (formData.excludedGroupIds || []).includes(group.id);
@@ -491,7 +491,7 @@ export function WishListTab({ userId }: WishListTabProps) {
 
                             <View className="flex-row gap-3 mb-4 min-w-0 w-full">
                                 <View className="flex-1 min-w-0">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Precio (€)</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Precio (€)</Text>
                                     <TextInput
                                         value={formData.price?.toString() || ''}
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
@@ -502,7 +502,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     />
                                 </View>
                                 <View className="flex-1 min-w-0">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Prioridad</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Prioridad</Text>
                                     <View className="flex-row gap-1.5 bg-surface-container-low p-1 rounded-2xl min-w-0">
                                         {[
                                             { key: 'low', label: 'Baja', color: 'text-tertiary' },
@@ -515,7 +515,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                                 className={`flex-1 min-w-0 py-3 rounded-xl items-center justify-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                             >
                                                 <Text
-                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
+                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/70'}`}
                                                     numberOfLines={1}
                                                 >
                                                     {p.label}
@@ -527,7 +527,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-4 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                                     Imagen
                                 </Text>
                                 {formData.imageUrl ? (
@@ -569,7 +569,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-4 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                                     Enlace (opcional)
                                 </Text>
                                 <TextInput
@@ -590,7 +590,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-6 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Notas</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Notas</Text>
                                 <TextInput
                                     value={formData.notes || ''}
                                     onChangeText={(text) => setFormData({ ...formData, notes: text })}

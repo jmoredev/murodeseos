@@ -130,7 +130,7 @@ export default function LoginPage() {
                         <Text className="text-3xl font-display text-on-background text-center tracking-tight">
                             Bienvenido de nuevo
                         </Text>
-                        <Text className="mt-3 text-sm text-on-surface/65 text-center font-sans">
+                        <Text className="mt-3 text-sm text-on-surface/70 text-center font-sans">
                             Inicia sesión para acceder a tu lista de deseos
                         </Text>
 
@@ -260,7 +260,7 @@ export default function LoginPage() {
                         ) : null}
 
                         <View className="mt-8">
-                            <Text className="text-center text-on-surface/65 font-sans">¿No tienes una cuenta?</Text>
+                            <Text className="text-center text-on-surface/70 font-sans">¿No tienes una cuenta?</Text>
                             <Pressable
                                 onPress={() => router.push('/signup')}
                                 accessibilityRole="button"

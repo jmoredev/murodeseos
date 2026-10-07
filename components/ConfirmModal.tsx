@@ -98,7 +98,7 @@ export function ConfirmModal({
                     <h3 id={titleId} className="text-xl font-sans-bold text-on-background mb-2">
                         {title}
                     </h3>
-                    <p id={messageId} className="text-on-surface/65 leading-relaxed font-sans">
+                    <p id={messageId} className="text-on-surface/70 leading-relaxed font-sans">
                         {message}
                     </p>
                 </div>

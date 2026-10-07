@@ -106,7 +106,7 @@ export default function GroupDetailsPage() {
             <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
                 <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
-                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <Text className="text-on-surface/70 text-center font-sans-medium mb-8">{error}</Text>
                 <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
                     Volver al inicio
                 </PrimaryButton>
@@ -145,7 +145,7 @@ export default function GroupDetailsPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 {group?.name}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
+                            <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Detalles del grupo
                             </Text>
                         </View>
@@ -188,14 +188,14 @@ export default function GroupDetailsPage() {
                         <View className="mt-3 gap-2">
                             <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
                                 <Text
-                                    className="text-xs font-sans-bold text-on-surface/55 uppercase tracking-widest"
+                                    className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest"
                                     numberOfLines={1}
                                     ellipsizeMode="middle"
                                 >
                                     Código: {group?.id}
                                 </Text>
                             </View>
-                            <Text className="text-xs text-on-surface/45 font-sans-bold">
+                            <Text className="text-xs text-on-surface/70 font-sans-bold">
                                 {members.length} participantes
                             </Text>
                         </View>
@@ -204,7 +204,7 @@ export default function GroupDetailsPage() {
 
                 {/* Members Grid */}
                 <View>
-                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-6 ml-2">
+                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-6 ml-2">
                         Participantes
                     </Text>
 
@@ -231,7 +231,7 @@ export default function GroupDetailsPage() {
                                                 <Text style={emojiInCircle(36)}>{member.profiles.avatar_url}</Text>
                                             ) : (
                                                 <Text
-                                                    className="font-sans-bold text-on-surface/30"
+                                                    className="font-sans-bold text-on-surface/70"
                                                     style={emojiInCircle(22)}
                                                 >
                                                     {member.profiles?.display_name?.charAt(0) || '?'}
@@ -248,7 +248,7 @@ export default function GroupDetailsPage() {
                                         {member.profiles?.display_name || 'Usuario'}
                                         {member.user_id === user?.id && <Text className="text-primary"> (Tú)</Text>}
                                     </Text>
-                                    <Text className="text-center text-xs text-on-surface/45 font-sans-bold uppercase tracking-tighter">
+                                    <Text className="text-center text-xs text-on-surface/70 font-sans-bold uppercase tracking-tighter">
                                         Ver deseos ›
                                     </Text>
                                 </Pressable>

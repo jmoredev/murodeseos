@@ -97,7 +97,7 @@ export function WishlistCard({
                             importantForAccessibility="no-hide-descendants"
                         />
                     ) : (
-                        <Text style={{ fontSize: 40 }} className="text-on-surface/20">
+                        <Text style={{ fontSize: 40 }} className="text-on-surface/70">
                             🎁
                         </Text>
                     )}
@@ -138,7 +138,7 @@ export function WishlistCard({
                     </Text>
 
                     {item.notes ? (
-                        <Text className="text-xs text-on-surface/55 font-sans mb-4" numberOfLines={2}>
+                        <Text className="text-xs text-on-surface/70 font-sans mb-4" numberOfLines={2}>
                             {item.notes}
                         </Text>
                     ) : null}
@@ -154,7 +154,7 @@ export function WishlistCard({
                         >
                             <Text
                                 numberOfLines={1}
-                                className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
+                                className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}
                             >
                                 {item.price ? `${item.price} €` : 'Sin precio'}
                             </Text>
@@ -204,7 +204,7 @@ export function WishlistCard({
                             accessibilityLabel="Cancelar reserva"
                             className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                         >
-                            <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
+                            <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                 Cancelar reserva
                             </Text>
                         </Pressable>
@@ -212,7 +212,7 @@ export function WishlistCard({
 
                     {isReservedByOther ? (
                         <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                            <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
+                            <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                 No disponible
                             </Text>
                         </View>

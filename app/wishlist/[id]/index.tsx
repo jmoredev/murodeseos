@@ -137,7 +137,7 @@ export default function UserWishlistPage() {
             <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
                 <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
-                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <Text className="text-on-surface/70 text-center font-sans-medium mb-8">{error}</Text>
                 <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
                     Volver al inicio
                 </PrimaryButton>
@@ -174,7 +174,7 @@ export default function UserWishlistPage() {
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
+                            <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Wishlist pública
                             </Text>
                         </View>
@@ -200,7 +200,7 @@ export default function UserWishlistPage() {
 
                 {reservationDegraded ? (
                     <View className="mb-6 rounded-2xl bg-surface-container-low px-4 py-3">
-                        <Text className="text-xs font-sans-medium text-on-surface/65">
+                        <Text className="text-xs font-sans-medium text-on-surface/70">
                             No se pudo comprobar el estado de las reservas: puede que un regalo ya esté reservado. Recarga la página para verlo con certeza.
                         </Text>
                     </View>
@@ -215,7 +215,7 @@ export default function UserWishlistPage() {
                                     <Text style={{ fontSize: 40 }}>🎁</Text>
                                 </View>
                                 <Text className="text-2xl font-display text-on-background mb-2 text-center">Lista vacía</Text>
-                                <Text className="text-on-surface/55 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
+                                <Text className="text-on-surface/70 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
                             </View>
                         ) : (
                             <View className="flex-row flex-wrap -m-2">
@@ -279,7 +279,7 @@ export default function UserWishlistPage() {
                                 onPress={() => setShowInfo(false)}
                                 className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center"
                             >
-                                <Text className="text-on-surface/55 font-sans-bold">✕</Text>
+                                <Text className="text-on-surface/70 font-sans-bold">✕</Text>
                             </Pressable>
                         </View>
 

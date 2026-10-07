@@ -56,7 +56,7 @@ export default function JoinGroupPage() {
                         <Text className="text-5xl">🔑</Text>
                     </View>
                     <Text className="mt-4 text-on-background font-sans-bold text-xl">¿Tienes un código?</Text>
-                    <Text className="text-on-surface/65 text-center text-sm mt-2 px-6 font-sans">
+                    <Text className="text-on-surface/70 text-center text-sm mt-2 px-6 font-sans">
                         Introduce el código que te han compartido para unirte al grupo.
                     </Text>
                 </View>

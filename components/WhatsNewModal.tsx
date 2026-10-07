@@ -93,7 +93,7 @@ export default function WhatsNewModal() {
 
                 <div className="p-6 bg-surface-container-lowest">
                     <div className="space-y-4">
-                        <h3 className="text-sm font-sans-semibold text-on-surface/55 uppercase tracking-wider">
+                        <h3 className="text-sm font-sans-semibold text-on-surface/70 uppercase tracking-wider">
                             Cambios realizados
                         </h3>
                         <ul className="space-y-3">

@@ -236,13 +236,13 @@ export const GroupCard = memo(function GroupCard({
                                 </Text>
                                 {onGroupAliasEdit && (
                                     <Pressable onPress={stopAnd(startEditingGroupName)} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                        <Text className="text-on-surface/40 text-xs">✎</Text>
+                                        <Text className="text-on-surface/70 text-xs">✎</Text>
                                     </Pressable>
                                 )}
                             </View>
                         )}
                         <Text
-                            className="text-xs text-on-surface/50 mt-1 font-sans-bold uppercase tracking-wider leading-tight"
+                            className="text-xs text-on-surface/70 mt-1 font-sans-bold uppercase tracking-wider leading-tight"
                             numberOfLines={1}
                             ellipsizeMode="tail"
                         >
@@ -342,24 +342,24 @@ export const GroupCard = memo(function GroupCard({
                                         {member.name}
                                     </Text>
                                     {member.originalName && (
-                                        <Text className="ml-2 text-xs text-on-surface/45 italic">
+                                        <Text className="ml-2 text-xs text-on-surface/70 italic">
                                             ({member.originalName})
                                         </Text>
                                     )}
                                     {onMemberEdit && (
                                         <Pressable onPress={stopAnd(() => startEditing(member))} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                            <Text className="text-on-surface/35 text-xs">✎</Text>
+                                            <Text className="text-on-surface/70 text-xs">✎</Text>
                                         </Pressable>
                                     )}
                                 </View>
                             )}
                         </View>
-                        <Text className="text-on-surface/30 ml-2">›</Text>
+                        <Text className="text-on-surface/70 ml-2">›</Text>
                     </Pressable>
                 ))}
 
                 {remainingCount > 0 && (
-                    <Text className="text-xs font-sans-bold text-on-surface/50 mt-2 ml-11">
+                    <Text className="text-xs font-sans-bold text-on-surface/70 mt-2 ml-11">
                         + {remainingCount} otros participantes
                     </Text>
                 )}

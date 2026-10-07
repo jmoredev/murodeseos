@@ -82,7 +82,7 @@ export function WishDetailModal({
                     accessibilityLabel="Cerrar detalle"
                     className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center shrink-0"
                 >
-                    <Text className="text-on-surface/55 font-sans-bold">✕</Text>
+                    <Text className="text-on-surface/70 font-sans-bold">✕</Text>
                 </Pressable>
             </View>
 
@@ -96,7 +96,7 @@ export function WishDetailModal({
                             accessibilityLabel={`Imagen de ${item.title}`}
                         />
                     ) : (
-                        <Text style={{ fontSize: 64 }} className="text-on-surface/20">
+                        <Text style={{ fontSize: 64 }} className="text-on-surface/70">
                             🎁
                         </Text>
                     )}
@@ -109,7 +109,7 @@ export function WishDetailModal({
                         </Text>
                     </View>
                     <View className={`px-4 py-2 rounded-full ${item.price ? 'bg-secondary/12' : 'bg-surface-container-low'}`}>
-                        <Text className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}>
+                        <Text className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}>
                             {item.price ? `${item.price} €` : 'Sin precio'}
                         </Text>
                     </View>
@@ -117,7 +117,7 @@ export function WishDetailModal({
 
                 {item.notes ? (
                     <View className="mb-6">
-                        <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                        <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                             Notas
                         </Text>
                         <Text className="text-on-background font-sans leading-relaxed">{item.notes}</Text>
@@ -126,7 +126,7 @@ export function WishDetailModal({
 
                 {item.links.length > 0 ? (
                     <View className="mb-6">
-                        <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-3">
+                        <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-3">
                             Enlaces
                         </Text>
                         {item.links.map((link, index) => (
@@ -160,7 +160,7 @@ export function WishDetailModal({
                                 accessibilityLabel="Cancelar reserva"
                                 className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                             >
-                                <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
+                                <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                     Cancelar reserva
                                 </Text>
                             </Pressable>
@@ -168,7 +168,7 @@ export function WishDetailModal({
 
                         {isReservedByOther ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
+                                <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                     Reservado por otro usuario
                                 </Text>
                             </View>
@@ -176,7 +176,7 @@ export function WishDetailModal({
 
                         {reservationState === 'unknown' ? (
                             <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                                <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
+                                <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                     Estado de reserva no disponible
                                 </Text>
                             </View>
