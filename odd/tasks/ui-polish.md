@@ -1,6 +1,6 @@
 # Pulido de interfaz: contraste, semántica de color, truncamientos y cromo (`fix/ui-polish`)
 
-**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U4 cerradas; pendientes U5, U6 y U7
+**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U5 cerradas; pendientes U6 y U7
 
 ## Objetivo
 
@@ -8,7 +8,7 @@ Cerrar la deuda de interfaz que salió de la auditoría visual con la app render
 
 ## Restricción de producto
 
-No cambiar la identidad de marca: la paleta (`primary` `#aa2c32`, `secondary` `#6d5a00`, `tertiary` `#006666`), las fuentes (BeVietnamPro + PlusJakartaSans), los tokens `surface-container-*` ni las sombras `ambient`. Tampoco se revierten las decisiones de `mobile-first` (suelo de 12px, objetivos de 44px en móvil, umbral único `>768`, `dvh`, insets). El arreglo no puede degradar la versión móvil.
+No cambiar la identidad de marca: la paleta (`#aa2c32` rojo, `#6d5a00` oliva, `#006666` teal), las fuentes (BeVietnamPro + PlusJakartaSans), los tokens `surface-container-*` ni las sombras `ambient`. Tampoco se revierten las decisiones de `mobile-first` (suelo de 12px, objetivos de 44px en móvil, umbral único `>768`, `dvh`, insets). El arreglo no puede degradar la versión móvil.
 
 ## Evidencia medida (2026-10-07)
 
@@ -93,7 +93,7 @@ Distinción importante, verificada en el código:
 | U2 | **Guardián de contraste**: función pura `contrastRatio`/`minAlphaFor` que **calcule** el umbral a partir de los tokens reales, y escáner de fuentes con guarda de no-vacuidad | **hecha** — `__tests__/contrast-floor.test.ts` (9 tests). Deriva el suelo **de `tailwind.config.cjs`**, no de constantes: barre los seis tokens de superficie, se queda con el que más exige y concluye `/70` (el que manda es `surface-container-highest` `#ecd8e0`, el relleno de inputs, el más oscuro de la familia). Se prueba a sí mismo con un control negativo (`/65` falla, `/66` pasa, `/45` falla) y lleva dos guardas de no-vacuidad (ficheros > 20 y usos vistos > 80) |
 | U3 | Truncamientos y CTA: títulos de deseos legibles a 360px y «✓ Ya lo tengo» sin partirse en dos líneas | **hecha** — dos cambios en `components/WishlistCard.tsx`: el título pasa de `numberOfLines={2}` a `{3}` (a 360px la tarjeta da ~116px de texto y un título real necesita 3 líneas: `scrollHeight 60 / clientHeight 40` medidos), y el CTA baja su `tracking-[0.2em]` a `[0.05em]` — ese tracking sumaba ~31px sobre 13 caracteres y era la causa del corte, no el texto. Resultado medido en los **5 usuarios sembrados**: ningún título recortado (incluido «Auriculares Sony WH-1000XM5», el que acreditó el defecto, ahora en 3 líneas completas) y el CTA en **una sola línea** (`103×16`, antes `116×32`) con objetivo táctil de 44px intacto |
 | U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | **hecha** — (1) **copy directo en 7 sitios**: `'Oops!'` era el título de la pantalla 404, `'¡Vaya!'` el encabezado de error de dos pantallas, y cuatro mensajes de éxito llevaban exclamación. (2) **Los tres `alert()` de navegador de `GroupsTab`** (bloqueantes, en una PWA) pasan al brindis de la casa; `ToastComponent` **no estaba montado** y ahora sí. (3) **`lib/format-price.ts`** nuevo: `formatPrice` **no destructivo** —lo que no entiende lo devuelve verbatim— y `parsePriceForSort`, que **cierra un defecto real**: `parseFloat('349,00')` devolvía `349` soltando los decimales en silencio y un valor no numérico producía `NaN` en el comparador (orden indefinido). Placeholder `0,00`. (4) El **clamp de notas no se tocó**: el seed inserta `notes: ''`, así que no hay nada que recortar — hallazgo de datos, no visual |
-| U5 | Semántica de color: separar los dos tokens sobrecargados en tokens con un significado único, sin cambiar los colores | pendiente |
+| U5 | Semántica de color: separar los tokens sobrecargados en tokens con un significado único, sin cambiar los colores | **hecha** — el censo real resultó **mayor que el enunciado**: `secondary` y `tertiary` llevaban **siete significados** entre los dos (prioridad media/baja, chip de precio, éxito, insignia de rol Admin, insignia «Reservado por ti», CTA «Ya lo tengo» y tinte decorativo de notificación), y `primary` cargaba además el de «prioridad alta». Se añadieron **9 tokens de significado** en `tailwind.config.cjs` (`priority-high/medium/low`, `price`, `success`, `role-badge`, `reserved`, `accent-warm`, `accent-cool`) con **los mismos hex exactos** y se re-apuntaron **24 usos en 7 ficheros**. `secondary`/`tertiary` quedaron **sin ninguna referencia** y se **retiraron del config** (el propio bloque de alias heredados dice quitarlos cuando eso pasa). `docs/DESIGN.md:81` prescribía justamente esos dos tokens muertos y se actualizó. **Render idéntico**: cada token nuevo apunta al hex que ya resolvía el viejo |
 | U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | pendiente |
 | U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | pendiente |
 
@@ -114,11 +114,33 @@ Distinción importante, verificada en el código:
 - El campo `icon` del grupo existe en la base de datos y **la UI no permite elegirlo**: `app/groups/create/index.tsx:12` lo fija a `'🎁'`. Hueco de producto, fuera del alcance de esta tanda.
 - Coherencia de `uppercase tracking-*`: 60 usos con valores dispares. Trabajo posterior.
 
+## Verificación de U5 (2026-10-07)
+
+**Censo real, medido antes de tocar nada**: 21 usos de `secondary`/`tertiary` en 7 ficheros (nada en `lib/`) más 3 de `primary` usados como «prioridad alta» → **siete significados sobre dos tokens** más uno sobre `primary`.
+
+| Token nuevo | Hex | Hex que ya resolvía |
+| --- | --- | --- |
+| `priority-high` | `#aa2c32` | `primary` |
+| `priority-medium` · `price` · `role-badge` · `accent-warm` | `#6d5a00` | `secondary` |
+| `priority-low` · `success` · `reserved` · `accent-cool` | `#006666` | `tertiary` |
+
+**24 usos re-apuntados** en `components/WishlistCard.tsx` (7), `components/WishDetailModal.tsx` (5), `components/WishListTab.tsx` (3), `app/(auth)/login/index.tsx` (2), `components/ProfileTab.tsx` (2), `components/NotificationItem.tsx` (4) y `app/groups/[id]/index.tsx` (1). Recuento final verificado por clase: 3+3+3 de prioridad, 4 de precio, 5 de éxito, 1 de rol, 1 de reservado, 2+2 de tinte = **24 exactos**.
+
+**Deriva documental cerrada**: `docs/DESIGN.md:81` prescribía literalmente «usa `secondary` y `tertiary` para etiquetas de categorización» — es decir, mandaba usar los tokens que se acaban de retirar. Actualizado a los tokens de significado. Es el mismo patrón de podredumbre documental que ya apareció en `docs/DEVELOPMENT.md` durante `mobile-first`.
+
+**Verificación**: `git grep` sobre ficheros versionados → **cero referencias de clase** a los tokens viejos. `typecheck` y `lint` limpios. `test:unit` **29 ficheros / 232 passed + 1 todo**. Suite E2E chromium **51 passed / 1 skipped**.
+
+### Dos incidentes, ninguno del código
+
+1. **La delegación fue a la rama equivocada y fue culpa mía.** Seguía en `chore/local-dev-ports` tras arreglar el CI de la PR #39 y no volví a `fix/ui-polish` antes de delegar, así que el writer heredó esa rama. **Su informe afirmaba que sus 8 ficheros eran «byte-idénticos» a los de `fix/ui-polish`, y era falso**: el árbol tenía 0 ocurrencias de `text-on-surface/70` frente a 5 y 8 en los ficheros de la rama correcta, es decir sus ediciones estaban sobre versiones **anteriores a U1 y U3**. Copiar esos ficheros habría revertido dos unidades ya revisadas. Se guardó su diff como evidencia, se descartó, se cambió de rama y se re-aplicaron los 24 renames sobre el texto real de esta rama (los números de línea de la tabla original ya no valían; el mapeo es por contenido). **Lección: verificar el árbol, no el informe** — y confirmar la rama ANTES de delegar, no después.
+2. **La suite E2E local dio 9 fallos que no eran del cambio.** Todos con esperas de ~30s y en specs sin relación con colores. Causa: en local los workers son tantos como CPUs (CI usa `workers: 1`) y la suite **no se autolimpia** (defecto E-10 del propio repo), así que la base acumuló estado de muchas corridas. Aislados, los specs afectados pasan; con `--workers=1` los fallos bajan a 2; y tras **resembrar los dos scripts** y correr con 1 worker, la suite queda en **51 passed / 1 skipped**. **Lección: para que una corrida local valga como verificación hay que resembrar y usar `--workers=1`; si no, da fallos y verdes falsos.**
+
 ## Commits
 
-- **`78a29be`** — `fix(a11y): bring secondary text up to WCAG AA and guard the floor` (U1+U2): 89 usos a `/70` en 22 ficheros + `__tests__/contrast-floor.test.ts`.
+- **`78a29be`** — `fix(a11y): bring secondary text up to WCAG AA and guard the floor` (U1+U2).
 - **`7ac4094`** — `fix(mobile): stop cutting wish titles and wrapping the card CTA` (U3).
-- _(U4, pendiente de commit)_ — copy, brindis de `GroupsTab`, `lib/format-price.ts`, orden por precio y tres specs E2E.
+- **`6564dab`** — `fix(a11y): direct copy, a real toast for the group actions, and Spanish prices` (U4).
+- _(U5, pendiente de commit)_ — 9 tokens de significado, 24 usos re-apuntados, `secondary`/`tertiary` retirados y `docs/DESIGN.md` actualizado.
 
 ## Verificación de U4 (2026-10-07)
 

@@ -37,9 +37,9 @@ export function WishlistCard({
     onDelete,
 }: WishlistCardProps) {
     const priorityAccent = {
-        low: 'bg-tertiary',
-        medium: 'bg-secondary',
-        high: 'bg-primary',
+        low: 'bg-priority-low',
+        medium: 'bg-priority-medium',
+        high: 'bg-priority-high',
     };
 
     const priorityLabels = {
@@ -126,7 +126,7 @@ export function WishlistCard({
 
                     {isReservedByMe ? (
                         <View className="absolute top-3 left-3">
-                            <View className="bg-tertiary px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
+                            <View className="bg-reserved px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
                                 <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
                                     ✓ Reservado por ti
                                 </Text>
@@ -159,12 +159,12 @@ export function WishlistCard({
                     <View className="flex-row items-center justify-between gap-2">
                         <View
                             className={`min-w-0 shrink px-3 py-1.5 rounded-xl ${
-                                item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
+                                item.price ? 'bg-price/12' : 'bg-surface-container-low'
                             }`}
                         >
                             <Text
                                 numberOfLines={1}
-                                className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}
+                                className={`text-xs font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}
                             >
                                 {priceText ?? 'Sin precio'}
                             </Text>
@@ -191,7 +191,7 @@ export function WishlistCard({
                         // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
                         // sobre 13 caracteres y partía la etiqueta en dos líneas a
                         // 360px. A 0.05em cabe en una sola y conserva el aire.
-                        className="text-xs font-sans-bold text-tertiary uppercase tracking-[0.05em]"
+                        className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
                     >
                         ✓ Ya lo tengo
                     </Text>

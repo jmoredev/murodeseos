@@ -78,7 +78,7 @@ Traditional drop shadows are often messy. This system uses **Ambient Light Physi
 
 ### Do
 * **Do** use asymmetrical margins. For example, give a headline more top-padding than bottom-padding to create a "pushed" editorial look.
-* **Do** use the `secondary` (#6d5a00) and `tertiary` (#006666) colors for categorization tags (e.g., "Travel," "Growth").
+* **Do** use the semantic colour tokens for their one meaning — `price`, `success`, `priority-high|medium|low`, `role-badge`, `reserved`, `accent-warm|cool`. They replaced `secondary`/`tertiary`, which each carried several meanings at once (priority, price, success, badges, decorative tint) so a chip's colour did not tell you what it meant. Several share a hex on purpose; the name carries the meaning, and each can be recoloured on its own.
 * **Do** leverage the `full` roundedness for interactive elements like Chips and Buttons to emphasize the "friendly" prompt.
 
 ### Don't

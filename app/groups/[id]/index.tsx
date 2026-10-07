@@ -239,7 +239,7 @@ export default function GroupDetailsPage() {
                                             )}
                                         </View>
                                         {member.role === 'admin' && (
-                                            <View className="absolute top-0 right-0 bg-secondary rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
+                                            <View className="absolute top-0 right-0 bg-role-badge rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
                                                 <Text className="text-xs font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
                                             </View>
                                         )}

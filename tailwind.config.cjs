@@ -19,8 +19,24 @@ module.exports = {
         // Relleno de inputs: entre el lienzo y el gris-malva; armoniza con #ffecee / surface sin el salto de #d6c2ce
         'surface-container-highest': '#ecd8e0',
         'surface-container-lowest': '#ffffff',
-        secondary: '#6d5a00',
-        tertiary: '#006666',
+        // Tokens de significado: un token, un significado. `secondary` y `tertiary`
+        // llevaban cada uno varios a la vez (prioridad, precio, éxito, insignias,
+        // tinte decorativo), así que leyendo el código no se sabía si un chip oliva
+        // era «prioridad media» o «tiene precio». Varios de estos comparten hex A
+        // PROPÓSITO: el render es idéntico al de antes; lo que cambia es que cada
+        // significado tiene nombre propio y podrá cambiar de color por separado.
+        // `secondary` y `tertiary` se retiraron en la misma unidad: quedaron sin
+        // ninguna referencia y el bloque de alias heredados dice quitarlos cuando
+        // eso pasa. Si hace falta un rol nuevo, se añade con su significado.
+        'priority-high': '#aa2c32',
+        'priority-medium': '#6d5a00',
+        'priority-low': '#006666',
+        price: '#6d5a00',
+        success: '#006666',
+        'role-badge': '#6d5a00',
+        reserved: '#006666',
+        'accent-warm': '#6d5a00',
+        'accent-cool': '#006666',
         'on-surface': '#4c212b',
         'on-background': '#4c212b',
         'outline-variant': '#dc9ca8',

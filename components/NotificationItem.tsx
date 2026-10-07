@@ -29,7 +29,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
     switch (notification.type) {
         case 'wish_added':
             icon = '✨';
-            bgColor = 'bg-secondary/15';
+            bgColor = 'bg-accent-warm/15';
             content = (
                 <>
                     <span className="font-sans-bold text-on-background">{actorName}</span> ha añadido &quot;
@@ -53,7 +53,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
             break;
         case 'wish_deleted_by_owner':
             icon = '📭';
-            bgColor = 'bg-tertiary/15';
+            bgColor = 'bg-accent-cool/15';
             content = (
                 <>
                     <span className="font-sans-bold text-on-background">{actorName}</span> eliminó &quot;
@@ -71,7 +71,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
             break;
         case 'draw_performed':
             icon = '🎅';
-            bgColor = 'bg-secondary/15';
+            bgColor = 'bg-accent-warm/15';
             content = (
                 <>
                     <span className="font-sans-bold text-on-background">{actorName}</span> ha realizado el sorteo
@@ -98,7 +98,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
             break;
         case 'name_day':
             icon = '🕯️';
-            bgColor = 'bg-tertiary/15';
+            bgColor = 'bg-accent-cool/15';
             content = (
                 <>
                     <span className="font-sans-bold text-on-background">{actorName}</span> celebra su onomástica

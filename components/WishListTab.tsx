@@ -509,9 +509,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Prioridad</Text>
                                     <View className="flex-row gap-1.5 bg-surface-container-low p-1 rounded-2xl min-w-0">
                                         {[
-                                            { key: 'low', label: 'Baja', color: 'text-tertiary' },
-                                            { key: 'medium', label: 'Media', color: 'text-secondary' },
-                                            { key: 'high', label: 'Alta', color: 'text-primary' },
+                                            { key: 'low', label: 'Baja', color: 'text-priority-low' },
+                                            { key: 'medium', label: 'Media', color: 'text-priority-medium' },
+                                            { key: 'high', label: 'Alta', color: 'text-priority-high' },
                                         ].map((p) => (
                                             <Pressable
                                                 key={p.key}

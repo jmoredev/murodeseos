@@ -136,11 +136,11 @@ export default function LoginPage() {
 
                         {successMessage ? (
                             <View
-                                className="mt-6 p-4 bg-tertiary/12 rounded-2xl"
+                                className="mt-6 p-4 bg-success/12 rounded-2xl"
                                 accessibilityLiveRegion="polite"
                                 nativeID={formStatusId}
                             >
-                                <Text className="text-tertiary text-sm font-sans-medium">{successMessage}</Text>
+                                <Text className="text-success text-sm font-sans-medium">{successMessage}</Text>
                             </View>
                         ) : null}
 

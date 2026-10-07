@@ -134,8 +134,8 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                 )}
 
                 {success && (
-                    <View className="mb-6 rounded-2xl bg-tertiary/12 p-4">
-                        <Text className="text-sm text-tertiary font-sans-bold text-center">Perfil actualizado</Text>
+                    <View className="mb-6 rounded-2xl bg-success/12 p-4">
+                        <Text className="text-sm text-success font-sans-bold text-center">Perfil actualizado</Text>
                     </View>
                 )}
 

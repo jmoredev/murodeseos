@@ -31,9 +31,9 @@ const priorityLabels: Record<Priority, string> = {
 };
 
 const priorityAccent: Record<Priority, string> = {
-    low: 'text-tertiary',
-    medium: 'text-secondary',
-    high: 'text-primary',
+    low: 'text-priority-low',
+    medium: 'text-priority-medium',
+    high: 'text-priority-high',
 };
 
 export function WishDetailModal({
@@ -109,8 +109,8 @@ export function WishDetailModal({
                             Prioridad {priorityLabels[item.priority]}
                         </Text>
                     </View>
-                    <View className={`px-4 py-2 rounded-full ${item.price ? 'bg-secondary/12' : 'bg-surface-container-low'}`}>
-                        <Text className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/70'}`}>
+                    <View className={`px-4 py-2 rounded-full ${item.price ? 'bg-price/12' : 'bg-surface-container-low'}`}>
+                        <Text className={`text-xs font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}>
                             {formatPrice(item.price) ? `${formatPrice(item.price)} €` : 'Sin precio'}
                         </Text>
                     </View>
