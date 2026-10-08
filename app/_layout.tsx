@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
@@ -116,7 +117,13 @@ export default function RootLayout() {
     }, []);
 
     if (!fontsReady) {
-        return null;
+        // NUNCA `null`. Mientras las fuentes cargan —hasta `FONT_LOAD_MAX_MS` en un
+        // arranque en frío— no se pintaba absolutamente nada, y en un móvil con el
+        // sistema en modo oscuro eso es una **pantalla negra sin explicación**,
+        // indistinguible de una app colgada: el propietario reportó exactamente eso.
+        // Se pinta el fondo de la marca, que es lo que se sigue viendo si las
+        // fuentes no llegan nunca.
+        return <View style={{ flex: 1, backgroundColor: SURFACE_BG }} />;
     }
 
     return (
