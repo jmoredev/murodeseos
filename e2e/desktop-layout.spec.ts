@@ -125,6 +125,54 @@ async function waitGroupsTabLoaded(page: Page) {
     await expect(page.getByText(/Cargando/i)).not.toBeVisible();
 }
 
+test.describe('Banda de dos columnas (769–1009px)', () => {
+    // El grid queda en `w-1/2` desde 769px, y ahí la tarjeta es más estrecha
+    // que a 1280: el chrome fijo (acciones + icono) se come la fila del nombre.
+    // Medición del propietario (odd/tasks/ui-polish.md, U7): a 769 la caja del
+    // nombre mide 25/145, a 900 mide 90/145 y a 1009 mide 144.5/145 — truncada
+    // en TODA la banda. Este guard recorre los anchos reales de la banda para
+    // que un rebrote nombre el ancho concreto que falla.
+    test.use({ viewport: { width: 769, height: 720 } });
+
+    test('group names and participant counters are not truncated at every width of the two-column band', async ({ page }) => {
+        // Cada ancho se mide de forma independiente (viewport + carga completa):
+        // el mensaje de fallo debe nombrar el ancho del drift.
+        for (const width of [769, 900, 1009]) {
+            await page.setViewportSize({ width, height: 720 });
+            await waitGroupsTabLoaded(page);
+
+            // --- Nombre del grupo: misma disciplina de no-vacuidad que a 1280 ---
+            const name = await leafTextBoxState(page, E2E_CONFIG.group.name);
+            expect(
+                name.found,
+                `/?tab=groups a ${width}px: el nombre de grupo «${E2E_CONFIG.group.name}» no está en la lista (drift del fixture o del selector).`,
+            ).toBeGreaterThan(0);
+            expect(
+                name.text,
+                `/?tab=groups a ${width}px: el elemento localizado pinta «${name.text}» y no «${E2E_CONFIG.group.name}» (drift de la medición en ${name.hint}).`,
+            ).toBe(E2E_CONFIG.group.name);
+            expect(
+                name.scrollWidth,
+                `/?tab=groups a ${width}px: el nombre «${E2E_CONFIG.group.name}» NO cabe en su caja (${name.hint}): scrollWidth=${name.scrollWidth} > clientWidth+1=${name.clientWidth + 1} — texto truncado en la banda de dos columnas.`,
+            ).toBeLessThanOrEqual(name.clientWidth + 1);
+
+            // --- Contador «N participantes»: mismo cuello de botella ---
+            const counters = await participantCounterStates(page);
+            expect(
+                counters.length,
+                `/?tab=groups a ${width}px: no se vio ningún contador «N participantes» (drift de GroupCard o del fixture).`,
+            ).toBeGreaterThan(0);
+            const truncated = counters
+                .filter((c) => c.scrollWidth > c.clientWidth + 1)
+                .map((c) => `«${c.text}» (${c.hint}): scrollWidth=${c.scrollWidth} > clientWidth+1=${c.clientWidth + 1}`);
+            expect(
+                truncated,
+                `/?tab=groups a ${width}px: contadores de participantes truncados en horizontal (mismo cuello de botella que el nombre):\n - ${truncated.join('\n - ')}`,
+            ).toEqual([]);
+        }
+    });
+});
+
 test.describe('Diseño de escritorio a 1280px', () => {
     test('group names and participant counters are not collapsed or truncated on the Groups tab', async ({ page }) => {
         await waitGroupsTabLoaded(page);

@@ -175,23 +175,42 @@ export const GroupCard = memo(function GroupCard({
             accessibilityHint="Abrir detalle del grupo"
             className="bg-surface-container-lowest rounded-lg p-4 md:p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
         >
-            {/* Header: la columna fija de acciones (compartir + menú) es solo de
-                escritorio: alinea la columna de título entre tarjetas en el grid
-                `md:`; en pantalla estrecha el ancho es el del contenido, para no
-                dejar solo ~56px al nombre (defecto C3). min-w-0 evita desbordes. */}
-            <View className="flex-row justify-between items-start mb-6 min-w-0">
-                <View className="flex-row items-start flex-1 min-w-0 pr-2">
-                    {/* C3: 56→48 en móvil (+8). El glifo del icono es 30px
-                        (`emojiInCircle(30)`) y cabe en la caja de 48 con aire;
-                        escritorio: md:w-14/md:h-14 de siempre. */}
-                    <View className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
-                        <Text className="text-3xl" style={emojiInCircle(30)}>
-                            {group.icon}
-                        </Text>
-                    </View>
-                    {/* C3: 16→12 en móvil (+4): 44 del lápiz + 4 ya caben a
-                        text-xs en la fila; escritorio: md:ml-4 de siempre. */}
-                    <View className="ml-3 md:ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
+            {/* Header en dos filas (U7, opción B del propietario): fila 1 = icono
+                + columna de acciones; fila 2 = nombre + contador a ANCHO COMPLETO
+                de la tarjeta. En móvil (flex-wrap, el nombre puede encoger) no se
+                produce salto de línea: la fila única de siempre. En escritorio el
+                nombre pasa a `md:w-full md:order-3`, así que salta a su propia
+                línea y las acciones comparten fila con el icono. Así la banda de
+                dos columnas (769–1009px) ya no le quita al nombre el icono (72px)
+                ni la columna de acciones (116px): a 769px el nombre pasa de ~25px
+                a ~220px para un texto de 145px. Coste aceptado: la tarjeta de
+                escritorio es más alta (fila propia del nombre). min-w-0 evita
+                desbordes. */}
+            <View className="flex-row justify-between items-start mb-6 min-w-0 flex-wrap">
+                {/* U7: el bloque de icono es hijo directo del header. En
+                    escritorio comparte fila 1 con las acciones; en móvil sigue
+                    pegado al nombre (fila única de siempre). C3: 56→48 en móvil
+                    (+8). El glifo del icono es 30px (`emojiInCircle(30)`) y cabe
+                    en la caja de 48 con aire; escritorio: md:w-14/md:h-14 de
+                    siempre. */}
+                <View className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
+                    <Text className="text-3xl" style={emojiInCircle(30)}>
+                        {group.icon}
+                    </Text>
+                </View>
+                {/* U7: columna del nombre, hija directa del header. Móvil:
+                    `ml-3` + `flex-1` + `pr-2` = fila única de siempre (icono ·
+                    nombre · acciones). Escritorio: `md:ml-0 md:mt-3 md:order-3
+                    md:w-full` — fila propia a ancho completo, solo con el hueco
+                    superior de 12px. min-h-[3.25rem] se conserva SOLO para
+                    móvil: alinea la columna del nombre con el icono de 48px en
+                    la fila compartida. El `md:min-h-[3.5rem]` anterior era
+                    alineación con el icono de 56px y aquí sería tamaño muerto
+                    (el nombre ya no comparte fila con el icono; la fila mide lo
+                    que piden nombre + contador), así que se elimina. C3: 16→12
+                    en móvil (+4): 44 del lápiz + 4 ya caben a text-xs en la
+                    fila. */}
+                <View className="ml-3 md:ml-0 md:mt-3 md:order-3 md:w-full md:flex-none flex-1 min-w-0 min-h-[3.25rem] pr-2 md:pr-0">
                         {isEditingGroupName ? (
                             <View className="flex-row items-center min-w-0">
                                 <TextInput
@@ -252,9 +271,11 @@ export const GroupCard = memo(function GroupCard({
                         >
                             {participantCount} participantes
                         </Text>
-                    </View>
                 </View>
 
+                {/* U7: columna de acciones sin cambios de tamaño o targets;
+                    en escritorio comparte la fila 1 con el icono (el nombre,
+                    order-3 y w-full, salta a la fila 2). */}
                 <View className="md:w-[7.25rem] shrink-0 flex-row justify-end items-start">
                     <Pressable
                         onPress={stopAnd(handleShareClick)}

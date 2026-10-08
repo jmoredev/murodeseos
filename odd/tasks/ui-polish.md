@@ -97,8 +97,40 @@ Distinción importante, verificada en el código:
 | U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | **hecha** — (1) **copy directo en 7 sitios**: `'Oops!'` era el título de la pantalla 404, `'¡Vaya!'` el encabezado de error de dos pantallas, y cuatro mensajes de éxito llevaban exclamación. (2) **Los tres `alert()` de navegador de `GroupsTab`** (bloqueantes, en una PWA) pasan al brindis de la casa; `ToastComponent` **no estaba montado** y ahora sí. (3) **`lib/format-price.ts`** nuevo: `formatPrice` **no destructivo** —lo que no entiende lo devuelve verbatim— y `parsePriceForSort`, que **cierra un defecto real**: `parseFloat('349,00')` devolvía `349` soltando los decimales en silencio y un valor no numérico producía `NaN` en el comparador (orden indefinido). Placeholder `0,00`. (4) El **clamp de notas no se tocó**: el seed inserta `notes: ''`, así que no hay nada que recortar — hallazgo de datos, no visual |
 | U5 | Semántica de color: separar los tokens sobrecargados en tokens con un significado único, sin cambiar los colores | **hecha** — el censo real resultó **mayor que el enunciado**: `secondary` y `tertiary` llevaban **siete significados** entre los dos (prioridad media/baja, chip de precio, éxito, insignia de rol Admin, insignia «Reservado por ti», CTA «Ya lo tengo» y tinte decorativo de notificación), y `primary` cargaba además el de «prioridad alta». Se añadieron **9 tokens de significado** en `tailwind.config.cjs` (`priority-high/medium/low`, `price`, `success`, `role-badge`, `reserved`, `accent-warm`, `accent-cool`) con **los mismos hex exactos** y se re-apuntaron **24 usos en 7 ficheros**. `secondary`/`tertiary` quedaron **sin ninguna referencia** y se **retiraron del config** (el propio bloque de alias heredados dice quitarlos cuando eso pasa). `docs/DESIGN.md:81` prescribía justamente esos dos tokens muertos y se actualizó. **Render idéntico**: cada token nuevo apunta al hex que ya resolvía el viejo |
 | U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | **hecha** — envoltorio único `components/ui/AppIcon.tsx` (familia Feather, color **siempre** por `className`), **23 sitios** sustituidos en 8 ficheros y guardián `__tests__/icon-chrome.test.ts`. Ver «Verificación de U6» |
-| U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | **en curso** — opción B: el nombre pasa a su propia línea en `components/GroupCard.tsx`, con ancho completo a cualquier viewport |
+| U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | **hecha** — opción B en `components/GroupCard.tsx`: el encabezado pasa a `flex-wrap` y la columna del nombre a `md:w-full md:order-3 md:mt-3` (fila propia a ancho completo). Guardián nuevo en `e2e/desktop-layout.spec.ts` que recorre los tres anchos de la banda. Ver «Verificación de U7» |
 | U8 | Cerrar los 3 hallazgos de la revisión de U4+U5: precio accesible sin «€», `formatPrice` con valores no finitos y comparador que devuelve `NaN` | **hecha** — `lib/format-price.ts` (guarda de finitud en `formatPrice` + comparador nuevo `comparePriceForSort`, un orden total que nunca devuelve `NaN`), `components/WishListTab.tsx:118` (usa el comparador) y `components/WishlistCard.tsx:67` (el precio accesible pasa al **nombre**, que sí se renderiza). Ver «Verificación de U8» |
+
+## Verificación de U7 (2026-10-08)
+
+**Cambio**: el encabezado de la tarjeta pierde el envoltorio interno y pasa a `flex-row flex-wrap`; el bloque de icono y la columna de acciones son hijos directos y comparten fila, y la columna del nombre lleva `md:ml-0 md:mt-3 md:order-3 md:w-full md:flex-none`. En móvil no hay salto (el nombre conserva `flex-1 min-w-0` y encoge), así que la fila única de siempre se mantiene. Se elimina `md:min-h-[3.5rem]`: era la alineación con el icono de 56px y, al no compartir ya la fila, quedaba como tamaño muerto; `min-h-[3.25rem]` se conserva **solo** para móvil.
+
+**RED observado por el escritor antes de tocar la maquetación** (`e2e/desktop-layout.spec.ts`, el guardián ampliado fallando contra el árbol anterior):
+
+```
+/?tab=groups a 769px: el nombre «E2E Test Group» NO cabe en su caja: scrollWidth=145 > clientWidth+1=26
+```
+
+**Medición del padre en navegador** (Edge headless, app local con Supabase sembrado), caja del nombre `clientWidth/scrollWidth`:
+
+| Viewport | Antes | Ahora | Resultado |
+| --- | --- | --- | --- |
+| 360 | 82 / 82 | **82 / 82** | idéntico — móvil sin regresión |
+| 768 | 640 / 640 | **640 / 640** | idéntico (a 768 sigue siendo móvil: el umbral es `> 768`) |
+| **769** | 25 / 145 | **221 / 221** | banda cerrada |
+| **900** | 90 / 145 | **286 / 286** | banda cerrada |
+| **1009** | 144,5 / 145 | **341 / 341** | banda cerrada |
+| 1010 | 145 / 145 | **341 / 341** | sin regresión |
+| 1280 | 152 / 152 | **348 / 348** | mejor |
+
+Contadores «N participantes» sin truncar en todos los anchos (269/269 · 334/334 · 389/389 · 396/396) y sin desborde horizontal de documento. La línea base se reprodujo revirtiendo `components/GroupCard.tsx` de forma temporal (`git stash`): a 769 volvió a medir **25/145 truncando**, lo que confirma que el guardián mide el defecto real y no un artefacto.
+
+**Coste real medido, y el informe del escritor se quedó corto**: la tarjeta de escritorio pasa de **179px a 247px** de alto → **+68px**, no los ~40px que el escritor estimó analíticamente (dijo no haber podido medir el «antes» sin revertir). El ancho **no** cambia (316,5 a 769 · 444 a 1280), luego el grid no se ha tocado. A 360px la tarjeta mide **328×175 antes y después**: cero regresión móvil, medido.
+
+**Limpieza del padre**: el escritor había duplicado `test.use({ viewport: 1280 })` dentro del segundo describe, cuando ya existe a nivel de fichero; se retiró la línea redundante (el scope de fichero ya cubre ese describe y el de la banda lo sobrescribe a 769).
+
+**Guardián nuevo**: `test.describe('Banda de dos columnas (769–1009px)')` recorre `[769, 900, 1009]` con `setViewportSize` + `waitGroupsTabLoaded` por ancho, y aserta no-vacuidad, `scrollWidth <= clientWidth + 1` del nombre y de cada contador, con el ancho en el mensaje de fallo. Cierra el hueco V9 que la feature anterior dejó abierto: el guardián de 1280 cazaba el colapso a 0 pero **no** protegía esta banda.
+
+**Estado**: `pnpm run typecheck` y `pnpm run lint` (`--max-warnings 0`) limpios; `test:unit` **30 ficheros / 242 passed + 1 todo**; `playwright test --project=chromium e2e/desktop-layout.spec.ts --workers=1` → **3 passed** (banda + 1280).
 
 ## Verificación de U8 (2026-10-08)
 
