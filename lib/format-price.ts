@@ -41,9 +41,10 @@ export function formatPrice(price: string | number | null | undefined): string |
 /**
  * Convierte un precio de texto en un número comparable para ordenar.
  *
- * Devuelve `null` cuando el valor no se puede interpretar como número: un
- * comparador que devuelva `NaN` deja el orden indefinido, así que el que llama
- * debe elegir un valor estable para los no numéricos.
+ * Devuelve `null` cuando el valor no se puede interpretar como número. Para
+ * ordenar, usa **`comparePriceForSort`**: decidir la clave de los no numéricos
+ * en cada llamador fue exactamente lo que produjo el comparador que devolvía
+ * `NaN` (`Infinity - Infinity`) y dejaba el orden indefinido.
  */
 export function parsePriceForSort(price: string | number | null | undefined): number | null {
     if (price === null || price === undefined) return null;
