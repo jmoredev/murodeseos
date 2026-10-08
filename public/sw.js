@@ -38,7 +38,7 @@ function offlinePage() {
       '<p style="margin:0 0 1.5rem;line-height:1.5;opacity:0.8">No se ha podido cargar la aplicación. Comprueba tu conexión e inténtalo de nuevo.</p>' +
       '<button onclick="location.reload()" style="min-height:44px;padding:0.75rem 1.5rem;border:0;border-radius:9999px;background:#aa2c32;color:#fff4f4;font-size:1rem;font-weight:700;cursor:pointer">Reintentar</button>' +
       '</main></body></html>',
-    { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }
+    { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
   );
 }
 
@@ -93,12 +93,21 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const fresh = await fetchWithTimeout(request, NAV_FETCH_MS);
-          // Red primero y **sin cachear**: la cáscara no se guarda nunca, así que
-          // no puede sobrevivir a los chunks que referencia (ver `offlinePage`).
-          if (fresh.ok) return fresh;
-          // Un 404 de Pages trae el HTML del 404, no la aplicación: no se sirve.
-          return offlinePage();
+          // Se devuelve la respuesta **fresca tal cual, también si es un 404**, y
+          // nunca se cachea. Un 404 aquí NO es un fallo de red: Pages sirve las
+          // rutas dinámicas (`/groups/<uuid>`, `/wishlist/<id>`) con el cuerpo del
+          // `index.html` **actual**, así que la app arranca y enruta con
+          // normalidad. Convertirlo en la página de sin conexión rompía enlaces
+          // profundos y recargas **estando en línea**, y como el botón de
+          // reintentar pide lo mismo, dejaba un callejón sin salida.
+          //
+          // El negro se arregla en el `catch`: ahí es donde antes se servía una
+          // cáscara **cacheada**, que podía apuntar a chunks ya borrados.
+          return fresh;
         } catch {
+          // Fallo de red o tiempo agotado: no se sirve ninguna cáscara cacheada
+          // (puede referenciar chunks que el despliegue siguiente ya borró), sino
+          // una página autocontenida que no depende de ningún activo.
           return offlinePage();
         }
       })()

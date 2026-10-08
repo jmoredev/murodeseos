@@ -14,11 +14,14 @@ type Bucket = Map<string, Response>;
 const SW_SCOPE = `${SW_ORIGIN}/murodeseos/`;
 
 /**
- * `caches.match` acepta un `Request` **o una ruta relativa** (`'./'`), y el SW usa
- * la forma relativa para su respaldo de navegación (`public/sw.js:81`). Sin
- * resolverla contra el scope, el mock no encontraría nunca esa entrada y el
- * respaldo quedaría **invisible** para los tests: justo el camino que produce la
- * pantalla negra.
+ * `caches.match` acepta un `Request` **o una ruta relativa** (`'./'`).
+ *
+ * La forma relativa **ya no la usa el SW**: era su respaldo de navegación
+ * (`caches.match('./')`) y desapareció en la v5, porque servir una cáscara
+ * cacheada es lo que producía la pantalla negra. La rama se conserva **como
+ * guardián**: si alguien reintroduce ese respaldo, el mock debe poder verlo —
+ * antes sólo resolvía `request.url`, así que ese camino era **invisible** para
+ * los tests y el defecto pasó desapercibido.
  */
 function resolveCacheKey(request: Request | string) {
     return typeof request === 'string' ? new URL(request, SW_SCOPE).href : request.url;
@@ -217,6 +220,52 @@ describe('service worker (public/sw.js)', () => {
 
         // `Response.error()`: el fallo se declara como fallo, no se disfraza de JS.
         expect(response.type).toBe('error');
+    });
+
+    it('una navegación con 404 NO se convierte en «Sin conexión»: ahí Pages sirve la cáscara actual', async () => {
+        // Regresión que este test caza, y que se pagó: Pages contesta **404 en las
+        // rutas dinámicas** (`/groups/<uuid>`, `/wishlist/<id>`) con el cuerpo del
+        // `index.html` actual, así que la app arranca y enruta con normalidad.
+        // Convertir ese 404 en la página de sin conexión rompía enlaces profundos y
+        // recargas **estando en línea**, y el botón de reintentar pedía lo mismo y
+        // volvía al mismo sitio: callejón sin salida.
+        const sandbox = createSandbox();
+        sandbox.fetchMock.mockResolvedValueOnce(
+            new Response(
+                '<html><script src="/murodeseos/_expo/static/js/web/entry-ACTUAL.js"></script></html>',
+                { status: 404 },
+            ),
+        );
+
+        const event = dispatchFetch(sandbox, navigationRequest(`${SW_ORIGIN}/murodeseos/groups/E2E001`));
+        const response = await event.respondWith.mock.calls[0][0];
+        const body = await response.text();
+
+        expect(response.status).toBe(404);
+        expect(body).toContain('entry-ACTUAL.js');
+        expect(body).not.toMatch(/sin conexi/i);
+    });
+
+    it('un recurso no-ok con copia en caché se sirve desde la caché, no como error', async () => {
+        // El camino `cached ?? Response.error()`: la red da un no-ok (el HTML del 404
+        // de un chunk borrado) pero hay copia buena, y la copia gana.
+        const sandbox = createSandbox();
+        const cachedBody = 'console.log("bundle cacheado")';
+        sandbox.cacheApi.store.set(
+            CACHE_NAME,
+            new Map([
+                [`${SW_ORIGIN}/murodeseos/_expo/static/js/web/entry-viejo.js`, new Response(cachedBody)],
+            ]),
+        );
+        sandbox.fetchMock.mockResolvedValueOnce(new Response('<!DOCTYPE html><html>404</html>', { status: 404 }));
+
+        const event = dispatchFetch(
+            sandbox,
+            new Request(`${SW_ORIGIN}/murodeseos/_expo/static/js/web/entry-viejo.js`),
+        );
+        const response = await event.respondWith.mock.calls[0][0];
+
+        expect(await response.text()).toBe(cachedBody);
     });
 
     it('la cáscara no acaba en la caché: no puede sobrevivir a los chunks que referencia', async () => {

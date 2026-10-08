@@ -85,7 +85,20 @@ El viejo entrega la cáscara que apunta a un bundle muerto: el navegador lo pide
 | P1 | **Reproducir** el negro en local: fijar el comportamiento actual del SW con tests que **fallen en rojo** (cáscara obsoleta servida y respuesta no-ok entregada como recurso) y una demostración en navegador con un despliegue simulado | **hecha (tests)** — cuatro tests en `__tests__/sw.test.ts` que describen el contrato correcto y **fallan los cuatro** contra el SW actual. El primero es la reproducción literal: el SW devuelve `<html><script src="…/entry-VIEJO.js">`, el chunk que el despliegue borró. Ver «Reproducción» |
 | P2 | **Arreglo del SW**: no servir una cáscara que pueda sobrevivir a sus chunks, y no entregar respuestas no-ok para recursos | **hecha** — `VERSION` a **`v5`** (cambia la estrategia: es lo que purga la caché vieja), `'./'` **fuera** de `CORE_ASSETS`, la cáscara **no se cachea nunca** en navegación, `offlinePage()` autocontenida como respuesta cuando la navegación no se puede servir, y `Response.error()` en vez de entregar una respuesta no-ok de un recurso |
 | P3 | **Recuperación en la app** ante un chunk ausente (recarga en vez de negro) y `_layout` que no pinte `null` | **parcial, y acotado con dato**: **no hay code splitting** (el export produce **un único** `entry-<hash>.js`), así que no existen chunks perezosos que puedan fallar y la recuperación de chunks **no aplica**; `app/_layout.tsx` ya no pinta `null` sino el fondo de marca. Ver «Verificación» |
-| P4 | Verificación (estáticos, unitarios, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | pendiente |
+| P4 | Verificación (estáticos, unitarios, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | **verificación hecha**; revisión nativa pendiente |
+
+## Verificación de la corrección de F1
+
+Mismo arnés que la demostración A/B, con el `sw.js` corregido, contra una ruta dinámica cuyo 404 devuelve la cáscara actual:
+
+| Petición de navegación | Resultado |
+| --- | --- |
+| **En línea** (404 de ruta dinámica) | 404 · **17 991** caracteres · referencia `entry-0d7e7fbe….js` · **no** es «Sin conexión» → **la app arranca** |
+| **Fallo de red** | 200 · **835** caracteres · **sin** referencia a bundle · sí es «Sin conexión» → autocontenida |
+
+Es la semántica correcta en las dos direcciones: el 404 se respeta porque ahí está la app, y el fallo de red sigue dando algo legible en vez de una cáscara muerta.
+
+**Estado final de la verificación**: `node --check` OK; `typecheck` y `lint` limpios; `test:unit` **248 passed + 1 todo** (30 ficheros; +2 tests: el del 404 de navegación y el de la caché en un recurso no-ok); E2E chromium con resiembra y `--workers=1` → **52 passed / 1 skipped**.
 
 ## Restricciones
 
@@ -106,3 +119,5 @@ El viejo entrega la cáscara que apunta a un bundle muerto: el navegador lo pide
 - **`dfa7a89`** — `test(pwa): pin the contract that makes the black screen impossible` (P1).
 - **`f06745b`** — `fix(pwa): never serve a shell that can outlive its own chunks` (P2).
 - **`91c2dae`** — `fix(pwa): paint the brand surface while fonts load, never nothing` (P3).
+- **`2a4b1ad`** — `docs(odd): record the black screen verification and what it does not prove`.
+- **`6825fb7`** — `fix(pwa): a 404 navigation is the app, not an offline page` (corrección de F1, con test que la caza).
