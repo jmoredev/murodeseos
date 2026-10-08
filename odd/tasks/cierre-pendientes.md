@@ -20,8 +20,8 @@ Son deudas de trabajos **ya fusionados y ya revisados**: no abren comportamiento
 | --- | --- | --- |
 | C1 | Cerrar `publicacion.md` tarea 5 con la evidencia de la primera etiqueta real, y actualizar `docs/DEVELOPMENT.md` donde dice que «hasta que se empuje la primera no habrá nada que consultar» | pendiente |
 | C2 | Guardián del borde de 768px: medir y aseverar que en esa anchura el nombre no se trunca, y dejar escrito el híbrido | **hecha** — `test.describe('El borde de 768px')` en `e2e/desktop-layout.spec.ts`, con el híbrido explicado en el comentario. **Visto fallando** con una rotura inyectada (`md:w-full` → `md:w-16`, que deja el nombre en 64px): `768px: el nombre «E2E Test Group» NO cabe: scrollWidth=28 > clientWidth+1=17`; revertida la rotura, verde |
-| C3 | Endurecer el guardián de iconos para que falle ante un `import` directo de `@expo/vector-icons` fuera del envoltorio | pendiente |
-| C4 | Corregir el comentario obsoleto de `lib/format-price.ts:44-46` | pendiente |
+| C3 | Endurecer el guardián de iconos para que falle ante un `import` directo de `@expo/vector-icons` fuera del envoltorio | **hecha** — `directFeatherOffenders` cubre las cuatro vías de entrada (defecto, nombrada, espacio de nombres y `require`) además de la etiqueta. **Visto fallando** inyectando `import Ionicons from '@expo/vector-icons'` en `components/ResponsiveLayout.tsx`: `ResponsiveLayout.tsx: import '@expo/vector-icons'`; revertido, verde. Con control negativo de cinco casos positivos y dos negativos |
+| C4 | Corregir el comentario obsoleto de `lib/format-price.ts:44-46` | **hecha** — el doc de `parsePriceForSort` ya no pide al llamador «elegir un valor estable para los no numéricos» (el consejo que produjo el comparador con `NaN`); ahora remite a `comparePriceForSort` |
 
 ## Contexto: el error de la etiqueta ligera (culpa propia)
 
@@ -65,5 +65,5 @@ Revertida la rotura (`git checkout -- components/GroupCard.tsx`), la suite vuelv
 ## Commits
 
 - **`aba1faf`** — `docs(odd): the tag trigger is proved, and the tag should have been annotated` (C1).
-
-_(se completan al cerrar cada unidad)_
+- **`7456e11`** — `test(e2e): guard the 768px boundary, where two rules disagree` (C2).
+- _(C3 y C4, pendientes de commit)_
