@@ -120,4 +120,4 @@ Es la semántica correcta en las dos direcciones: el 404 se respeta porque ahí 
 - **`f06745b`** — `fix(pwa): never serve a shell that can outlive its own chunks` (P2).
 - **`91c2dae`** — `fix(pwa): paint the brand surface while fonts load, never nothing` (P3).
 - **`2a4b1ad`** — `docs(odd): record the black screen verification and what it does not prove`.
-- **`6825fb7`** — `fix(pwa): a 404 navigation is the app, not an offline page` (corrección de F1, con test que la caza).
+- **`30046a4`** — `fix(pwa): a 404 navigation is the app, not an offline page` (corrección de F1, con test que la caza).
