@@ -96,7 +96,7 @@ Distinción importante, verificada en el código:
 | U3 | Truncamientos y CTA: títulos de deseos legibles a 360px y «✓ Ya lo tengo» sin partirse en dos líneas | **hecha** — dos cambios en `components/WishlistCard.tsx`: el título pasa de `numberOfLines={2}` a `{3}` (a 360px la tarjeta da ~116px de texto y un título real necesita 3 líneas: `scrollHeight 60 / clientHeight 40` medidos), y el CTA baja su `tracking-[0.2em]` a `[0.05em]` — ese tracking sumaba ~31px sobre 13 caracteres y era la causa del corte, no el texto. Resultado medido en los **5 usuarios sembrados**: ningún título recortado (incluido «Auriculares Sony WH-1000XM5», el que acreditó el defecto, ahora en 3 líneas completas) y el CTA en **una sola línea** (`103×16`, antes `116×32`) con objetivo táctil de 44px intacto |
 | U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | **hecha** — (1) **copy directo en 7 sitios**: `'Oops!'` era el título de la pantalla 404, `'¡Vaya!'` el encabezado de error de dos pantallas, y cuatro mensajes de éxito llevaban exclamación. (2) **Los tres `alert()` de navegador de `GroupsTab`** (bloqueantes, en una PWA) pasan al brindis de la casa; `ToastComponent` **no estaba montado** y ahora sí. (3) **`lib/format-price.ts`** nuevo: `formatPrice` **no destructivo** —lo que no entiende lo devuelve verbatim— y `parsePriceForSort`, que **cierra un defecto real**: `parseFloat('349,00')` devolvía `349` soltando los decimales en silencio y un valor no numérico producía `NaN` en el comparador (orden indefinido). Placeholder `0,00`. (4) El **clamp de notas no se tocó**: el seed inserta `notes: ''`, así que no hay nada que recortar — hallazgo de datos, no visual |
 | U5 | Semántica de color: separar los tokens sobrecargados en tokens con un significado único, sin cambiar los colores | **hecha** — el censo real resultó **mayor que el enunciado**: `secondary` y `tertiary` llevaban **siete significados** entre los dos (prioridad media/baja, chip de precio, éxito, insignia de rol Admin, insignia «Reservado por ti», CTA «Ya lo tengo» y tinte decorativo de notificación), y `primary` cargaba además el de «prioridad alta». Se añadieron **9 tokens de significado** en `tailwind.config.cjs` (`priority-high/medium/low`, `price`, `success`, `role-badge`, `reserved`, `accent-warm`, `accent-cool`) con **los mismos hex exactos** y se re-apuntaron **24 usos en 7 ficheros**. `secondary`/`tertiary` quedaron **sin ninguna referencia** y se **retiraron del config** (el propio bloque de alias heredados dice quitarlos cuando eso pasa). `docs/DESIGN.md:81` prescribía justamente esos dos tokens muertos y se actualizó. **Render idéntico**: cada token nuevo apunta al hex que ya resolvía el viejo |
-| U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | **hecha** — envoltorio único `components/ui/AppIcon.tsx` (familia Feather, color **siempre** por `className`), **23 sitios** sustituidos en 8 ficheros y guardián `__tests__/icon-chrome.test.ts`. Ver «Verificación de U6» |
+| U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | **hecha** — envoltorio único `components/ui/AppIcon.tsx` (familia Feather, color **siempre** por `className`), **25 sitios** sustituidos en 8 ficheros y guardián `__tests__/icon-chrome.test.ts`. Ver «Verificación de U6» |
 | U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | **hecha** — opción B en `components/GroupCard.tsx`: el encabezado pasa a `flex-wrap` y la columna del nombre a `md:w-full md:order-3 md:mt-3` (fila propia a ancho completo). Guardián nuevo en `e2e/desktop-layout.spec.ts` que recorre los tres anchos de la banda. Ver «Verificación de U7» |
 | U8 | Cerrar los 3 hallazgos de la revisión de U4+U5: precio accesible sin «€», `formatPrice` con valores no finitos y comparador que devuelve `NaN` | **hecha** — `lib/format-price.ts` (guarda de finitud en `formatPrice` + comparador nuevo `comparePriceForSort`, un orden total que nunca devuelve `NaN`), `components/WishListTab.tsx:118` (usa el comparador) y `components/WishlistCard.tsx:67` (el precio accesible pasa al **nombre**, que sí se renderiza). Ver «Verificación de U8» |
 
@@ -115,7 +115,7 @@ Distinción importante, verificada en el código:
 | Viewport | Antes | Ahora | Resultado |
 | --- | --- | --- | --- |
 | 360 | 82 / 82 | **82 / 82** | idéntico — móvil sin regresión |
-| 768 | 640 / 640 | **640 / 640** | idéntico (a 768 sigue siendo móvil: el umbral es `> 768`) |
+| 768 | 444 / 444 | **640 / 640** | **no es «idéntico»**: el nombre gana 196px y la tarjeta pasa de 179 a 247px (+68). Ver «El borde de 768px» |
 | **769** | 25 / 145 | **221 / 221** | banda cerrada |
 | **900** | 90 / 145 | **286 / 286** | banda cerrada |
 | **1009** | 144,5 / 145 | **341 / 341** | banda cerrada |
@@ -131,6 +131,35 @@ Contadores «N participantes» sin truncar en todos los anchos (269/269 · 334/3
 **Guardián nuevo**: `test.describe('Banda de dos columnas (769–1009px)')` recorre `[769, 900, 1009]` con `setViewportSize` + `waitGroupsTabLoaded` por ancho, y aserta no-vacuidad, `scrollWidth <= clientWidth + 1` del nombre y de cada contador, con el ancho en el mensaje de fallo. Cierra el hueco V9 que la feature anterior dejó abierto: el guardián de 1280 cazaba el colapso a 0 pero **no** protegía esta banda.
 
 **Estado**: `pnpm run typecheck` y `pnpm run lint` (`--max-warnings 0`) limpios; `test:unit` **30 ficheros / 242 passed + 1 todo**; `playwright test --project=chromium e2e/desktop-layout.spec.ts --workers=1` → **3 passed** (banda + 1280).
+
+### El borde de 768px: una afirmación mía que no había medido
+
+**Error propio, corregido aquí.** La primera versión de la tabla decía «768 → 640/640 · idéntico». **Nunca medí el 768 antes**: lo extrapolé de que el umbral de producto es `> 768`. La verificación independiente lo señaló, y al medirlo de verdad la cifra era otra: **antes 444/444** (no 640) y **nada de idéntico** — el nombre gana **196px** y la tarjeta crece igual que en escritorio (**179 → 247px**). Es exactamente la clase de afirmación sin medir que le reproché al escritor en esta misma unidad; queda escrita para que no se repita.
+
+**Y hay una rareza real que conviene saber**: en **768px exactos** el layout es **híbrido**, porque Tailwind `md` es `min-width: 768px` mientras que `lib/use-is-desktop.ts` usa `width > 768`:
+
+- el **grid** sigue en móvil (1 columna, tarjeta de 736px), porque `isDesktop` es falso; pero
+- las clases **`md:`** de `GroupCard` **sí** aplican, así que el nombre salta a su propia fila.
+
+La mezcla es **previa** a U7 (el fichero ya usaba `md:w-14`, `md:ml-4`, `md:p-6`), pero U7 es lo primero que hace que ese borde cambie de **fila**. El efecto neto es favorable (el nombre pasa de 444 a 640px de ancho), **no** una regresión, pero ese borde **no lo cubre ningún guardián**: el de la banda mide 769/900/1009 y el de escritorio mide 1280.
+
+### Verificación independiente del corte (2026-10-08)
+
+Delegada en modo **read-only** con mandato explícito de **falsificar, no confirmar** (`gentle-ai-verify`). Reprodujo por su cuenta: `test:unit` 30/242+1, `typecheck` y `lint` en 0, y **tres specs** de Playwright en verde (`desktop-layout` 3 passed · `mobile-layout` 7 passed / 1 skipped · `responsive-wishlist` 5 passed). No modificó ningún fichero versionado.
+
+**Veredictos**: las tres afirmaciones de U8 **confirmadas** (y en la del precio accesible dio una causa **más precisa** que la mía: `react-native-web` 0.21.2 no traduce la forma **objeto** de `accessibilityValue` en **ningún** rol, no sólo en `role="button"` — mi conclusión era correcta y mi explicación se quedaba corta). U6 #4/#5/#7 confirmadas; #6 verificada sólo por mecanismo (no re-midió colores). U7 #8/#9/#11 confirmadas por paso del guardián; **#10 (el coste en altura) declarada no verificada** por no tener vía de medición read-only — la medí yo, y es el número de arriba.
+
+**Hallazgos suyos, todos registrados como trabajo posterior y ninguno bloqueante**:
+
+| ID | Sev. | Qué |
+| --- | --- | --- |
+| V-B | WARNING | El guardián de iconos sólo mira **etiquetas JSX `<Feather>`**; no cazaría `import Ionicons from '@expo/vector-icons'` ni `Icons.Feather`. Hoy la familia única la sostiene el `grep`, no el guardián |
+| V-C | WARNING | El **borde de 768px** no lo cubre ningún guardián (ver arriba) |
+| V-D | informativo | El guardián de U7 protege que quepa el **fixture de 145px**; un nombre más largo sigue truncando por diseño (`numberOfLines={1}` en escritorio). No cubre 768 ni el coste en altura |
+| V-A | doc | «23 sitios» → **25** (ya corregido arriba) |
+| V-E | doc | Comentario obsoleto en `lib/format-price.ts:44-46`: sigue diciendo que el llamador «elija un valor estable para los no numéricos», cosa que ahora hace `comparePriceForSort` por él |
+
+**Decisión de proceso**: **no** se toca código para cerrar estos hallazgos. La autoridad de revisión está quemada sobre este árbol y lo que se entrega es **exactamente el árbol de código revisado** (verificado: `git diff e1dad48..HEAD` sólo toca esta ficha); las cinco son mejoras de guardián o documentación, no defectos, y el propio proveedor declara sus advisory «trabajo posterior, nunca motivo para repetir la revisión». Meterlas ahora dejaría código sin revisar al final de la rama, que es peor que un guardián flojo documentado.
 
 ## Verificación de U8 (2026-10-08)
 
@@ -155,9 +184,11 @@ El comparador viejo (`?? Number.POSITIVE_INFINITY`) devolvía `NaN` incluso con 
 
 **Envoltorio único**: `components/ui/AppIcon.tsx` — una familia (Feather), un peso, y el color **siempre** por el `className` NativeWind del llamador (nunca una prop `color` con hex, que rompería el token del tema). Los nombres permitidos derivan del propio `Feather.glyphMap`, así que un nombre inexistente es un error de tipos y no un «?» silencioso. Se importa por la subruta `@expo/vector-icons/Feather` (el índice del paquete arrastra todos los sets).
 
-**23 sitios sustituidos en 8 ficheros**: dock (🎁👥👤), glifos de control (✓ ✕ ⋮ ✎ ↗ ←) y los placeholders decorativos de 40 y 64px. **Intactos por decisión**: avatares de usuario, `groups.icon` (dato de BD), los pictogramas de tipo de notificación (✨🎁📭🎅🎂🕯️🔔 — son contenido semántico, no cromo de control; Feather no tiene equivalente para 🎂/🕯️/🎅 y un icono genérico perdería significado) y el 😕 de los estados de error. **Fuera de alcance, anotado**: el `›` de «Ver deseos ›» (va dentro de una etiqueta de texto) y el 🗑 de los modales de borrado.
+**25 sitios sustituidos en 8 ficheros**: dock (🎁👥👤), glifos de control (✓ ✕ ⋮ ✎ ↗ ←) y los placeholders decorativos de 40 y 64px. **Intactos por decisión**: avatares de usuario, `groups.icon` (dato de BD), los pictogramas de tipo de notificación (✨🎁📭🎅🎂🕯️🔔 — son contenido semántico, no cromo de control; Feather no tiene equivalente para 🎂/🕯️/🎅 y un icono genérico perdería significado) y el 😕 de los estados de error. **Fuera de alcance, anotado**: el `›` de «Ver deseos ›» (va dentro de una etiqueta de texto) y el 🗑 de los modales de borrado.
 
-**Guardián** `__tests__/icon-chrome.test.ts` (5 pruebas): cero glifos en los ficheros del cromo, no-vacuidad (9 ficheros leídos y no vacíos, comprobado antes de barrer), `@expo/vector-icons` importado **sólo** por el envoltorio (por AST, no por regex) y el propio `AppIcon` sin color hardcodeado. El escritor observó el **RED con 24 ofendidos** (los 23 sitios más el fichero del envoltorio, que aún no existía).
+> **Corrección de un recuento propio (2026-10-08)**: esta ficha y el mensaje del commit `d488200` dicen «**23 sitios**». Es **falso**: son **25** (`grep -ro "<AppIcon" app components` → 1+3+8+3+3+2+3+2). Conté **filas de la tabla de mapeo**, no sitios, y varias filas cubrían dos. El mensaje de commit no se reescribe porque la revisión nativa está quemada sobre este rango y reescribir los ids invalidaría el recibo; queda anotado aquí para el PR.
+
+**Guardián** `__tests__/icon-chrome.test.ts` (5 pruebas): cero glifos en los ficheros del cromo, no-vacuidad (9 ficheros leídos y no vacíos, comprobado antes de barrer), `@expo/vector-icons` importado **sólo** por el envoltorio (por AST, no por regex) y el propio `AppIcon` sin color hardcodeado. El escritor observó el **RED con 24 ofendidos**: los 24 sitios dentro del alcance del guardián (el sitio restante hasta 25 es el `←` de `app/groups/[id]/index.tsx`, que está excluido) más el fichero del envoltorio, que aún no existía.
 
 **Defecto del guardián, encontrado y corregido por el padre**: el barrido de texto marcaba el glifo **dentro de un comentario**, así que el guardián se puso rojo por su propia documentación (dos comentarios que explicaban el retiro del ✓). Se reescribió para recorrer el **AST** y mirar sólo `JsxText` y literales de cadena, que por construcción nunca son comentarios, con **control negativo en el propio test** (`// ✓` y `{/* ✓ */}` no cuentan; `<Text>✓</Text>` sí). El primer intento con el escáner de TypeScript devolvía **0 comentarios** en el fichero real, así que se descartó esa vía en lugar de dejarla a medias.
 
