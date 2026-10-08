@@ -1,6 +1,6 @@
 # Pulido de interfaz: contraste, semántica de color, truncamientos y cromo (`fix/ui-polish`)
 
-**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U5 cerradas y revisadas; cierre en curso con U6, U7 y U8
+**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** cerrada — U1–U8 hechas, verificadas y **aprobadas por revisión nativa** (U1+U2+U3, U4+U5 y U6+U7+U8, las tres quemadas); pendiente empujar la rama y abrir el PR, que es decisión del propietario
 
 ## Objetivo
 
@@ -200,6 +200,19 @@ El comparador viejo (`?? Number.POSITIVE_INFINITY`) devolvía `NaN` incluso con 
 - Los emoji de los avatares **se recortan** (23px de contenido en 20px de caja). Si no se sustituyen por iconos, hay que darles caja suficiente.
 - El campo `icon` del grupo existe en la base de datos y **la UI no permite elegirlo**: `app/groups/create/index.tsx:12` lo fija a `'🎁'`. Hueco de producto, fuera del alcance de esta tanda.
 - Coherencia de `uppercase tracking-*`: 60 usos con valores dispares. Trabajo posterior.
+- **(U6, `R3-appicon-color-contract-unproved`)** — el guardián de iconos comprueba que el envoltorio **no** lleva un hex hardcodeado, pero eso **no prueba** que el colour llegue a pintarse: la prueba real fue la medición en navegador (dock activo `rgb(170,44,50)` = `text-primary`, inactivos `rgba(76,33,43,0.7)` = `text-on-surface/70`, idénticos a la etiqueta). El guardián unitario no puede sostener esa afirmación; si se quiere automatizar, tiene que ser un test de navegador, no de fuente.
+- **(U6, `R3-icon-guard-whole-file-exemption`)** — la exclusión de `app/groups/[id]/index.tsx` en el guardián es **por fichero entero** (el `🎁` de `{group?.icon}` es un dato de BD), así que un glifo de chrome reintroducido en ese fichero **no** lo cazaría. Trabajo posterior: acotar la exclusión a la línea del `icon`.
+- **(U6, `R3-vector-icons-alias-scope`)** — el alias de vitest apunta sólo a la subruta `@expo/vector-icons/Feather`; un import del índice del paquete no pasaría por el mock. Hoy es correcto porque el envoltorio es el único que importa la familia, pero conviene saberlo antes de añadir un segundo punto de import.
+
+## Revisión nativa del corte U6+U7+U8 (2026-10-08)
+
+Linaje **`review-6972711e352f35e5`**: riesgo medio, 1 lente (`review-reliability`), **21 ficheros / 839 líneas** (`737+102`), presupuesto de corrección 200 → **aprobada a la primera** (sin refutador) y autoridad **quemada** (`gentle-ai.review-acknowledged/v1`).
+
+**Acotado del candidato**: `inspect` sólo ofrecía **`supabase/config.toml`** (la proyección `workspace` ve el árbol sucio, no el contenido commiteado), que es el **swap temporal de puertos** — un artefacto de entorno, no la feature. Se verificó comparando el `base_tree` del candidato con `git rev-parse HEAD^{tree}` (coincidían) y se arrancó con **`baseRef=bbbec9665249c8b1e3a5e504e413944d96115fa7` + `committedOnly: true`**, que acotó exactamente el corte (21 ficheros, `737+102=839` líneas, sin `supabase/`). **Tercera vez que este repo paga la misma trampa**: cuando la implementación está commiteada y el árbol tiene un cambio local intencionado, la proyección del recordatorio apunta al artefacto.
+
+**Un incidente sin consumo de autoridad**: el primer `start` devolvió `consent-binding-stale` / `consent-binding-expired` (una binding caducada a los 10 minutos sin respuesta) con `lineage_created: false` y `mutation_performed: false`. Reejecutado `start` con `idempotencyKey` nueva → linaje creado a la primera. **Nada se quemó en el intento fallido.**
+
+Tres hallazgos **advisory, informativos, ninguno bloqueante** (el proveedor lo dice explícitamente: no reabren la revisión ni son motivo para repetirla; son trabajo posterior, ya recogidos arriba): `R3-appicon-color-contract-unproved` (WARNING) · `R3-icon-guard-whole-file-exemption` (SUGGESTION) · `R3-vector-icons-alias-scope` (SUGGESTION).
 
 ## Verificación de U5 (2026-10-07)
 
