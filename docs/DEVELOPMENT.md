@@ -45,9 +45,11 @@ git push origin v2026.09.28
 
 El workflow comprueba que la etiqueta apunta a un commit de `main`, ejecuta el build y el gate de extremo a extremo, y solo entonces publica. Para republicar o revertir sin mover etiquetas, se lanza el workflow a mano (`workflow_dispatch`) desde `main`.
 
+La etiqueta va **anotada y con mensaje** (`-a -m`): ese mensaje es la nota de la publicación. `git tag v… <commit>` a secas publica igual —el workflow lee `GITHUB_SHA`—, pero **pierde el mensaje** sin avisar de nada. Para comprobar cómo quedó una etiqueta: `git for-each-ref refs/tags --format='%(refname:short) %(objecttype)'` (`tag` = anotada, `commit` = ligera).
+
 La etiqueta marca **cuándo se publicó**, no la versión del producto: esa vive en `app.json` y no se repite aquí, para no tener el mismo dato en dos sitios.
 
-Para saber qué está publicado ahora mismo: `git tag --sort=-creatordate | head -1`. **El registro empieza con la primera etiqueta**: las publicaciones anteriores a este cambio se hicieron sin ninguna, así que hasta que se empuje la primera no habrá nada que consultar.
+Para saber qué está publicado ahora mismo: `git tag --sort=-creatordate | head -1`. El registro empieza con **`v2026.10.08`**, la primera etiqueta publicada con este procedimiento; las publicaciones anteriores se hicieron sin ninguna, así que para todo lo previo a esa fecha no hay nada que consultar.
 
 **Volver atrás.** Hay dos caminos y no son equivalentes. Si el problema es del código y el arreglo está cerca, lo correcto es **arreglar hacia adelante**: un PR a `main` y una etiqueta nueva. Es el único camino que deja `main` y lo publicado contando la misma historia.
 

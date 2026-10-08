@@ -2,7 +2,7 @@
 
 **Rama:** `ci/publicar-con-etiquetas`
 **Abierta:** 2026-09-28
-**Estado:** en curso
+**Estado:** cerrada — las cinco tareas hechas; el disparo por etiqueta quedó **demostrado en real** con `v2026.10.08`
 
 ## Objetivo
 
@@ -52,7 +52,17 @@ dejar registro en git de **qué** se publicó y **cuándo**.
 | 2 | Procedimiento de publicación en `docs/DEVELOPMENT.md` y la decisión en `consolidacion.md` | **hecho** | `ee8963e`: la sección `Cómo se publica`, con el comando de la etiqueta y la nota de que marca cuándo se publicó, no la versión |
 | 3 | Verificación: YAML válido, guardia probada en local y gate completo | **hecho** | Los tres workflows se parsean; la guardia se probó en tres casos (un commit de `main` la pasa, el de la rama y el de otro PR sin mergear la fallan); lint, tipos y 148 unitarios en verde |
 | 4 | Procedimiento de vuelta atrás, escrito donde se lee (hallazgos R3-ROLLBACK-DOC y R4-ROLLBACK-GAP) | **hecho** | En `docs/DEVELOPMENT.md`, dentro de `### Cómo se publica`: los dos caminos —arreglar hacia adelante o republicar un estado bueno—, la advertencia de que `main` y lo publicado divergen hasta que entre el arreglo, y lo que una vuelta atrás **no** revierte |
-| 5 | Comprobar el disparo por etiqueta con la primera etiqueta real | pendiente | No se puede demostrar sin publicar: es lo único no verificado de esta unidad, y la primera etiqueta que se empuje lo demuestra |
+| 5 | Comprobar el disparo por etiqueta con la primera etiqueta real | **hecho** | `v2026.10.08` (commit `6057b6a`, 2026-10-08): el run `37754771856` arrancó por `push` de la etiqueta y **los cuatro jobs pasaron** (`Verify the tag is on main`, `E2E gate / Chromium suite`, `Build the static export`, `Publish`). Verificado además **en producción**, no sólo en el workflow: el bundle servido es uno nuevo y contiene marcadores que sólo existen en esa versión (`wishlist-empty-icon`, `info-sheet-close`, `order-3`, `feather`) |
+
+## La primera etiqueta real (2026-10-08)
+
+`v2026.10.08` sobre `6057b6a` publicó de golpe las **59 commits y 10 PRs** que estaban sin publicar desde `v2026.09.29`, con el gate corriendo **antes** del publish: si la suite hubiera salido roja, se habría quedado publicada la versión anterior. El disparo por etiqueta queda demostrado, que era lo único que esta unidad no podía verificar sin publicar.
+
+### Un error propio, anotado aquí
+
+La etiqueta se empujó **ligera** (`git tag v2026.10.08 <sha>`), **sin mensaje**, mientras que la anterior (`v2026.09.29`) y **el procedimiento escrito en `docs/DEVELOPMENT.md`** usan `git tag -a ... -m ...`. No es un hueco de convención del repositorio: **los documentos ya decían cómo hacerlo y no los leí antes de etiquetar**. La consecuencia es que esta publicación perdió su nota.
+
+No se corrige moviendo la etiqueta: borrarla y re-empujarla dispara **otra publicación completa de producción** del mismo commit, y mover una etiqueta ya publicada reescribe el registro. **Decisión del propietario: dejarla ligera y usar `-a -m` desde la próxima.** A partir de aquí, la comprobación de que una etiqueta está anotada es `git for-each-ref refs/tags --format='%(refname:short) %(objecttype)'` (`tag` = anotada, `commit` = ligera).
 
 ## Restricciones
 
@@ -68,6 +78,9 @@ dejar registro en git de **qué** se publicó y **cuándo**.
   y `deploy needs [build, e2e]`.
 - **La guardia se probó en los tres casos**: un commit de `main` la pasa; el commit de esta
   rama y el de otro PR sin mergear la fallan. Sin esa prueba, la guardia sería una promesa.
+- **El disparo por etiqueta quedó demostrado con la primera etiqueta real** (`v2026.10.08`): la
+  tarea 5 era la única que no se podía verificar sin publicar, y ya no hace falta fingir que se
+  corrió: se corrió, con los cuatro jobs en verde.
 - `pnpm run lint` limpio, `pnpm exec tsc --noEmit` sin errores y **148** pruebas unitarias en
   verde (el recuento de entonces; después entró la unidad del mínimo de contraseña).
 - El gate completo **no se ejecutó a propósito**: esta unidad no toca código de producto, así
