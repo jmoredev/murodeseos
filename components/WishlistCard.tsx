@@ -65,7 +65,15 @@ export function WishlistCard({
               ? 'Estado de reserva no disponible'
               : 'Disponible';
 
-    const a11yPrice = a11yPriceText ?? 'Sin precio';
+    // react-native-web **ignora** `accessibilityValue` en un `role="button"`, así
+    // que el precio no llegaba al DOM: el dato accesible hay que llevarlo al
+    // **nombre**, que sí se renderiza como `aria-label`. Se reutiliza `priceText`,
+    // la misma expresión que pinta el texto visible, para que el «€» no pueda
+    // divergir entre lo que se ve y lo que se oye.
+    const a11yPrice = priceText ?? 'Sin precio';
+    const a11yLabel = `${item.title}. Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${
+        a11yReservation ? `. ${a11yReservation}.` : '.'
+    }`;
 
     const handleOpenDetail = () => {
         if (onClick) onClick(item);
@@ -83,11 +91,8 @@ export function WishlistCard({
             <Pressable
                 onPress={handleOpenDetail}
                 accessibilityRole="button"
-                accessibilityLabel={item.title}
+                accessibilityLabel={a11yLabel}
                 accessibilityHint="Abrir detalle del deseo"
-                accessibilityValue={{
-                    text: `Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${a11yReservation ? `. ${a11yReservation}.` : '.'}`,
-                }}
                 className="active:opacity-95"
             >
                 <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">

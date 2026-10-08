@@ -15,7 +15,7 @@ import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
-import { parsePriceForSort } from '@/lib/format-price'
+import { comparePriceForSort } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface WishListTabProps {
@@ -114,12 +114,10 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
         } else if (sortBy === 'price') {
-            // El campo es texto libre: se normaliza la coma decimal (parseFloat la
-            // trunca: «349,00» → 349) y los no numéricos reciben una clave estable
-            // (∞) para que el comparador nunca devuelva NaN.
-            const priceA = parsePriceForSort(a.price) ?? Number.POSITIVE_INFINITY;
-            const priceB = parsePriceForSort(b.price) ?? Number.POSITIVE_INFINITY;
-            return priceA - priceB;
+            // El campo es texto libre: `comparePriceForSort` normaliza la coma
+            // decimal, manda los no numéricos al final y es un **orden total**
+            // —nunca devuelve `NaN`, tampoco con dos valores ilegibles—.
+            return comparePriceForSort(a.price, b.price);
         } else {
             const priorityValues = { high: 3, medium: 2, low: 1 };
             const priorityA = priorityValues[a.priority || 'medium'] || 2;

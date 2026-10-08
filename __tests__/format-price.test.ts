@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPrice, parsePriceForSort } from '../lib/format-price';
+import { comparePriceForSort, formatPrice, parsePriceForSort } from '../lib/format-price';
 
 describe('formatPrice', () => {
     it('devuelve null para null, undefined y vacío', () => {
@@ -37,6 +37,16 @@ describe('formatPrice', () => {
         expect(formatPrice(349)).toBe('349');
         expect(formatPrice(349.5)).toBe('349,5');
     });
+
+    it('devuelve null para números no finitos en lugar de «NaN» o «Infinity»', () => {
+        // Control negativo de la revisión R3-format-nan: la rama numérica es
+        // `String(price)`, así que `NaN` se pintaba como «NaN €» en la tarjeta y
+        // `Infinity` como «Infinity €». No hay texto honesto que devolver: el
+        // contrato de `null` es el que ya pinta «Sin precio».
+        expect(formatPrice(NaN)).toBeNull();
+        expect(formatPrice(Infinity)).toBeNull();
+        expect(formatPrice(-Infinity)).toBeNull();
+    });
 });
 
 describe('parsePriceForSort', () => {
@@ -67,15 +77,56 @@ describe('parsePriceForSort', () => {
         expect(parsePriceForSort('12abc')).toBeNull();
         expect(parsePriceForSort(NaN)).toBeNull();
     });
+});
 
-    it('ordena correctamente: el comparador no produce NaN y las comas se respetan', () => {
-        const sortKey = (p: string | number | null | undefined): number =>
-            parsePriceForSort(p) ?? Number.POSITIVE_INFINITY;
-
+describe('comparePriceForSort', () => {
+    it('ordena precios numéricos de menor a mayor respetando la coma decimal', () => {
         const items = ['25,00', 'no numeric', '349,00', '100.00'];
-        const sorted = [...items].sort((a, b) => sortKey(a) - sortKey(b));
+        const sorted = [...items].sort(comparePriceForSort);
 
-        // El no numérico va al final (clave estable ∞), y «349,00» vale 349.00, no 349.
+        // El no numérico va al final, y «349,00» vale 349.00, no 349.
         expect(sorted).toEqual(['25,00', '100.00', '349,00', 'no numeric']);
+    });
+
+    it('con DOS valores no numéricos devuelve 0, nunca NaN', () => {
+        // Control negativo de la revisión R3-sort-nan: con la clave
+        // `?? Number.POSITIVE_INFINITY` dos no numéricos daban
+        // `Infinity - Infinity = NaN` y el orden del array quedaba indefinido.
+        // El test anterior no lo cazaba porque usaba UN solo no numérico.
+        expect(comparePriceForSort('gratis', 'aprox 30')).toBe(0);
+        expect(Number.isNaN(comparePriceForSort('gratis', 'aprox 30'))).toBe(false);
+        expect(Number.isNaN(comparePriceForSort('', ''))).toBe(false);
+        expect(Number.isNaN(comparePriceForSort(null, NaN))).toBe(false);
+        expect(Number.isNaN(comparePriceForSort(Infinity, undefined))).toBe(false);
+    });
+
+    it('es un orden total: reflexivo, simétrico y finito en toda la matriz', () => {
+        const values: (string | number | null | undefined)[] = [
+            null, undefined, NaN, Infinity, -Infinity, '', '   ', 'gratis', '12abc',
+            '0', '25,00', '100.00', '349,00'
+        ];
+
+        for (const a of values) {
+            expect(comparePriceForSort(a, a)).toBe(0);
+
+            for (const b of values) {
+                const ab = comparePriceForSort(a, b);
+                const ba = comparePriceForSort(b, a);
+
+                // `toBe` distingue 0 de -0, así que se compara la suma de signos.
+                expect(Number.isFinite(ab)).toBe(true);
+                expect(Number.isFinite(ba)).toBe(true);
+                expect(Math.sign(ab) + Math.sign(ba)).toBe(0);
+            }
+        }
+    });
+
+    it('con dos no numéricos separados por numéricos el orden queda definido', () => {
+        const items = ['gratis', '25,00', 'aprox 30', '100.00'];
+        // `sort` es estable en V8: los dos no numéricos (clave igual) conservan
+        // su orden relativo en vez de quedar indefinidos.
+        expect([...items].sort(comparePriceForSort)).toEqual([
+            '25,00', '100.00', 'gratis', 'aprox 30'
+        ]);
     });
 });

@@ -1,6 +1,6 @@
 # Pulido de interfaz: contraste, semántica de color, truncamientos y cromo (`fix/ui-polish`)
 
-**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U5 cerradas; pendientes U6 y U7
+**Abierta:** 2026-10-07 · **Rama:** `fix/ui-polish` (desde `origin/main`, `c25f542`) · **Estado:** abierta — U1–U5 cerradas y revisadas; cierre en curso con U6, U7 y U8
 
 ## Objetivo
 
@@ -84,6 +84,8 @@ Distinción importante, verificada en el código:
 - **Las cinco unidades entran**: contraste, truncamientos y CTA, copy y formato, semántica de color, e iconografía del cromo.
 - **Iconografía: set real**. Se implementa con **`@expo/vector-icons`**, que **ya está disponible** (v15.1.1, dependencia de `expo`) → **cero dependencias nuevas**. Se descarta `react-native-svg` + `lucide-react-native`/`@phosphor-icons/react-native` (no instalados, añadirían dependencia). Los **avatares de emoji del usuario se quedan**.
 - **Contraste**: subir el texto informativo al mínimo AA. Umbral **`/70`** (con margen sobre el mínimo calculado `/66`).
+- **U6 — alcance del cromo (2026-10-08)**: se sustituye **todo** el emoji del cromo, **incluido el 🎁 decorativo de los estados vacíos**, por una sola familia de `@expo/vector-icons` (Feather: un solo peso, coherente con la tipografía del producto). Los **avatares de usuario** y el `icon` del grupo (dato de BD) quedan intactos.
+- **U7 — banda 769–1009px (2026-10-08)**: **opción B**, el nombre del grupo pasa a **su propia línea** y recupera el ancho completo en todos los anchos. Descartadas: «una columna hasta 1010px» (rompe el umbral único decidido en E2, exigiría un segundo hook) y «aceptar y documentar» (nombre visible pero ilegible, 25–90px). Coste aceptado: la tarjeta de escritorio gana altura.
 
 ## Unidades de trabajo
 
@@ -95,7 +97,27 @@ Distinción importante, verificada en el código:
 | U4 | Copy y formato: fuera «¡Oops!» y las exclamaciones de éxito; precio a formato español (`349,00 €`) | **hecha** — (1) **copy directo en 7 sitios**: `'Oops!'` era el título de la pantalla 404, `'¡Vaya!'` el encabezado de error de dos pantallas, y cuatro mensajes de éxito llevaban exclamación. (2) **Los tres `alert()` de navegador de `GroupsTab`** (bloqueantes, en una PWA) pasan al brindis de la casa; `ToastComponent` **no estaba montado** y ahora sí. (3) **`lib/format-price.ts`** nuevo: `formatPrice` **no destructivo** —lo que no entiende lo devuelve verbatim— y `parsePriceForSort`, que **cierra un defecto real**: `parseFloat('349,00')` devolvía `349` soltando los decimales en silencio y un valor no numérico producía `NaN` en el comparador (orden indefinido). Placeholder `0,00`. (4) El **clamp de notas no se tocó**: el seed inserta `notes: ''`, así que no hay nada que recortar — hallazgo de datos, no visual |
 | U5 | Semántica de color: separar los tokens sobrecargados en tokens con un significado único, sin cambiar los colores | **hecha** — el censo real resultó **mayor que el enunciado**: `secondary` y `tertiary` llevaban **siete significados** entre los dos (prioridad media/baja, chip de precio, éxito, insignia de rol Admin, insignia «Reservado por ti», CTA «Ya lo tengo» y tinte decorativo de notificación), y `primary` cargaba además el de «prioridad alta». Se añadieron **9 tokens de significado** en `tailwind.config.cjs` (`priority-high/medium/low`, `price`, `success`, `role-badge`, `reserved`, `accent-warm`, `accent-cool`) con **los mismos hex exactos** y se re-apuntaron **24 usos en 7 ficheros**. `secondary`/`tertiary` quedaron **sin ninguna referencia** y se **retiraron del config** (el propio bloque de alias heredados dice quitarlos cuando eso pasa). `docs/DESIGN.md:81` prescribía justamente esos dos tokens muertos y se actualizó. **Render idéntico**: cada token nuevo apunta al hex que ya resolvía el viejo |
 | U6 | Iconografía del cromo: sustituir 🎁👥👤 del dock y los glifos `✓ ✕ ⋮ ✎ ↗ ←` de los controles por `@expo/vector-icons` (una sola familia, un solo `strokeWidth`/peso); arreglar el recorte de los emoji que se queden. Avatares y datos: intactos | pendiente |
-| U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | pendiente |
+| U7 | Cerrar la banda 769–1009px del nombre de grupo (arrastrada de la feature anterior) | **en curso** — opción B: el nombre pasa a su propia línea en `components/GroupCard.tsx`, con ancho completo a cualquier viewport |
+| U8 | Cerrar los 3 hallazgos de la revisión de U4+U5: precio accesible sin «€», `formatPrice` con valores no finitos y comparador que devuelve `NaN` | **hecha** — `lib/format-price.ts` (guarda de finitud en `formatPrice` + comparador nuevo `comparePriceForSort`, un orden total que nunca devuelve `NaN`), `components/WishListTab.tsx:118` (usa el comparador) y `components/WishlistCard.tsx:67` (el precio accesible pasa al **nombre**, que sí se renderiza). Ver «Verificación de U8» |
+
+## Verificación de U8 (2026-10-08)
+
+**Test-first, con el RED observado antes de implementar** (no deducido): se añadieron los seis casos nuevos, se ejecutó la implementación **anterior** recuperada de `git show HEAD:lib/format-price.ts` y se capturó el defecto en vivo:
+
+```
+formatPrice(NaN)        = "NaN"          formatPrice(Infinity)  = "Infinity"
+formatPrice(-Infinity)  = "-Infinity"    oldCompare('gratis','aprox 30') = NaN  → orden indefinido
+```
+
+El comparador viejo (`?? Number.POSITIVE_INFINITY`) devolvía `NaN` incluso con **dos valores iguales** (`oldCompare('x','x')` → `NaN`), que es justo lo que el comentario del código afirmaba imposible.
+
+**El hallazgo de a11y era más profundo que el de la revisión.** La lente leyó el código y concluyó «el valor accesible omite el €»; medido en el DOM real, **`react-native-web` 0.21 no emite `accessibilityValue` en un `role="button"`**: el botón salía con `aria-label="Test Gift"` y **sin** `aria-valuetext`, así que el precio no llegaba al DOM en absoluto. Se comprobó con una sonda desechable que volcó el `outerHTML` del botón.
+
+**Arreglo elegido**: el dato accesible pasa al **nombre** (`aria-label`), la única vía que sí se renderiza, y se reutiliza `priceText` —la misma expresión que pinta el texto visible— para que el «€» no pueda divergir entre lo que se ve y lo que se oye. Se retira el `accessibilityValue` porque en la única plataforma que se entrega es código muerto, y dejarlo sería exactamente el pecado que este repo ya ha pagado: un atributo que afirma algo que la plataforma ignora. El nombre accesible queda «*título*. Prioridad *X*. *precio* *€*. *estado de reserva*.»
+
+**Sin impacto en E2E**: se revisaron los localizadores por etiqueta; ninguno depende de la etiqueta de la tarjeta (los `getByRole('button', { name })` del área son «Nuevo deseo», «Guardar deseo» y «Eliminar»). En unitarios sí hubo que actualizar el del título a subcadena, y de paso se corrigió una mentira latente: la variable se llamaba `img` y contenía el botón de la tarjeta (`Image` está oculto para AT).
+
+**Estado**: `pnpm run typecheck` y `pnpm run lint` (`--max-warnings 0`) limpios; `pnpm run test:unit` **29 ficheros / 237 passed + 1 todo** (antes 232 + 1; +6 casos nuevos y −1 que replicaba el comparador defectuoso en vez de probarlo).
 
 ## Verificación
 
@@ -140,7 +162,29 @@ Distinción importante, verificada en el código:
 - **`78a29be`** — `fix(a11y): bring secondary text up to WCAG AA and guard the floor` (U1+U2).
 - **`7ac4094`** — `fix(mobile): stop cutting wish titles and wrapping the card CTA` (U3).
 - **`6564dab`** — `fix(a11y): direct copy, a real toast for the group actions, and Spanish prices` (U4).
-- _(U5, pendiente de commit)_ — 9 tokens de significado, 24 usos re-apuntados, `secondary`/`tertiary` retirados y `docs/DESIGN.md` actualizado.
+- **`bbbec96`** — `refactor(design): one token per meaning instead of two tokens for seven` (U5): 9 tokens de significado, 24 usos re-apuntados, `secondary`/`tertiary` retirados y `docs/DESIGN.md` actualizado.
+
+## Revisión nativa de U4+U5 (2026-10-07)
+
+Linaje **`review-f7abbb49da69f35c`**: riesgo medio, 1 lente (`review-reliability`), **20 ficheros / 313 líneas**, presupuesto 157 → **aprobada a la primera** (sin refutador) y autoridad **quemada**.
+
+**Acotado del candidato**: `inspect` ofrecía la rama entera desde `main` (33 rutas, U1–U5), así que se arrancó con `baseRef=7ac4094` + `committedOnly: true` → candidato `7ac4094..bbbec96` (U4+U5), confirmado por los `candidate_paths` del proveedor. Es la misma técnica que funcionó con el delta de documentación de `mobile-first`: **cuando `inspect` ofrece la rama acumulada, reducir con `baseRef` al tramo no revisado**.
+
+Tres hallazgos **advisory, informativos, y los tres reales** (verificados por el padre contra el código, no aceptados por la severidad): se cierran en **U8**.
+
+| ID | Sev. | Ubicación | Defecto |
+| --- | --- | --- | --- |
+| `R3-a11y-price` | WARNING | `components/WishlistCard.tsx:68` | El valor accesible es el precio **sin** el «€» que sí lleva el texto visible (`${a11yPriceText} €`): un lector de pantalla lee «349,00» |
+| `R3-format-nan` | SUGGESTION | `lib/format-price.ts:25` | La rama numérica es `String(price)` sin guarda de finitud: `formatPrice(NaN)` → `"NaN"`, `formatPrice(Infinity)` → `"Infinity"` → se pintaría «NaN €» |
+| `R3-sort-nan` | SUGGESTION | `components/WishListTab.tsx:120` | El comparador usa `?? Number.POSITIVE_INFINITY` y el comentario afirma que «nunca devuelve NaN», y **es falso**: `Infinity - Infinity === NaN`, así que con **dos** precios no numéricos devuelve `NaN` y el orden queda indefinido. Doble defecto: el hueco lógico **y** un comentario que afirma lo contrario de lo que hace el código |
+
+## Revisión nativa de U1+U2+U3 (2026-10-07)
+
+Linaje **`review-f594a23f576fd4ac`**: riesgo medio, 1 lente (`review-reliability`), 23 ficheros / 694 líneas, presupuesto 200 → **aprobada**, autoridad **quemada**. Cuatro hallazgos advisory, todos informativos (`R3-001`/`R3-002`/`R3-004` en el propio guardián `__tests__/contrast-floor.test.ts`, `R3-003` en el clamp de notas de `components/WishlistCard.tsx:142`).
+
+**`R3-003` se decidió no tocar** (recogido en «Verificación de U4»): el seed inserta `notes: ''`, así que no hay notas que recortar; es un hallazgo **de datos**, no visual.
+
+**Incidencia de admisión, sin consumo de slot**: el primer envío del resultado de la lente se rechazó truncado (`reviewer payload contains no complete JSON object: … scan ended at byte 5671`); el payload rechazado quedó en `.git/gentle-ai/rejected-results/<linaje>/…`. La instrucción del proveedor fue **no reenviar los bytes rechazados**: STATUS fresco volvió a ofrecer el mismo slot (idéntico `subject-hash`) y el reintento **pasó**. Lección: una salida truncada del revisor es recuperable con STATUS fresco; no hay que reiniciar el linaje.
 
 ## Verificación de U4 (2026-10-07)
 

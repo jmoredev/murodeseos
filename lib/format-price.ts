@@ -14,6 +14,8 @@
  * Reglas, en orden:
  * 1. `null`, `undefined` o vacío (tras recortar espacios) → `null` (los
  *    consumidores ya pintan «Sin precio»).
+ * 1b. Un número **no finito** (`NaN`, `±Infinity`) → `null`: `String(NaN)` es
+ *    «NaN» y la tarjeta lo pintaba literalmente como «NaN €».
  * 2. Decimal con punto (`349.00`) → se cambia el punto por coma (`349,00`).
  * 3. Decimal con coma (`349,00`) → sin cambios.
  * 4. Entero simple (`349`) → sin cambios.
@@ -21,6 +23,11 @@
  */
 export function formatPrice(price: string | number | null | undefined): string | null {
     if (price === null || price === undefined) return null;
+
+    // `NaN` e `Infinity` no tienen texto honesto que devolver, y sin esta guarda
+    // el contrato «lo que no entiendo lo devuelvo verbatim» se cumplía al pie de
+    // la letra con un texto inventado por JavaScript.
+    if (typeof price === 'number' && !Number.isFinite(price)) return null;
 
     const text = typeof price === 'number' ? String(price) : price.trim();
     if (text === '') return null;
@@ -50,4 +57,28 @@ export function parsePriceForSort(price: string | number | null | undefined): nu
 
     const value = Number(normalized);
     return Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Comparador de precios para `Array.prototype.sort`.
+ *
+ * Es un **orden total**: los valores no numéricos van al final, dos no numéricos
+ * comparan igual (`0`) y **nunca se devuelve `NaN`**. Un comparador que devuelve
+ * `NaN` deja el orden del array indefinido, y la clave
+ * `?? Number.POSITIVE_INFINITY` que se usaba en `WishListTab` lo hacía en cuanto
+ * había **dos** precios no numéricos: `Infinity - Infinity` es `NaN`.
+ */
+export function comparePriceForSort(
+    a: string | number | null | undefined,
+    b: string | number | null | undefined
+): number {
+    const priceA = parsePriceForSort(a);
+    const priceB = parsePriceForSort(b);
+
+    if (priceA === null && priceB === null) return 0;
+    if (priceA === null) return 1;
+    if (priceB === null) return -1;
+
+    // Ambos finitos por contrato de `parsePriceForSort`.
+    return priceA - priceB;
 }
