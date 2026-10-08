@@ -70,13 +70,38 @@ Se sirvió el `dist/` bajo `/murodeseos/` con un servidor que imita a Pages (404
 | Referencia al bundle | **`entry-0d7e7fbe….js`**, el que ya no existe | **ninguna** |
 | ¿Es la página de sin conexión? | no | **sí** |
 
-El viejo entrega la cáscara que apunta a un bundle muerto: el navegador lo pide, falla y **nada se monta**. El nuevo entrega 835 bytes autocontenidos que no pueden fallar.
+El viejo entrega la cáscara que apunta a un bundle muerto: el navegador lo pide, falta y **nada se monta**. El nuevo entrega una página autocontenida que no puede fallar.
 
-**Limitación del arnés, dicha en lugar de tapada**: en este entorno una **navegación real** de Playwright **no consulta al service worker** (resuelve antes y devuelve `ERR_EMPTY_RESPONSE`/`ERR_INTERNET_DISCONNECTED`), así que la demostración usa **la misma petición que hace una navegación** (`accept: text/html`), que es el discriminante exacto del SW (`public/sw.js:50-52`). El camino `mode: 'navigate'` lo cubren los **unitarios**, que sí es el camino que el navegador usa de verdad. Dos vías de arnés se descartaron antes de llegar aquí: `context.setOffline` (el navegador resuelve la navegación sin consultar al SW) y la navegación real con el servidor tumbado.
+**Lo que esta demostración NO prueba, dicho sin adornos** (lo señaló la verificación independiente y tiene razón):
+
+- **No es reproducible**: el arnés no está commiteado, así que las cifras no se pueden volver a obtener sin escribirlo.
+- **Mezclé unidades**: el «835 bytes» son **835 caracteres / 840 bytes en UTF-8**. El 17 991 sí era bytes.
+- **No muestra el negro**: la cáscara «vieja» de la prueba es el `dist/index.html` **posterior al arreglo**, que ya pinta el fondo de marca. Es fiel en el **mecanismo** (bytes que referencian un bundle inexistente), **no en el aspecto**.
+- **Aísla el service worker**: usa la misma petición que hace una navegación, así que no observa el efecto posterior en el documento ni en sus subrecursos; ese camino lo cubren los unitarios.
+
+**Limitación del arnés**: en este entorno una **navegación real** de Playwright **no consulta al service worker** (devuelve `ERR_EMPTY_RESPONSE`/`ERR_INTERNET_DISCONNECTED` sin pasar por él), así que se usa **la misma petición que hace una navegación** (`accept: text/html`), que es el discriminante exacto del SW. Dos vías se descartaron antes: `context.setOffline` y la navegación real con el servidor tumbado.
 
 **Un obstáculo que conviene saber**: la app **no registra el SW fuera de `github.io`** (`lib/site-url.ts:29`), a propósito, para que en desarrollo no sirva JS viejo. Por eso la demostración registra el SW a mano; es el mismo fichero que sirve Pages.
 
 **Lo que sigue sin probarse**: cuál de los dos caminos disparó en el móvil del propietario. La clase de fallo y el mecanismo están demostrados; el disparo concreto necesita registros del dispositivo.
+
+## La verificación independiente encontró una regresión MÍA (F1)
+
+**Y era bloqueante.** La primera versión convertía **cualquier** navegación no-ok en la página de sin conexión. **El dato del despliegue que tenía delante y no conecté**: GitHub Pages sirve las **rutas dinámicas** (`/groups/<uuid>`, `/wishlist/<id>`) con su **fallback 404**, y ese cuerpo **es una copia byte a byte del `index.html` actual** (está en `scripts/postbuild.cjs` y en el propio `docs/DEVELOPMENT.md`; la verificación lo comprobó en vivo: `curl` a una ruta dinámica → 404 con la cáscara de 17 906 B). Así que un 404 de navegación **no es un fallo**: es la app, y arranca y enruta bien.
+
+Convertirlo en «Sin conexión» rompía **enlaces profundos y recargas estando en línea**, y el botón de reintentar pide lo mismo, así que volvía a la misma página: **callejón sin salida**.
+
+**El razonamiento que se me pasó**: el negro lo producía servir la cáscara **cacheada** cuando la red **fallaba**. Una respuesta 404 **fresca** trae la cáscara **actual**, con el hash vigente. El arreglo sólo tenía que tocar el `catch`.
+
+**Corrección**: la respuesta fresca se devuelve tal cual — **también si es un 404** — y sólo el `catch` (fallo de red o tiempo agotado) sirve la página de sin conexión. **Con test que lo caza**, escrito primero y fallando en rojo (`expected 200 to be 404`), porque era justo el camino **sin cobertura**: el hueco por el que se coló.
+
+**Límite de los tests, reconocido**: el test de la página de sin conexión se conformaba con la expresión `sin conexi`, que la satisface el propio `<title>`, sin comprobar el texto visible ni la autocontención; y la rama `cached ??` de un recurso tampoco estaba cubierta. Ambas entran ahora.
+
+## Coste asumido (F2) y decisión
+
+Como la cáscara ya no se cachea, **abrir la app sin conexión muestra la página de sin conexión** en vez de la app (verificado: con la red caída, la v4 servía la cáscara de 17 991 B y la v5 sirve la página). Y una navegación de más de 14 s también muestra la página en vez de la app cacheada.
+
+**Decisión del propietario (2026-10-08): se acepta el coste.** Sin red se muestra «Sin conexión», honesto y con botón de reintentar; **no** se añade la maquinaria de cachear cáscara + bundle como unidad. El matiz a favor: una app sin red tampoco puede traer datos (todo vive en Supabase), así que lo que se pierde es una cáscara que arrancaba para quedarse vacía. Está escrito aquí y en `docs/DEVELOPMENT.md` para que el día que alguien pregunte por qué la app instalada no abre sin conexión, la respuesta esté y no haya que deducirla.
 
 ## Unidades de trabajo
 
