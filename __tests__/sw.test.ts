@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const SW_SOURCE = readFileSync(join(__dirname, '..', 'public', 'sw.js'), 'utf8');
 
 const SW_ORIGIN = 'https://user.github.io';
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE_NAME = `murodeseos-${VERSION}`;
 
 type Bucket = Map<string, Response>;

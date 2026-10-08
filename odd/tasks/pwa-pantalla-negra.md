@@ -54,7 +54,7 @@ Los cuatro tests **anteriores siguen verdes** (mismo origen y red-primero para a
 | # | Tarea | Estado |
 | --- | --- | --- |
 | P1 | **Reproducir** el negro en local: fijar el comportamiento actual del SW con tests que **fallen en rojo** (cáscara obsoleta servida y respuesta no-ok entregada como recurso) y una demostración en navegador con un despliegue simulado | **hecha (tests)** — cuatro tests en `__tests__/sw.test.ts` que describen el contrato correcto y **fallan los cuatro** contra el SW actual. El primero es la reproducción literal: el SW devuelve `<html><script src="…/entry-VIEJO.js">`, el chunk que el despliegue borró. Ver «Reproducción» |
-| P2 | **Arreglo del SW**: no servir una cáscara que pueda sobrevivir a sus chunks, y no entregar respuestas no-ok para recursos | pendiente |
+| P2 | **Arreglo del SW**: no servir una cáscara que pueda sobrevivir a sus chunks, y no entregar respuestas no-ok para recursos | **hecha** — `VERSION` a **`v5`** (cambia la estrategia: es lo que purga la caché vieja), `'./'` **fuera** de `CORE_ASSETS`, la cáscara **no se cachea nunca** en navegación, `offlinePage()` autocontenida como respuesta cuando la navegación no se puede servir, y `Response.error()` en vez de entregar una respuesta no-ok de un recurso |
 | P3 | **Recuperación en la app** ante un chunk ausente (recarga en vez de negro) y `_layout` que no pinte `null` | pendiente |
 | P4 | Verificación (estáticos, unitarios, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | pendiente |
 
@@ -74,4 +74,5 @@ Los cuatro tests **anteriores siguen verdes** (mismo origen y red-primero para a
 
 ## Commits
 
-- _(P1, pendiente de commit)_
+- **`dfa7a89`** — `test(pwa): pin the contract that makes the black screen impossible` (P1).
+- _(P2, pendiente de commit)_
