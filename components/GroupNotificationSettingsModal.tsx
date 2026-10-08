@@ -301,7 +301,7 @@ export function GroupNotificationSettingsModal({
                     >
                         Notificaciones del grupo
                     </h3>
-                    <p id={subtitleId} className="text-on-surface/65 leading-relaxed font-sans">
+                    <p id={subtitleId} className="text-on-surface/70 leading-relaxed font-sans">
                         Elige qué avisos quieres recibir de {groupName}. Solo afecta a ti: el resto
                         del grupo tiene sus propias preferencias.
                     </p>
@@ -310,15 +310,15 @@ export function GroupNotificationSettingsModal({
                 <div className="flex-1 min-h-0 overflow-y-auto">
                 <div className="flex flex-col gap-3">
                         <div className="p-4 rounded-2xl bg-surface-container-low">
-                            <p className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                            <p className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                                 Antelación de los avisos (días)
                             </p>
-                            <p className="text-xs text-on-surface/50 font-sans leading-snug">
+                            <p className="text-xs text-on-surface/70 font-sans leading-snug">
                                 Con cuántos días de antelación recibes tú los avisos de cumpleaños y
                                 onomástico en este grupo. Por defecto, {DEFAULT_REMINDER_LEAD_DAYS}.
                             </p>
                             {leadDaysLoading ? (
-                                <p className="mt-3 text-xs text-on-surface/45 font-sans">Cargando…</p>
+                                <p className="mt-3 text-xs text-on-surface/70 font-sans">Cargando…</p>
                             ) : leadDaysLoadError ? (
                                 <div className="mt-3 flex flex-col gap-2">
                                     <p className="text-xs text-primary font-sans-bold" role="status" aria-live="polite">
@@ -375,14 +375,14 @@ export function GroupNotificationSettingsModal({
                                 </p>
                             )}
                             {leadDaysSaved && !leadDaysSaveError && !leadDaysInvalidError && (
-                                <p className="mt-2 text-xs text-on-surface/50 font-sans" role="status" aria-live="polite">
+                                <p className="mt-2 text-xs text-on-surface/70 font-sans" role="status" aria-live="polite">
                                     Guardado.
                                 </p>
                             )}
                         </div>
                         {loading ? (
                             <div className="py-10 text-center" role="status" aria-live="polite">
-                                <p className="text-on-surface/45 font-sans">Cargando preferencias…</p>
+                                <p className="text-on-surface/70 font-sans">Cargando preferencias…</p>
                             </div>
                         ) : loadError ? (
                             <div className="py-6 flex flex-col gap-4">
@@ -411,7 +411,7 @@ export function GroupNotificationSettingsModal({
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-sans-bold text-on-background">{option.label}</p>
-                                                <p className="text-xs text-on-surface/50 font-sans mt-1 leading-snug">
+                                                <p className="text-xs text-on-surface/70 font-sans mt-1 leading-snug">
                                                     {option.description}
                                                 </p>
                                             </div>

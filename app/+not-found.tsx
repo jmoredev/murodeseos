@@ -4,11 +4,11 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function NotFoundScreen() {
     return (
         <>
-            <Stack.Screen options={{ title: 'Oops!' }} />
+            <Stack.Screen options={{ title: 'Página no encontrada' }} />
             <View style={styles.container}>
                 <Text style={styles.title}>Esta página no existe.</Text>
                 <Link href="/" style={styles.link}>
-                    <Text style={styles.linkText}>¡Volver a la pantalla de inicio!</Text>
+                    <Text style={styles.linkText}>Volver a la pantalla de inicio</Text>
                 </Link>
             </View>
         </>

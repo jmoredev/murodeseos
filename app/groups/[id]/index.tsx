@@ -8,7 +8,8 @@ import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
+import { emojiInCircle } from '@/lib/circle-glyph-styles';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 function isHttpUrl(value: string | undefined | null): boolean {
     return !!value && /^https?:\/\//i.test(value);
@@ -105,8 +106,8 @@ export default function GroupDetailsPage() {
         return (
             <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
-                <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
-                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <Text className="text-2xl font-display text-on-background mb-2">No se pudo cargar el grupo</Text>
+                <Text className="text-on-surface/70 text-center font-sans-medium mb-8">{error}</Text>
                 <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
                     Volver al inicio
                 </PrimaryButton>
@@ -135,17 +136,18 @@ export default function GroupDetailsPage() {
                     <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
+                            accessibilityRole="button"
+                            accessibilityLabel="Volver"
                             className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
-                                ←
-                            </Text>
+                            {/* 16px: el tamaño del glifo de flecha atrás anterior. */}
+                            <AppIcon name="arrow-left" size={16} className="text-on-surface" />
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 {group?.name}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
+                            <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Detalles del grupo
                             </Text>
                         </View>
@@ -188,14 +190,14 @@ export default function GroupDetailsPage() {
                         <View className="mt-3 gap-2">
                             <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
                                 <Text
-                                    className="text-xs font-sans-bold text-on-surface/55 uppercase tracking-widest"
+                                    className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest"
                                     numberOfLines={1}
                                     ellipsizeMode="middle"
                                 >
                                     Código: {group?.id}
                                 </Text>
                             </View>
-                            <Text className="text-xs text-on-surface/45 font-sans-bold">
+                            <Text className="text-xs text-on-surface/70 font-sans-bold">
                                 {members.length} participantes
                             </Text>
                         </View>
@@ -204,7 +206,7 @@ export default function GroupDetailsPage() {
 
                 {/* Members Grid */}
                 <View>
-                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-6 ml-2">
+                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-6 ml-2">
                         Participantes
                     </Text>
 
@@ -231,7 +233,7 @@ export default function GroupDetailsPage() {
                                                 <Text style={emojiInCircle(36)}>{member.profiles.avatar_url}</Text>
                                             ) : (
                                                 <Text
-                                                    className="font-sans-bold text-on-surface/30"
+                                                    className="font-sans-bold text-on-surface/70"
                                                     style={emojiInCircle(22)}
                                                 >
                                                     {member.profiles?.display_name?.charAt(0) || '?'}
@@ -239,7 +241,7 @@ export default function GroupDetailsPage() {
                                             )}
                                         </View>
                                         {member.role === 'admin' && (
-                                            <View className="absolute top-0 right-0 bg-secondary rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
+                                            <View className="absolute top-0 right-0 bg-role-badge rounded-full px-2 py-0.5 ring-2 ring-surface-container-lowest">
                                                 <Text className="text-xs font-sans-bold text-surface-container-lowest uppercase">Admin</Text>
                                             </View>
                                         )}
@@ -248,7 +250,7 @@ export default function GroupDetailsPage() {
                                         {member.profiles?.display_name || 'Usuario'}
                                         {member.user_id === user?.id && <Text className="text-primary"> (Tú)</Text>}
                                     </Text>
-                                    <Text className="text-center text-xs text-on-surface/45 font-sans-bold uppercase tracking-tighter">
+                                    <Text className="text-center text-xs text-on-surface/70 font-sans-bold uppercase tracking-tighter">
                                         Ver deseos ›
                                     </Text>
                                 </Pressable>

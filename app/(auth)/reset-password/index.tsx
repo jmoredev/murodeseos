@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
                         {checking ? (
                             <View testID="reset-checking" className="items-center py-10">
                                 <ActivityIndicator size="large" color="#aa2c32" />
-                                <Text className="mt-4 text-on-surface/55 font-sans-medium">Comprobando el enlace...</Text>
+                                <Text className="mt-4 text-on-surface/70 font-sans-medium">Comprobando el enlace...</Text>
                             </View>
                         ) : !hasSession ? (
                             <View testID="reset-link-invalid">

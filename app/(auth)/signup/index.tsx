@@ -90,7 +90,7 @@ export default function SignupPage() {
                         <Text className="text-3xl font-display text-on-background text-center tracking-tight">
                             Crear una cuenta
                         </Text>
-                        <Text className="mt-3 text-sm text-on-surface/65 text-center font-sans">
+                        <Text className="mt-3 text-sm text-on-surface/70 text-center font-sans">
                             Únete a Muro de deseos hoy
                         </Text>
 
@@ -180,7 +180,7 @@ export default function SignupPage() {
                         </View>
 
                         <View className="mt-8">
-                            <Text className="text-center text-on-surface/65 font-sans">¿Ya tienes una cuenta?</Text>
+                            <Text className="text-center text-on-surface/70 font-sans">¿Ya tienes una cuenta?</Text>
                             <Pressable
                                 onPress={() => router.push('/login')}
                                 accessibilityRole="button"

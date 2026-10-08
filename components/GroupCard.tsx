@@ -7,6 +7,7 @@ import { useIsDesktop } from '@/lib/use-is-desktop';
 import type { GestureResponderEvent } from 'react-native';
 import { useRouter } from 'expo-router';
 import { emojiInCircle } from '@/lib/circle-glyph-styles';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 export interface GroupMember {
     id: string;
@@ -174,23 +175,42 @@ export const GroupCard = memo(function GroupCard({
             accessibilityHint="Abrir detalle del grupo"
             className="bg-surface-container-lowest rounded-lg p-4 md:p-6 shadow-ambient active:scale-[0.98] transition-all mb-4 flex-1"
         >
-            {/* Header: la columna fija de acciones (compartir + menú) es solo de
-                escritorio: alinea la columna de título entre tarjetas en el grid
-                `md:`; en pantalla estrecha el ancho es el del contenido, para no
-                dejar solo ~56px al nombre (defecto C3). min-w-0 evita desbordes. */}
-            <View className="flex-row justify-between items-start mb-6 min-w-0">
-                <View className="flex-row items-start flex-1 min-w-0 pr-2">
-                    {/* C3: 56→48 en móvil (+8). El glifo del icono es 30px
-                        (`emojiInCircle(30)`) y cabe en la caja de 48 con aire;
-                        escritorio: md:w-14/md:h-14 de siempre. */}
-                    <View className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
-                        <Text className="text-3xl" style={emojiInCircle(30)}>
-                            {group.icon}
-                        </Text>
-                    </View>
-                    {/* C3: 16→12 en móvil (+4): 44 del lápiz + 4 ya caben a
-                        text-xs en la fila; escritorio: md:ml-4 de siempre. */}
-                    <View className="ml-3 md:ml-4 flex-1 min-w-0 min-h-[3.25rem] md:min-h-[3.5rem]">
+            {/* Header en dos filas (U7, opción B del propietario): fila 1 = icono
+                + columna de acciones; fila 2 = nombre + contador a ANCHO COMPLETO
+                de la tarjeta. En móvil (flex-wrap, el nombre puede encoger) no se
+                produce salto de línea: la fila única de siempre. En escritorio el
+                nombre pasa a `md:w-full md:order-3`, así que salta a su propia
+                línea y las acciones comparten fila con el icono. Así la banda de
+                dos columnas (769–1009px) ya no le quita al nombre el icono (72px)
+                ni la columna de acciones (116px): a 769px el nombre pasa de ~25px
+                a ~220px para un texto de 145px. Coste aceptado: la tarjeta de
+                escritorio es más alta (fila propia del nombre). min-w-0 evita
+                desbordes. */}
+            <View className="flex-row justify-between items-start mb-6 min-w-0 flex-wrap">
+                {/* U7: el bloque de icono es hijo directo del header. En
+                    escritorio comparte fila 1 con las acciones; en móvil sigue
+                    pegado al nombre (fila única de siempre). C3: 56→48 en móvil
+                    (+8). El glifo del icono es 30px (`emojiInCircle(30)`) y cabe
+                    en la caja de 48 con aire; escritorio: md:w-14/md:h-14 de
+                    siempre. */}
+                <View className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-md bg-surface-container-low items-center justify-center shadow-inner">
+                    <Text className="text-3xl" style={emojiInCircle(30)}>
+                        {group.icon}
+                    </Text>
+                </View>
+                {/* U7: columna del nombre, hija directa del header. Móvil:
+                    `ml-3` + `flex-1` + `pr-2` = fila única de siempre (icono ·
+                    nombre · acciones). Escritorio: `md:ml-0 md:mt-3 md:order-3
+                    md:w-full` — fila propia a ancho completo, solo con el hueco
+                    superior de 12px. min-h-[3.25rem] se conserva SOLO para
+                    móvil: alinea la columna del nombre con el icono de 48px en
+                    la fila compartida. El `md:min-h-[3.5rem]` anterior era
+                    alineación con el icono de 56px y aquí sería tamaño muerto
+                    (el nombre ya no comparte fila con el icono; la fila mide lo
+                    que piden nombre + contador), así que se elimina. C3: 16→12
+                    en móvil (+4): 44 del lápiz + 4 ya caben a text-xs en la
+                    fila. */}
+                <View className="ml-3 md:ml-0 md:mt-3 md:order-3 md:w-full md:flex-none flex-1 min-w-0 min-h-[3.25rem] pr-2 md:pr-0">
                         {isEditingGroupName ? (
                             <View className="flex-row items-center min-w-0">
                                 <TextInput
@@ -203,11 +223,13 @@ export const GroupCard = memo(function GroupCard({
                                     className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 min-w-0 ring-2 ring-primary/20"
                                     autoFocus
                                 />
-                                <Pressable onPress={stopAnd(saveGroupName)} className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
-                                    <Text className="text-green-600">✓</Text>
+                                <Pressable onPress={stopAnd(saveGroupName)} accessibilityRole="button" accessibilityLabel="Guardar alias del grupo" className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
+                                    {/* El check de 16px (por defecto de RN) que había; la caja
+                                        p-2 y el centrado no cambian. */}
+                                    <AppIcon name="check" size={16} className="text-green-600" />
                                 </Pressable>
-                                <Pressable onPress={stopAnd(cancelEditingGroupName)} className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
-                                    <Text className="text-red-600">✕</Text>
+                                <Pressable onPress={stopAnd(cancelEditingGroupName)} accessibilityRole="button" accessibilityLabel="Cancelar edición del alias del grupo" className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
+                                    <AppIcon name="x" size={16} className="text-red-600" />
                                 </Pressable>
                             </View>
                         ) : (
@@ -235,22 +257,25 @@ export const GroupCard = memo(function GroupCard({
                                     {group.name}
                                 </Text>
                                 {onGroupAliasEdit && (
-                                    <Pressable onPress={stopAnd(startEditingGroupName)} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                        <Text className="text-on-surface/40 text-xs">✎</Text>
+                                    <Pressable onPress={stopAnd(startEditingGroupName)} accessibilityRole="button" accessibilityLabel="Editar alias del grupo" className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
+                                        {/* text-xs = 12: el tamaño del glifo de lápiz anterior. */}
+                                        <AppIcon name="edit-2" size={12} className="text-on-surface/70" />
                                     </Pressable>
                                 )}
                             </View>
                         )}
                         <Text
-                            className="text-xs text-on-surface/50 mt-1 font-sans-bold uppercase tracking-wider leading-tight"
+                            className="text-xs text-on-surface/70 mt-1 font-sans-bold uppercase tracking-wider leading-tight"
                             numberOfLines={1}
                             ellipsizeMode="tail"
                         >
                             {participantCount} participantes
                         </Text>
-                    </View>
                 </View>
 
+                {/* U7: columna de acciones sin cambios de tamaño o targets;
+                    en escritorio comparte la fila 1 con el icono (el nombre,
+                    order-3 y w-full, salta a la fila 2). */}
                 <View className="md:w-[7.25rem] shrink-0 flex-row justify-end items-start">
                     <Pressable
                         onPress={stopAnd(handleShareClick)}
@@ -258,7 +283,8 @@ export const GroupCard = memo(function GroupCard({
                         accessibilityLabel="Compartir grupo"
                         className="p-3 rounded-full bg-surface-container-low items-center justify-center mr-2"
                     >
-                        <Text className="text-lg">↗</Text>
+                        {/* text-lg = 18: el tamaño del glifo de compartir anterior. */}
+                        <AppIcon name="arrow-up-right" size={18} className="text-on-surface" />
                     </Pressable>
 
                     {isAdmin ? (
@@ -269,7 +295,8 @@ export const GroupCard = memo(function GroupCard({
                                 accessibilityLabel="Opciones de grupo"
                                 className="p-3 rounded-full bg-surface-container-low items-center justify-center"
                             >
-                                <Text className="text-lg">⋮</Text>
+                                {/* text-lg = 18: el tamaño del glifo de menú anterior. */}
+                                <AppIcon name="more-vertical" size={18} className="text-on-surface" />
                             </Pressable>
 
                             {menuOpen && (
@@ -329,11 +356,12 @@ export const GroupCard = memo(function GroupCard({
                                         className="flex-1 px-2 py-1 bg-surface-container-highest rounded-md text-sm text-on-background"
                                         autoFocus
                                     />
-                                    <Pressable onPress={stopAnd(saveAlias)} className="p-2 ml-1">
-                                        <Text className="text-green-600 font-bold">✓</Text>
+                                    <Pressable onPress={stopAnd(saveAlias)} accessibilityRole="button" accessibilityLabel={`Guardar alias de ${member.name}`} className="p-2 ml-1">
+                                        {/* El check de 16px que había; la caja p-2 no cambia. */}
+                                        <AppIcon name="check" size={16} className="text-green-600" />
                                     </Pressable>
-                                    <Pressable onPress={stopAnd(cancelEditing)} className="p-2">
-                                        <Text className="text-red-600">✕</Text>
+                                    <Pressable onPress={stopAnd(cancelEditing)} accessibilityRole="button" accessibilityLabel={`Cancelar edición del alias de ${member.name}`} className="p-2">
+                                        <AppIcon name="x" size={16} className="text-red-600" />
                                     </Pressable>
                                 </View>
                             ) : (
@@ -342,24 +370,25 @@ export const GroupCard = memo(function GroupCard({
                                         {member.name}
                                     </Text>
                                     {member.originalName && (
-                                        <Text className="ml-2 text-xs text-on-surface/45 italic">
+                                        <Text className="ml-2 text-xs text-on-surface/70 italic">
                                             ({member.originalName})
                                         </Text>
                                     )}
                                     {onMemberEdit && (
-                                        <Pressable onPress={stopAnd(() => startEditing(member))} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                            <Text className="text-on-surface/35 text-xs">✎</Text>
+                                        <Pressable onPress={stopAnd(() => startEditing(member))} accessibilityRole="button" accessibilityLabel={`Editar alias de ${member.name}`} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
+                                            {/* text-xs = 12: el tamaño del glifo de lápiz anterior. */}
+                                            <AppIcon name="edit-2" size={12} className="text-on-surface/70" />
                                         </Pressable>
                                     )}
                                 </View>
                             )}
                         </View>
-                        <Text className="text-on-surface/30 ml-2">›</Text>
+                        <Text className="text-on-surface/70 ml-2">›</Text>
                     </Pressable>
                 ))}
 
                 {remainingCount > 0 && (
-                    <Text className="text-xs font-sans-bold text-on-surface/50 mt-2 ml-11">
+                    <Text className="text-xs font-sans-bold text-on-surface/70 mt-2 ml-11">
                         + {remainingCount} otros participantes
                     </Text>
                 )}

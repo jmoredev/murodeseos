@@ -18,7 +18,7 @@ export default function LoginPage() {
     const [dismissedWelcome, setDismissedWelcome] = useState(false);
     const successMessage =
         !dismissedWelcome && params.registered === 'true'
-            ? '¡Cuenta creada exitosamente! Por favor, inicia sesión.'
+            ? 'Cuenta creada. Inicia sesión.'
             : '';
     const [emailError, setEmailError] = useState('');
     const [showRecovery, setShowRecovery] = useState(false);
@@ -130,17 +130,17 @@ export default function LoginPage() {
                         <Text className="text-3xl font-display text-on-background text-center tracking-tight">
                             Bienvenido de nuevo
                         </Text>
-                        <Text className="mt-3 text-sm text-on-surface/65 text-center font-sans">
+                        <Text className="mt-3 text-sm text-on-surface/70 text-center font-sans">
                             Inicia sesión para acceder a tu lista de deseos
                         </Text>
 
                         {successMessage ? (
                             <View
-                                className="mt-6 p-4 bg-tertiary/12 rounded-2xl"
+                                className="mt-6 p-4 bg-success/12 rounded-2xl"
                                 accessibilityLiveRegion="polite"
                                 nativeID={formStatusId}
                             >
-                                <Text className="text-tertiary text-sm font-sans-medium">{successMessage}</Text>
+                                <Text className="text-success text-sm font-sans-medium">{successMessage}</Text>
                             </View>
                         ) : null}
 
@@ -260,7 +260,7 @@ export default function LoginPage() {
                         ) : null}
 
                         <View className="mt-8">
-                            <Text className="text-center text-on-surface/65 font-sans">¿No tienes una cuenta?</Text>
+                            <Text className="text-center text-on-surface/70 font-sans">¿No tienes una cuenta?</Text>
                             <Pressable
                                 onPress={() => router.push('/signup')}
                                 accessibilityRole="button"

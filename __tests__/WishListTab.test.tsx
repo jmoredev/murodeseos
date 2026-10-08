@@ -74,7 +74,7 @@ describe('WishListTab', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Tu lista está vacía')).toBeInTheDocument();
-            expect(screen.getByText('🎁')).toBeInTheDocument();
+            expect(screen.getByTestId('wishlist-empty-icon')).toBeInTheDocument();
         });
     });
 
@@ -113,7 +113,7 @@ describe('WishListTab', () => {
 
         // Fill form
         fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'New Wish' } });
-        fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '50' } });
+        fireEvent.change(screen.getByPlaceholderText('0,00'), { target: { value: '50' } });
 
         // Setup mock for insert
         const chain = createMockChain();

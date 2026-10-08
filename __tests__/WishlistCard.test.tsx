@@ -31,14 +31,29 @@ describe('WishlistCard', () => {
         expect(screen.getByText(/Prioridad Alta/i)).toBeInTheDocument();
         // Enlace recortado y clickeable
         expect(screen.getByRole('link', { name: /example\.com/i })).toBeInTheDocument();
-        // Image
-        const img = screen.getByLabelText(mockItem.title);
-        expect(img).toBeInTheDocument();
+        // Tarjeta clickeable: el nombre accesible es título + prioridad + precio,
+        // así que se busca por subcadena y no por igualdad exacta.
+        expect(screen.getByLabelText(new RegExp(mockItem.title))).toBeInTheDocument();
     });
 
     it('formats price with Euro symbol correctly', () => {
         render(<WishlistCard item={mockItem} isOwner={true} />);
         expect(screen.getByText('25 €')).toBeInTheDocument();
+    });
+
+    it('anuncia el precio con el mismo símbolo de euro que el texto visible', () => {
+        // Control negativo de la revisión R3-a11y-price, corregido de raíz: el
+        // precio accesible vivía en `accessibilityValue`, que react-native-web
+        // **ignora** en un `role="button"` (no emite `aria-valuetext`), así que no
+        // llegaba al DOM en absoluto. Ahora viaja en el nombre accesible con el
+        // mismo «€» del texto visible.
+        render(<WishlistCard item={mockItem} isOwner={true} />);
+        const label = screen
+            .getByTestId(`wishlist-card-${mockItem.id}`)
+            .querySelector('[aria-label]')
+            ?.getAttribute('aria-label');
+
+        expect(label).toContain('25 €');
     });
 
     it('displays "Sin precio" when price is missing', () => {
@@ -81,6 +96,8 @@ describe('WishlistCard', () => {
     });
 
     it('renders the reserved state for a viewer when another user reserved it', () => {
+        // El check del chip de reserva es un icono (sin texto accesible propio):
+        // la etiqueta «Reservado por ti» es el texto que queda junto al icono.
         const onReserve = vi.fn();
         render(
             <WishlistCard
@@ -106,7 +123,9 @@ describe('WishlistCard', () => {
             />
         );
 
-        expect(screen.getByText('✓ Reservado por ti')).toBeInTheDocument();
+        // El «✓ Reservado por ti» original era un único <Text> con el glifo y la
+        // etiqueta; ahora el check es un icono y la etiqueta un texto propio.
+        expect(screen.getByText('Reservado por ti')).toBeInTheDocument();
         expect(screen.getByTestId('wish-cancel-reserve-button')).toBeInTheDocument();
         expect(screen.queryByTestId('wish-reserve-button')).not.toBeInTheDocument();
 

@@ -4,7 +4,7 @@ import { useIsDesktop } from '@/lib/use-is-desktop';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
 import { GlassBar } from './ui/GlassBar';
-import { emojiInCircle } from '@/lib/circle-glyph-styles';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 interface ResponsiveLayoutProps {
     userId: string;
@@ -24,7 +24,7 @@ function TabLabel({
     return (
         <Text
             className={`text-sm font-sans-bold uppercase tracking-widest ${
-                active ? 'text-primary' : 'text-on-surface/55'
+                active ? 'text-primary' : 'text-on-surface/70'
             }`}
         >
             {label}
@@ -174,9 +174,16 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
-                                <Text style={emojiInCircle(20)}>🎁</Text>
+                                {/* El icono hereda el color de la etiqueta activa/inactiva
+                                    que pinta `TabLabel`: misma clase `text-primary` o
+                                    `text-on-surface/70` en el mismo Pressable. */}
+                                <AppIcon
+                                    name="gift"
+                                    size={20}
+                                    className={`mb-0.5 ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/70'}`}
+                                />
                                 <Text
-                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'wishlist' ? 'text-primary' : 'text-on-surface/70'}`}
                                 >
                                     Deseos
                                 </Text>
@@ -191,9 +198,13 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
-                                <Text style={emojiInCircle(20)}>👥</Text>
+                                <AppIcon
+                                    name="users"
+                                    size={20}
+                                    className={`mb-0.5 ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/70'}`}
+                                />
                                 <Text
-                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'groups' ? 'text-primary' : 'text-on-surface/70'}`}
                                 >
                                     Grupos
                                 </Text>
@@ -208,9 +219,13 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
-                                <Text style={emojiInCircle(20)}>👤</Text>
+                                <AppIcon
+                                    name="user"
+                                    size={20}
+                                    className={`mb-0.5 ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/70'}`}
+                                />
                                 <Text
-                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/50'}`}
+                                    className={`text-xs mt-0.5 font-sans-bold ${activeTab === 'profile' ? 'text-primary' : 'text-on-surface/70'}`}
                                 >
                                     Perfil
                                 </Text>

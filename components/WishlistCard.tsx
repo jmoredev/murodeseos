@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { PrimaryButton } from './ui/PrimaryButton';
+import { AppIcon } from '@/components/ui/AppIcon';
 import { WishLinkChip } from './WishLinkChip';
+import { formatPrice } from '@/lib/format-price';
 import { ReservationState } from '@/lib/wish-reservation';
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -36,9 +38,9 @@ export function WishlistCard({
     onDelete,
 }: WishlistCardProps) {
     const priorityAccent = {
-        low: 'bg-tertiary',
-        medium: 'bg-secondary',
-        high: 'bg-primary',
+        low: 'bg-priority-low',
+        medium: 'bg-priority-medium',
+        high: 'bg-priority-high',
     };
 
     const priorityLabels = {
@@ -51,6 +53,8 @@ export function WishlistCard({
     const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
     const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
     const isAvailable = !isOwner && reservationState === 'available';
+    const a11yPriceText = formatPrice(item.price);
+    const priceText = a11yPriceText ? `${a11yPriceText} €` : null;
 
     const a11yReservation = isOwner
         ? undefined
@@ -62,7 +66,15 @@ export function WishlistCard({
               ? 'Estado de reserva no disponible'
               : 'Disponible';
 
-    const a11yPrice = item.price ? `${item.price} €` : 'Sin precio';
+    // react-native-web **ignora** `accessibilityValue` en un `role="button"`, así
+    // que el precio no llegaba al DOM: el dato accesible hay que llevarlo al
+    // **nombre**, que sí se renderiza como `aria-label`. Se reutiliza `priceText`,
+    // la misma expresión que pinta el texto visible, para que el «€» no pueda
+    // divergir entre lo que se ve y lo que se oye.
+    const a11yPrice = priceText ?? 'Sin precio';
+    const a11yLabel = `${item.title}. Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${
+        a11yReservation ? `. ${a11yReservation}.` : '.'
+    }`;
 
     const handleOpenDetail = () => {
         if (onClick) onClick(item);
@@ -80,11 +92,8 @@ export function WishlistCard({
             <Pressable
                 onPress={handleOpenDetail}
                 accessibilityRole="button"
-                accessibilityLabel={item.title}
+                accessibilityLabel={a11yLabel}
                 accessibilityHint="Abrir detalle del deseo"
-                accessibilityValue={{
-                    text: `Prioridad ${priorityLabels[item.priority]}. ${a11yPrice}${a11yReservation ? `. ${a11yReservation}.` : '.'}`,
-                }}
                 className="active:opacity-95"
             >
                 <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">
@@ -97,9 +106,7 @@ export function WishlistCard({
                             importantForAccessibility="no-hide-descendants"
                         />
                     ) : (
-                        <Text style={{ fontSize: 40 }} className="text-on-surface/20">
-                            🎁
-                        </Text>
+                        <AppIcon name="gift" size={40} className="text-on-surface/70" />
                     )}
 
                     <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
@@ -123,22 +130,37 @@ export function WishlistCard({
 
                     {isReservedByMe ? (
                         <View className="absolute top-3 left-3">
-                            <View className="bg-tertiary px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
-                                <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
-                                    ✓ Reservado por ti
-                                </Text>
+                            <View className="bg-reserved px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
+                                <View className="flex-row items-center gap-1">
+                                    {/* El check comparte el color y el tamaño (text-xs = 12) de
+                                        la etiqueta del chip de reserva: misma fila, misma caja.
+                                        `gap-1` reproduce el espacio que el glifo ✓ llevaba
+                                        dentro del propio texto (medido: sin él la separación
+                                        era de 0px). */}
+                                    <AppIcon name="check" size={12} className="text-surface-container-lowest" />
+                                    <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
+                                        Reservado por ti
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     ) : null}
                 </View>
 
                 <View className="p-5">
-                    <Text className="font-sans-bold text-on-background text-base leading-tight mb-4" numberOfLines={2}>
+                    <Text
+                        className="font-sans-bold text-on-background text-base leading-tight mb-4"
+                        // 3 y no 2: a 360px la tarjeta da ~116px de ancho de texto y un
+                        // título real como «Auriculares Sony WH-1000XM5» necesita 3
+                        // líneas (scrollHeight 60 vs clientHeight 40 medidos), así que
+                        // con 2 se cortaba el contenido del propio usuario.
+                        numberOfLines={3}
+                    >
                         {item.title}
                     </Text>
 
                     {item.notes ? (
-                        <Text className="text-xs text-on-surface/55 font-sans mb-4" numberOfLines={2}>
+                        <Text className="text-xs text-on-surface/70 font-sans mb-4" numberOfLines={2}>
                             {item.notes}
                         </Text>
                     ) : null}
@@ -149,14 +171,14 @@ export function WishlistCard({
                     <View className="flex-row items-center justify-between gap-2">
                         <View
                             className={`min-w-0 shrink px-3 py-1.5 rounded-xl ${
-                                item.price ? 'bg-secondary/12' : 'bg-surface-container-low'
+                                item.price ? 'bg-price/12' : 'bg-surface-container-low'
                             }`}
                         >
                             <Text
                                 numberOfLines={1}
-                                className={`text-xs font-sans-bold ${item.price ? 'text-secondary' : 'text-on-surface/45'}`}
+                                className={`text-xs font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}
                             >
-                                {item.price ? `${item.price} €` : 'Sin precio'}
+                                {priceText ?? 'Sin precio'}
                             </Text>
                         </View>
 
@@ -177,9 +199,21 @@ export function WishlistCard({
                     accessibilityLabel="Marcar como ya lo tengo"
                     className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
-                    <Text className="text-xs font-sans-bold text-tertiary uppercase tracking-[0.2em]">
-                        ✓ Ya lo tengo
-                    </Text>
+                    <View className="flex-row items-center gap-1">
+                        {/* El check comparte color (`text-success`) y tamaño (text-xs =
+                            12px) con la etiqueta: misma fila, misma caja. `gap-1`
+                            reproduce el espacio que el glifo ✓ llevaba dentro del texto
+                            (medido: sin él la separación era de 0px). */}
+                        <AppIcon name="check" size={12} className="text-success" />
+                        <Text
+                            // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
+                            // sobre 13 caracteres y partía la etiqueta en dos líneas a
+                            // 360px. A 0.05em cabe en una sola y conserva el aire.
+                            className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
+                        >
+                            Ya lo tengo
+                        </Text>
+                    </View>
                 </Pressable>
             ) : null}
 
@@ -204,7 +238,7 @@ export function WishlistCard({
                             accessibilityLabel="Cancelar reserva"
                             className="w-full py-3.5 bg-surface-container-high rounded-full items-center justify-center active:opacity-80"
                         >
-                            <Text className="text-on-surface/55 font-sans-bold text-xs uppercase tracking-widest">
+                            <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                 Cancelar reserva
                             </Text>
                         </Pressable>
@@ -212,7 +246,7 @@ export function WishlistCard({
 
                     {isReservedByOther ? (
                         <View className="w-full py-3.5 bg-surface-container-low rounded-full items-center justify-center opacity-70">
-                            <Text className="text-on-surface/45 font-sans-bold text-xs uppercase tracking-widest">
+                            <Text className="text-on-surface/70 font-sans-bold text-xs uppercase tracking-widest">
                                 No disponible
                             </Text>
                         </View>

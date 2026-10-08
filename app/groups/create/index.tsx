@@ -56,7 +56,7 @@ export default function CreateGroupPage() {
                     <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center shadow-ambient">
                         <Text className="text-5xl">{icon}</Text>
                     </View>
-                    <Text className="mt-4 text-on-surface/55 text-sm font-sans">Icono del grupo</Text>
+                    <Text className="mt-4 text-on-surface/70 text-sm font-sans">Icono del grupo</Text>
                 </View>
 
                 <View className="space-y-6">

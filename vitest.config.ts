@@ -13,6 +13,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './'),
       'react-native': 'react-native-web',
       'expo-linear-gradient': path.resolve(__dirname, './test/mocks/expo-linear-gradient.tsx'),
+      '@expo/vector-icons/Feather': path.resolve(__dirname, './test/mocks/expo-vector-icons.tsx'),
     },
     server: {
       deps: {

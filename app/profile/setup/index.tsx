@@ -74,7 +74,7 @@ export default function ProfileSetupPage() {
             <ScrollView className="flex-1 p-8" contentContainerStyle={{ justifyContent: 'center', minHeight: '100%' }}>
                 <View className="items-center mb-10 pt-4">
                     <Text className="text-3xl font-display text-on-background text-center tracking-tight">¡Bienvenido!</Text>
-                    <Text className="text-on-surface/65 text-center mt-3 px-4 font-sans">
+                    <Text className="text-on-surface/70 text-center mt-3 px-4 font-sans">
                         Antes de empezar, dinos cómo quieres que te vean los demás.
                     </Text>
                 </View>
@@ -106,7 +106,7 @@ export default function ProfileSetupPage() {
                             placeholderTextColor="#4c212b88"
                             className="bg-surface-container-highest p-4 rounded-full text-on-background text-lg font-sans"
                         />
-                        <Text className="text-xs text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
+                        <Text className="text-xs text-on-surface/70 mt-2 font-sans-bold uppercase tracking-wider ml-1">
                             Mínimo 3 caracteres
                         </Text>
                     </View>
@@ -123,7 +123,7 @@ export default function ProfileSetupPage() {
                             value={nameDay}
                             onChange={setNameDay}
                         />
-                        <Text className="text-xs text-on-surface/45 mt-2 font-sans-bold uppercase tracking-wider ml-1">
+                        <Text className="text-xs text-on-surface/70 mt-2 font-sans-bold uppercase tracking-wider ml-1">
                             Solo importan el día y el mes; el año no se tiene en cuenta
                         </Text>
                     </View>

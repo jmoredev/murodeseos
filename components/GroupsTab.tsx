@@ -7,7 +7,9 @@ import { GroupCard, Group } from '@/components/GroupCard'
 import { updateGroupName, deleteGroup, setGroupAlias } from '@/lib/group-utils'
 import { getUserAliases, setUserAlias } from '@/lib/aliases'
 import { getSiteBaseUrl } from '@/lib/site-url'
+import { useToast } from '@/components/Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { AppIcon } from '@/components/ui/AppIcon'
 
 export interface GroupsTabProps {
     userId: string;
@@ -34,6 +36,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [groupToDelete, setGroupToDelete] = useState<{ id: string, name: string } | null>(null);
     const [userRoles, setUserRoles] = useState<Map<string, string>>(new Map());
+    const { showToast, ToastComponent } = useToast();
 
     // Almacenamos aliases localmente para refresco rápido
     const [aliases, setAliases] = useState<Record<string, string>>({});
@@ -176,7 +179,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         if (selectedGroupId && Platform.OS === 'web') {
             try {
                 await navigator.clipboard.writeText(selectedGroupId);
-                alert('¡Código copiado al portapapeles!');
+                showToast('Código copiado al portapapeles');
             } catch (err) {
                 console.error('Failed to copy', err);
             }
@@ -219,7 +222,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             setGroupToRename(null);
         } catch (error) {
             console.error('Error renaming group:', error);
-            alert('Error al renombrar el grupo');
+            showToast('No se pudo renombrar el grupo', 'error');
         }
     };
 
@@ -240,7 +243,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             setGroupToDelete(null);
         } catch (error) {
             console.error('Error deleting group:', error);
-            alert('Error al eliminar el grupo');
+            showToast('No se pudo eliminar el grupo', 'error');
         }
     };
 
@@ -321,7 +324,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
-                <Text className="mt-4 text-on-surface/55 font-sans-medium">Cargando grupos...</Text>
+                <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando grupos...</Text>
             </View>
         );
     }
@@ -332,12 +335,13 @@ export function GroupsTab({ userId }: GroupsTabProps) {
             <View className="flex-row justify-between items-end mb-10 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mis grupos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
+                    <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">Gestiona tus intercambios</Text>
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
-                        <Pressable className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
-                            <Text style={{ fontSize: 20 }}>👤</Text>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Unirse a un grupo" className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
+                            {/* 20px: el tamaño del glifo de persona anterior. */}
+                            <AppIcon name="user" size={20} className="text-on-surface/70" />
                         </Pressable>
                     </Link>
                     <PrimaryButton
@@ -373,10 +377,10 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 ) : (
                     <View className="items-center justify-center py-20 px-6 text-center">
                         <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                            <Text style={{ fontSize: 40 }}>🎁</Text>
+                            <AppIcon name="gift" size={40} className="text-on-surface/70" />
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">No tienes grupos aún</Text>
-                        <Text className="text-on-surface/55 font-sans-medium max-w-xs mb-8">
+                        <Text className="text-on-surface/70 font-sans-medium max-w-xs mb-8">
                             Crea un nuevo grupo para empezar a organizar tus intercambios de regalos.
                         </Text>
                         <View className="flex-row gap-4 w-full max-w-xs">
@@ -416,10 +420,11 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     >
                         <View className="items-center mb-8">
                             <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center mb-4">
-                                <Text style={{ fontSize: 32 }}>↗</Text>
+                                {/* Decorativo: la acción accesible es el panel «Toca para copiar». */}
+                                <AppIcon name="arrow-up-right" size={32} className="text-on-surface/70" importantForAccessibility="no" />
                             </View>
                             <Text className="text-2xl font-display text-on-background mb-2">Invita a tus amigos</Text>
-                            <Text className="text-on-surface/55 font-sans-medium text-center">
+                            <Text className="text-on-surface/70 font-sans-medium text-center">
                                 Comparte este código para que puedan unirse al grupo.
                             </Text>
                         </View>
@@ -435,7 +440,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text className="text-xl md:text-4xl font-mono font-sans-bold text-on-background tracking-wider md:tracking-widest uppercase break-all">
                                 {selectedGroupId}
                             </Text>
-                            <Text className="text-xs font-sans-bold text-on-surface/45 mt-2 uppercase tracking-widest">Toca para copiar</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/70 mt-2 uppercase tracking-widest">Toca para copiar</Text>
                         </Pressable>
 
                         <PrimaryButton
@@ -516,7 +521,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                             <Text style={{ fontSize: 24 }}>🗑</Text>
                         </View>
                         <Text className="text-xl font-display text-on-background mb-2">¿Eliminar grupo?</Text>
-                        <Text className="text-on-surface/65 mb-6 font-sans-medium">
+                        <Text className="text-on-surface/70 mb-6 font-sans-medium">
                             Estás a punto de eliminar el grupo <Text className="font-sans-bold text-on-background">&quot;{groupToDelete?.name}&quot;</Text>. Esta acción no se puede deshacer.
                         </Text>
                         <View className="flex-row gap-3 justify-end">
@@ -540,6 +545,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     </View>
                 </View>
             ) : null}
+            {ToastComponent}
         </View>
     );
 }

@@ -152,7 +152,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
     const NotificationList = (
         <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
             {loading ? (
-                <div className="flex-1 flex items-center justify-center p-12 text-on-surface/50 italic text-sm font-sans">
+                <div className="flex-1 flex items-center justify-center p-12 text-on-surface/70 italic text-sm font-sans">
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-8 h-8 border-2 border-primary/25 border-t-primary rounded-full animate-spin"></div>
                         <span>Cargando notificaciones...</span>
@@ -172,7 +172,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full">
                     <div className="text-6xl mb-6 opacity-20">🔔</div>
                     <h4 className="text-on-background font-display text-xl mb-2">Sin notificaciones</h4>
-                    <p className="text-on-surface/55 text-sm max-w-[240px] leading-relaxed font-sans">
+                    <p className="text-on-surface/70 text-sm max-w-[240px] leading-relaxed font-sans">
                         Te avisaremos cuando pase algo importante en tus grupos o listas de deseos.
                     </p>
                 </div>
@@ -188,7 +188,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
             <button
                 ref={buttonRef}
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 rounded-xl text-on-surface/60 hover:bg-surface-container-low transition-all active:scale-90"
+                className="relative p-2 rounded-xl text-on-surface/70 hover:bg-surface-container-low transition-all active:scale-90"
                 aria-label="Ver notificaciones"
             >
                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
@@ -227,7 +227,7 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
 
                     {notifications.length > 0 && (
                         <div className="p-3 bg-surface-container-low text-center shrink-0">
-                            <span className="text-xs uppercase tracking-widest font-sans-bold text-on-surface/45">Sólo las últimas 20</span>
+                            <span className="text-xs uppercase tracking-widest font-sans-bold text-on-surface/70">Sólo las últimas 20</span>
                         </div>
                     )}
                 </div>

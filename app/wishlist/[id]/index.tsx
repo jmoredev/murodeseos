@@ -11,6 +11,7 @@ import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 import { WishDetailModal } from '@/components/WishDetailModal';
 import { ProfileInfoSection } from '@/components/ProfileInfoSection';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { AppIcon } from '@/components/ui/AppIcon';
 import { useToast } from '@/components/Toast';
 
 export default function UserWishlistPage() {
@@ -107,7 +108,7 @@ export default function UserWishlistPage() {
                 i.id === item.id ? { ...i, reservationState: 'reserved_by_me' } : i;
             setItems((prev) => prev.map(update));
             setSelectedItem((prev) => (prev?.id === item.id ? { ...prev, reservationState: 'reserved_by_me' } : prev));
-            showToast('¡Regalo reservado!');
+            showToast('Regalo reservado');
         } catch (err) {
             console.error('Error reserving item:', err);
             showToast(getWishActionErrorMessage(err, 'No se pudo reservar el regalo'), 'error');
@@ -136,8 +137,8 @@ export default function UserWishlistPage() {
         return (
             <View className="flex-1 items-center justify-center bg-surface p-6">
                 <Text style={{ fontSize: 64 }} className="mb-4">😕</Text>
-                <Text className="text-2xl font-display text-on-background mb-2">¡Vaya!</Text>
-                <Text className="text-on-surface/65 text-center font-sans-medium mb-8">{error}</Text>
+                <Text className="text-2xl font-display text-on-background mb-2">No se pudo cargar la lista</Text>
+                <Text className="text-on-surface/70 text-center font-sans-medium mb-8">{error}</Text>
                 <PrimaryButton onPress={() => router.replace('/')} accessibilityLabel="Volver al inicio">
                     Volver al inicio
                 </PrimaryButton>
@@ -166,15 +167,18 @@ export default function UserWishlistPage() {
                     <View className="flex-row items-center flex-1">
                         <Pressable
                             onPress={() => router.back()}
+                            accessibilityRole="button"
+                            accessibilityLabel="Volver"
                             className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-on-surface font-sans-bold">←</Text>
+                            {/* 16px: el tamaño del glifo de flecha atrás anterior. */}
+                            <AppIcon name="arrow-left" size={16} className="text-on-surface" />
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
                                 Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
                             </Text>
-                            <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">
+                            <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Wishlist pública
                             </Text>
                         </View>
@@ -200,7 +204,7 @@ export default function UserWishlistPage() {
 
                 {reservationDegraded ? (
                     <View className="mb-6 rounded-2xl bg-surface-container-low px-4 py-3">
-                        <Text className="text-xs font-sans-medium text-on-surface/65">
+                        <Text className="text-xs font-sans-medium text-on-surface/70">
                             No se pudo comprobar el estado de las reservas: puede que un regalo ya esté reservado. Recarga la página para verlo con certeza.
                         </Text>
                     </View>
@@ -212,10 +216,10 @@ export default function UserWishlistPage() {
                         {items.length === 0 ? (
                             <View className="items-center justify-center py-20 opacity-80">
                                 <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                                    <Text style={{ fontSize: 40 }}>🎁</Text>
+                                    <AppIcon name="gift" size={40} className="text-on-surface/70" />
                                 </View>
                                 <Text className="text-2xl font-display text-on-background mb-2 text-center">Lista vacía</Text>
-                                <Text className="text-on-surface/55 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
+                                <Text className="text-on-surface/70 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
                             </View>
                         ) : (
                             <View className="flex-row flex-wrap -m-2">
@@ -277,9 +281,13 @@ export default function UserWishlistPage() {
                             <Text className="text-2xl font-display text-on-background">Información</Text>
                             <Pressable
                                 onPress={() => setShowInfo(false)}
+                                accessibilityRole="button"
+                                accessibilityLabel="Cerrar información"
+                                testID="info-sheet-close"
                                 className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center"
                             >
-                                <Text className="text-on-surface/55 font-sans-bold">✕</Text>
+                                {/* 16px: el tamaño del glifo de cerrar anterior. */}
+                                <AppIcon name="x" size={16} className="text-on-surface/70" />
                             </Pressable>
                         </View>
 

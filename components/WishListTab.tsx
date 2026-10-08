@@ -10,11 +10,12 @@ import {
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
-import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
+import { AppIcon } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
+import { comparePriceForSort } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface WishListTabProps {
@@ -113,9 +114,10 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
         } else if (sortBy === 'price') {
-            const priceA = typeof a.price === 'number' ? a.price : parseFloat(a.price || '0');
-            const priceB = typeof b.price === 'number' ? b.price : parseFloat(b.price || '0');
-            return priceA - priceB;
+            // El campo es texto libre: `comparePriceForSort` normaliza la coma
+            // decimal, manda los no numéricos al final y es un **orden total**
+            // —nunca devuelve `NaN`, tampoco con dos valores ilegibles—.
+            return comparePriceForSort(a.price, b.price);
         } else {
             const priorityValues = { high: 3, medium: 2, low: 1 };
             const priorityA = priorityValues[a.priority || 'medium'] || 2;
@@ -283,7 +285,7 @@ export function WishListTab({ userId }: WishListTabProps) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
-                <Text className="mt-4 text-on-surface/55 font-sans-medium">Cargando deseos...</Text>
+                <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando deseos...</Text>
             </View>
         );
     }
@@ -293,7 +295,7 @@ export function WishListTab({ userId }: WishListTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
+                    <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
                 <PrimaryButton
                     onPress={() => openForm()}
@@ -330,7 +332,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             className={`px-2 py-2.5 rounded-full items-center justify-center ${sortBy === type ? 'bg-primary shadow-ambient' : 'bg-surface-container-low'}`}
                         >
                             <Text
-                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/55'}`}
+                                className={`text-center font-sans-bold uppercase ${isDesktop ? 'text-xs tracking-wider' : 'text-xs tracking-wide'} ${sortBy === type ? 'text-on-primary' : 'text-on-surface/70'}`}
                                 numberOfLines={1}
                             >
                                 {isDesktop
@@ -367,10 +369,10 @@ export function WishListTab({ userId }: WishListTabProps) {
                 ) : (
                     <View className="items-center justify-center py-20 text-center">
                         <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                            <Text style={emojiInCircle(40)}>🎁</Text>
+                            <AppIcon name="gift" size={40} className="text-on-surface/70" testID="wishlist-empty-icon" />
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">Tu lista está vacía</Text>
-                        <Text className="text-on-surface/55 font-sans-medium">Añade cosas que te ilusionen.</Text>
+                        <Text className="text-on-surface/70 font-sans-medium">Añade cosas que te ilusionen.</Text>
                     </View>
                 )}
             </View>
@@ -410,11 +412,13 @@ export function WishListTab({ userId }: WishListTabProps) {
                             <View className="flex-row items-center mb-4 min-w-0">
                                 <Pressable
                                     onPress={() => !isSaving && setIsFormOpen(false)}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Cerrar formulario"
                                     className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
                                 >
-                                    <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
-                                        ←
-                                    </Text>
+                                    {/* Mantiene el tamaño de glifo de la flecha atrás:
+                                        la caja de 44 y el centrado no cambian. */}
+                                    <AppIcon name="arrow-left" size={16} className="text-on-surface" />
                                 </Pressable>
                                 <Text
                                     className="text-2xl font-display text-on-background shrink min-w-0 flex-1"
@@ -454,7 +458,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                         >
                             <View className="w-full min-w-0 max-w-full">
                             <View className="mb-4">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Título</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Título</Text>
                                 <TextInput
                                     value={formData.title || ''}
                                     onChangeText={(text) => setFormData({ ...formData, title: text })}
@@ -467,7 +471,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             {/* Exclusión de deseos por grupos (web): los e2e buscan `label` + `input[type="checkbox"]`. */}
                             {Platform.OS === 'web' && userGroups.length > 0 ? (
                                 <View className="mb-4">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Excluir de grupos</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Excluir de grupos</Text>
                                     <View>
                                         {userGroups.map(group => {
                                             const excluded = (formData.excludedGroupIds || []).includes(group.id);
@@ -491,23 +495,23 @@ export function WishListTab({ userId }: WishListTabProps) {
 
                             <View className="flex-row gap-3 mb-4 min-w-0 w-full">
                                 <View className="flex-1 min-w-0">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Precio (€)</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Precio (€)</Text>
                                     <TextInput
                                         value={formData.price?.toString() || ''}
                                         onChangeText={(text) => setFormData({ ...formData, price: text })}
-                                        placeholder="0.00"
+                                        placeholder="0,00"
                                         keyboardType="numeric"
                                         style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
                                 </View>
                                 <View className="flex-1 min-w-0">
-                                    <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Prioridad</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Prioridad</Text>
                                     <View className="flex-row gap-1.5 bg-surface-container-low p-1 rounded-2xl min-w-0">
                                         {[
-                                            { key: 'low', label: 'Baja', color: 'text-tertiary' },
-                                            { key: 'medium', label: 'Media', color: 'text-secondary' },
-                                            { key: 'high', label: 'Alta', color: 'text-primary' },
+                                            { key: 'low', label: 'Baja', color: 'text-priority-low' },
+                                            { key: 'medium', label: 'Media', color: 'text-priority-medium' },
+                                            { key: 'high', label: 'Alta', color: 'text-priority-high' },
                                         ].map((p) => (
                                             <Pressable
                                                 key={p.key}
@@ -515,7 +519,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                                                 className={`flex-1 min-w-0 py-3 rounded-xl items-center justify-center ${formData.priority === p.key ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                             >
                                                 <Text
-                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/40'}`}
+                                                    className={`text-xs font-sans-bold uppercase tracking-wide text-center ${formData.priority === p.key ? p.color : 'text-on-surface/70'}`}
                                                     numberOfLines={1}
                                                 >
                                                     {p.label}
@@ -527,7 +531,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-4 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                                     Imagen
                                 </Text>
                                 {formData.imageUrl ? (
@@ -569,7 +573,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-4 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">
                                     Enlace (opcional)
                                 </Text>
                                 <TextInput
@@ -590,7 +594,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                             </View>
 
                             <View className="mb-6 min-w-0">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2">Notas</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Notas</Text>
                                 <TextInput
                                     value={formData.notes || ''}
                                     onChangeText={(text) => setFormData({ ...formData, notes: text })}

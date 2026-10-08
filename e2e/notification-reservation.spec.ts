@@ -76,7 +76,7 @@ test.describe('Aviso al reservar un deseo', () => {
         const card = page.getByTestId(`wishlist-card-${wishId}`);
         await expect(card).toBeVisible({ timeout: 15000 });
         await card.getByTestId('wish-reserve-button').click();
-        await expect(page.getByText('¡Regalo reservado!')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText('Regalo reservado')).toBeVisible({ timeout: 10000 });
 
         // El aviso vive en la base: el cliente no inserta esta fila.
         const { data: notifications, error } = await supabaseAdmin

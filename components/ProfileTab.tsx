@@ -122,7 +122,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
             <View className="flex-row justify-between items-end mb-8 px-2">
                 <View>
                     <Text className="text-3xl font-display text-on-background tracking-tight">Mi perfil</Text>
-                    <Text className="text-on-surface/55 font-sans-bold uppercase text-xs tracking-widest mt-2">Personaliza cómo te ven los demás</Text>
+                    <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">Personaliza cómo te ven los demás</Text>
                 </View>
             </View>
 
@@ -134,8 +134,8 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                 )}
 
                 {success && (
-                    <View className="mb-6 rounded-2xl bg-tertiary/12 p-4">
-                        <Text className="text-sm text-tertiary font-sans-bold text-center">¡Perfil actualizado!</Text>
+                    <View className="mb-6 rounded-2xl bg-success/12 p-4">
+                        <Text className="text-sm text-success font-sans-bold text-center">Perfil actualizado</Text>
                     </View>
                 )}
 
@@ -149,12 +149,12 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                             <Text style={{ color: 'white', fontSize: 12 }}>🖋️</Text>
                         </View>
                     </Pressable>
-                    <Text className="mt-4 text-xs text-on-surface/45 font-sans-bold uppercase tracking-[0.2em]">Avatar personal</Text>
+                    <Text className="mt-4 text-xs text-on-surface/70 font-sans-bold uppercase tracking-[0.2em]">Avatar personal</Text>
                 </View>
 
                 <View className="space-y-6">
                     <View>
-                        <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-3 ml-1">Nombre público</Text>
+                        <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-3 ml-1">Nombre público</Text>
                         <TextInput
                             value={displayName}
                             onChangeText={setDisplayName}
@@ -176,7 +176,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                             value={nameDay}
                             onChange={setNameDay}
                         />
-                        <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mt-2 ml-1">
+                        <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mt-2 ml-1">
                             Solo importan el día y el mes; el año no se tiene en cuenta
                         </Text>
                     </View>
@@ -186,7 +186,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
 
                         <View className="flex-row gap-4 mb-4">
                             <View className="flex-1">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Camiseta</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2 ml-1">Camiseta</Text>
                                 <TextInput
                                     value={shirtSize}
                                     onChangeText={setShirtSize}
@@ -196,7 +196,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Pantalón</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2 ml-1">Pantalón</Text>
                                 <TextInput
                                     value={pantsSize}
                                     onChangeText={setPantsSize}
@@ -209,7 +209,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
 
                         <View className="flex-row gap-4 mb-4">
                             <View className="flex-1">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Zapatos</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2 ml-1">Zapatos</Text>
                                 <TextInput
                                     value={shoeSize}
                                     onChangeText={setShoeSize}
@@ -219,7 +219,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Color favorito</Text>
+                                <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2 ml-1">Color favorito</Text>
                                 <View className="relative">
                                     <TextInput
                                         value={favoriteColor}
@@ -237,7 +237,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
                         </View>
 
                         <View>
-                            <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-widest mb-2 ml-1">Marcas favoritas</Text>
+                            <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2 ml-1">Marcas favoritas</Text>
                             <TextInput
                                 value={favoriteBrands}
                                 onChangeText={setFavoriteBrands}

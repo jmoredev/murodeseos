@@ -21,7 +21,7 @@ export function ProfileInfoSection({ profile, isDesktop }: ProfileInfoSectionPro
     if (sections.length === 0) {
         return (
             <View className="p-6 items-center">
-                <Text className="text-on-surface/50 italic text-sm font-sans">Sin información de tallas disponible.</Text>
+                <Text className="text-on-surface/70 italic text-sm font-sans">Sin información de tallas disponible.</Text>
             </View>
         );
     }
@@ -29,7 +29,7 @@ export function ProfileInfoSection({ profile, isDesktop }: ProfileInfoSectionPro
     return (
         <View className={`${isDesktop ? 'bg-surface-container-low rounded-3xl p-6 shadow-ambient' : 'p-6'}`}>
             <View className="mb-6 pt-1">
-                <Text className="text-on-surface/45 font-sans-bold uppercase text-xs tracking-widest mb-2">
+                <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mb-2">
                     Información de perfil
                 </Text>
                 <Text className="text-xl font-display text-on-background">Detalles y Tallas</Text>
@@ -42,7 +42,7 @@ export function ProfileInfoSection({ profile, isDesktop }: ProfileInfoSectionPro
                             <Text style={{ fontSize: 20 }}>{section.icon}</Text>
                         </View>
                         <View className="flex-1">
-                            <Text className="text-xs font-sans-bold text-on-surface/45 uppercase tracking-wider mb-0.5">
+                            <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-wider mb-0.5">
                                 {section.label}
                             </Text>
                             <Text className="text-on-background font-sans-bold" numberOfLines={2}>

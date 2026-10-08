@@ -74,7 +74,7 @@ test.describe('Funcionalidad de Perfil', () => {
         await page.getByText(/Guardar Cambios/i).first().click();
 
         // Verificar mensaje de éxito
-        await expect(page.getByText('¡Perfil actualizado!')).toBeVisible();
+        await expect(page.getByText('Perfil actualizado')).toBeVisible();
 
         // Recargar e ir directamente a la pestaña de perfil para verificar persistencia
         await page.goto('/?tab=profile');
@@ -117,7 +117,7 @@ test.describe('Funcionalidad de Perfil', () => {
 
         // Guardar los cambios
         await page.getByText(/Guardar Cambios/i).first().click();
-        await expect(page.getByText('¡Perfil actualizado!')).toBeVisible();
+        await expect(page.getByText('Perfil actualizado')).toBeVisible();
 
         // Verificar tras recarga
         await page.goto('/?tab=profile');
