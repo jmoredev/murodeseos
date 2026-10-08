@@ -49,13 +49,42 @@ Los cuatro tests **anteriores siguen verdes** (mismo origen y red-primero para a
 
 **Mejora del arnés que hizo falta**: `caches.match` acepta también una **ruta relativa** (`'./'`), y el SW la usa para su respaldo de navegación. El mock resolvía sólo `request.url`, así que ese camino era **invisible** para los tests — justo el que produce el negro. Ahora se resuelve contra el scope (`resolveCacheKey`).
 
+## Verificación (2026-10-08)
+
+| Comprobación | Resultado |
+| --- | --- |
+| `node --check public/sw.js` | OK |
+| `pnpm run typecheck` | limpio |
+| `pnpm run lint` (`--max-warnings 0`) | limpio |
+| `pnpm run test:unit` | **246 passed + 1 todo** (antes 242+1: los 4 tests nuevos), con los 4 del SW que fallaban en rojo ahora verdes |
+| E2E chromium, **resiembra y `--workers=1`** | **52 passed / 1 skipped**, la misma línea base |
+
+### Demostración en navegador, contra los artefactos reales
+
+Se sirvió el `dist/` bajo `/murodeseos/` con un servidor que imita a Pages (404 con el cuerpo de `404.html`), y se comparó el **SW de producción** (`git show 6057b6a:public/sw.js`) contra el arreglado, con el bundle retirado de la caché para reproducir el estado real del fallo — la cáscara queda cacheada al instalar (`CORE_ASSETS`) pero **el bundle no está en `CORE_ASSETS`** — y un fallo de red de verdad:
+
+| | **VIEJO** (SW en producción) | **NUEVO** (arreglado) |
+| --- | --- | --- |
+| Respuesta a la petición de navegación | 200 | 200 |
+| Tamaño | **17 991 bytes** | **835 bytes** |
+| Referencia al bundle | **`entry-0d7e7fbe….js`**, el que ya no existe | **ninguna** |
+| ¿Es la página de sin conexión? | no | **sí** |
+
+El viejo entrega la cáscara que apunta a un bundle muerto: el navegador lo pide, falla y **nada se monta**. El nuevo entrega 835 bytes autocontenidos que no pueden fallar.
+
+**Limitación del arnés, dicha en lugar de tapada**: en este entorno una **navegación real** de Playwright **no consulta al service worker** (resuelve antes y devuelve `ERR_EMPTY_RESPONSE`/`ERR_INTERNET_DISCONNECTED`), así que la demostración usa **la misma petición que hace una navegación** (`accept: text/html`), que es el discriminante exacto del SW (`public/sw.js:50-52`). El camino `mode: 'navigate'` lo cubren los **unitarios**, que sí es el camino que el navegador usa de verdad. Dos vías de arnés se descartaron antes de llegar aquí: `context.setOffline` (el navegador resuelve la navegación sin consultar al SW) y la navegación real con el servidor tumbado.
+
+**Un obstáculo que conviene saber**: la app **no registra el SW fuera de `github.io`** (`lib/site-url.ts:29`), a propósito, para que en desarrollo no sirva JS viejo. Por eso la demostración registra el SW a mano; es el mismo fichero que sirve Pages.
+
+**Lo que sigue sin probarse**: cuál de los dos caminos disparó en el móvil del propietario. La clase de fallo y el mecanismo están demostrados; el disparo concreto necesita registros del dispositivo.
+
 ## Unidades de trabajo
 
 | # | Tarea | Estado |
 | --- | --- | --- |
 | P1 | **Reproducir** el negro en local: fijar el comportamiento actual del SW con tests que **fallen en rojo** (cáscara obsoleta servida y respuesta no-ok entregada como recurso) y una demostración en navegador con un despliegue simulado | **hecha (tests)** — cuatro tests en `__tests__/sw.test.ts` que describen el contrato correcto y **fallan los cuatro** contra el SW actual. El primero es la reproducción literal: el SW devuelve `<html><script src="…/entry-VIEJO.js">`, el chunk que el despliegue borró. Ver «Reproducción» |
 | P2 | **Arreglo del SW**: no servir una cáscara que pueda sobrevivir a sus chunks, y no entregar respuestas no-ok para recursos | **hecha** — `VERSION` a **`v5`** (cambia la estrategia: es lo que purga la caché vieja), `'./'` **fuera** de `CORE_ASSETS`, la cáscara **no se cachea nunca** en navegación, `offlinePage()` autocontenida como respuesta cuando la navegación no se puede servir, y `Response.error()` en vez de entregar una respuesta no-ok de un recurso |
-| P3 | **Recuperación en la app** ante un chunk ausente (recarga en vez de negro) y `_layout` que no pinte `null` | pendiente |
+| P3 | **Recuperación en la app** ante un chunk ausente (recarga en vez de negro) y `_layout` que no pinte `null` | **parcial, y acotado con dato**: **no hay code splitting** (el export produce **un único** `entry-<hash>.js`), así que no existen chunks perezosos que puedan fallar y la recuperación de chunks **no aplica**; `app/_layout.tsx` ya no pinta `null` sino el fondo de marca. Ver «Verificación» |
 | P4 | Verificación (estáticos, unitarios, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | pendiente |
 
 ## Restricciones
@@ -75,4 +104,5 @@ Los cuatro tests **anteriores siguen verdes** (mismo origen y red-primero para a
 ## Commits
 
 - **`dfa7a89`** — `test(pwa): pin the contract that makes the black screen impossible` (P1).
-- _(P2, pendiente de commit)_
+- **`f06745b`** — `fix(pwa): never serve a shell that can outlive its own chunks` (P2).
+- **`91c2dae`** — `fix(pwa): paint the brand surface while fonts load, never nothing` (P3).
