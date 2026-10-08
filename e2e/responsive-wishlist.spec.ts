@@ -209,10 +209,20 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         await expect(sheetTitle.first()).toBeVisible({ timeout: 10000 });
         await expect(page.getByText('Tallas')).toBeVisible({ timeout: 10000 });
 
-        // Cerrar el bottom sheet
-        const closeText = page.getByText('✕').first();
-        const closeButton = closeText.locator('xpath=ancestor::*[contains(@class,"rounded-full")]').first();
-        await closeButton.evaluate((el) => (el as HTMLElement).click());
+        // Cerrar el bottom sheet. Antes se localizaba por el glifo de texto «✕»
+        // y se pulsaba con un `click()` a nivel de DOM (`evaluate`), que era la
+        // única forma de esquivar la animación de entrada de la hoja: la
+        // aserción de visibilidad de arriba pasa en cuanto el texto existe, con
+        // la hoja todavía deslizándose. Desde la Unidad U6 el glifo es un icono
+        // Feather, así que el botón lleva un testID estable («info-sheet-close»)
+        // y se pulsa con un click NORMAL: Playwright espera a que el elemento
+        // esté quieto y clickeable, con lo que además se comprueba de verdad
+        // que un usuario puede pulsarlo. Con `force: true` la corrida fallaba
+        // con «Element is outside of the viewport», porque `force` salta la
+        // espera de estabilidad y calcula el punto con la caja a mitad de
+        // animación (medida real: 44x44 en y=207 una vez asentada).
+        const closeButton = page.getByTestId('info-sheet-close');
+        await closeButton.click();
 
         // El contenido debería desaparecer
         await expect(sheetTitle).not.toBeVisible({ timeout: 10000 });

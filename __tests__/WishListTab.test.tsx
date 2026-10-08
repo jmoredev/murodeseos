@@ -74,7 +74,7 @@ describe('WishListTab', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Tu lista está vacía')).toBeInTheDocument();
-            expect(screen.getByText('🎁')).toBeInTheDocument();
+            expect(screen.getByTestId('wishlist-empty-icon')).toBeInTheDocument();
         });
     });
 

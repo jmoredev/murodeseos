@@ -7,6 +7,7 @@ import { useIsDesktop } from '@/lib/use-is-desktop';
 import type { GestureResponderEvent } from 'react-native';
 import { useRouter } from 'expo-router';
 import { emojiInCircle } from '@/lib/circle-glyph-styles';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 export interface GroupMember {
     id: string;
@@ -203,11 +204,13 @@ export const GroupCard = memo(function GroupCard({
                                     className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 min-w-0 ring-2 ring-primary/20"
                                     autoFocus
                                 />
-                                <Pressable onPress={stopAnd(saveGroupName)} className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
-                                    <Text className="text-green-600">✓</Text>
+                                <Pressable onPress={stopAnd(saveGroupName)} accessibilityRole="button" accessibilityLabel="Guardar alias del grupo" className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
+                                    {/* El check de 16px (por defecto de RN) que había; la caja
+                                        p-2 y el centrado no cambian. */}
+                                    <AppIcon name="check" size={16} className="text-green-600" />
                                 </Pressable>
-                                <Pressable onPress={stopAnd(cancelEditingGroupName)} className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
-                                    <Text className="text-red-600">✕</Text>
+                                <Pressable onPress={stopAnd(cancelEditingGroupName)} accessibilityRole="button" accessibilityLabel="Cancelar edición del alias del grupo" className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
+                                    <AppIcon name="x" size={16} className="text-red-600" />
                                 </Pressable>
                             </View>
                         ) : (
@@ -235,8 +238,9 @@ export const GroupCard = memo(function GroupCard({
                                     {group.name}
                                 </Text>
                                 {onGroupAliasEdit && (
-                                    <Pressable onPress={stopAnd(startEditingGroupName)} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                        <Text className="text-on-surface/70 text-xs">✎</Text>
+                                    <Pressable onPress={stopAnd(startEditingGroupName)} accessibilityRole="button" accessibilityLabel="Editar alias del grupo" className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
+                                        {/* text-xs = 12: el tamaño del glifo de lápiz anterior. */}
+                                        <AppIcon name="edit-2" size={12} className="text-on-surface/70" />
                                     </Pressable>
                                 )}
                             </View>
@@ -258,7 +262,8 @@ export const GroupCard = memo(function GroupCard({
                         accessibilityLabel="Compartir grupo"
                         className="p-3 rounded-full bg-surface-container-low items-center justify-center mr-2"
                     >
-                        <Text className="text-lg">↗</Text>
+                        {/* text-lg = 18: el tamaño del glifo de compartir anterior. */}
+                        <AppIcon name="arrow-up-right" size={18} className="text-on-surface" />
                     </Pressable>
 
                     {isAdmin ? (
@@ -269,7 +274,8 @@ export const GroupCard = memo(function GroupCard({
                                 accessibilityLabel="Opciones de grupo"
                                 className="p-3 rounded-full bg-surface-container-low items-center justify-center"
                             >
-                                <Text className="text-lg">⋮</Text>
+                                {/* text-lg = 18: el tamaño del glifo de menú anterior. */}
+                                <AppIcon name="more-vertical" size={18} className="text-on-surface" />
                             </Pressable>
 
                             {menuOpen && (
@@ -329,11 +335,12 @@ export const GroupCard = memo(function GroupCard({
                                         className="flex-1 px-2 py-1 bg-surface-container-highest rounded-md text-sm text-on-background"
                                         autoFocus
                                     />
-                                    <Pressable onPress={stopAnd(saveAlias)} className="p-2 ml-1">
-                                        <Text className="text-green-600 font-bold">✓</Text>
+                                    <Pressable onPress={stopAnd(saveAlias)} accessibilityRole="button" accessibilityLabel={`Guardar alias de ${member.name}`} className="p-2 ml-1">
+                                        {/* El check de 16px que había; la caja p-2 no cambia. */}
+                                        <AppIcon name="check" size={16} className="text-green-600" />
                                     </Pressable>
-                                    <Pressable onPress={stopAnd(cancelEditing)} className="p-2">
-                                        <Text className="text-red-600">✕</Text>
+                                    <Pressable onPress={stopAnd(cancelEditing)} accessibilityRole="button" accessibilityLabel={`Cancelar edición del alias de ${member.name}`} className="p-2">
+                                        <AppIcon name="x" size={16} className="text-red-600" />
                                     </Pressable>
                                 </View>
                             ) : (
@@ -347,8 +354,9 @@ export const GroupCard = memo(function GroupCard({
                                         </Text>
                                     )}
                                     {onMemberEdit && (
-                                        <Pressable onPress={stopAnd(() => startEditing(member))} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
-                                            <Text className="text-on-surface/70 text-xs">✎</Text>
+                                        <Pressable onPress={stopAnd(() => startEditing(member))} accessibilityRole="button" accessibilityLabel={`Editar alias de ${member.name}`} className="w-11 h-11 ml-1 shrink-0 items-center justify-center">
+                                            {/* text-xs = 12: el tamaño del glifo de lápiz anterior. */}
+                                            <AppIcon name="edit-2" size={12} className="text-on-surface/70" />
                                         </Pressable>
                                     )}
                                 </View>

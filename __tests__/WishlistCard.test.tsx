@@ -96,6 +96,8 @@ describe('WishlistCard', () => {
     });
 
     it('renders the reserved state for a viewer when another user reserved it', () => {
+        // El check del chip de reserva es un icono (sin texto accesible propio):
+        // la etiqueta «Reservado por ti» es el texto que queda junto al icono.
         const onReserve = vi.fn();
         render(
             <WishlistCard
@@ -121,7 +123,9 @@ describe('WishlistCard', () => {
             />
         );
 
-        expect(screen.getByText('✓ Reservado por ti')).toBeInTheDocument();
+        // El «✓ Reservado por ti» original era un único <Text> con el glifo y la
+        // etiqueta; ahora el check es un icono y la etiqueta un texto propio.
+        expect(screen.getByText('Reservado por ti')).toBeInTheDocument();
         expect(screen.getByTestId('wish-cancel-reserve-button')).toBeInTheDocument();
         expect(screen.queryByTestId('wish-reserve-button')).not.toBeInTheDocument();
 

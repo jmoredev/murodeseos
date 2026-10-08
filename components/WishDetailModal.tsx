@@ -13,6 +13,7 @@ import { useIsDesktop } from '@/lib/use-is-desktop';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
+import { AppIcon } from '@/components/ui/AppIcon';
 import { formatPrice } from '@/lib/format-price';
 
 interface WishDetailModalProps {
@@ -83,7 +84,9 @@ export function WishDetailModal({
                     accessibilityLabel="Cerrar detalle"
                     className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center shrink-0"
                 >
-                    <Text className="text-on-surface/70 font-sans-bold">✕</Text>
+                    {/* Mantiene el tamaño de glifo que la X del modal reemplaza:
+                        la caja de 44 y el centrado no cambian. */}
+                    <AppIcon name="x" size={16} className="text-on-surface/70" />
                 </Pressable>
             </View>
 
@@ -97,9 +100,7 @@ export function WishDetailModal({
                             accessibilityLabel={`Imagen de ${item.title}`}
                         />
                     ) : (
-                        <Text style={{ fontSize: 64 }} className="text-on-surface/70">
-                            🎁
-                        </Text>
+                        <AppIcon name="gift" size={64} className="text-on-surface/70" />
                     )}
                 </View>
 

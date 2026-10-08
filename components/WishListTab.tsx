@@ -10,8 +10,8 @@ import {
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
-import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
+import { AppIcon } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
@@ -369,7 +369,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 ) : (
                     <View className="items-center justify-center py-20 text-center">
                         <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                            <Text style={emojiInCircle(40)}>🎁</Text>
+                            <AppIcon name="gift" size={40} className="text-on-surface/70" testID="wishlist-empty-icon" />
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">Tu lista está vacía</Text>
                         <Text className="text-on-surface/70 font-sans-medium">Añade cosas que te ilusionen.</Text>
@@ -412,11 +412,13 @@ export function WishListTab({ userId }: WishListTabProps) {
                             <View className="flex-row items-center mb-4 min-w-0">
                                 <Pressable
                                     onPress={() => !isSaving && setIsFormOpen(false)}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Cerrar formulario"
                                     className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-3 shrink-0"
                                 >
-                                    <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
-                                        ←
-                                    </Text>
+                                    {/* Mantiene el tamaño de glifo de la flecha atrás:
+                                        la caja de 44 y el centrado no cambian. */}
+                                    <AppIcon name="arrow-left" size={16} className="text-on-surface" />
                                 </Pressable>
                                 <Text
                                     className="text-2xl font-display text-on-background shrink min-w-0 flex-1"

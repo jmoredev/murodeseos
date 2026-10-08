@@ -8,7 +8,8 @@ import { shareGroup } from '@/lib/group-utils';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSettingsModal';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { circleGlyphTextBase, emojiInCircle } from '@/lib/circle-glyph-styles';
+import { emojiInCircle } from '@/lib/circle-glyph-styles';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 function isHttpUrl(value: string | undefined | null): boolean {
     return !!value && /^https?:\/\//i.test(value);
@@ -135,11 +136,12 @@ export default function GroupDetailsPage() {
                     <View className="flex-row items-center flex-1 min-w-0">
                         <Pressable
                             onPress={() => router.back()}
+                            accessibilityRole="button"
+                            accessibilityLabel="Volver"
                             className="w-11 h-11 rounded-full bg-surface-container-low items-center justify-center mr-4"
                         >
-                            <Text className="text-on-surface font-sans-bold" style={circleGlyphTextBase}>
-                                ←
-                            </Text>
+                            {/* 16px: el tamaño del glifo de flecha atrás anterior. */}
+                            <AppIcon name="arrow-left" size={16} className="text-on-surface" />
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { PrimaryButton } from './ui/PrimaryButton';
+import { AppIcon } from '@/components/ui/AppIcon';
 import { WishLinkChip } from './WishLinkChip';
 import { formatPrice } from '@/lib/format-price';
 import { ReservationState } from '@/lib/wish-reservation';
@@ -105,9 +106,7 @@ export function WishlistCard({
                             importantForAccessibility="no-hide-descendants"
                         />
                     ) : (
-                        <Text style={{ fontSize: 40 }} className="text-on-surface/70">
-                            🎁
-                        </Text>
+                        <AppIcon name="gift" size={40} className="text-on-surface/70" />
                     )}
 
                     <View className="absolute top-3 right-3 flex flex-col gap-2 items-end">
@@ -132,9 +131,17 @@ export function WishlistCard({
                     {isReservedByMe ? (
                         <View className="absolute top-3 left-3">
                             <View className="bg-reserved px-3 py-1.5 rounded-full shadow-ambient flex-row items-center">
-                                <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
-                                    ✓ Reservado por ti
-                                </Text>
+                                <View className="flex-row items-center gap-1">
+                                    {/* El check comparte el color y el tamaño (text-xs = 12) de
+                                        la etiqueta del chip de reserva: misma fila, misma caja.
+                                        `gap-1` reproduce el espacio que el glifo ✓ llevaba
+                                        dentro del propio texto (medido: sin él la separación
+                                        era de 0px). */}
+                                    <AppIcon name="check" size={12} className="text-surface-container-lowest" />
+                                    <Text className="text-surface-container-lowest text-xs font-sans-bold uppercase tracking-widest">
+                                        Reservado por ti
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                     ) : null}
@@ -192,14 +199,21 @@ export function WishlistCard({
                     accessibilityLabel="Marcar como ya lo tengo"
                     className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
                 >
-                    <Text
-                        // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
-                        // sobre 13 caracteres y partía la etiqueta en dos líneas a
-                        // 360px. A 0.05em cabe en una sola y conserva el aire.
-                        className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
-                    >
-                        ✓ Ya lo tengo
-                    </Text>
+                    <View className="flex-row items-center gap-1">
+                        {/* El check comparte color (`text-success`) y tamaño (text-xs =
+                            12px) con la etiqueta: misma fila, misma caja. `gap-1`
+                            reproduce el espacio que el glifo ✓ llevaba dentro del texto
+                            (medido: sin él la separación era de 0px). */}
+                        <AppIcon name="check" size={12} className="text-success" />
+                        <Text
+                            // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
+                            // sobre 13 caracteres y partía la etiqueta en dos líneas a
+                            // 360px. A 0.05em cabe en una sola y conserva el aire.
+                            className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
+                        >
+                            Ya lo tengo
+                        </Text>
+                    </View>
                 </Pressable>
             ) : null}
 

@@ -9,6 +9,7 @@ import { getUserAliases, setUserAlias } from '@/lib/aliases'
 import { getSiteBaseUrl } from '@/lib/site-url'
 import { useToast } from '@/components/Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { AppIcon } from '@/components/ui/AppIcon'
 
 export interface GroupsTabProps {
     userId: string;
@@ -338,8 +339,9 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
-                        <Pressable className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
-                            <Text style={{ fontSize: 20 }}>👤</Text>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Unirse a un grupo" className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
+                            {/* 20px: el tamaño del glifo de persona anterior. */}
+                            <AppIcon name="user" size={20} className="text-on-surface/70" />
                         </Pressable>
                     </Link>
                     <PrimaryButton
@@ -375,7 +377,7 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                 ) : (
                     <View className="items-center justify-center py-20 px-6 text-center">
                         <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
-                            <Text style={{ fontSize: 40 }}>🎁</Text>
+                            <AppIcon name="gift" size={40} className="text-on-surface/70" />
                         </View>
                         <Text className="text-2xl font-display text-on-background mb-2">No tienes grupos aún</Text>
                         <Text className="text-on-surface/70 font-sans-medium max-w-xs mb-8">
@@ -418,7 +420,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
                     >
                         <View className="items-center mb-8">
                             <View className="w-20 h-20 bg-surface-container-low rounded-3xl items-center justify-center mb-4">
-                                <Text style={{ fontSize: 32 }}>↗</Text>
+                                {/* Decorativo: la acción accesible es el panel «Toca para copiar». */}
+                                <AppIcon name="arrow-up-right" size={32} className="text-on-surface/70" importantForAccessibility="no" />
                             </View>
                             <Text className="text-2xl font-display text-on-background mb-2">Invita a tus amigos</Text>
                             <Text className="text-on-surface/70 font-sans-medium text-center">
