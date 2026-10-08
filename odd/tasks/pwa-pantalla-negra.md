@@ -139,6 +139,21 @@ Es la semántica correcta en las dos direcciones: el 404 se respeta porque ahí 
 - E2E con **resiembra y `--workers=1`**.
 - Reproducción en navegador con un despliegue simulado, con captura del negro.
 
+## Revisión nativa del corte (2026-10-08)
+
+Linaje **`review-5d3c3b0d78a46507`**: riesgo medio, 1 lente (`review-reliability`), **5 ficheros / 400 líneas**, presupuesto de corrección 200 → **aprobada a la primera** (sin refutador) y autoridad **quemada** (`gentle-ai.review-acknowledged/v1`).
+
+Acotado del candidato: `inspect` ofreció `base-ref=6057b6a` + `committedOnly`, y los `candidate_paths` fueron exactamente los cinco ficheros del corte. Sin incidentes de consentimiento ni de admisión.
+
+**Dos hallazgos advisory, informativos, ninguno bloqueante** (el proveedor lo dice: no reabren la revisión ni son motivo para repetirla; son trabajo posterior):
+
+| ID | Sev. | Ubicación | Lectura propia |
+| --- | --- | --- | --- |
+| `R3-OFFLINE-PAGE-CONTENT` | SUGGESTION | `__tests__/sw.test.ts:207` | El test de la página de sin conexión se conforma con la expresión `sin conexi`, que la satisface el propio `<title>`, y no comprueba el texto visible ni la autocontención. **Coincide con lo que ya señaló la verificación independiente**: queda como trabajo posterior. |
+| `R3-ROOTLAYOUT-FALLBACK` | SUGGESTION | `app/_layout.tsx:126` | Sobre el fondo de marca que sustituye al `null` mientras cargan las fuentes. |
+
+**Lo que esta revisión NO cubre**: el arnés de la demostración en navegador no está commiteado, así que la demostración **no es reproducible** — está declarado en la sección de la demostración y no se disfraza aquí.
+
 ## Commits
 
 - **`dfa7a89`** — `test(pwa): pin the contract that makes the black screen impossible` (P1).
