@@ -173,6 +173,56 @@ test.describe('Banda de dos columnas (769–1009px)', () => {
     });
 });
 
+test.describe('El borde de 768px', () => {
+    // 768 es el único ancho donde la aplicación está bajo dos reglas a la vez, y conviene
+    // tenerlo escrito: Tailwind `md` es `min-width: 768px`, así que las clases `md:` de
+    // `GroupCard` YA se aplican, mientras que `lib/use-is-desktop.ts` usa `width > 768` y por
+    // tanto el grid sigue en modo móvil (una sola columna). El resultado es un híbrido:
+    // tarjeta ancha (736px) con el nombre en su propia fila, que es lo que U7 introdujo al
+    // mover el nombre con `md:order-3 md:w-full`.
+    //
+    // La mezcla es PREVIA a U7 (el fichero ya usaba `md:w-14`, `md:ml-4`, `md:p-6`) y el
+    // efecto neto es favorable —el nombre pasa de 444px a 640px de ancho—, pero ningún
+    // guardián lo cubría: el de la banda mide 769/900/1009 y el de escritorio 1280, así que
+    // un cambio futuro podía romper exactamente esta anchura con todos los guardianes verdes.
+    //
+    // Alinear el umbral (`md` a 769, o el hook a `>= 768`) cambiaría el layout a 768 en toda
+    // la app y es una decisión de producto aparte. Lo que aquí se vigila es lo que sí sería
+    // un defecto: que el nombre —o el contador— se trunquen exactamente aquí.
+    test.use({ viewport: { width: 768, height: 720 } });
+
+    test('group names and participant counters are not truncated at exactly 768px', async ({ page }) => {
+        await waitGroupsTabLoaded(page);
+
+        const name = await leafTextBoxState(page, E2E_CONFIG.group.name);
+        expect(
+            name.found,
+            `/?tab=groups a 768px: el nombre de grupo «${E2E_CONFIG.group.name}» no está en la lista (drift del fixture o del selector).`,
+        ).toBeGreaterThan(0);
+        expect(
+            name.text,
+            `/?tab=groups a 768px: el elemento localizado pinta «${name.text}» y no «${E2E_CONFIG.group.name}» (drift de la medición en ${name.hint}).`,
+        ).toBe(E2E_CONFIG.group.name);
+        expect(
+            name.scrollWidth,
+            `/?tab=groups a 768px: el nombre «${E2E_CONFIG.group.name}» NO cabe en su caja (${name.hint}): scrollWidth=${name.scrollWidth} > clientWidth+1=${name.clientWidth + 1}. Es el ancho donde el grid sigue en móvil pero las clases md: ya aplican (híbrido de 768px): si alguien alinea el umbral o mueve el nombre, este es el sitio donde se rompe.`,
+        ).toBeLessThanOrEqual(name.clientWidth + 1);
+
+        const counters = await participantCounterStates(page);
+        expect(
+            counters.length,
+            '/?tab=groups a 768px: no se vio ningún contador «N participantes» (drift de GroupCard o del fixture).',
+        ).toBeGreaterThan(0);
+        const truncated = counters
+            .filter((c) => c.scrollWidth > c.clientWidth + 1)
+            .map((c) => `«${c.text}» (${c.hint}): scrollWidth=${c.scrollWidth} > clientWidth+1=${c.clientWidth + 1}`);
+        expect(
+            truncated,
+            `/?tab=groups a 768px: contadores de participantes truncados (mismo cuello de botella que el nombre):\n - ${truncated.join('\n - ')}`,
+        ).toEqual([]);
+    });
+});
+
 test.describe('Diseño de escritorio a 1280px', () => {
     test('group names and participant counters are not collapsed or truncated on the Groups tab', async ({ page }) => {
         await waitGroupsTabLoaded(page);
