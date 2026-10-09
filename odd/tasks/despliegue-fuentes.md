@@ -1,6 +1,6 @@
 # Las fuentes no se sirven en producción (`fix/despliegue-fuentes`)
 
-**Abierta:** 2026-10-09 · **Rama:** `fix/despliegue-fuentes` (desde `main`, `af691c2`) · **Estado:** en curso
+**Abierta:** 2026-10-09 · **Rama:** `fix/despliegue-fuentes` (desde `main`, `af691c2`) · **Estado:** hecho, verificado y aprobado por revisión nativa; pendiente fusionar y publicar
 
 ## Objetivo
 
@@ -52,6 +52,24 @@ Porque **una fuente que falta degrada en silencio**: el navegador cae a la fuent
 - Tras publicar: **las fuentes en 200 en el sitio real**, y los iconos visibles en el navegador (que es lo que reportó el propietario).
 - E2E con **resiembra y `--workers=1`**.
 
+## Revisión nativa (2026-10-09)
+
+Linaje **`review-c93ae323906ac906`**: **riesgo ALTO**, **4 lentes** (`review-risk`, `review-resilience`, `review-readability`, `review-reliability`), 3 ficheros / 211 líneas, presupuesto de corrección 106 → **aprobada a la primera** (sin refutador) y autoridad **quemada**.
+
+**Por qué salió alto**: el disparador fue `shell_source` — el script de shell del paso que comprueba las fuentes en `.github/workflows/deploy.yml`. Es la primera vez en esta sesión que una revisión sube a 4 lentes, y el motivo es que añadí código que se ejecuta en el pipeline.
+
+**Las 4 lentes se prepararon y se enviaron las 4** (24,6 KB de prompt por lente; 2,7–3,8 KB de resultado), sin incidentes de admisión.
+
+**Trece hallazgos advisory, informativos, ninguno bloqueante.** Leídos juntos se agrupan en **tres sitios**, que es lo que pasa cuando cuatro lentes miran el mismo trozo desde ángulos distintos:
+
+| Sitio | Hallazgos |
+| --- | --- |
+| **El paso de shell que comprueba la fuente** (`deploy.yml:116-124`) | `R2-003`, `R3-001`, `R3-002`, `R4-002` — el script del pipeline es lo que más miradas atrajo |
+| **El guardián** (`__tests__/deploy-workflow.test.ts`) | `R2-001`, `R2-002`, `R3-003`, `R4-001`, `R4-003` |
+| **Configuración y comentarios del workflow** | `R1-001`, `R1-002`, `R2-004`, `R3-004` |
+
+El cuerpo del sobre da **ubicación y gravedad, no el texto**, así que quedan anotados como trabajo posterior en vez de interpretados de oídas. Se agrupan a propósito: cuatro lentes señalando el mismo rango significa que ese rango merece una lectura propia antes de la próxima vez que se toque el pipeline.
+
 ## Commits
 
-- **`96c7ffe`** — `fix(deploy): keep .nojekyll in the artifact so the fonts are served` (F1+F2+F3).
+- **`8d43518`** — `fix(deploy): keep .nojekyll in the artifact so the fonts are served` (F1+F2+F3).
