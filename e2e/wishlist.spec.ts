@@ -202,4 +202,44 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByText('Guardar', { exact: true }).last().click();
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
     });
+
+    test('el campo de precio sólo admite un número decimal', async ({ page }) => {
+        await page.getByLabel('Nuevo deseo').click();
+
+        const price = page.getByPlaceholder('0,00');
+
+        // Se teclea letra a letra, que es la única forma de comprobar que el filtro
+        // actúa en cada pulsación y no cuando el valor llega entero de golpe.
+        await price.pressSequentially('12abc3,50€');
+        await expect(price).toHaveValue('123,50');
+
+        // Y un segundo separador tampoco: manda el primero.
+        await price.fill('');
+        await price.pressSequentially('1,2,3');
+        await expect(price).toHaveValue('1,23');
+
+        await page.getByPlaceholder('¿Qué deseas?').fill(`Deseo precio ${Date.now()}`);
+        await price.fill('');
+        await price.pressSequentially('99,99');
+
+        // Se mira lo que la app **envía**, no lo que devuelve el servidor: la fila
+        // devuelta trae también la columna de texto, que sigue ahí hasta el paso 2.
+        const requestPromise = page.waitForRequest(r =>
+            r.method() === 'POST' && r.url().includes('wishlist_items')
+        );
+        const responsePromise = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
+        await page.getByText('Guardar', { exact: true }).last().click();
+
+        const payload = (await requestPromise).postDataJSON();
+        // El número va a la columna numérica con su valor, y la de texto no se toca.
+        expect(payload.price_numeric).toBe(99.99);
+        expect(payload).not.toHaveProperty('price');
+
+        const body = await (await responsePromise).json();
+        if (body?.id) createdIds.add(body.id);
+    });
 });
