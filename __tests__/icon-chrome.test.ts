@@ -105,6 +105,57 @@ function glyphOffenders(rel: string, source: string): string[] {
     return offenders;
 }
 
+const PAQUETE_ICONOS = '@expo/vector-icons';
+
+/**
+ * Usos DIRECTOS de la familia fuera del envoltorio: una etiqueta `<Feather>` o
+ * **una importación del paquete**, que es la vía que el guardián anterior
+ * dejaba pasar.
+ *
+ * El hueco era real y estaba arriba del todo: mirar sólo etiquetas JSX no caza
+ * `import Ionicons from '@expo/vector-icons'`, con la que se llega a la familia
+ * sin escribir nunca `<Feather>`. Hoy la familia única la sostenía el `grep`,
+ * no el guardián. Se cubren las cuatro formas de entrar (defecto, nombrada,
+ * espacio de nombres y `require`), porque todas traen la familia al bundle.
+ */
+function directFeatherOffenders(rel: string, source: string): string[] {
+    const sourceFile = ts.createSourceFile(rel, source, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
+    const offenders: string[] = [];
+
+    const esDelPaquete = (specifier: string) =>
+        specifier === PAQUETE_ICONOS || specifier.startsWith(`${PAQUETE_ICONOS}/`);
+
+    const visit = (node: ts.Node): void => {
+        if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
+            if (esDelPaquete(node.moduleSpecifier.text)) {
+                offenders.push(`${rel}: import '${node.moduleSpecifier.text}'`);
+            }
+        }
+
+        // `require` no es un nodo de importación, pero trae la familia igual.
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require') {
+            const [first] = node.arguments;
+            if (first && ts.isStringLiteral(first) && esDelPaquete(first.text)) {
+                offenders.push(`${rel}: require('${first.text}')`);
+            }
+        }
+
+        // La etiqueta directa sigue prohibida: alguien podría definir su propio
+        // `Feather` sin importar nada.
+        if (
+            (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+            node.tagName.getText(sourceFile) === 'Feather'
+        ) {
+            offenders.push(`${rel}: <Feather>`);
+        }
+
+        ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+
+    return offenders;
+}
+
 describe('guardián del chrome de iconos (U6 ui-polish)', () => {
     it('la lista de ficheros es real: ≥ 8 ficheros, cada uno leído y no vacío', () => {
         expect(CHROME_FILES.length).toBeGreaterThanOrEqual(8);
@@ -139,35 +190,36 @@ describe('guardián del chrome de iconos (U6 ui-polish)', () => {
         expect(glyphOffenders('falso.tsx', '<Text>✓</Text>\n')).toHaveLength(1);
     });
 
-    it('Feather se usa SÓLO en AppIcon.tsx: fuera de él, cero etiquetas `<Feather>`', () => {
+    it('la familia entra SÓLO por AppIcon.tsx: fuera de él, ni `<Feather>` ni importaciones del paquete', () => {
         const offenders: string[] = [];
 
         for (const dir of ['app', 'components'] as const) {
             for (const file of collectTsFiles(path.join(ROOT, dir))) {
                 const rel = path.relative(ROOT, file).split(path.sep).join('/');
                 if (rel === 'components/ui/AppIcon.tsx') continue;
-
-                // Buscar `<Feather` como etiqueta JSX (abierta o auto-cerrada), no
-                // como texto suelto: un comentario que mencione «Feather» no cuenta.
-                const source = readFileSync(file, 'utf8');
-                const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
-                const visit = (node: ts.Node): void => {
-                    if (
-                        (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-                        node.tagName.getText(sourceFile) === 'Feather'
-                    ) {
-                        offenders.push(`${rel}: <Feather>`);
-                    }
-                    ts.forEachChild(node, visit);
-                };
-                visit(sourceFile);
+                offenders.push(...directFeatherOffenders(rel, readFileSync(file, 'utf8')));
             }
         }
 
         expect(
             offenders,
-            `Los componentes directos de Feather están prohibidos: usa <AppIcon> (familia, peso y color en un solo punto):\n${offenders.join('\n')}`,
+            `Los usos directos de la familia están prohibidos: usa <AppIcon> (familia, peso y color en un solo punto):\n${offenders.join('\n')}`,
         ).toEqual([]);
+    });
+
+    it('control negativo: caza la importación del paquete, no sólo la etiqueta', () => {
+        // Es el hueco que este endurecimiento cierra. Sin estos casos, el
+        // guardián volvería a ser una promesa que sólo mira JSX.
+        expect(directFeatherOffenders('falso.tsx', "import Ionicons from '@expo/vector-icons';\n")).toHaveLength(1);
+        expect(directFeatherOffenders('falso.tsx', "import { Feather } from '@expo/vector-icons';\n")).toHaveLength(1);
+        expect(directFeatherOffenders('falso.tsx', "import Feather from '@expo/vector-icons/Feather';\n")).toHaveLength(1);
+        expect(directFeatherOffenders('falso.tsx', "const Icons = require('@expo/vector-icons');\n")).toHaveLength(1);
+        expect(directFeatherOffenders('falso.tsx', '<Feather name="gift" />\n')).toHaveLength(1);
+
+        // Y no debe dar falsos positivos: el envoltorio de la casa y una
+        // mención en prosa no son usos directos.
+        expect(directFeatherOffenders('falso.tsx', "import { AppIcon } from '@/components/ui/AppIcon';\n")).toEqual([]);
+        expect(directFeatherOffenders('falso.tsx', "// antes se usaba '@expo/vector-icons' aquí\n")).toEqual([]);
     });
 
     it('el fichero AppIcon.tsx existe, registra la familia Feather y su clase de color viene del className del llamador', () => {
