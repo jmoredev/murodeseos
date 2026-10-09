@@ -105,7 +105,22 @@ jobs:
       # navegador cae a la del sistema y todo «funciona»).
       #
       # La URL de la fuente se descubre **desde el bundle servido** porque el hash
-      # cambia en cada build, y se reintenta porque el CDN tarda en propagar.
+      # cambia en cada build, y se reintenta porque el CDN tarda en propagar (y
+      # durante esa ventana sirve una mezcla: llegué a medir PNG en 200 y fuentes
+      # en 404 en el mismo despliegue, lo que me llevó a dos hipótesis falsas).
+      #
+      # OJO al tocar esto: NADA de tuberías aquí. `grep … | head -1` y hasta
+      # `grep -m1` mueren con `set -o pipefail`: cuando el lector sale antes de
+      # tiempo, el que recibe SIGPIPE es el escritor (`printf` volcando 2,7 MB de
+      # bundle), y el pipeline devuelve 141. Es **no determinista** —cabe en el
+      # búfer de tubería y pasa en local, y falla en CI—, así que la primera vez
+      # el despliegue salió en rojo con el sitio ya publicado y correcto.
+      #
+      # Y la coincidencia exige `/assets/` a propósito: el bundle también contiene
+      # URLs de Google Fonts (`//fonts.gstatic.com/…`), y quedarse con la primera
+      # `.ttf` a secas elegía una de ellas, pidiendo un fichero local que no existe.
+      # Se usa coincidencia por expresión regular de bash: sin tubería, sin
+      # SIGPIPE y sin depender del tamaño de la entrada.
       - name: Verify the fonts are actually served
         run: |
           set -euo pipefail
@@ -114,16 +129,18 @@ jobs:
           base="${base%/}"
 
           html="$(curl -sL "$base/")"
-          entry="$(printf '%s' "$html" | grep -o 'entry-[a-f0-9]*\.js' | head -1)"
+          entry=""
+          if [[ "$html" =~ entry-[a-f0-9]+\.js ]]; then entry="${BASH_REMATCH[0]}"; fi
           if [ -z "$entry" ]; then
             echo "::error::no se encontró el bundle en $base/ — no se puede comprobar la fuente"
             exit 1
           fi
 
           bundle="$(curl -sL "$base/_expo/static/js/web/$entry")"
-          font="$(printf '%s' "$bundle" | grep -oE '/[^"]*\.ttf' | head -1)"
+          font=""
+          if [[ "$bundle" =~ /assets/[^\"]*\.ttf ]]; then font="${BASH_REMATCH[0]}"; fi
           if [ -z "$font" ]; then
-            echo "::error::el bundle $entry no declara ninguna fuente (¿cambió el empaquetado?)"
+            echo "::error::el bundle $entry no declara ninguna fuente local (¿cambió el empaquetado?)"
             exit 1
           fi
 
