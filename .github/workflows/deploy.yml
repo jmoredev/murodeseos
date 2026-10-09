@@ -67,9 +67,17 @@ jobs:
 
       - uses: actions/configure-pages@v6
 
+      # `include-hidden-files: true` NO es opcional aquí, y su ausencia costó dos
+      # semanas de fuentes rotas en producción: el action excluye por defecto los
+      # ficheros que empiezan por punto (`--exclude=.[^/]*`), y eso se lleva por
+      # delante `.nojekyll`. Sin `.nojekyll`, Pages procesa el sitio con Jekyll,
+      # Jekyll descarta `node_modules` por defecto, y **todas las fuentes** viven
+      # en `assets/node_modules/…` → 404 en todas.
+      # Lo vigila `__tests__/deploy-workflow.test.ts`, porque el fallo es mudo.
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
+          include-hidden-files: true
 
   # Publish gate: the identical chromium suite called via the reusable
   # workflow, so a red suite leaves the previously published version in
@@ -88,3 +96,48 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      # La comprobación que habría cazado lo de las fuentes el primer día.
+      #
+      # Va DESPUÉS de publicar, así que no puede revertirlo: lo que hace es dejar
+      # el despliegue en rojo y con el motivo a la vista, en lugar de degradar en
+      # silencio durante semanas como pasó (una fuente que falta no da error: el
+      # navegador cae a la del sistema y todo «funciona»).
+      #
+      # La URL de la fuente se descubre **desde el bundle servido** porque el hash
+      # cambia en cada build, y se reintenta porque el CDN tarda en propagar.
+      - name: Verify the fonts are actually served
+        run: |
+          set -euo pipefail
+
+          base="${{ steps.deployment.outputs.page_url }}"
+          base="${base%/}"
+
+          html="$(curl -sL "$base/")"
+          entry="$(printf '%s' "$html" | grep -o 'entry-[a-f0-9]*\.js' | head -1)"
+          if [ -z "$entry" ]; then
+            echo "::error::no se encontró el bundle en $base/ — no se puede comprobar la fuente"
+            exit 1
+          fi
+
+          bundle="$(curl -sL "$base/_expo/static/js/web/$entry")"
+          font="$(printf '%s' "$bundle" | grep -oE '/[^"]*\.ttf' | head -1)"
+          if [ -z "$font" ]; then
+            echo "::error::el bundle $entry no declara ninguna fuente (¿cambió el empaquetado?)"
+            exit 1
+          fi
+
+          echo "fuente a comprobar: $font"
+          code=""
+          for intento in 1 2 3 4 5 6 7 8 9 10; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "$base$font")"
+            if [ "$code" = "200" ]; then
+              echo "OK: la fuente se sirve"
+              exit 0
+            fi
+            echo "intento $intento: HTTP $code; reintentando…"
+            sleep 15
+          done
+
+          echo "::error::las fuentes no se sirven: $font responde $code. Si Pages publica el sitio sin .nojekyll, Jekyll descarta node_modules y TODAS las fuentes dan 404 (los iconos salen como recuadros vacíos)."
+          exit 1
