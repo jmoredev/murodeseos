@@ -186,6 +186,21 @@ Linaje **`review-8e157803f74135b7`**: riesgo medio, 1 lente (`review-reliability
 
 **Nota sobre producción**: producción ya aplicó la versión **pre-arreglo** y su resultado es **idéntico**, porque ninguna fila real supera el límite (verificado: 49 filas, ninguna con más de dos dígitos enteros, 0 candidatas a redondeo). Lo que estaba mal era la **robustez del artefacto** para cualquier otro conjunto de datos. El SQL del repositorio **no es byte a byte el que corrió en producción**, y es el intercambio correcto: los entornos futuros reciben la versión que no puede abortar.
 
+## Revisión nativa del corte de app (2026-10-09)
+
+Linaje **`review-457cd4b91a748e26`**: riesgo medio, 1 lente (`review-reliability`), 15 ficheros / 645 líneas, presupuesto de corrección 200. **Aprobada en un solo evento de revisor**, autoridad **quemada** (`review-acknowledged/v1`) y entrega devuelta a la política ordinaria del repositorio. El corte se revisó como rango comprometido `main..HEAD` (15 ficheros), no como rama acumulada.
+
+**Cuatro hallazgos, todos `informational` y ninguno bloqueante** —el proveedor los declara no reabribles y no ofrece transición de corrección—, y dos merecen trabajo posterior:
+
+| Hallazgo | Ubicación | Lo que dice, en corto |
+| --- | --- | --- |
+| `R3-paste-thousands` (WARNING) | `lib/format-price.ts:67-73` | Pegar «1.234» se lee como **1,234** y no como 1234. Es la ambigüedad histórica de este campo (punto de miles contra separador decimal) y el filtro no la resuelve: deja pasar el primer separador y descarta el resto. No se arregla en esta tanda porque exigiría decidir formato con el usuario. |
+| `R3-read-divergence` (WARNING) | `components/WishListTab.tsx:109` | Las dos rutas de lectura podrían divergir. |
+| `R3-update-path-untested` (SUGGESTION) | `components/WishListTab.tsx:247` | La ruta de **editar** un deseo existente no tiene prueba propia, y con el precio en dos estados (número y texto) es justo donde más fácil sería equivocarse. |
+| `R3-modal-zero-untested` (SUGGESTION) | `components/WishDetailModal.tsx:123-125` | El cero se probó en la tarjeta, no en el modal. |
+
+**Nota de honestidad sobre la cobertura**: el E2E prueba crear, y las dos sugerencias dicen que **editar** y el **modal** solo están cubiertos por los tests unitarios de la tarjeta. Es deuda de prueba acotada y anotada, no un defecto vivo.
+
 ## Commits
 
 - **`848f51a`** — `feat(db): add a numeric price column and backfill what can be read` (paso 1: la migración y esta ficha).
