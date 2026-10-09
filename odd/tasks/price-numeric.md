@@ -1,6 +1,24 @@
 # Precio como número (`feat/price-numeric`)
 
-**Abierta:** 2026-10-07 · **Rama:** `feat/price-numeric` (desde `main`, `c25f542`) · **Estado:** abierta — **paso 1 aplicado en producción y aprobado por revisión nativa** (tras corregir un hallazgo CRITICAL del refutador); pendientes el paso 2 y los cambios de app
+**Abierta:** 2026-10-07 · **Rama de esta tanda:** `feat/price-numeric-app` (desde `main`, `a15e924`) · **Estado:** en curso — paso 1 aplicado en producción y aprobado; **cambios de app en esta tanda**, y el paso 2 escrito pendiente de aplicar y de una ventana de compatibilidad
+
+## Decisión de esta tanda (2026-10-09): **no se renombra la columna**
+
+El plan original del paso 2 renombraba `price_numeric` → `price`. **Se descarta, y el motivo es de secuencia, no de gusto**: escribir un número en una columna que todavía es **texto** falla, y escribir texto en la que **ya es numérica** también, así que el renombrado obliga a que la app **tolere los dos nombres** (o a una **segunda publicación**), y `price_numeric` es además una columna que **no puede recibir el texto** del cliente rezagado.
+
+**Decisión del propietario**: la app lee y escribe **`price_numeric`**, y el paso 2 **solo borra la columna de texto**. Una publicación, sin tolerancia de nombres, y el hueco de clientes rezagados lo cubre la **recuperación de desajuste de esquema que ya existe** (`lib/wish-reservation.ts`: `WishSchemaMismatchError`, códigos `42703`, `42P01`, `42883`, `PGRST202`, `PGRST204` → mensaje «Recarga la página»). La columna se queda con el nombre `price_numeric`.
+
+## Unidades de esta tanda
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| A1 | `lib/format-price.ts` para **números**: `formatPrice` (dos decimales, dinero), `parsePriceInput` (lo que se teclea, con el máximo de la columna), `toPriceNumber` (lo que llega de PostgREST, que puede ser cadena) y `filterPriceInputText` (el filtro del campo); comparador numérico con orden total | **hecho** (`1f0b74c`, +12 tests → 273 pasan) |
+| A2 | El **formulario** admite sólo entrada numérica (teclado decimal, filtro por pulsación) y guarda en `price_numeric` | **hecho** (`1f0b74c`) |
+| A3 | **Lectura y escritura** sobre `price_numeric` en las dos consultas, y `GiftItem.price` a número | **hecho** (`1f0b74c`) |
+| A4 | **Seed y specs**: los literales de precio pasan a número | **hecho** (`1f0b74c`, `5a76f21`) |
+| A5 | **Paso 2 escrito** (sólo `drop column price` + el `CHECK` de no negativo), **sin aplicar** hasta que la app lleve publicada una ventana | **escrito**, sin aplicar |
+| A6 | **Arreglo del dato en producción**: la única fila no numérica (`'25/30. €'`) pasa a **30** — autorizado por el propietario, y apaga además el defecto vivo del «25/30. € €» | hecho |
+| A7 | Verificación y publicación | verificado en local (`55 passed / 1 skipped`); falta revisión y publicación |
 
 ## Objetivo
 
@@ -73,23 +91,58 @@ select id, price from public.wishlist_items
  where btrim(price) ~ '^[0-9]+[.,][0-9]{3,}$';
 ```
 
-**Decisión pendiente del propietario**: qué hacer con las filas de (a). Se quedan en `NULL` (el deseo se muestra como «Sin precio») y su texto sigue en la columna vieja hasta el paso 2. **Como el paso 2 borra esa columna, esas filas perderían el texto**: hay que limpiarlas a mano antes, o no aplicar el paso 2.
+**Decisión del propietario (2026-10-09)**: la fila de (a) que no parsea —**una sola**, con el texto `'25/30. €'`— pasa a **30**. Se hace a mano antes del paso 2, así que ninguna fila pierde texto cuando se borre la columna. Las dos filas **vacías** se quedan como están: un deseo sin precio es legítimo y se pinta «Sin precio».
 
-## Paso 2 — NO escrito todavía (espera a la revisión)
+Medido en producción el 2026-10-09 (consulta de sólo lectura): **49 filas**, 46 con número, 2 vacías y **una** con texto no numérico. Cero candidatas a redondeo.
+
+## Paso 2 — escrito, NO aplicado (espera a la ventana de compatibilidad)
 
 ```sql
+-- El paso 2 con la decisión de «sin renombrar»: la columna numérica conserva su
+-- nombre y lo único destructivo es borrar la de texto, que ya no escribe nadie.
+-- Antes de aplicarlo, la fila `'25/30. €'` tiene que valer 30 (hecho y anotado arriba).
 alter table public.wishlist_items drop column price;
-alter table public.wishlist_items rename column price_numeric to price;
+
 alter table public.wishlist_items
     add constraint wishlist_items_price_nonnegative
-    check (price is null or price >= 0);
+    check (price_numeric is null or price_numeric >= 0);
 ```
 
-El renombrado es seguro aunque dos funciones de trigger referencien `price` (el guardián de permisos y el espejo de reservas): PL/pgSQL resuelve los nombres en tiempo de ejecución y el nombre final sigue siendo `price`.
+**Por qué no se renombra** (y por qué eso cambia el SQL): el renombrado haría que el nombre final fuese `price`, y con él llegarían dos roturas distintas según el cliente. Un cliente **viejo** que siga mandando texto a `price` fallaría, y un cliente **nuevo** que mande un número a `price_numeric` fallaría mientras la columna todavía se llame así. Sin renombrar, en cambio, la app vieja escribe en la columna de **texto** (que sigue existiendo hasta el paso 2) y la nueva escribe en la numérica: las dos conviven sin tolerancia de nombres.
 
-## Cambios de app — pendientes, y van DESPUÉS de `ui-polish`
+**Ventana de compatibilidad antes de aplicarlo**: el paso 2 borra `price`, así que un cliente rezagado que todavía la escriba recibirá un error de columna inexistente. Ese caso ya está cubierto por la **recuperación de desajuste de esquema** que existe en el repositorio (`lib/wish-reservation.ts`: `WishSchemaMismatchError` con los códigos `42703`, `42P01`, `42883`, `PGRST202`, `PGRST204`, mensaje «Recarga la página»), así que no hace falta código nuevo: hace falta que la app nueva esté publicada y que los clientes hayan tenido ocasión de recargarla.
 
-Tocan `WishlistCard`, `WishDetailModal` y `WishListTab`, que son justo los ficheros de U4 en la rama `ui-polish`, y **simplifican** el formateador que U4 acaba de escribir (con un número, `formatPrice` deja de tener que defender nunca contra texto basura). Hacerlo antes obligaría a escribir lo mismo dos veces.
+**Nota sobre los dos triggers que nombran `price`** (el guardián de permisos y el espejo de reservas): este SQL **ya no los toca**, porque no hay renombrado. Si en el futuro se decidiera renombrar, seguiría siendo seguro —PL/pgSQL resuelve los nombres en tiempo de ejecución— pero no es el caso.
+
+## Cambios de app — hechos (2026-10-09)
+
+Se hicieron **después** de `ui-polish`, como estaba previsto y por el motivo previsto: tocan `WishlistCard`, `WishDetailModal` y `WishListTab`, que son ficheros de U4, y **simplifican** el formateador que U4 escribió.
+
+Cuatro cosas que solo se ven al hacerlo, y que quedan anotadas:
+
+1. **El precio vive en dos sitios a propósito**: como número en los datos y como **texto que se está tecleando** en un estado propio. Sin esa separación no se puede escribir «12,» camino de «12,50», porque el número no guarda la coma a medias.
+2. **Con un número, `0` es falso.** La comprobación de veracidad que había en el detalle (`item.price ? … : 'Sin precio'`) habría escondido un precio real de 0 € detrás de «Sin precio». Ahora se pregunta por el texto formateado, que sí es verdadero para `0,00`.
+3. **El aviso del campo es casi inalcanzable tecleando**, y eso está bien: el filtro ya impide letras y segundos separadores, así que el único texto no legible que puede quedar es un número **fuera del rango de la columna** (`> 9999999999.99`). Es defensa en profundidad, no el camino principal.
+4. **PostgREST puede devolver un `numeric` como cadena**, así que la lectura pasa por `toPriceNumber` en vez de dar por hecho que llega un número.
+
+## Arreglo del dato en producción (2026-10-09)
+
+Con autorización del propietario. **Una sola fila** cuadraba con el patrón de texto no numérico, y se identificó antes de tocarla:
+
+| Antes | Después |
+| --- | --- |
+| `32c6cf9a-2d10-4b41-b0d2-b40c8678598a` · «Bolso/ maletín trabajo» · `price = '25/30. €'`, `price_numeric = null` | `price = '30'`, `price_numeric = 30.00` |
+
+Se escribieron **las dos** columnas a propósito: la de texto la sigue leyendo la app publicada ahora mismo, así que el arreglo apaga ya el defecto visible «25/30. € €» sin esperar a la publicación. El `UPDATE` llevaba el valor viejo en el `WHERE` y `RETURNING`, de modo que si otra sesión hubiera cambiado la fila, la sentencia no habría cambiado nada en vez de pisar un valor ajeno.
+
+**Y un dato medido de paso, que respalda una decisión del código**: esa lectura devolvió `price_numeric` como la **cadena** `"30.00"`, no como número. No prueba lo que hace PostgREST —la consulta va por el CLI, no por la API—, pero confirma que la representación **no es la misma en todos los caminos**, que es exactamente el motivo de que la ruta de lectura pase por `toPriceNumber`. El ida y vuelta completo por la API queda probado por el E2E, que escribe un número desde el formulario y lo ve pintado.
+
+## Verificación local (2026-10-09)
+
+- `typecheck` y `lint --max-warnings 0`: limpios.
+- `vitest`: **33 ficheros, 273 tests + 1 todo** (base: 32 / 261 + 1).
+- E2E con **resiembra y `--workers=1`**, proyecto `chromium` (el canónico del repo): **55 pasan, 1 saltado**. Las 54 de siempre más la nueva del campo de precio.
+- **Cuidado con la trampa de la medición**: la primera corrida la lancé sin `--project`, así que Playwright intentó los seis proyectos. Salieron **162 fallos** que eran ambientales, no regresiones: `browserType.launch: Executable doesn't exist at …\firefox.exe`, porque solo está instalado chromium (`ms-playwright` tiene `chromium-1243` y nada más). Chromium y Mobile Chrome pasaron 54/54 cada uno dentro de esa misma corrida. Es la misma clase de trampa que la propagación de CDN: **medir el instrumento antes que el objeto**.
 
 ## Procedimiento de enlace y despliegue (ejecutado)
 
@@ -133,10 +186,28 @@ Linaje **`review-8e157803f74135b7`**: riesgo medio, 1 lente (`review-reliability
 
 **Nota sobre producción**: producción ya aplicó la versión **pre-arreglo** y su resultado es **idéntico**, porque ninguna fila real supera el límite (verificado: 49 filas, ninguna con más de dos dígitos enteros, 0 candidatas a redondeo). Lo que estaba mal era la **robustez del artefacto** para cualquier otro conjunto de datos. El SQL del repositorio **no es byte a byte el que corrió en producción**, y es el intercambio correcto: los entornos futuros reciben la versión que no puede abortar.
 
+## Revisión nativa del corte de app (2026-10-09)
+
+Linaje **`review-457cd4b91a748e26`**: riesgo medio, 1 lente (`review-reliability`), 15 ficheros / 645 líneas, presupuesto de corrección 200. **Aprobada en un solo evento de revisor**, autoridad **quemada** (`review-acknowledged/v1`) y entrega devuelta a la política ordinaria del repositorio. El corte se revisó como rango comprometido `main..HEAD` (15 ficheros), no como rama acumulada.
+
+**Cuatro hallazgos, todos `informational` y ninguno bloqueante** —el proveedor los declara no reabribles y no ofrece transición de corrección—, y dos merecen trabajo posterior:
+
+| Hallazgo | Ubicación | Lo que dice, en corto |
+| --- | --- | --- |
+| `R3-paste-thousands` (WARNING) | `lib/format-price.ts:67-73` | Pegar «1.234» se lee como **1,234** y no como 1234. Es la ambigüedad histórica de este campo (punto de miles contra separador decimal) y el filtro no la resuelve: deja pasar el primer separador y descarta el resto. No se arregla en esta tanda porque exigiría decidir formato con el usuario. |
+| `R3-read-divergence` (WARNING) | `components/WishListTab.tsx:109` | Las dos rutas de lectura podrían divergir. |
+| `R3-update-path-untested` (SUGGESTION) | `components/WishListTab.tsx:247` | La ruta de **editar** un deseo existente no tiene prueba propia, y con el precio en dos estados (número y texto) es justo donde más fácil sería equivocarse. |
+| `R3-modal-zero-untested` (SUGGESTION) | `components/WishDetailModal.tsx:123-125` | El cero se probó en la tarjeta, no en el modal. |
+
+**Nota de honestidad sobre la cobertura**: el E2E prueba crear, y las dos sugerencias dicen que **editar** y el **modal** solo están cubiertos por los tests unitarios de la tarjeta. Es deuda de prueba acotada y anotada, no un defecto vivo.
+
 ## Commits
 
 - **`848f51a`** — `feat(db): add a numeric price column and backfill what can be read` (paso 1: la migración y esta ficha).
 - **`1b0324a`** — `fix(db): bound the backfill magnitude so it degrades instead of aborting` (corrección del CRITICAL `R3-numeric-overflow`).
+- **`cd535d7`** — `docs(odd): record the notification findings and decide the price column name` (la decisión de no renombrar, y el registro de notificaciones).
+- **`1f0b74c`** — `feat(price): read and write the numeric price column` (los cambios de app y su suite).
+- **`5a76f21`** — `test(e2e): prove the price field only takes a decimal number`.
 
 ## Aplicado en producción (2026-10-07)
 

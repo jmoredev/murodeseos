@@ -52,9 +52,11 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
 
     test('debe crear, ver, ordenar y eliminar un deseo con imagen y prioridad', async ({ page }) => {
         const timestamp = Date.now();
+        // El precio se guarda como número y se teclea y se pinta en formato español.
+        const toPriceText = (value: number) => value.toFixed(2).replace('.', ',');
         const testItem = {
             title: `Deseo E2E ${timestamp}`,
-            price: '99.99',
+            price: 99.99,
             notes: 'Este es un deseo de prueba con imagen y prioridad alta',
             link: 'https://example.com/producto-e2e',
             imageUrl: 'https://placehold.co/600x400/png',
@@ -63,7 +65,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
 
         const anotherItem = {
             title: `A-Z Item Especial ${timestamp}`,
-            price: '10.00',
+            price: 10,
             priority: 'Baja'
         };
 
@@ -72,7 +74,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
 
         await page.getByPlaceholder('¿Qué deseas?').fill(testItem.title);
-        await page.getByPlaceholder('0,00').fill(testItem.price);
+        await page.getByPlaceholder('0,00').fill(toPriceText(testItem.price));
         await page.getByPlaceholder('https://tienda.com/articulo').fill(testItem.link);
         await page.getByPlaceholder('Talla, color, detalles...').fill(testItem.notes);
         await page.getByPlaceholder('URL de la foto (opcional)').fill(testItem.imageUrl);
@@ -95,16 +97,16 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // Verificar que aparece en la lista (anclado por título único)
         const title1 = page.getByText(testItem.title, { exact: true }).first();
         await expect(title1).toBeVisible();
-        // El precio se guarda como texto `10.00` pero la app lo pinta con coma
-        // decimal (`10,00 €`): `lib/format-price.ts`, formato español.
-        await expect(page.getByText(`${testItem.price.replace('.', ',')} €`).first()).toBeVisible();
+        // El precio vive en la columna numérica y la app lo pinta con dos decimales
+        // y coma (`99,99 €`): `lib/format-price.ts`, formato español.
+        await expect(page.getByText(`${toPriceText(testItem.price)} €`).first()).toBeVisible();
         await expect(page.getByText(/Prioridad Alta/i).first()).toBeVisible();
         await expect(page.getByRole('link', { name: /example\.com/i }).first()).toBeVisible();
 
         // --- 2. Crear Segundo Item (para probar ordenación) ---
         await page.getByLabel('Nuevo deseo').click();
         await page.getByPlaceholder('¿Qué deseas?').fill(anotherItem.title);
-        await page.getByPlaceholder('0,00').fill(anotherItem.price);
+        await page.getByPlaceholder('0,00').fill(toPriceText(anotherItem.price));
         await page.getByText(anotherItem.priority, { exact: true }).first().click();
 
         const responsePromise2 = page.waitForResponse(r =>
@@ -199,5 +201,45 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.getByLabel('Nuevo deseo').click();
         await page.getByText('Guardar', { exact: true }).last().click();
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
+    });
+
+    test('el campo de precio sólo admite un número decimal', async ({ page }) => {
+        await page.getByLabel('Nuevo deseo').click();
+
+        const price = page.getByPlaceholder('0,00');
+
+        // Se teclea letra a letra, que es la única forma de comprobar que el filtro
+        // actúa en cada pulsación y no cuando el valor llega entero de golpe.
+        await price.pressSequentially('12abc3,50€');
+        await expect(price).toHaveValue('123,50');
+
+        // Y un segundo separador tampoco: manda el primero.
+        await price.fill('');
+        await price.pressSequentially('1,2,3');
+        await expect(price).toHaveValue('1,23');
+
+        await page.getByPlaceholder('¿Qué deseas?').fill(`Deseo precio ${Date.now()}`);
+        await price.fill('');
+        await price.pressSequentially('99,99');
+
+        // Se mira lo que la app **envía**, no lo que devuelve el servidor: la fila
+        // devuelta trae también la columna de texto, que sigue ahí hasta el paso 2.
+        const requestPromise = page.waitForRequest(r =>
+            r.method() === 'POST' && r.url().includes('wishlist_items')
+        );
+        const responsePromise = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
+        await page.getByText('Guardar', { exact: true }).last().click();
+
+        const payload = (await requestPromise).postDataJSON();
+        // El número va a la columna numérica con su valor, y la de texto no se toca.
+        expect(payload.price_numeric).toBe(99.99);
+        expect(payload).not.toHaveProperty('price');
+
+        const body = await (await responsePromise).json();
+        if (body?.id) createdIds.add(body.id);
     });
 });

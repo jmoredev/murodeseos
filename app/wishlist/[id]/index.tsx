@@ -9,6 +9,7 @@ import { getWishActionErrorMessage } from '@/lib/wish-action-errors';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { WishlistCard, GiftItem, Priority } from '@/components/WishlistCard';
 import { WishDetailModal } from '@/components/WishDetailModal';
+import { toPriceNumber } from '@/lib/format-price';
 import { ProfileInfoSection } from '@/components/ProfileInfoSection';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { AppIcon } from '@/components/ui/AppIcon';
@@ -75,7 +76,9 @@ export default function UserWishlistPage() {
                     title: item.title,
                     links: item.links || [],
                     imageUrl: item.image_url,
-                    price: item.price,
+                    // `price_numeric` es la columna viva; `toPriceNumber` acepta que
+                    // PostgREST devuelva el `numeric` como número o como cadena.
+                    price: toPriceNumber(item.price_numeric),
                     notes: item.notes,
                     priority: item.priority as Priority,
                     reservationState: reservationStates.has(item.id)

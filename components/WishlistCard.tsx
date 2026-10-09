@@ -13,7 +13,7 @@ export interface GiftItem {
     title: string;
     links: string[];
     imageUrl?: string;
-    price?: string | number;
+    price?: number | null;
     notes?: string;
     priority: Priority;
     reservationState?: ReservationState;
