@@ -70,6 +70,36 @@ Linaje **`review-c93ae323906ac906`**: **riesgo ALTO**, **4 lentes** (`review-ris
 
 El cuerpo del sobre da **ubicación y gravedad, no el texto**, así que quedan anotados como trabajo posterior en vez de interpretados de oídas. Se agrupan a propósito: cuatro lentes señalando el mismo rango significa que ese rango merece una lectura propia antes de la próxima vez que se toque el pipeline.
 
+## Segunda vuelta: la comprobación estaba rota (2026-10-09)
+
+**El despliegue salió en rojo con el sitio ya publicado y correcto.** El job `Publish` falló en **mi propio paso de verificación**, no en la publicación: `actions/deploy-pages@v5` dio `success` y las fuentes ya se servían.
+
+### Tres errores míos en el mismo script
+
+Encontré los tres **ejecutándolo en local antes de subirlo**, que es exactamente lo que debería haber hecho la primera vez:
+
+| # | Error | Por qué es peor de lo que parece |
+| --- | --- | --- |
+| 1 | `grep … \| head -1` con `set -o pipefail` | `head` cierra la tubería, el escritor recibe SIGPIPE y el pipeline devuelve 141. **No determinista**: en local cabe en el búfer de tubería y **pasa**; en CI **falla**. Un paso que a veces pasa es peor que uno que siempre falla |
+| 2 | `grep -m1` como «arreglo» | Mismo problema por el otro lado: al salir `grep` antes de tiempo, el que recibe SIGPIPE es `printf` volcando 2,7 MB de bundle. Medido en local: **salida 141** |
+| 3 | Buscar la primera `.ttf` a secas | La primera del bundle **no es un activo local**, es una URL de Google Fonts (`//fonts.gstatic.com/…`), así que construía `…/murodeseos//fonts.gstatic.com/…` y daba 404. **Habría fallado siempre**, con un mensaje que culpaba al sitio |
+
+**El arreglo** quita la tubería (coincidencia por regex de bash, `BASH_REMATCH`) y exige la raíz de activos local (`/assets/…ttf`), con lo que la URL de Google Fonts no puede colarse. Verificado **extrayendo el script del propio workflow y ejecutándolo contra producción**: encuentra un activo local y termina con `OK: la fuente se sirve`, salida 0.
+
+### Lección de método: durante un despliegue la CDN sirve una mezcla
+
+Mientras el sitio se propagaba medí, **en el mismo despliegue**, PNG bajo `assets/node_modules/` en **200** y fuentes en **404**. Eso me llevó a dos hipótesis falsas —«Pages bloquea `node_modules`» y «Pages bloquea las rutas con `@`»—, y las dos las **refuté con controles** antes de tocar nada: PNG bajo `node_modules/expo-router` (200) y PNG bajo `node_modules/@react-navigation` (200). Minutos después, las 6 fuentes que probé daban 200.
+
+**Consecuencia práctica**: sondear justo después de publicar no mide el sitio, mide la propagación. Es exactamente el motivo por el que la comprobación reintenta 10 veces, y la razón por la que esa comprobación importa.
+
+### Y el 4-lentes tenía razón
+
+Cuatro de los trece hallazgos (`R2-003`, `R3-001`, `R3-002`, `R4-002`) señalaban **el mismo rango**: `deploy.yml:116-124`, el script de shell. Los anoté como «trabajo posterior» y ese rango es justo lo que falló. **Cuatro lentes apuntando al mismo sitio no es ruido: es la señal.**
+
+### Lo que sí quedó demostrado del arreglo
+
+En producción: `.nojekyll` → **200**, las 6 fuentes muestreadas → **200**, `document.fonts.check('20px Feather')` → **true**, y cargadas **PlusJakartaSans** y **BeVietnamPro** (400/500/600/700). **La tipografía de marca vuelve después de dos semanas y los iconos con ella.**
+
 ## Commits
 
 - **`8d43518`** — `fix(deploy): keep .nojekyll in the artifact so the fonts are served` (F1+F2+F3).
