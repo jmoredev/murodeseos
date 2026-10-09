@@ -1,6 +1,6 @@
 # Cierre de pendientes: publicación demostrada y guardianes flojos (`chore/cierre-pendientes`)
 
-**Abierta:** 2026-10-08 · **Rama:** `chore/cierre-pendientes` (desde `main`, `6057b6a`) · **Estado:** en curso
+**Abierta:** 2026-10-08 · **Rama:** `chore/cierre-pendientes` (desde `main`, `6057b6a`) · **Estado:** cerrada — las cuatro unidades hechas, verificadas y **aprobadas por revisión nativa**
 
 ## Objetivo
 
@@ -61,6 +61,16 @@ Revertida la rotura (`git checkout -- components/GroupCard.tsx`), la suite vuelv
 - **Cada guardián nuevo se ve fallando antes de pasar**: un guardián que nunca falla es una promesa, no una prueba.
 - E2E con **resiembra y `--workers=1`** (regla del repo: en local los workers son tantos como CPUs y la suite no se autolimpiaba, así que sin eso hay fallos **y verdes falsos**).
 - Medición en navegador del borde de 768px, y línea base del «antes» reproducida revirtiendo el fichero de forma temporal.
+
+## Revisión nativa (2026-10-08)
+
+Linaje **`review-e0fd740bb09e652e`**: riesgo medio, 1 lente (`review-reliability`), **6 ficheros / 233 líneas**, presupuesto de corrección 117 → **aprobada a la primera** (sin refutador) y autoridad **quemada** (`gentle-ai.review-acknowledged/v1`).
+
+Acotado del candidato: `inspect` ofreció `base-ref=6057b6a` + `committedOnly` y los `candidate_paths` fueron exactamente los seis ficheros del corte. Sin incidentes de consentimiento ni de admisión.
+
+**Un hallazgo advisory, informativo y no bloqueante** (el proveedor lo declara: no reabre la revisión ni es motivo para repetirla): `R3-001` en `__tests__/icon-chrome.test.ts:129-133` — sobre los controles negativos del guardián de iconos. Queda como trabajo posterior, anotado aquí.
+
+**Nota de proceso**: esta rama se abrió antes de que aparecieran el pantallazo negro de la PWA y los reportes de notificaciones, y la atención se fue a ellos, así que su revisión llegó **después de abrir el PR**. Se detectó al revisar la disposición de otro candidato, no por casualidad: **código en un PR abierto sin revisar es una deuda, aunque los checks estén verdes**. Los checks verdes no son una revisión.
 
 ## Commits
 
