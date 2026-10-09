@@ -10,6 +10,7 @@ import {
     Platform,
 } from 'react-native';
 import { useIsDesktop } from '@/lib/use-is-desktop';
+import { useBackToClose } from '@/lib/use-back-to-close';
 import { GiftItem, Priority } from './WishlistCard';
 import { PrimaryButton } from './ui/PrimaryButton';
 import { WishLinkChip } from './WishLinkChip';
@@ -56,6 +57,10 @@ export function WishDetailModal({
         });
         return () => sub.remove();
     }, [visible, isDesktop, onClose]);
+
+    // Web: el gesto de atrás cierra el detalle en vez de salir de la aplicación
+    // (en web no hay `BackHandler`, así que el gesto es historial del navegador).
+    useBackToClose(visible, onClose);
 
     if (!item) return null;
 

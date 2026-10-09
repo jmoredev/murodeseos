@@ -236,6 +236,33 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
         await expect(page.getByTestId('wish-detail-title')).toHaveText(createdFriendWish!.title);
     });
 
+    test('el atrás CIERRA el detalle en vez de sacar de la aplicación', async ({ page }) => {
+        // El fallo que esto vigila, medido en Android con la PWA instalada: abrir el
+        // detalle es un **modal**, no una ruta, así que NO añade entrada de
+        // historial. Sin el arreglo, el gesto de atrás se comía la entrada
+        // anterior —que está fuera de la app— y el usuario acababa fuera de la
+        // aplicación, o con una ventana negra sin barra de direcciones de la que
+        // sólo se salía reiniciando.
+        const card = page.getByTestId(`wishlist-card-${createdFriendWish!.id}`);
+        await card.getByText(createdFriendWish!.title, { exact: true }).click();
+        await expect(page.getByTestId('wish-detail-modal')).toBeVisible({ timeout: 10000 });
+
+        const urlAntes = page.url();
+
+        // `history.back()` en lugar de `page.goBack()`: lo que hace el gesto es un
+        // `popstate` **en el mismo documento**, y `page.goBack` espera una
+        // navegación de documento que aquí no ocurre.
+        await page.evaluate(() => window.history.back());
+
+        // Se cierra el detalle…
+        await expect(page.getByTestId('wish-detail-modal')).not.toBeVisible({ timeout: 10000 });
+        // …y seguimos DENTRO de la app, en la misma lista y con la misma URL.
+        await expect(page).toHaveURL(urlAntes);
+        await expect(page.getByText(`Lista de ${E2E_CONFIG.secondaryUser.displayName}`)).toBeVisible({
+            timeout: 10000,
+        });
+    });
+
     test('debe permitir reservar un artículo en la vista de amigo', async ({ page }) => {
         const card = page.getByTestId(`wishlist-card-${createdFriendWish!.id}`);
         await expect(card.getByText(createdFriendWish!.title, { exact: true })).toBeVisible();
