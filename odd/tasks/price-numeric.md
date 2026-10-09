@@ -1,6 +1,24 @@
 # Precio como número (`feat/price-numeric`)
 
-**Abierta:** 2026-10-07 · **Rama:** `feat/price-numeric` (desde `main`, `c25f542`) · **Estado:** abierta — **paso 1 aplicado en producción y aprobado por revisión nativa** (tras corregir un hallazgo CRITICAL del refutador); pendientes el paso 2 y los cambios de app
+**Abierta:** 2026-10-07 · **Rama de esta tanda:** `feat/price-numeric-app` (desde `main`, `a15e924`) · **Estado:** en curso — paso 1 aplicado en producción y aprobado; **cambios de app en esta tanda**, y el paso 2 escrito pendiente de aplicar y de una ventana de compatibilidad
+
+## Decisión de esta tanda (2026-10-09): **no se renombra la columna**
+
+El plan original del paso 2 renombraba `price_numeric` → `price`. **Se descarta, y el motivo es de secuencia, no de gusto**: escribir un número en una columna que todavía es **texto** falla, y escribir texto en la que **ya es numérica** también, así que el renombrado obliga a que la app **tolere los dos nombres** (o a una **segunda publicación**), y `price_numeric` es además una columna que **no puede recibir el texto** del cliente rezagado.
+
+**Decisión del propietario**: la app lee y escribe **`price_numeric`**, y el paso 2 **solo borra la columna de texto**. Una publicación, sin tolerancia de nombres, y el hueco de clientes rezagados lo cubre la **recuperación de desajuste de esquema que ya existe** (`lib/wish-reservation.ts`: `WishSchemaMismatchError`, códigos `42703`, `42P01`, `42883`, `PGRST202`, `PGRST204` → mensaje «Recarga la página»). La columna se queda con el nombre `price_numeric`.
+
+## Unidades de esta tanda
+
+| # | Tarea | Estado |
+| --- | --- | --- |
+| A1 | `lib/format-price.ts` para **números**: `formatPrice` sólo con números (y `null`), `parsePriceInput` para lo que se teclea, y comparador numérico con orden total | pendiente |
+| A2 | El **formulario** admite sólo entrada numérica (teclado decimal y filtro) y guarda en `price_numeric` | pendiente |
+| A3 | **Lectura y escritura** sobre `price_numeric` en las dos consultas, y el tipo de `GiftItem.price` a número | pendiente |
+| A4 | **Seed y specs**: los literales de precio pasan a número | pendiente |
+| A5 | **Paso 2 escrito** (sólo `drop column price` + el `CHECK` de no negativo), **sin aplicar** hasta que la app lleve publicada una ventana | pendiente |
+| A6 | **Arreglo del dato en producción**: la única fila no numérica (`'25/30. €'`) pasa a **30** — autorizado por el propietario, y apaga además el defecto vivo del «25/30. € €» | pendiente |
+| A7 | Verificación, revisión nativa y publicación | pendiente |
 
 ## Objetivo
 
