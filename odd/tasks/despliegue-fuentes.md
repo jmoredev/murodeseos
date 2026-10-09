@@ -100,6 +100,13 @@ Cuatro de los trece hallazgos (`R2-003`, `R3-001`, `R3-002`, `R4-002`) señalaba
 
 En producción: `.nojekyll` → **200**, las 6 fuentes muestreadas → **200**, `document.fonts.check('20px Feather')` → **true**, y cargadas **PlusJakartaSans** y **BeVietnamPro** (400/500/600/700). **La tipografía de marca vuelve después de dos semanas y los iconos con ella.**
 
+## Revisión nativa de la corrección (2026-10-09)
+
+Linaje **`review-2d8e82e6c8010057`**: **riesgo ALTO**, **4 lentes** (`review-risk`, `review-resilience`, `review-readability`, `review-reliability`), 2 ficheros / 55 líneas, presupuesto de corrección 28 → **aprobada a la primera** y autoridad **quemada**. Las 4 se prepararon y se enviaron (17,1 KB de prompt y 0,8–3,0 KB de resultado por lente).
+
+**Un solo hallazgo advisory**, informativo y no bloqueante: `R3-001` en `.github/workflows/deploy.yml:141`. **Y el contraste es el dato interesante**: el corte anterior, con el script frágil, produjo **trece** hallazgos y **cuatro de ellos** señalaban justo ese rango; este, con la tubería eliminada, produce **uno**. Menos superficie frágil, menos que decir.
+
 ## Commits
 
 - **`8d43518`** — `fix(deploy): keep .nojekyll in the artifact so the fonts are served` (F1+F2+F3).
+- **`b27235c`** — `fix(ci): the font check was broken three ways, and it was mine` (el script del paso, reescrito sin tuberías y con el activo local exigido).
