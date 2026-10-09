@@ -16,7 +16,7 @@ import { AppIcon } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
-import { comparePriceForSort } from '@/lib/format-price'
+import { comparePriceValues, filterPriceInputText, formatPrice, parsePriceInput, toPriceNumber } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 export interface WishListTabProps {
@@ -40,6 +40,11 @@ export function WishListTab({ userId }: WishListTabProps) {
     const keyboardInset = useKeyboardInset(Platform.OS === 'web' && !isDesktop);
 
     const [formData, setFormData] = useState<Partial<GiftItem>>({});
+    // El precio vive en dos sitios a propósito: como **número** en los datos, y como
+    // **texto que se está tecleando** aquí. Sin esta separación no se puede escribir
+    // «12,» camino de «12,50»: el número no guarda la coma a medias.
+    const [priceInput, setPriceInput] = useState('');
+    const [priceError, setPriceError] = useState<string | null>(null);
     const { showToast, ToastComponent } = useToast();
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -101,7 +106,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     title: item.title,
                     links: item.links || [],
                     imageUrl: item.image_url,
-                    price: item.price,
+                    price: toPriceNumber(item.price_numeric),
                     notes: item.notes,
                     priority: item.priority as Priority,
                     excludedGroupIds: item.excluded_group_ids || []
@@ -122,10 +127,10 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
         } else if (sortBy === 'price') {
-            // El campo es texto libre: `comparePriceForSort` normaliza la coma
-            // decimal, manda los no numéricos al final y es un **orden total**
-            // —nunca devuelve `NaN`, tampoco con dos valores ilegibles—.
-            return comparePriceForSort(a.price, b.price);
+            // El precio ya es un número: `comparePriceValues` manda los ausentes al
+            // final y es un **orden total** —nunca devuelve `NaN`, tampoco con dos
+            // precios ausentes—.
+            return comparePriceValues(a.price, b.price);
         } else {
             const priorityValues = { high: 3, medium: 2, low: 1 };
             const priorityA = priorityValues[a.priority || 'medium'] || 2;
@@ -138,6 +143,8 @@ export function WishListTab({ userId }: WishListTabProps) {
         if (item) {
             setEditingItem(item);
             setFormData({ ...item });
+            // Se precarga el número ya formateado, que es como aparece en la tarjeta.
+            setPriceInput(formatPrice(item.price) ?? '');
         } else {
             setEditingItem(null);
             setFormData({
@@ -145,10 +152,12 @@ export function WishListTab({ userId }: WishListTabProps) {
                 links: [],
                 priority: 'medium',
                 notes: '',
-                price: '',
+                price: null,
                 excludedGroupIds: []
             });
+            setPriceInput('');
         }
+        setPriceError(null);
         setIsFormOpen(true);
     };
 
@@ -216,6 +225,16 @@ export function WishListTab({ userId }: WishListTabProps) {
     const handleSave = async () => {
         if (!formData.title || !userId) return;
 
+        const parsedPrice = parsePriceInput(priceInput);
+
+        // Un precio tecleado que no se entiende no se guarda en silencio: se avisa y
+        // no se envía nada. Callarlo dejaría el deseo sin precio sin decirlo, y
+        // guardar un número inventado sería peor todavía.
+        if (priceInput.trim() !== '' && parsedPrice === null) {
+            setPriceError('Escribe sólo el número, por ejemplo 25,90.');
+            return;
+        }
+
         setIsSaving(true);
         try {
             const itemData = {
@@ -223,7 +242,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                 title: formData.title,
                 links: normalizeWishLinks(formData.links || []),
                 image_url: formData.imageUrl,
-                price: formData.price,
+                // La columna numérica es la única que se escribe; la de texto queda
+                // pendiente de borrar y ya no se toca desde aquí.
+                price_numeric: parsedPrice,
                 notes: formData.notes,
                 priority: formData.priority || 'medium',
                 excluded_group_ids: formData.excludedGroupIds || []
@@ -236,7 +257,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     .eq('id', editingItem.id);
 
                 if (error) throw error;
-                setItems(items.map(i => i.id === editingItem.id ? { ...i, ...formData } as GiftItem : i));
+                setItems(items.map(i => i.id === editingItem.id ? { ...i, ...formData, price: parsedPrice } as GiftItem : i));
             } else {
                 const { data, error } = await supabase
                     .from('wishlist_items')
@@ -250,7 +271,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     title: data.title,
                     links: data.links || [],
                     imageUrl: data.image_url,
-                    price: data.price,
+                    price: toPriceNumber(data.price_numeric),
                     notes: data.notes,
                     priority: data.priority as Priority
                 };
@@ -505,13 +526,22 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 <View className="flex-1 min-w-0">
                                     <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Precio (€)</Text>
                                     <TextInput
-                                        value={formData.price?.toString() || ''}
-                                        onChangeText={(text) => setFormData({ ...formData, price: text })}
+                                        value={priceInput}
+                                        onChangeText={(text) => {
+                                            setPriceInput(filterPriceInputText(text));
+                                            if (priceError) setPriceError(null);
+                                        }}
                                         placeholder="0,00"
-                                        keyboardType="numeric"
+                                        // Teclado decimal: es el que necesita un precio, no
+                                        // el numérico entero que ofrecía antes.
+                                        keyboardType="decimal-pad"
+                                        inputMode="decimal"
                                         style={{ fontSize: 16 }}
                                         className="w-full min-w-0 px-4 py-3.5 rounded-2xl bg-surface-container-highest text-on-background font-sans-semibold"
                                     />
+                                    {priceError ? (
+                                        <Text className="text-xs text-red-600 font-sans-semibold mt-1.5">{priceError}</Text>
+                                    ) : null}
                                 </View>
                                 <View className="flex-1 min-w-0">
                                     <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Prioridad</Text>

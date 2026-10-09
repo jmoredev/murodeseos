@@ -51,8 +51,8 @@ describe('WishListTab', () => {
         (supabase.from as any).mockImplementation((table: string) => {
             if (table === 'wishlist_items') {
                 return createMockChain([
-                    { id: '1', title: 'Item 1', price: '10', priority: 'medium' },
-                    { id: '2', title: 'Item 2', price: '20', priority: 'high' }
+                    { id: '1', title: 'Item 1', price_numeric: 10, priority: 'medium' },
+                    { id: '2', title: 'Item 2', price_numeric: 20, priority: 'high' }
                 ]);
             }
             return createMockChain([]);
@@ -117,7 +117,7 @@ describe('WishListTab', () => {
 
         // Setup mock for insert
         const chain = createMockChain();
-        chain.single = vi.fn().mockResolvedValue({ data: { id: '3', title: 'New Wish', price: '50', priority: 'medium' }, error: null });
+        chain.single = vi.fn().mockResolvedValue({ data: { id: '3', title: 'New Wish', price_numeric: 50, priority: 'medium' }, error: null });
         vi.mocked(supabase.from).mockReturnValueOnce(chain as any);
 
         // Save
