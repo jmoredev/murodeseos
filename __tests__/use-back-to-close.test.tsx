@@ -25,6 +25,17 @@ function ModalDePrueba({ onCerrar }: { onCerrar: () => void }) {
     );
 }
 
+/**
+ * Simula lo que hace el navegador con un gesto de atrás: **la entrada que estaba
+ * en la cima se consume**, así que el historial deja de tener nuestra marca y solo
+ * despues llega el `popstate`. Sin esto el arnés miente sobre la plataforma: el
+ * hook pregunta al historial, no recuerda nada.
+ */
+function gestoDeAtras() {
+    window.history.replaceState(null, '');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
     let pushState: ReturnType<typeof vi.spyOn>;
     let back: ReturnType<typeof vi.spyOn>;
@@ -52,16 +63,16 @@ describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
     it('re-renderizar mientras está abierto NO empuja otra entrada', () => {
         // El fallo clásico de este patrón: un callback en las dependencias del
         // efecto hace que cada render empuje otra entrada y el gesto necesite
-        // varios toques para cerrar.
+        // varios toques de atrás para cerrar.
         const { rerender } = render(<ModalDePrueba onCerrar={vi.fn()} />);
         fireEvent.click(screen.getByText('abrir'));
         expect(pushState).toHaveBeenCalledTimes(1);
 
-        rerender(<ModalDePrueba onCerrar={vi.fn()} />);
-        fireEvent.click(screen.getByText('cerrar con la X'));
-        fireEvent.click(screen.getByText('abrir'));
-        // La segunda apertura empuja la segunda entrada; no más.
-        expect(pushState).toHaveBeenCalledTimes(2);
+        // Varios renders con el modal abierto…
+        for (let i = 0; i < 3; i++) rerender(<ModalDePrueba onCerrar={vi.fn()} />);
+
+        // …y sigue habiendo UNA sola entrada.
+        expect(pushState).toHaveBeenCalledTimes(1);
     });
 
     it('el gesto de atrás CIERRA el modal, en vez de salir de la app', () => {
@@ -70,7 +81,7 @@ describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
         fireEvent.click(screen.getByText('abrir'));
 
         act(() => {
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            gestoDeAtras();
         });
 
         expect(screen.getByTestId('estado').textContent).toBe('cerrado');
@@ -79,16 +90,43 @@ describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
         expect(back).not.toHaveBeenCalled();
     });
 
-    it('cerrar con la X retira la entrada que se empujó, para no dejar un hueco', () => {
+    it('cerrar con la X no retira la entrada: la reutiliza el modal siguiente', () => {
+        // Antes se llamaba a `history.back()` para retirarla, y ese back abría una
+        // carrera: es asíncrono e **indistinguible** de un gesto, así que si el
+        // usuario abría otro modal entre medias, su `popstate` lo cerraba solo
+        // (CRITICAL del refutador). Sin back interno no hay carrera posible; el
+        // precio es un toque de atrás que no hace nada, y se acepta.
         render(<ModalDePrueba onCerrar={vi.fn()} />);
         fireEvent.click(screen.getByText('abrir'));
+        expect(pushState).toHaveBeenCalledTimes(1);
 
         fireEvent.click(screen.getByText('cerrar con la X'));
 
         expect(screen.getByTestId('estado').textContent).toBe('cerrado');
-        // Sin esto, cada apertura dejaría una entrada muerta en el historial y el
-        // usuario tendría que pulsar atrás varias veces para salir de la pantalla.
-        expect(back).toHaveBeenCalledTimes(1);
+        expect(back).not.toHaveBeenCalled();
+
+        // Y el modal siguiente reutiliza la entrada que quedó, sin empujar otra.
+        fireEvent.click(screen.getByText('abrir'));
+        expect(pushState).toHaveBeenCalledTimes(1);
+    });
+
+    it('un gesto con la capa vacía consume la entrada gastada y no cierra nada', () => {
+        render(<ModalDePrueba onCerrar={vi.fn()} />);
+        fireEvent.click(screen.getByText('abrir'));
+        fireEvent.click(screen.getByText('cerrar con la X'));
+
+        act(() => {
+            gestoDeAtras();
+        });
+
+        // No hay capa: el gesto se lleva la entrada gastada y no cierra nada.
+        expect(back).not.toHaveBeenCalled();
+        expect(screen.getByTestId('estado').textContent).toBe('cerrado');
+
+        // Y a partir de aqui el modal siguiente abre entrada propia, porque la
+        // gastada ya se consumió.
+        fireEvent.click(screen.getByText('abrir'));
+        expect(pushState).toHaveBeenCalledTimes(2);
     });
 
     it('si no está abierto, no toca el historial', () => {
@@ -112,10 +150,12 @@ describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
  */
 describe('useBackToClose con varios modales y con un cierre que no puede ocurrir', () => {
     let pushState: ReturnType<typeof vi.spyOn>;
+    let back: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         window.history.replaceState(null, '');
         pushState = vi.spyOn(window.history, 'pushState');
+        back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -151,7 +191,7 @@ describe('useBackToClose con varios modales y con un cierre que no puede ocurrir
         fireEvent.click(screen.getByText('abrir arriba'));
 
         act(() => {
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            gestoDeAtras();
         });
 
         // El de arriba se cierra; el de abajo NO.
@@ -162,7 +202,7 @@ describe('useBackToClose con varios modales y con un cierre que no puede ocurrir
 
         // Y el gesto siguiente cierra el que queda, sin salir de la aplicación.
         act(() => {
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            gestoDeAtras();
         });
         expect(screen.getByTestId('abajo').textContent).toBe('cerrado');
         expect(cerrarAbajo).toHaveBeenCalledTimes(1);
@@ -197,7 +237,7 @@ describe('useBackToClose con varios modales y con un cierre que no puede ocurrir
         expect(pushState).toHaveBeenCalledTimes(1);
 
         act(() => {
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            gestoDeAtras();
         });
 
         expect(intento).toHaveBeenCalledTimes(1);
@@ -208,5 +248,25 @@ describe('useBackToClose con varios modales y con un cierre que no puede ocurrir
         await vi.waitFor(() => {
             expect(pushState).toHaveBeenCalledTimes(2);
         });
+    });
+
+    it('el cierre con la X deja la entrada a reutilizar, sin back interno', () => {
+        // El arreglo del CRITICAL del refutador, dicho como contrato: **no hay
+        // `history.back()` interno**. Su `popstate` era indistinguible de un gesto y
+        // podía cerrar el modal que el usuario acabara de abrir.
+        const cerrar = vi.fn();
+        render(<ModalDePrueba onCerrar={cerrar} />);
+
+        fireEvent.click(screen.getByText('abrir'));
+        fireEvent.click(screen.getByText('cerrar con la X'));
+
+        expect(back).not.toHaveBeenCalled();
+
+        // Aunque alguien dispare un `popstate` después (como haría el navegador si
+        // hubiéramos retrocedido), no hay ningún modal que cerrar.
+        act(() => {
+            gestoDeAtras();
+        });
+        expect(cerrar).not.toHaveBeenCalled();
     });
 });

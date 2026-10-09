@@ -36,8 +36,18 @@ interface ModalAbierto {
 /** La capa de modales: el último es el de arriba, y es el que cierra un gesto. */
 const abiertos: ModalAbierto[] = [];
 
-/** Si el historial tiene ya el paso de la capa. Uno por capa, no uno por modal. */
-let entradaPropia = false;
+/**
+ * ¿La entrada que está en la cima del historial es la nuestra?
+ *
+ * Se **pregunta al historial** en vez de recordarlo en una variable, y eso no es
+ * un detalle: un booleano de módulo se queda obsoleto en cuanto la aplicación
+ * navega (el router empuja su propia entrada y la nuestra deja de estar arriba),
+ * y entonces la capa cree tener paso cuando no lo tiene, o al revés. El historial
+ * es la única fuente de verdad de lo que hay en el historial.
+ */
+function entradaEsNuestra(): boolean {
+    return (window.history.state as EstadoHistorial)?.[MARCA] === true;
+}
 
 /**
  * El **mismo** objeto `PopStateEvent` llega a todos los escuchadores de `window`.
@@ -47,7 +57,6 @@ let eventoAtendido: PopStateEvent | null = null;
 
 function empujarEntrada() {
     window.history.pushState({ [MARCA]: true } as EstadoHistorial, '');
-    entradaPropia = true;
 }
 
 export function useBackToClose(isOpen: boolean, onClose: () => void): void {
@@ -65,26 +74,25 @@ export function useBackToClose(isOpen: boolean, onClose: () => void): void {
 
         const id = Symbol('modal');
         abiertos.push({ id, cerrar: () => onCloseRef.current() });
-        if (!entradaPropia) empujarEntrada();
+        // Una entrada para toda la capa de modales: mientras haya alguno abierto,
+        // el historial tiene su paso.
+        if (!entradaEsNuestra()) empujarEntrada();
 
         const alVolver = (evento: PopStateEvent) => {
             if (eventoAtendido === evento) return;
             eventoAtendido = evento;
 
+            // El gesto consume la entrada que hubiera en la cima; a partir de aqui
+            // manda lo que diga el historial.
             if (abiertos.length === 0) return;
 
-            // El gesto **ya ha consumido** la entrada del historial, así que se
-            // suelta aquí y la repone quien corresponda: el cierre del modal si
-            // queda capa, o la comprobación diferida si el cierre no llega a
-            // ocurrir (el formulario mientras guarda), que es `R3-002`.
-            entradaPropia = false;
             abiertos[abiertos.length - 1].cerrar();
 
             // React aplica el cierre de forma **asíncrona**, así que aquí la capa
             // todavía contiene el modal: decidir ya repondría una entrada que el
             // cierre retiraría acto seguido (un `pushState` + `back` de más).
             setTimeout(() => {
-                if (abiertos.length > 0 && !entradaPropia) empujarEntrada();
+                if (abiertos.length > 0 && !entradaEsNuestra()) empujarEntrada();
             }, 0);
         };
         window.addEventListener('popstate', alVolver);
@@ -94,21 +102,21 @@ export function useBackToClose(isOpen: boolean, onClose: () => void): void {
             const i = abiertos.findIndex((modal) => modal.id === id);
             if (i !== -1) abiertos.splice(i, 1);
 
-            if (abiertos.length > 0) {
-                // Todavía hay capa y el gesto se había llevado la entrada: se repone
-                // para que el siguiente atrás cierre el siguiente modal, en lugar de
-                // salir de la aplicación.
-                if (!entradaPropia) empujarEntrada();
-                return;
-            }
+            // Mientras quede capa, la entrada no sobra: es el paso que el próximo
+            // gesto consumirá. Si el gesto se la había llevado, se repone para que
+            // el siguiente atrás cierre el siguiente modal, no para salir de la app
+            // (`R3-002`).
+            if (abiertos.length > 0 && !entradaEsNuestra()) empujarEntrada();
 
-            // La capa queda **vacía**: sólo entonces se retira la entrada. Retirarla
-            // con otro modal abierto lanzaba un `popstate` que lo cerraba sin
-            // querer: la segunda mitad de `R3-001`.
-            if (entradaPropia) {
-                entradaPropia = false;
-                window.history.back();
-            }
+            // Y si la capa queda **vacía**, no se toca el historial. Antes se
+            // llamaba a `history.back()` para retirar la entrada, y eso es lo que
+            // abría la carrera: ese back es asíncrono e **indistinguible** de un
+            // gesto del usuario, así que si entre medias se abría otro modal, su
+            // `popstate` lo cerraba solo (CRITICAL del refutador). Sin back interno
+            // no hay carrera posible: la entrada queda «gastada» y la reutiliza el
+            // próximo modal; si nadie la usa, un gesto la consume sin cerrar nada.
+            // El precio es un toque de atrás que no hace nada tras cerrar un modal
+            // con la ✕, y se acepta a cambio de que la carrera sea imposible.
         };
     }, [isOpen]);
 }
