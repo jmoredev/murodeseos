@@ -1,6 +1,6 @@
 # El gesto de atrás saca de la app (`fix/atras-navegacion`)
 
-**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** en curso
+**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** hecho y verificado; pendiente la revisión nativa y la PR
 
 ## Objetivo
 
@@ -48,9 +48,32 @@ Y eso se ve distinto según dónde estés:
 | --- | --- | --- |
 | A1 | **Que el gesto cierre lo que abriste**: al abrir un modal, empujar una entrada de historial y cerrarlo al recibir `popstate`; al cerrarlo por la UI, retirar esa entrada para no dejar un hueco | **hecha** — `lib/use-back-to-close.ts`, aplicado a `components/WishDetailModal.tsx` y `components/WishListTab.tsx` (en este último respetando `isSaving`, igual que la ✕ y el atrás nativo) |
 | A2 | **Test en rojo primero**, con el historial simulado: abrir empuja; el gesto cierra; cerrar con la ✕ no deja basura en el historial | **hecha** — `__tests__/use-back-to-close.test.tsx`, 5 casos. **Vistos fallando antes**: el módulo no existía. Incluye el caso que rompe este patrón: re-renderizar con el callback en línea **no** empuja otra entrada (por eso el callback vive en una ref) |
-| B1 | **`ErrorBoundary` de verdad**, exportado donde `expo-router` lo recoge, con pantalla legible y botón de recarga que **no dependa de las fuentes** | pendiente |
-| B2 | Que un atrás que no resuelve **no** deje la app en la nada | pendiente |
-| C | Verificación (estáticos, unit, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | pendiente |
+| B1 | **`ErrorBoundary` de verdad**, exportado donde `expo-router` lo recoge, con pantalla legible y botón de recarga que **no dependa de las fuentes** | **hecha** — `components/AppErrorBoundary.tsx` + el **export nombrado `ErrorBoundary`** en `app/_layout.tsx`, que es lo que `expo-router` busca en el módulo de ruta (sin ese export, el componente sería código muerto). Tres tests. La pantalla fija una **pila del sistema** a propósito: si el error ocurre antes de que carguen las fuentes —o son ellas la causa—, una pantalla de error con texto invisible sería el mismo vacío con más pasos |
+| B2 | Que un atrás que no resuelve **no** deje la app en la nada | **cubierto por B1, y se dice por qué**: cuando el historial cae en una ruta irresoluble, `expo-router` acaba con un estado **sin rutas** y ahí lanzaba, desmontando el árbol entero. Con el `ErrorBoundary` exportado eso ya no deja un vacío: se ve una pantalla legible con **dos salidas** (reintentar y recargar). Interceptar el `resetRoot` interno del router **no se puede desde la app**, así que no se finge que se hace |
+| C | Verificación (estáticos, unit, E2E con resiembra y `--workers=1`), verificación independiente y revisión nativa | **verificación hecha**; verificación independiente y revisión nativa pendientes |
+
+## Verificación (2026-10-09)
+
+**Un E2E nuevo que reproduce el fallo, y se le vio fallar.** En `e2e/responsive-wishlist.spec.ts`: abrir el detalle de un deseo, pulsar atrás y exigir que **el detalle se cierre y la URL no cambie**.
+
+**RED, con el hook desconectado a propósito** — y el mensaje es literalmente el síntoma del propietario:
+
+```
+Expected: "…/wishlist/2f144dd7-…?name=Juan%20Perez"
+Received: "…/groups/E2E001"
+```
+
+O sea: sin el arreglo, el atrás **se lleva la pantalla a otra ruta**. En una pestaña eso es «se me sale de la página»; con la app instalada y sin barra de direcciones, la ventana negra.
+
+**GREEN con el arreglo.** Detalle de fidelidad: el test usa `history.back()` **desde la página** en vez de `page.goBack()`, porque el gesto es un `popstate` **en el mismo documento** y `page.goBack` espera una navegación de documento que aquí no ocurre.
+
+| Comprobación | Resultado |
+| --- | --- |
+| `pnpm run typecheck` | limpio |
+| `pnpm run lint` (`--max-warnings 0`) | limpio |
+| `pnpm run test:unit` | **257 passed + 1 todo** (los 5 del hook y los 3 del boundary) |
+| E2E chromium, **resiembra y `--workers=1`** | **54 passed / 1 skipped** (línea base 53 + el test nuevo) |
+| El E2E nuevo, **visto fallar** sin el hook | sí, con la URL saltando a otra ruta |
 
 ## Restricciones
 

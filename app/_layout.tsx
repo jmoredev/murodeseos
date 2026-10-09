@@ -11,6 +11,7 @@ import {
     BeVietnamPro_700Bold,
 } from '@expo-google-fonts/be-vietnam-pro';
 import { getGithubPagesBasePath } from '@/lib/site-url';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import './global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -143,4 +144,19 @@ export default function RootLayout() {
             </Stack>
         </SafeAreaProvider>
     );
+}
+
+/**
+ * `expo-router` envuelve una ruta con este componente **sólo si el módulo lo
+ * exporta** (`node_modules/expo-router/build/useScreens.js`, `fromImport`), y
+ * recibe `{ error, retry }`. Sin este export, la app no tenía **ningún**
+ * `ErrorBoundary` y un error de render desmontaba el árbol entero: pantalla
+ * vacía, sin texto y sin salida. Esa era la mitad del «pantallazo negro» que
+ * reportó el propietario.
+ *
+ * Se declara aquí, como export nombrado y no como reexport, para que no dependa
+ * de cómo resuelva el empaquetador los reexports.
+ */
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+    return <AppErrorBoundary error={error} retry={retry} />;
 }
