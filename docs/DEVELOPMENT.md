@@ -98,9 +98,19 @@ Si la UI en web o en el cliente de desarrollo **no refleja** los cambios (clases
 ### Service Worker (PWA en producción / GitHub Pages)
 `public/sw.js` se copia a `dist/` en el postbuild. Historia corta del SW: la **v3** puso las peticiones **que no son navegación** (bundles JS, chunks, CSS…) en **red primero** (antes eran caché primero y, tras un deploy, el navegador podía seguir sirviendo **JS antiguo**); la **v4** añade la restricción de **same-origin**: el handler de `fetch` solo interviene en peticiones cuyo origen coincide con el del SW (`self.location.origin`) y hace `return` para todo lo demás, así que las GET a la REST/Storage de Supabase (datos privados de deseos y grupos) **nunca entran en Cache Storage** y el navegador las gestiona con normalidad.
 
+La **v5** arregla una **pantalla negra permanente** que podía aparecer tras publicar una versión, reportada en Android con la app instalada. La causa: el export produce **un único** `entry-<hash>.js`, así que **publicar borra el bundle anterior del servidor**, mientras que la **cáscara** (`'./'`) se cacheaba en la instalación del SW y podía sobrevivir a los chunks que referencia. Cuando una navegación fallaba, el SW servía esa cáscara guardada, su `<script>` recibía el HTML del 404 de Pages y **la app no llegaba a montarse**: negro, sin texto, y sin más salida que reiniciar. Los tres cambios de la v5:
+
+- **La cáscara no se cachea nunca**, ni en la instalación ni en una navegación. El HTML es lo más barato de pedir a Pages, así que cachearlo no aportaba nada y arriesgaba justo esto.
+- Si una navegación **falla de red o agota el tiempo**, se responde con una página de **sin conexión autocontenida** (sin CSS ni JS externos: no puede fallar por un activo que ya no exista).
+- Una respuesta **no-ok** de un **recurso** no se entrega como si fuera el recurso: Pages contesta a un chunk borrado con el HTML de su 404, y el navegador intentaría ejecutarlo como JavaScript. Cae a la caché y, si no hay copia, el fallo se declara como fallo.
+
+**Un 404 de navegación NO es un error de red** y se devuelve tal cual: Pages sirve las **rutas dinámicas** (`/groups/<uuid>`, `/wishlist/<id>`) con el cuerpo del `index.html` **actual**, así que la app arranca y enruta con normalidad. Convertirlo en la página de sin conexión dejaba un callejón sin salida **estando en línea**.
+
+**Coste asumido de la v5**: como la cáscara ya no se cachea, **abrir la app sin conexión muestra la página de sin conexión** en vez de la app. Antes se servía la cáscara, pero una app sin red tampoco puede traer datos (todo vive en Supabase), así que el cambio de comportamiento es una degradación honesta declarada, no un efecto colateral silencioso.
+
 Además, el cierre de sesión pasó por un único camino: `lib/sign-out.ts` hace `supabase.auth.signOut()` y, en web, borra todas las caches cuyo nombre empieza por `murodeseos-` (no todas: el origen de GitHub Pages se comparte entre repositorios y las caches de otros proyectos deben sobrevivir). Todos los botones de salir (`app/index.tsx`, `app/wishlist/[id]`, `app/groups/[id]` y `ProfileTab`) usan ese helper.
 
-Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.); el salto a **v4** purga así cualquier dato privado que bundles anteriores guardaran en `murodeseos-v3`. El registro del SW está en `app/_layout.tsx`.
+Al cambiar la estrategia del SW, **sube `VERSION`** en `sw.js` (p. ej. `v3` → `v4`) para que el evento `activate` borre caches con el nombre antiguo (`murodeseos-v3`, etc.); el salto a **v4** purga así cualquier dato privado que bundles anteriores guardaran en `murodeseos-v3`, y el salto a **v5** purga la caché que pudiera contener una cáscara obsoleta. El registro del SW está en `app/_layout.tsx`.
 
 **Local (`bun run web`, Metro):** no se registra el SW: `hostname` no es `github.io`, `getGithubPagesBasePath()` devuelve `''` y se llama a `unregister()` por si quedó un SW de una prueba anterior. Así HMR y recargas normales no compiten con Cache Storage.
 
