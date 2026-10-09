@@ -10,6 +10,7 @@ import {
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
+import { useBackToClose } from '@/lib/use-back-to-close'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { AppIcon } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
@@ -54,6 +55,13 @@ export function WishListTab({ userId }: WishListTabProps) {
         });
         return () => sub.remove();
     }, [isFormOpen, isDesktop, isSaving]);
+
+    // Web: el gesto de atrás cierra el formulario en vez de salir de la aplicación.
+    // Con el guardado en curso no se cierra (igual que la ✕ y que el atrás nativo,
+    // más arriba), y se retira la entrada de historial al cerrarlo con la UI.
+    useBackToClose(isFormOpen, () => {
+        if (!isSaving) setIsFormOpen(false);
+    });
 
     // Cargar items desde Supabase
     useEffect(() => {
