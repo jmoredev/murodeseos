@@ -1,6 +1,6 @@
 # El gesto de atrás saca de la app (`fix/atras-navegacion`)
 
-**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** hecho y verificado; pendiente la revisión nativa y la PR
+**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** cerrado — implementado, verificado, **revisión nativa aprobada** y autoridad quemada; pendiente el PR
 
 ## Objetivo
 
@@ -89,6 +89,35 @@ O sea: sin el arreglo, el atrás **se lleva la pantalla a otra ruta**. En una pe
 - E2E con **resiembra y `--workers=1`**.
 - **Y a mano en el navegador**, que es el único sitio donde se puede comprobar de verdad: abrir un artículo, pulsar atrás, y comprobar que cierra el modal **sin salir** de la app.
 
+## Revisión nativa (2026-10-09)
+
+Linaje **`review-74ff5ecfc5b7fb00`**: riesgo medio, 1 lente (`review-reliability`), 9 ficheros / 730 líneas → **aprobada** y autoridad **quemada**. Dos hallazgos advisory, ambos informativos y ninguno bloqueante: `R3-001` en `components/AppErrorBoundary.tsx:37-43` y `R3-002` en `lib/use-back-to-close.ts:111-119`.
+
+**Pero llegar aquí costó tres CRITICAL, todos reales y todos míos.** Los dos primeros los encontró la lente y el tercero **el refutador**, y los tres están arreglados:
+
+| ID | Quién | Defecto | Arreglo |
+| --- | --- | --- | --- |
+| `R3-001` | lente | Cada instancia añadía su `popstate`, así que **un gesto cerraba todos los modales abiertos**; y cerrar uno con la ✕ lanzaba un `history.back()` cuyo `popstate` cerraba el otro | Una entrada para toda la capa, **un solo escuchador por gesto** —comparando el **objeto de evento**, idéntico para todos los escuchadores: sin banderas ni temporizadores— y reposición de la entrada mientras quede capa |
+| `R3-002` | lente | Con `isSaving`, el callback no cerraba pero el gesto se daba por consumido y su limpieza no reponía la entrada → **el siguiente atrás salía de la app**, anulando el arreglo justo al guardar | El invariante «mientras haya capa, hay entrada» la repone. La decisión se difiere un turno porque **React aplica el cierre de forma asíncrona** |
+| `R3-001` | **refutador** | El `history.back()` de la limpieza es **asíncrono e indistinguible** de un gesto del usuario: si se abría otro modal antes de que llegara su `popstate`, lo **cerraba solo** | **Se elimina el back interno.** La carrera deja de ser improbable y pasa a ser **imposible por construcción** |
+
+**Dos correcciones de diseño que forzaron los tests**, y merecen quedar escritas porque las dos eran trampas:
+
+1. **El estado del módulo ya no recuerda si la entrada era nuestra** en un booleano. Ese booleano **se queda obsoleto en cuanto el router navega** (empuja su propia entrada y la nuestra deja de estar arriba), así que la capa creía tener paso cuando no lo tenía. Ahora **se pregunta al historial**, que es la única fuente de verdad de lo que hay en el historial. Lo destapó una fuga de estado entre tests, no una lectura del código.
+2. **El arnés mentía sobre la plataforma**: despachaba el `popstate` sin consumir antes la entrada. Ahora simula el gesto como lo hace el navegador (consume la entrada, después el evento). Un arnés que no reproduce el orden real no prueba el comportamiento real.
+
+**Coste aceptado y documentado**: cerrar un modal con la ✕ deja la entrada «gastada», así que un toque de atrás posterior no hace nada. Se cambia por que la carrera sea imposible.
+
+### Dos defectos de la fontanería de revisión, no del código
+
+- **El plan de corrección se envía ANTES de aplicar la corrección.** Enviado después, el proveedor lo rechaza (`capture-binding-rejected`, «no lleva un linaje y un objetivo válidos»), porque el árbol avanzó y el `target_identity` del binding ya no coincide con el actual. Probarlo al revés cuesta dos operaciones reversibles y **no se arregla retrocediendo el árbol de trabajo**: el proveedor **proyecta desde HEAD**. Con el orden correcto, el plan se aceptó a la primera.
+- **La validación dirigida rechaza su propio binding.** Con el plan aceptado y la corrección commiteada, STATUS pide `targeted_validation_required`, y ese binding —copia exacta del del proveedor— se rechaza con «collectBinding is missing or stale for current STATUS» **sin que el STATUS cambie entre intentos**. Pasó en dos linajes distintos. No se manipulan tokens del proveedor para sortearlo: se declara.
+
+**Vía que sí funcionó, y está declarada como rodeo**: `inspect` volvió a ofrecer `review.start` sobre el candidato ya corregido, y una **revisión nueva** corrió entera (lente → refutador → aprobada). Los dos linajes anteriores quedan en `correction_required`: **es deuda de mantenimiento, no un corte sin revisar**, y así está dicho.
+
 ## Commits
 
-- _(A1+A2, pendiente de commit)_
+- **`49ab916`** — `fix(pwa): the back gesture closes what you opened, instead of leaving the app` (A1+A2).
+- **`20c3e1c`** — `fix(pwa): never leave a blank void, and prove the back gesture in CI` (B1+B2+E2E).
+- **`ee430d9`** — `fix(pwa): coordinate the modal layer, and restore the entry when a close cannot happen` (corrección de los dos CRITICAL de la lente).
+- **`f3c3842`** — `fix(pwa): remove the internal history back, so the race cannot exist` (corrección del CRITICAL del refutador).
