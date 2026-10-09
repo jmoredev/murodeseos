@@ -98,3 +98,115 @@ describe('useBackToClose: el gesto de atrás cierra lo que abriste', () => {
         expect(back).not.toHaveBeenCalled();
     });
 });
+
+/**
+ * Dos hallazgos CRITICAL de la revisión nativa, los dos reales:
+ *
+ * - `R3-001`: cada instancia añadía su propio `popstate` sin coordinarse. Con dos
+ *   modales abiertos, **un** gesto cerraba **los dos** (todos los escuchadores
+ *   atendían el mismo evento), y cerrar uno con la ✕ llamaba a `history.back()`,
+ *   cuyo `popstate` cerraba el otro sin querer.
+ * - `R3-002`: si el llamador no podía cerrar (guardando), el hook daba el gesto
+ *   por consumido igualmente y no reponía la entrada, así que **el siguiente
+ *   atrás salía de la aplicación**: el arreglo se anulaba a sí mismo.
+ */
+describe('useBackToClose con varios modales y con un cierre que no puede ocurrir', () => {
+    let pushState: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+        window.history.replaceState(null, '');
+        pushState = vi.spyOn(window.history, 'pushState');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    function DosModales({ onCerrarArriba, onCerrarAbajo }: { onCerrarArriba: () => void; onCerrarAbajo: () => void }) {
+        const [abajo, setAbajo] = useState(false);
+        const [arriba, setArriba] = useState(false);
+        useBackToClose(abajo, () => {
+            setAbajo(false);
+            onCerrarAbajo();
+        });
+        useBackToClose(arriba, () => {
+            setArriba(false);
+            onCerrarArriba();
+        });
+        return (
+            <div>
+                <button onClick={() => setAbajo(true)}>abrir abajo</button>
+                <button onClick={() => setArriba(true)}>abrir arriba</button>
+                <span data-testid="abajo">{abajo ? 'abierto' : 'cerrado'}</span>
+                <span data-testid="arriba">{arriba ? 'abierto' : 'cerrado'}</span>
+            </div>
+        );
+    }
+
+    it('con dos modales abiertos, UN gesto cierra sólo el de arriba', () => {
+        const cerrarAbajo = vi.fn();
+        const cerrarArriba = vi.fn();
+        render(<DosModales onCerrarAbajo={cerrarAbajo} onCerrarArriba={cerrarArriba} />);
+        fireEvent.click(screen.getByText('abrir abajo'));
+        fireEvent.click(screen.getByText('abrir arriba'));
+
+        act(() => {
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        });
+
+        // El de arriba se cierra; el de abajo NO.
+        expect(screen.getByTestId('arriba').textContent).toBe('cerrado');
+        expect(screen.getByTestId('abajo').textContent).toBe('abierto');
+        expect(cerrarArriba).toHaveBeenCalledTimes(1);
+        expect(cerrarAbajo).not.toHaveBeenCalled();
+
+        // Y el gesto siguiente cierra el que queda, sin salir de la aplicación.
+        act(() => {
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        });
+        expect(screen.getByTestId('abajo').textContent).toBe('cerrado');
+        expect(cerrarAbajo).toHaveBeenCalledTimes(1);
+    });
+
+    function ModalQueNoPuedeCerrar({ onIntento }: { onIntento: () => void }) {
+        const [abierto, setAbierto] = useState(false);
+        const [noPuedeCerrar, setNoPuedeCerrar] = useState(false);
+        useBackToClose(abierto, () => {
+            onIntento();
+            if (noPuedeCerrar) return false;
+            setAbierto(false);
+            return true;
+        });
+        return (
+            <div>
+                <button onClick={() => setAbierto(true)}>abrir</button>
+                <button onClick={() => setNoPuedeCerrar(true)}>poner a guardar</button>
+                <span data-testid="estado">{abierto ? 'abierto' : 'cerrado'}</span>
+            </div>
+        );
+    }
+
+    it('si el cierre no puede ocurrir, la entrada se repone y el modal sigue abierto', async () => {
+        // El caso real: guardando, la ✕ no cierra (y el atrás nativo tampoco).
+        // Sin reponer la entrada, el gesto se da por consumido y el SIGUIENTE
+        // atrás sale de la aplicación.
+        const intento = vi.fn();
+        render(<ModalQueNoPuedeCerrar onIntento={intento} />);
+        fireEvent.click(screen.getByText('abrir'));
+        fireEvent.click(screen.getByText('poner a guardar'));
+        expect(pushState).toHaveBeenCalledTimes(1);
+
+        act(() => {
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        });
+
+        expect(intento).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('estado').textContent).toBe('abierto');
+
+        // La reposición es deliberadamente diferida: React aplica el cierre de forma
+        // asíncrona y hasta el siguiente turno no se sabe si hay capa que mantener.
+        await vi.waitFor(() => {
+            expect(pushState).toHaveBeenCalledTimes(2);
+        });
+    });
+});
