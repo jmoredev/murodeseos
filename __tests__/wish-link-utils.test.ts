@@ -28,6 +28,21 @@ describe('wish-link-utils', () => {
             expect(wishLinkHost('https://example.com/producto-e2e')).toBe('example.com');
         });
 
+        it('recorta el dominio largo con puntos suspensivos explícitos, y no por CSS', () => {
+            // El chip del enlace lleva `numberOfLines={1}`, así que si el recorte lo hiciera
+            // el CSS no se podría probar. Se hace en el helper: el texto visible es
+            // determinista, y el nombre accesible conserva el dominio completo.
+            const largo = wishLinkHost('https://tienda-online-muy-larga.example.es/producto');
+            expect(largo).toBe('tienda-online-muy-larga…');
+            expect(largo.length).toBeLessThanOrEqual(24);
+        });
+
+        it('un esquema en mayúsculas no se duplica', () => {
+            // `url.startsWith('http')` es sensible a mayúsculas y convertía `HTTP://x` en
+            // `https://HTTP://x`; `normalizeWishLink` usa una expresión insensible.
+            expect(wishLinkHost('HTTP://www.example.com/x')).toBe('example.com');
+        });
+
         it('funciona sin esquema, que es como se pega muchas veces', () => {
             expect(wishLinkHost('tienda.com/item')).toBe('tienda.com');
         });

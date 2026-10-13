@@ -5,17 +5,15 @@ import { E2E_CONFIG } from './config';
 /**
  * Alturas iguales en la rejilla de tarjetas.
  *
- * El propietario pidió que todas midan lo mismo, «aunque no tengan descripción».
- * Y esto se **mide**, no se mira, por dos motivos:
+ * El propietario pidió que todas midan lo mismo, «aunque no tengan descripción». Y esto
+ * se **mide**, no se mira, por dos motivos:
  *
  *  1. El contenedor tenía que ser **una rejilla de verdad** (`display: grid` con filas
- *     `1fr`). El proyecto **no usaba `grid` en ningún sitio** —son componentes de React
- *     Native con nativewind—, así que darlo por hecho sería exactamente el error que ya
- *     cometí dos veces hoy: suponer dónde está la evidencia. Si nativewind no emite el
- *     `display: grid`, esta prueba lo dice en la primera aserción.
+ *     `1fr`): el proyecto **no usaba `grid` en ningún sitio**, así que darlo por hecho
+ *     sería suponer dónde está la evidencia. Si nativewind no emite el `display: grid`,
+ *     la primera aserción lo dice.
  *  2. Y con la rejilla puesta, la comprobación de fondo: **todas las tarjetas miden lo
- *     mismo** con y sin descripción, con título corto y largo, y en los dos anchos que
- *     importan: 360px (móvil, 2 columnas) y 1280px (escritorio, 3 columnas).
+ *     mismo** con y sin descripción, con título corto y largo, y en cada ancho.
  *
  * La lista de otro miembro (`app/wishlist/[id]/index.tsx`) usa la misma rejilla; la
  * cubren los E2E de layout que ya existían, que miden desbordes en esa vista.
@@ -28,17 +26,19 @@ const TITULO_LARGO = 'Auriculares Sony WH-1000XM5';
 const TITULO_CORTO = 'Bolso';
 const NOTAS = 'Talla M, color negro, con la funda y el cable originales.';
 
-test.afterAll(async () => {
+test.afterEach(async () => {
     for (const id of createdIds) {
         await supabaseAdmin.from('wishlist_items').delete().eq('id', id);
     }
+    // Se vacía: si no, la lista crece entre pruebas y la limpieza siguiente vuelve a
+    // borrar ids ya borrados (y en un reintento, ids de la corrida anterior).
+    createdIds.length = 0;
 });
 
 /** Cuatro tarjetas que cubren las cuatro combinaciones que hacían descuadrar la rejilla. */
 async function sembrarTarjetas() {
     // `data` es un objeto con `users` dentro, no el array: `{ data: { users } }`. Con
-    // `{ data: users }` se obtiene el objeto y `users.find` revienta en ejecución
-    // (`users.find is not a function`), así que se copia la forma de los otros E2E.
+    // `{ data: users }` se obtiene el objeto y `users.find` revienta en ejecución.
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ page: 0, perPage: 100 });
     const user = users.find((u) => u.email === E2E_CONFIG.user.email);
     if (!user?.id) throw new Error(`No se encontró el usuario ${E2E_CONFIG.user.email}`);
@@ -93,22 +93,24 @@ async function medirAlturas(page: Page) {
 test.describe('Alturas de las tarjetas', () => {
     test.setTimeout(120000);
 
-    test('todas miden lo mismo, con y sin descripción, en móvil y en escritorio', async ({ page }) => {
-        await sembrarTarjetas();
+    // Un test por ancho, en vez de un bucle dentro de uno: así un fallo dice **en qué
+    // ancho** falla, y ninguno depende de que el anterior haya pasado.
+    for (const ancho of [360, 1280]) {
+        test(`todas miden lo mismo a ${ancho}px, con y sin descripción`, async ({ page }) => {
+            await sembrarTarjetas();
 
-        for (const ancho of [360, 1280]) {
             await page.setViewportSize({ width: ancho, height: 900 });
             await page.goto('/?tab=wishlist');
             await expect(page.getByLabel('Nuevo deseo')).toBeVisible({ timeout: 20000 });
 
-            // 1) ¿Es de verdad una rejilla? Esto es el riesgo declarado: el proyecto no
+            // 1) ¿Es de verdad una rejilla? Este era el riesgo declarado: el proyecto no
             //    usaba `grid` en ningún sitio, así que se comprueba en vez de suponerlo.
             const rejilla = await medirRejilla(page);
-            expect(rejilla, `a ${ancho}px no se encontró el contenedor de tarjetas`).not.toBeNull();
-            expect(rejilla?.display, `a ${ancho}px el contenedor no es una rejilla`).toBe('grid');
+            expect(rejilla, 'no se encontró el contenedor de tarjetas').not.toBeNull();
+            expect(rejilla?.display, 'el contenedor no es una rejilla').toBe('grid');
             expect(
                 rejilla?.filas,
-                `a ${ancho}px las filas no son iguales (grid-auto-rows): ${rejilla?.filas}`
+                `las filas no son iguales (grid-auto-rows): ${rejilla?.filas}`
             ).toContain('1fr');
 
             // 2) Y las alturas, medidas una a una.
@@ -116,12 +118,12 @@ test.describe('Alturas de las tarjetas', () => {
             const distintas = [...new Set(alturas.map((t) => t.alto))];
             expect(
                 distintas.length,
-                `a ${ancho}px hay ${distintas.length} alturas distintas entre ` +
-                    `${alturas.length} tarjetas: ${JSON.stringify(alturas)}`
+                `hay ${distintas.length} alturas distintas entre ${alturas.length} tarjetas: ` +
+                    JSON.stringify(alturas)
             ).toBe(1);
 
             // Y no es una rejilla de una sola tarjeta, que pasaría por accidente.
-            expect(alturas.length, `a ${ancho}px faltan tarjetas sembradas`).toBeGreaterThanOrEqual(4);
-        }
-    });
+            expect(alturas.length, 'faltan tarjetas sembradas').toBeGreaterThanOrEqual(4);
+        });
+    }
 });

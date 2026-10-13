@@ -1,5 +1,8 @@
 import { Linking } from 'react-native';
 
+/** Lo máximo que se pinta de un dominio en la tarjeta; por encima, se recorta con `…`. */
+const DOMINIO_MAXIMO = 24;
+
 export function normalizeWishLink(url: string): string | null {
     const trimmed = url.trim();
     if (!trimmed) return null;
@@ -19,25 +22,38 @@ export function normalizeWishLinks(links: string[]): string[] {
 }
 
 /**
- * El **dominio** de un enlace, sin esquema ni `www`.
+ * El **dominio** de un enlace, sin esquema ni `www`, recortado con puntos suspensivos si
+ * pasa de `maxLength`.
  *
- * Es lo que se pinta en la tarjeta, donde el ancho es escaso: `amazon.es` cabe y
- * se lee, mientras que la ruta completa (hasta 36 caracteres) se recortaba. El
- * enlace real **no se muestra nunca**; este es el nombre visible y la base del
- * nombre que se anuncia a quien usa un lector de pantalla.
+ * Es lo que se pinta en la tarjeta, donde el ancho es escaso: `amazon.es` cabe y se lee,
+ * mientras que la ruta completa (hasta 36 caracteres) se recortaba. El enlace real **no
+ * se muestra nunca**; el nombre accesible del botón sí lleva el dominio entero.
+ *
+ * El recorte se hace **aquí y no en el CSS** a propósito: así el texto visible es
+ * determinista y se puede probar, en vez de depender de la elipsis del navegador.
+ *
+ * La normalización se delega en `normalizeWishLink`, que ya vive en este módulo, en vez
+ * de repetir un `startsWith('http')` que además es sensible a mayúsculas (`HTTP://x`
+ * acababa convertido en `https://HTTP://x`).
  */
-export function wishLinkHost(url: string): string {
+export function wishLinkHost(url: string, maxLength = DOMINIO_MAXIMO): string {
+    const normalized = normalizeWishLink(url);
+    if (!normalized) return '';
+
     try {
-        const normalized = url.startsWith('http') ? url : `https://${url}`;
-        return new URL(normalized).hostname.replace(/^www\./, '') || url;
+        const host = new URL(normalized).hostname.replace(/^www\./, '');
+        if (!host) return url;
+        return host.length <= maxLength ? host : `${host.slice(0, maxLength - 1)}…`;
     } catch {
         return url;
     }
 }
 
 export function truncateWishLink(url: string, maxLength = 36): string {
+    const normalized = normalizeWishLink(url);
+    if (!normalized) return '';
+
     try {
-        const normalized = url.startsWith('http') ? url : `https://${url}`;
         const parsed = new URL(normalized);
         const host = parsed.hostname.replace(/^www\./, '');
         const path = parsed.pathname === '/' ? '' : parsed.pathname;
