@@ -1,8 +1,21 @@
 import React from 'react';
+import fs from 'node:fs';
+import path from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { WishlistCard, GiftItem } from '@/components/WishlistCard';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+/**
+ * El código de la tarjeta, en texto, para afirmar las **reglas de estilo** donde
+ * viven. Hace falta porque nativewind **compila** las clases: en el DOM no queda
+ * `shrink-0`, sino una clase atómica generada, así que buscar la clase en el
+ * elemento renderizado es buscar donde la regla no está. Es el mismo patrón que
+ * usan `contrast-floor` y `typography-floor`: la regla se lee del código y su
+ * **efecto** se mide en el navegador (aquí, el E2E a 360px con el precio más
+ * largo posible).
+ */
+const CARD_SOURCE = fs.readFileSync(path.resolve(process.cwd(), 'components/WishlistCard.tsx'), 'utf8');
 
 describe('WishlistCard', () => {
     const mockItem: GiftItem = {
@@ -140,5 +153,46 @@ describe('WishlistCard', () => {
 
         fireEvent.click(screen.getByTestId('wish-cancel-reserve-button'));
         expect(onCancelReserve).toHaveBeenCalledWith(expect.objectContaining({ id: mockItem.id }));
+    });
+
+    it('el chip del precio no cede y la fila de chips envuelve', () => {
+        // La regla, en el código: el precio `shrink-0` (no se encoge nunca) y la fila
+        // `flex-wrap` (si no caben juntos, el enlace baja de línea). Antes los dos
+        // chips encogían y el que se recortaba era el precio.
+        expect(CARD_SOURCE).toContain('flex-row flex-wrap items-center justify-between');
+        const desdeElPrecio = CARD_SOURCE.slice(CARD_SOURCE.indexOf('wish-price-'));
+        expect(desdeElPrecio.slice(0, 200)).toContain('shrink-0');
+        expect(desdeElPrecio.slice(0, 200)).not.toContain('shrink ');
+
+        // Y en el DOM, que el chip existe y pinta el precio entero (formato español).
+        render(<WishlistCard item={mockItem} isOwner={true} />);
+        const chip = screen.getByTestId(`wish-price-${mockItem.id}`);
+        expect(chip).toHaveTextContent('25,00 €');
+    });
+
+    it('el enlace es un botón con el dominio y dice a dónde va', () => {
+        render(<WishlistCard item={{ ...mockItem, links: ['https://www.amazon.es/dp/B0EXAMPLE'] }} isOwner={true} />);
+
+        const link = screen.getByLabelText(/Abrir enlace: amazon\.es/);
+        // Se ve el dominio, nunca la URL: el enlace real no se pinta.
+        expect(link).toHaveTextContent('amazon.es');
+        expect(link).not.toHaveTextContent('https://');
+    });
+
+    it('«Ya lo tengo» tiene forma de botón, no de enlace suelto', () => {
+        // La forma, en el código: la MISMA que el botón secundario de la app
+        // («Cancelar reserva»). Antes no tenía ni fondo ni borde.
+        const desdeElBoton = CARD_SOURCE.slice(CARD_SOURCE.indexOf('wish-already-have'));
+        expect(desdeElBoton.slice(0, 500)).toContain('bg-surface-container-high');
+        expect(desdeElBoton.slice(0, 500)).toContain('rounded-full');
+        expect(desdeElBoton.slice(0, 500)).toContain('min-h-[44px]');
+
+        // Y en el DOM sigue siendo el botón que borra (o marca) el deseo, con su etiqueta.
+        const onDelete = vi.fn();
+        render(<WishlistCard item={mockItem} isOwner={true} onDelete={onDelete} />);
+        const boton = screen.getByTestId('wish-already-have');
+        expect(boton).toHaveAccessibleName('Marcar como ya lo tengo');
+        fireEvent.click(boton);
+        expect(onDelete).toHaveBeenCalledWith(mockItem);
     });
 });

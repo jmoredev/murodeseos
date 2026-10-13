@@ -18,6 +18,23 @@ export function normalizeWishLinks(links: string[]): string[] {
     return normalized;
 }
 
+/**
+ * El **dominio** de un enlace, sin esquema ni `www`.
+ *
+ * Es lo que se pinta en la tarjeta, donde el ancho es escaso: `amazon.es` cabe y
+ * se lee, mientras que la ruta completa (hasta 36 caracteres) se recortaba. El
+ * enlace real **no se muestra nunca**; este es el nombre visible y la base del
+ * nombre que se anuncia a quien usa un lector de pantalla.
+ */
+export function wishLinkHost(url: string): string {
+    try {
+        const normalized = url.startsWith('http') ? url : `https://${url}`;
+        return new URL(normalized).hostname.replace(/^www\./, '') || url;
+    } catch {
+        return url;
+    }
+}
+
 export function truncateWishLink(url: string, maxLength = 36): string {
     try {
         const normalized = url.startsWith('http') ? url : `https://${url}`;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeWishLink, normalizeWishLinks, truncateWishLink } from '@/lib/wish-link-utils';
+import { normalizeWishLink, normalizeWishLinks, truncateWishLink, wishLinkHost } from '@/lib/wish-link-utils';
 
 describe('wish-link-utils', () => {
     it('adds https when missing', () => {
@@ -18,5 +18,23 @@ describe('wish-link-utils', () => {
         const short = truncateWishLink('https://www.amazon.es/dp/very-long-product-path', 20);
         expect(short.length).toBeLessThanOrEqual(20);
         expect(short).toContain('…');
+    });
+
+    describe('wishLinkHost', () => {
+        it('devuelve solo el dominio, sin esquema ni www', () => {
+            // Es lo que se pinta en la tarjeta: 8-15 caracteres caben donde la ruta
+            // completa (hasta 36) se recortaba.
+            expect(wishLinkHost('https://www.amazon.es/dp/B0EXAMPLE')).toBe('amazon.es');
+            expect(wishLinkHost('https://example.com/producto-e2e')).toBe('example.com');
+        });
+
+        it('funciona sin esquema, que es como se pega muchas veces', () => {
+            expect(wishLinkHost('tienda.com/item')).toBe('tienda.com');
+        });
+
+        it('si no se puede leer, devuelve la entrada tal cual en vez de inventarse nada', () => {
+            expect(wishLinkHost('no es una url')).toBe('no es una url');
+            expect(wishLinkHost('')).toBe('');
+        });
     });
 });
