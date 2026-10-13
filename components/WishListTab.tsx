@@ -12,12 +12,50 @@ import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
 import { useBackToClose } from '@/lib/use-back-to-close'
 import { WishlistCard, GiftItem, Priority } from './WishlistCard'
-import { AppIcon } from '@/components/ui/AppIcon'
+import { AppIcon, type AppIconName } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
 import { comparePriceValues, filterPriceInputText, formatPrice, parsePriceInput, toPriceNumber } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+
+/**
+ * Acción secundaria del bloque de imagen.
+ *
+ * La forma es la MISMA que el botón secundario de la app (superficie tonal con
+ * anillo), y existe porque el control de la foto dejó de ser un `PrimaryButton`:
+ * usar el degradado de la acción principal para algo secundario es lo que hacía que
+ * pareciera «demasiado grande para lo que es».
+ *
+ * Las etiquetas son cortas a propósito («Añadir foto», «Cambiar», «Quitar»). La
+ * anterior, «Elegir de la galería», era larga —y es la que se recortaba en un panel
+ * estrecho—; además en web lo que abre es el diálogo de archivos, no una galería. El
+ * nombre accesible **contiene la etiqueta visible** y dice sobre qué actúa, que es lo
+ * que necesita quien usa un lector de pantalla.
+ *
+ * Nota: la forma está repetida en la tarjeta («Ya lo tengo») y aquí. Extraer un
+ * `SecondaryButton` compartido queda anotado como trabajo posterior en la ficha.
+ */
+function ImageAction({ label, icon, onPress, disabled, accessibilityLabel }: {
+    label: string
+    icon: AppIconName
+    onPress: () => void
+    disabled?: boolean
+    accessibilityLabel: string
+}) {
+    return (
+        <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            accessibilityRole="button"
+            accessibilityLabel={accessibilityLabel}
+            className={`min-h-[44px] w-full rounded-full bg-surface-container-high ring-1 ring-outline-variant/15 items-center justify-center flex-row gap-2 px-4 active:opacity-80 ${disabled ? 'opacity-50' : ''}`}
+        >
+            <AppIcon name={icon} size={14} className="text-on-surface" />
+            <Text className="text-xs font-sans-bold text-on-surface uppercase tracking-[0.05em]">{label}</Text>
+        </Pressable>
+    )
+}
 
 export interface WishListTabProps {
     userId: string;
@@ -573,13 +611,32 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     Imagen
                                 </Text>
                                 {formData.imageUrl ? (
-                                    <View className="mb-3 items-center">
+                                    <View className="mb-3 flex-row items-center gap-3">
                                         <Image
                                             source={{ uri: formData.imageUrl }}
-                                            className="w-32 h-32 rounded-2xl bg-surface-container-low"
+                                            className="w-24 h-24 rounded-2xl bg-surface-container-low"
                                             resizeMode="cover"
                                             accessibilityLabel="Vista previa de la imagen del deseo"
                                         />
+                                        {/* Con la foto puesta, lo que se hace es cambiarla o
+                                            quitarla: dos acciones pequeñas al lado, en vez de un
+                                            botón grande que parecía la acción principal. */}
+                                        <View className="min-w-0 flex-1 gap-2">
+                                            <ImageAction
+                                                label={isUploading ? 'Subiendo…' : 'Cambiar'}
+                                                icon="image"
+                                                onPress={onPickWishImagePress}
+                                                disabled={isSaving || isUploading}
+                                                accessibilityLabel={isUploading ? 'Subiendo imagen' : 'Cambiar la foto del deseo'}
+                                            />
+                                            <ImageAction
+                                                label="Quitar"
+                                                icon="x"
+                                                onPress={() => setFormData({ ...formData, imageUrl: '' })}
+                                                disabled={isSaving || isUploading}
+                                                accessibilityLabel="Quitar la foto del deseo"
+                                            />
+                                        </View>
                                     </View>
                                 ) : null}
                                 <TextInput
@@ -599,15 +656,15 @@ export function WishListTab({ userId }: WishListTabProps) {
                                         data-testid="wish-image-file-input"
                                     />
                                 ) : null}
-                                <PrimaryButton
-                                    onPress={onPickWishImagePress}
-                                    disabled={isSaving || isUploading}
-                                    className="rounded-2xl py-3 w-full min-w-0"
-                                    textClassName="text-on-primary font-sans-bold text-sm"
-                                    accessibilityLabel={isUploading ? 'Subiendo imagen' : 'Elegir imagen de la galería'}
-                                >
-                                    {isUploading ? 'Subiendo…' : 'Elegir de la galería'}
-                                </PrimaryButton>
+                                {formData.imageUrl ? null : (
+                                    <ImageAction
+                                        label={isUploading ? 'Subiendo…' : 'Añadir foto'}
+                                        icon="image"
+                                        onPress={onPickWishImagePress}
+                                        disabled={isSaving || isUploading}
+                                        accessibilityLabel={isUploading ? 'Subiendo imagen' : 'Añadir foto del deseo'}
+                                    />
+                                )}
                             </View>
 
                             <View className="mb-4 min-w-0">

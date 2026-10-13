@@ -348,4 +348,47 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
             'rgba(0, 0, 0, 0)'
         );
     });
+
+    test('el control de imagen no se recorta y no compite con Guardar', async ({ page }) => {
+        // La causa que se pudo afirmar leyendo el código es la de **jerarquía**: el
+        // selector usaba `PrimaryButton`, el mismo degradado de la acción principal.
+        // Aquí se comprueba midiendo: el control de imagen no lleva degradado y el de
+        // Guardar sí, así que la app dice cuál es la acción principal.
+        await page.setViewportSize({ width: 360, height: 800 });
+        await page.reload();
+        await page.getByLabel('Nuevo deseo').click();
+
+        const anadir = page.getByRole('button', { name: 'Añadir foto del deseo' });
+        await expect(anadir).toBeVisible();
+
+        const medida = await anadir.evaluate((el) => ({
+            ancho: el.scrollWidth - el.clientWidth,
+            alto: el.scrollHeight - el.clientHeight,
+            caja: el.getBoundingClientRect().height,
+        }));
+
+        // Ni el texto ni el icono pueden desbordar el control: eso es lo que se ve
+        // como «cortado».
+        expect(medida.ancho, `el control se recorta a lo ancho (${medida.ancho}px)`).toBeLessThanOrEqual(1);
+        expect(medida.alto, `el control se recorta a lo alto (${medida.alto}px)`).toBeLessThanOrEqual(1);
+        expect(medida.caja, 'el control no llega a 44px').toBeGreaterThanOrEqual(44);
+
+        // El degradado no vive en el `Pressable` exterior sino en un hijo: así lo pinta
+        // `LinearGradient` en web. Mirar solo el elemento exterior daría «sin degradado»
+        // para la propia acción principal — que es lo que me pasó al escribir esto la
+        // primera vez—, así que se busca en el botón y en sus descendientes.
+        const tieneDegradado = (el: Element): boolean =>
+            getComputedStyle(el).backgroundImage.includes('gradient') ||
+            Array.from(el.querySelectorAll('*')).some((hijo) =>
+                getComputedStyle(hijo).backgroundImage.includes('gradient')
+            );
+
+        const guardar = page.getByRole('button', { name: 'Guardar deseo' });
+        const [degradadoImagen, degradadoGuardar] = await Promise.all([
+            anadir.evaluate(tieneDegradado),
+            guardar.evaluate(tieneDegradado),
+        ]);
+        expect(degradadoImagen, 'el control de imagen no debe llevar el degradado principal').toBe(false);
+        expect(degradadoGuardar, 'Guardar es la acción principal y lleva el degradado').toBe(true);
+    });
 });
