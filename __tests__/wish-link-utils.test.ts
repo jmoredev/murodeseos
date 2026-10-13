@@ -38,6 +38,16 @@ describe('wish-link-utils', () => {
             expect(largo.length).toBeLessThanOrEqual(24);
         });
 
+        it('con un sufijo público de varias partes conserva el dominio registrable', () => {
+            // El refutador encontró esto como CRITICAL: la regla de «las dos últimas etiquetas»
+            // conservaba solo `co.uk` y perdía `example.co.uk`, que es el destino. Un sufijo
+            // público de dos partes no es el sitio, y la etiqueta tiene que poder leerlo.
+            const largo = wishLinkHost('https://tienda-online-muy-larga.example.co.uk/producto');
+            expect(largo).toContain('example.co.uk');
+            expect(largo).toBe('tienda-onl…example.co.uk');
+            expect(largo.length).toBeLessThanOrEqual(24);
+        });
+
         it('un dominio que cabe no se recorta, por largo que sea el enlace', () => {
             // El caso normal, y el que planteó el propietario: lo largo de un enlace de tienda es
             // su **ruta**, y la ruta no entra en la etiqueta del chip. Aquí solo se pinta el

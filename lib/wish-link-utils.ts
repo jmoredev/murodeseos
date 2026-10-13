@@ -3,6 +3,23 @@ import { Linking } from 'react-native';
 /** Lo máximo que se pinta de un dominio en la tarjeta; por encima, se recorta con `…`. */
 const DOMINIO_MAXIMO = 24;
 
+/**
+ * Etiquetas que, justo antes del TLD, forman parte del **sufijo público** y no del nombre
+ * del sitio: `co.uk`, `com.mx`, `gob.es`. Sirven para saber si el destino son **dos**
+ * etiquetas o **tres**; sin esto, la cola del recorte conservaba solo `co.uk` y se perdía
+ * `example.co.uk`, que es exactamente lo que dice a dónde va el enlace.
+ */
+const ETIQUETAS_DE_SUFIJO = new Set(['co', 'com', 'net', 'org', 'gob', 'gov', 'edu', 'ac', 'gen', 'mil']);
+
+/** Las etiquetas finales que hay que conservar: el dominio registrable con su sufijo. */
+function etiquetasDeDestino(host: string): string[] {
+    const etiquetas = host.split('.');
+    if (etiquetas.length < 3) return etiquetas;
+
+    const antesDelTld = etiquetas[etiquetas.length - 2];
+    return etiquetas.slice(ETIQUETAS_DE_SUFIJO.has(antesDelTld) ? -3 : -2);
+}
+
 export function normalizeWishLink(url: string): string | null {
     const trimmed = url.trim();
     if (!trimmed) return null;
@@ -49,13 +66,15 @@ export function wishLinkHost(url: string, maxLength = DOMINIO_MAXIMO): string {
         if (host.length <= maxLength) return host;
 
         // Se recorta **por el medio**: la cola es siempre el destino (el dominio registrable
-        // con su TLD) y del principio cabe lo que quepa. Recortar el final hacía que
-        // `tienda-legitima.es` y `tienda-legitima.evil` se vieran igual; recortar el
-        // principio perdía el nombre de la tienda. (Con un TLD de varias partes —`.co.uk`—
-        // la cola se queda en las dos últimas etiquetas, y el principio es el que conserva
-        // el nombre reconocible.)
-        const etiquetas = host.split('.');
-        const destino = etiquetas.slice(-2).join('.');
+        // con su sufijo público) y del principio cabe lo que quepa. Recortar el final hacía
+        // que `tienda-legitima.es` y `tienda-legitima.evil` se vieran igual; recortar el
+        // principio perdía el nombre de la tienda.
+        //
+        // El destino son DOS etiquetas (`example.es`) o TRES cuando el sufijo público tiene
+        // varias partes (`example.co.uk`). Asumir siempre dos fue un **defecto real** que
+        // encontró el refutador: con `.co.uk` la cola conservaba solo `co.uk` y el sitio
+        // desaparecía de la etiqueta, que es justo lo que hay que poder leer.
+        const destino = etiquetasDeDestino(host).join('.');
         const paraElPrincipio = maxLength - destino.length - 1; // el 1 es el `…`
 
         // Un destino larguísimo (o un `maxLength` muy pequeño): entonces manda el destino.
