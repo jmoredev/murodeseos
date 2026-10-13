@@ -257,3 +257,41 @@ Con autorización explícita del propietario. `db push` aplicó **dos** migracio
 De **49 filas** de `wishlist_items`: **46 parseadas**, **2 vacías** ('' → `NULL`, se muestran «Sin precio» y no se pierde nada) y **una sola no numérica**: **`'25/30. €'`** (un rango escrito a mano). **Cero candidatas a redondeo**: ningún precio tiene tres decimales. Ese valor produce además un defecto vivo cosmético: la tarjeta pinta `${item.price} €`, así que se ve **«25/30. € €»**, con el euro duplicado.
 
 ## Procedimiento de enlace y despliegue (ejecutado)
+
+## Cierre del frente del precio (2026-10-13)
+
+Los tres PRs y los dos `push` que dejan el precio numérico de punta a punta:
+
+| PR | Corte | Estado |
+| --- | --- | --- |
+| **#47** | cambios de app: la app lee y escribe `price_numeric` y el campo solo admite números | fusionada (`3d0fb67`) y publicada como **`v2026.10.13`**; verificado **en vivo** en el bundle servido (`entry-75bdaf55…` contiene `price_numeric`, `decimal-pad` y el mensaje de desajuste) |
+| **#48** | **el paso 2**: `drop column price` + el `CHECK` + la red de seguridad | fusionada (`a7cf54a`) y **aplicada en producción** |
+| **#49** | el `COMMENT` de la columna, que el paso 1 dejó describiendo el renombrado abandonado | fusionada (`95a5f23`) y **aplicada en producción** |
+
+**Producción tras los dos `push`** (verificado con volcados **posteriores**, no con la salida del comando): **28 migraciones en sincronía**, `price` fuera, `price_numeric numeric(12,2)` con su `CHECK`, **49 filas y 47 precios intactos**, y el comentario del esquema ya correcto.
+
+**La red de seguridad no llegó a saltar, y estaba medido antes de empujar**: 0 filas en los tres casos de discrepancia. La última escritura en `wishlist_items` es del **2026-10-01**, así que la ventana del bundle viejo **no se llegó a ejercitar**: el defecto que encontró el refutador era real **como mecanismo** y no se había materializado. Se escribe así y no al revés.
+
+## Disposiciones del propietario (2026-10-13)
+
+- **El corte del arreglo del comentario (#49) queda SIN REVISAR por decisión explícita del propietario**: objetivo `sha256:7ee720aa…`, linaje `review-302d2c9255d2f48a` **ofrecido por el proveedor y no arrancado**, ningún linaje creado. Su verificación es el **CI del PR #49**, cuyo gate aplica la migración desde cero. Un `COMMENT ON COLUMN` no toca datos, ni comportamiento, ni bundle.
+- **Los tres linajes de revisión atascados quedan DECLARADOS**, no reintentados: `review-40d6204006920db7` y `review-a5dcf5ab1ac5b49c` (2026-10-09) porque el proveedor **no tiene objeto que revisar** (sus cortes están fusionados y devuelve `paths: []` con `empty_candidate_base_ref_required`), y `review-76ef862fe1a237f0` (hoy) porque el `recover` que el proveedor ofrece como salida arrastraría a revisión precisamente el fichero declarado sin revisar. **Causa medida del atasco**: la ruta de validación dirigida se rechaza (`capture-route-registration-rejected`, tres intentos, dos hipótesis distintas), y es el mismo escalón donde se quedaron los dos del 2026-10-09. El corte del paso 2 **está corregido y verificado**; lo que falta es el veredicto del proveedor, y se dice así en vez de llamarlo «revisado».
+- Por qué estas notas llegan hoy y no antes: **cada commit posterior a una revisión abre un candidato nuevo**, así que escribir documentación en su propio commit obliga a otra revisión y a otra corrida de CI por una frase. Viajan con el primer corte que ya necesitaba CI.
+
+## Convención de miles en el campo de precio (2026-10-13)
+
+**Decisión del propietario**: en España el separador de millares es el **punto** y el decimal la **coma**, y el punto cuenta como millar **solo si agrupa de tres en tres**.
+
+| Se teclea o se pega | Se guarda |
+| --- | --- |
+| `1.234` | `1234` |
+| `1.234.567` | `1234567` |
+| `1.234,56` | `1234,56` |
+| `12.5` | `12,50` — no agrupa, así que es decimal |
+| `0,50` | `0,50` |
+
+**El defecto que cierra, y era real**: `parsePriceInput` normalizaba la primera coma a punto y hacía `Number('1.234')` → **1,234**, mil veces menos; y el filtro, al pegar `1.234,56`, dejaba pasar el primer separador y **descartaba el resto**, así que a la lectura llegaba `1.23456`. Nada avisaba: el precio se guardaba mal **en silencio**. Estaba reportado como hallazgo informativo `R3-paste-thousands` en la revisión del corte de app, con la nota de que exigía decidir el formato con el propietario.
+
+**La trampa de diseño que se evitó**: el filtro **no normaliza el punto mientras se teclea**. Si lo convirtiera en el acto, al escribir `1.234` el primer punto todavía no agrupa y se leería como decimal, rompiendo el número a mitad de camino. El filtro decide **qué caracteres pueden aparecer** (dígitos, puntos en la parte entera, **una** coma); qué **significan** se decide **al leer**, que es cuando la cadena está completa. Un punto que no agrupa **junto a** una coma (`1.23,45`) se rechaza en vez de adivinar.
+
+Verificación: **rojo primero** (2 fallan / 22 pasan), después verde; **276 unitarios + 1 todo**; y un E2E nuevo que **pega** `1.234,56` y comprueba lo que la app **envía** (`price_numeric` = `1234.56`), porque `fill` entrega la cadena entera de golpe y ese es justo el camino que fallaba en la vida real.
