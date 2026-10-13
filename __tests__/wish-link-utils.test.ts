@@ -28,17 +28,23 @@ describe('wish-link-utils', () => {
             expect(wishLinkHost('https://example.com/producto-e2e')).toBe('example.com');
         });
 
-        it('recorta el dominio largo por delante, para que sobreviva el destino', () => {
-            // El chip del enlace lleva `numberOfLines={1}`, así que si el recorte lo hiciera el
-            // CSS no se podría probar. Se hace en el helper, y **por delante**: lo que hay que
-            // poder leer es **a dónde va** el enlace (el dominio registrable y su TLD), que está
-            // al final. Recortando el final, `tienda-legitima.es` y `tienda-legitima.evil` se
-            // veían igual.
+        it('recorta el dominio largo por el medio, para que sobrevivan el nombre y el destino', () => {
+            // Las dos puntas dicen cosas distintas y las dos hacen falta: el principio, **de quién**
+            // es la tienda; el final, **a dónde va** (el dominio registrable con su TLD). Recortar
+            // un extremo pierde una de las dos: recortando el final, `tienda-legitima.es` y
+            // `tienda-legitima.evil` se veían igual; recortando el principio, se perdía el nombre.
             const largo = wishLinkHost('https://tienda-online-muy-larga.example.es/producto');
-            expect(largo.startsWith('…')).toBe(true);
-            expect(largo.endsWith('.example.es')).toBe(true);
-            expect(largo).not.toContain('tienda-online');
+            expect(largo).toBe('tienda-online…example.es');
             expect(largo.length).toBeLessThanOrEqual(24);
+        });
+
+        it('un dominio que cabe no se recorta, por largo que sea el enlace', () => {
+            // El caso normal, y el que planteó el propietario: lo largo de un enlace de tienda es
+            // su **ruta**, y la ruta no entra en la etiqueta del chip. Aquí solo se pinta el
+            // dominio, que cabe entero.
+            expect(wishLinkHost('https://www.amazon.es/dp/B0EXAMPLEXLONG/ref=sr_1_1?keywords=x')).toBe(
+                'amazon.es'
+            );
         });
 
         it('un esquema en mayúsculas no se duplica', () => {

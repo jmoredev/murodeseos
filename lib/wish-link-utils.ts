@@ -31,8 +31,9 @@ export function normalizeWishLinks(links: string[]): string[] {
  *
  * El recorte se hace **aquí y no en el CSS** a propósito: así el texto visible es
  * determinista y se puede probar, en vez de depender de la elipsis del navegador. Y se
- * recorta **por delante** (`…dominio.es`): lo que hay que poder leer es **a dónde va** el
- * enlace, y eso está al final.
+ * recorta **por el medio**, no por un extremo: las dos puntas dicen cosas distintas y las
+ * dos hacen falta —el principio dice **de quién** es la tienda, el final dice **a dónde
+ * va** el enlace—.
  *
  * La normalización se delega en `normalizeWishLink`, que ya vive en este módulo, en vez
  * de repetir un `startsWith('http')` que además es sensible a mayúsculas (`HTTP://x`
@@ -46,10 +47,21 @@ export function wishLinkHost(url: string, maxLength = DOMINIO_MAXIMO): string {
         const host = new URL(normalized).hostname.replace(/^www\./, '');
         if (!host) return url;
         if (host.length <= maxLength) return host;
-        // Se recorta **por delante**, no por detrás: lo que hay que poder leer es **a dónde va**
-        // el enlace, y eso está al final — el dominio registrable y su TLD. Recortando el
-        // final, `tienda-legitima.es` y `tienda-legitima.evil` se veían igual.
-        return `…${host.slice(-(maxLength - 1))}`;
+
+        // Se recorta **por el medio**: la cola es siempre el destino (el dominio registrable
+        // con su TLD) y del principio cabe lo que quepa. Recortar el final hacía que
+        // `tienda-legitima.es` y `tienda-legitima.evil` se vieran igual; recortar el
+        // principio perdía el nombre de la tienda. (Con un TLD de varias partes —`.co.uk`—
+        // la cola se queda en las dos últimas etiquetas, y el principio es el que conserva
+        // el nombre reconocible.)
+        const etiquetas = host.split('.');
+        const destino = etiquetas.slice(-2).join('.');
+        const paraElPrincipio = maxLength - destino.length - 1; // el 1 es el `…`
+
+        // Un destino larguísimo (o un `maxLength` muy pequeño): entonces manda el destino.
+        if (paraElPrincipio < 1) return `…${host.slice(-(maxLength - 1))}`;
+
+        return `${host.slice(0, paraElPrincipio)}…${destino}`;
     } catch {
         return url;
     }
