@@ -46,7 +46,7 @@ Las dos guardan `1.01`. PostgREST envía el número en su **representación deci
 
 - **L2 (2026-10-13) — decisión del propietario:** **todo el trabajo posterior en un solo corte** (fiabilidad + legibilidad + la deuda de prueba), entre las tres opciones que se le presentaron, y **no** solo el bloque de fiabilidad ni solo la deuda de prueba.
 
-- **L3 (2026-10-13) — de dónde sale cada hallazgo:** `R1-decimal-precision`, `R2-comentario-coma` y `R2-nombres-digito` del linaje `review-cf1add91836999c2`… no: del **precio** (`review-93a5c7f00f1ef4f9`); `R2-001`, `R2-002`, `R2-003`, `R3-LINK-CHIP-SHRINK`, `R3-SOURCE-WINDOW-ASSERT` y `R3-WISHLINKHOST-PARSE` del **corte de interfaz** (`review-cf1add91836999c2`); y `R2-001`, `R2-002`, `R2-003`, `R3-001`, `R3-002` y `R3-003` del **corte de alturas** (`review-b58e43a714f2c1c6`).
+- **L3 (2026-10-13) — de dónde sale cada hallazgo:** `R1-decimal-precision`, `R2-comentario-coma` y `R2-nombres-digito` del **precio** (`review-93a5c7f00f1ef4f9`); `R2-001`, `R2-002`, `R2-003`, `R3-LINK-CHIP-SHRINK`, `R3-SOURCE-WINDOW-ASSERT` y `R3-WISHLINKHOST-PARSE` del **corte de interfaz** (`review-cf1add91836999c2`); y `R2-001`, `R2-002`, `R2-003`, `R3-001`, `R3-002` y `R3-003` del **corte de alturas** (`review-b58e43a714f2c1c6`).
 
 - **L4 (2026-10-13) — lo que NO se toca, con el motivo delante:** en el sembrado de `e2e/card-heights.spec.ts:54` y en el `input` de fichero de `components/WishListTab.tsx:665` **no he identificado ninguna mejora defendible** leyendo el código, así que se quedan como están. Cambiarlos para parecer diligente sería ruido en la revisión, y eso también es un coste.
 
