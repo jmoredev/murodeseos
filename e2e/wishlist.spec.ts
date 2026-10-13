@@ -242,4 +242,35 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         const body = await (await responsePromise).json();
         if (body?.id) createdIds.add(body.id);
     });
+
+    test('un precio pegado con separador de millares se guarda como el número que es', async ({ page }) => {
+        await page.getByLabel('Nuevo deseo').click();
+
+        const price = page.getByPlaceholder('0,00');
+
+        // `fill` entrega el texto entero de una vez, que es exactamente lo que pasa al
+        // pegar: el filtro ve la cadena completa, no una pulsación detrás de otra. Antes
+        // de la convención de millares, pegar `1.234` guardaba 1,234 y pegar
+        // `1.234,56` guardaba 1,23456: mil veces menos, en silencio.
+        await price.fill('1.234,56');
+        await expect(price).toHaveValue('1.234,56');
+
+        await page.getByPlaceholder('¿Qué deseas?').fill(`Deseo millares ${Date.now()}`);
+
+        const requestPromise = page.waitForRequest(r =>
+            r.method() === 'POST' && r.url().includes('wishlist_items')
+        );
+        const responsePromise = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
+        await page.getByText('Guardar', { exact: true }).last().click();
+
+        const payload = (await requestPromise).postDataJSON();
+        expect(payload.price_numeric).toBe(1234.56);
+
+        const body = await (await responsePromise).json();
+        if (body?.id) createdIds.add(body.id);
+    });
 });

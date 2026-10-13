@@ -32,45 +32,82 @@ export function formatPrice(price: number | null | undefined): string | null {
 }
 
 /**
- * Lee lo que el usuario ha tecleado en el campo de precio.
+ * Lee lo que el usuario ha tecleado o pegado en el campo de precio.
  *
- * Acepta `349`, `349,5`, `349.50`, `349,00` y espacios alrededor; una coma final
- * (`12,`) vale `12`. Devuelve `null` cuando no es un precio: vacío, con letras, con
- * más de un separador, **negativo**, o por encima del máximo de la columna — un
- * valor que no quepa en `numeric(12,2)` no puede salir de aquí, porque llegar a la
- * base sería un error de escritura en vez de un dato que falta.
+ * **Convención española**, fijada por el propietario el 2026-10-13: la **coma** es el
+ * separador decimal y el **punto** es el de millares, y un punto solo cuenta como
+ * millares **si agrupa de tres en tres** (`1.234`, `1.234.567`). Un punto que no
+ * agrupa se lee como decimal (`12.5` vale `12,5`), que es lo que impide que pegar un
+ * número con punto decimal se multiplique por mil; y si además hay una coma, un
+ * punto que no agrupa se rechaza en vez de adivinar (`1.23,45` no es un precio).
+ *
+ * Acepta `349`, `349,5`, `349,50`, `349.50`, `1.234`, `1.234,56` y espacios
+ * alrededor; una coma final (`12,`) vale `12`. Devuelve `null` cuando no es un
+ * precio: vacío, con letras, con más de una coma, con un grupo de millares mal
+ * formado, **negativo**, o por encima del máximo de la columna — un valor que no
+ * quepa en `numeric(12,2)` no puede salir de aquí, porque llegar a la base sería un
+ * error de escritura en vez de un dato que falta.
  */
 export function parsePriceInput(text: string): number | null {
-    const normalized = text.trim().replace(',', '.');
+    const limpio = text.trim();
+    if (limpio === '') return null;
 
-    // Sólo dígitos y, como mucho, un separador: `12.3.4` o `-5` no son un precio.
-    if (!/^\d*\.?\d*$/.test(normalized)) return null;
+    const trozos = limpio.split(',');
+    if (trozos.length > 2) return null; // dos comas no son un precio
 
-    // La coma (o el punto) final de una escritura a medias: «12,» es 12.
-    const sinSeparadorFinal = normalized.replace(/\.$/, '');
-    if (sinSeparadorFinal === '') return null;
+    const [entera, decimales] = trozos;
+    if (decimales !== undefined && !/^\d*$/.test(decimales)) return null;
 
-    const value = Number(sinSeparadorFinal);
+    let digitoEntero: string;
+    let digitoDecimal = decimales ?? '';
+
+    if (entera.includes('.')) {
+        if (/^\d{1,3}(\.\d{3})+$/.test(entera)) {
+            // Agrupa de tres en tres: son millares, y los millares se van.
+            digitoEntero = entera.replace(/\./g, '');
+        } else if (decimales === undefined && /^\d+\.\d*$/.test(entera)) {
+            // Un solo punto que no agrupa y sin coma: es el separador decimal.
+            const [parteEntera, parteDecimal] = entera.split('.');
+            digitoEntero = parteEntera;
+            digitoDecimal = parteDecimal;
+        } else {
+            return null;
+        }
+    } else if (/^\d*$/.test(entera)) {
+        digitoEntero = entera;
+    } else {
+        return null;
+    }
+
+    // La coma final de una escritura a medias: «12,» es 12.
+    if (digitoEntero === '' && digitoDecimal === '') return null;
+
+    const value = Number(`${digitoEntero}.${digitoDecimal}`);
     if (!Number.isFinite(value) || value < 0 || value > PRECIO_MAXIMO) return null;
 
     return value;
 }
 
 /**
- * Filtra lo que entra en el campo de precio **mientras se teclea**.
+ * Filtra lo que entra en el campo de precio **mientras se teclea o se pega**.
  *
- * Deja sólo dígitos y **un** separador decimal, así que ni una letra ni un segundo
- * separador llegan a aparecer en el campo. El filtro gobierna lo que se ve; decidir
- * si eso es un precio es cosa de `parsePriceInput`, y por eso el campo sigue
- * avisando cuando lo tecleado no se puede leer.
+ * Deja dígitos, puntos y **una** coma; el resto no llega a aparecer. Los puntos se
+ * dejan pasar en la parte entera porque un punto recién tecleado **todavía no se
+ * puede juzgar**: al escribir `1.234`, el primer punto es un prefijo válido de un
+ * separador de millares y descartarlo lo haría imposible de teclear. Los puntos
+ * **después** de la coma sí se descartan, que ahí ya no significan nada.
+ *
+ * El filtro gobierna lo que se ve; decidir si eso es un precio es cosa de
+ * `parsePriceInput`, y por eso el campo sigue avisando cuando lo tecleado no se
+ * puede leer.
  */
 export function filterPriceInputText(text: string): string {
     const soloValidos = text.replace(/[^\d.,]/g, '');
-    const separador = soloValidos.search(/[.,]/);
+    const [entera, ...resto] = soloValidos.split(',');
 
-    if (separador === -1) return soloValidos;
+    if (resto.length === 0) return entera;
 
-    return soloValidos.slice(0, separador + 1) + soloValidos.slice(separador + 1).replace(/[.,]/g, '');
+    return `${entera},${resto.join('').replace(/\D/g, '')}`;
 }
 
 /**
