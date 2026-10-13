@@ -225,17 +225,19 @@ export default function UserWishlistPage() {
                                 <Text className="text-on-surface/70 font-sans-medium text-center">Este usuario aún no ha añadido deseos.</Text>
                             </View>
                         ) : (
-                            <View className="flex-row flex-wrap -m-2">
+                            <View className={`grid auto-rows-fr gap-4 ${isDesktop ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                                {/* Misma rejilla de filas iguales que en la lista propia: las
+                                    tarjetas de **otro** miembro también tienen que medir lo
+                                    mismo, con y sin descripción. */}
                                 {items.map((item) => (
-                                    <View key={item.id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
-                                        <WishlistCard
-                                            item={item}
-                                            isOwner={isOwner}
-                                            onClick={setSelectedItem}
-                                            onReserve={handleReserve}
-                                            onCancelReserve={handleCancelReserve}
-                                        />
-                                    </View>
+                                    <WishlistCard
+                                        key={item.id}
+                                        item={item}
+                                        isOwner={isOwner}
+                                        onClick={setSelectedItem}
+                                        onReserve={handleReserve}
+                                        onCancelReserve={handleCancelReserve}
+                                    />
                                 ))}
                             </View>
                         )}

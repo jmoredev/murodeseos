@@ -94,7 +94,10 @@ export function WishlistCard({
                 accessibilityRole="button"
                 accessibilityLabel={a11yLabel}
                 accessibilityHint="Abrir detalle del deseo"
-                className="active:opacity-95"
+                // `flex-1`: con la rejilla de filas iguales todas las tarjetas miden lo
+                // mismo, así que el contenido tiene que **absorber** el espacio que
+                // sobre en vez de dejarlo colgando al final de la tarjeta.
+                className="active:opacity-95 flex-1"
             >
                 <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">
                     {item.imageUrl ? (
@@ -147,7 +150,7 @@ export function WishlistCard({
                     ) : null}
                 </View>
 
-                <View className="p-5">
+                <View className="p-5 flex-1 justify-between">
                     <Text
                         className="font-sans-bold text-on-background text-base leading-tight mb-4"
                         // 3 y no 2: a 360px la tarjeta da ~116px de ancho de texto y un

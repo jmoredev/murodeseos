@@ -421,16 +421,28 @@ export function WishListTab({ userId }: WishListTabProps) {
 
             <View className="w-full">
                 {sortedItems.length > 0 ? (
-                    <View className="flex-row flex-wrap -m-2">
+                    <View className={`grid auto-rows-fr gap-4 ${isDesktop ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        {/* Rejilla con **filas iguales** (`auto-rows-fr`: `grid-auto-rows`
+                            `1fr`): todas las filas miden lo que la tarjeta más alta, así que las
+                            tarjetas quedan a la misma altura aunque unas tengan descripción y
+                            otras no, y aunque el título ocupe más o menos líneas. Con
+                            `flex-wrap` eso no se puede: en flex cada **línea** mide lo suyo, y
+                            de ahí venía el desorden. Las guías pasan de márgenes negativos a
+                            `gap-4`, que es la forma de una rejilla.
+
+                            (Este comentario va **dentro** del `View` a propósito: un comentario
+                            JSX solo vale como hijo de un elemento, no en las ramas de un
+                            ternario `? ( … ) : ( … )`, donde solo cabe un elemento. Y ojo con
+                            la secuencia de cierre dentro de un comentario: la cierra antes de
+                            tiempo. Me pasó aquí mismo, escribiéndola.) */}
                         {sortedItems.map(item => (
-                            <View key={item.id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
-                                <WishlistCard
-                                    item={item}
-                                    onClick={openForm}
-                                    isOwner={true}
-                                    onDelete={(i) => setItemToDelete(i)}
-                                />
-                            </View>
+                            <WishlistCard
+                                key={item.id}
+                                item={item}
+                                onClick={openForm}
+                                isOwner={true}
+                                onDelete={(i) => setItemToDelete(i)}
+                            />
                         ))}
                     </View>
                 ) : (
