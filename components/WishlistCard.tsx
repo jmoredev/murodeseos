@@ -165,18 +165,22 @@ export function WishlistCard({
                         </Text>
                     ) : null}
 
-                    {/* C4: los dos chips pueden encoger (`min-w-0 shrink`) y recortar con
-                            ellipsis en vez de forzar la fila más ancha que la tarjeta a 360px.
-                            Sin cambios de ancho: solo se permite encoger. */}
-                    <View className="flex-row items-center justify-between gap-2">
+                    {/* El precio **no cede**: es el dato que tiene que verse entero, y hasta
+                        ahora se elidía porque los dos chips podían encoger (regla C4 de
+                        `ui-polish`). Ahora el que cede es el enlace, y la fila **envuelve**:
+                        si no caben juntos, el enlace baja a una segunda línea en vez de
+                        recortar el precio. La garantía anti-desborde se mantiene
+                        envolviendo, no encogiendo el dato. */}
+                    <View className="flex-row flex-wrap items-center justify-between gap-2">
                         <View
-                            className={`min-w-0 shrink px-3 py-1.5 rounded-xl ${
+                            testID={`wish-price-${item.id}`}
+                            className={`shrink-0 px-3 py-1.5 rounded-xl ${
                                 item.price ? 'bg-price/12' : 'bg-surface-container-low'
                             }`}
                         >
                             <Text
                                 numberOfLines={1}
-                                className={`text-xs font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}
+                                className={`text-sm font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}
                             >
                                 {priceText ?? 'Sin precio'}
                             </Text>
@@ -190,31 +194,38 @@ export function WishlistCard({
             </Pressable>
 
             {isOwner ? (
-                <Pressable
-                    testID="wish-already-have"
-                    onPress={() => {
-                        if (onDelete) onDelete(item);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Marcar como ya lo tengo"
-                    className="min-h-[44px] px-5 pb-5 pt-0 items-center justify-center flex-row active:opacity-60"
-                >
-                    <View className="flex-row items-center gap-1">
-                        {/* El check comparte color (`text-success`) y tamaño (text-xs =
-                            12px) con la etiqueta: misma fila, misma caja. `gap-1`
-                            reproduce el espacio que el glifo ✓ llevaba dentro del texto
-                            (medido: sin él la separación era de 0px). */}
-                        <AppIcon name="check" size={12} className="text-success" />
-                        <Text
-                            // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
-                            // sobre 13 caracteres y partía la etiqueta en dos líneas a
-                            // 360px. A 0.05em cabe en una sola y conserva el aire.
-                            className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
-                        >
-                            Ya lo tengo
-                        </Text>
-                    </View>
-                </Pressable>
+                <View className="px-5 pb-5 pt-0">
+                    {/* Era un `Pressable` **sin superficie**, así que parecía un enlace.
+                        Ahora usa la MISMA forma que el botón secundario de la app
+                        («Cancelar reserva»): eso es lo que le da la affordance. El verde
+                        del check y de la etiqueta se conserva porque la acción es
+                        positiva (ya lo tengo → sale de la lista); quien dice «esto se
+                        pulsa» es la forma, no el color. */}
+                    <Pressable
+                        testID="wish-already-have"
+                        onPress={() => {
+                            if (onDelete) onDelete(item);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Marcar como ya lo tengo"
+                        className="min-h-[44px] w-full rounded-full bg-surface-container-high ring-1 ring-outline-variant/15 items-center justify-center flex-row px-4 active:opacity-80"
+                    >
+                        <View className="flex-row items-center gap-1.5">
+                            {/* El check comparte color (`text-success`) con la etiqueta y va un
+                                punto más grande que antes (12 → 14): ahora es el icono de un
+                                botón, no el adorno de un enlace. */}
+                            <AppIcon name="check" size={14} className="text-success" />
+                            <Text
+                                // tracking-[0.2em] a 12px en mayúsculas sumaba ~31px de ancho
+                                // sobre 13 caracteres y partía la etiqueta en dos líneas a
+                                // 360px. A 0.05em cabe en una sola y conserva el aire.
+                                className="text-xs font-sans-bold text-success uppercase tracking-[0.05em]"
+                            >
+                                Ya lo tengo
+                            </Text>
+                        </View>
+                    </Pressable>
+                </View>
             ) : null}
 
             {!isOwner ? (

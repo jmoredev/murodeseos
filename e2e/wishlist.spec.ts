@@ -273,4 +273,122 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         const body = await (await responsePromise).json();
         if (body?.id) createdIds.add(body.id);
     });
+
+    test('el precio se ve entero y las acciones de la tarjeta parecen botones a 360px', async ({ page }) => {
+        // El peor caso de ancho posible: el precio más largo que admite la columna
+        // (`numeric(12,2)`), que da `9999999999,99 €`. Si el precio se recorta, se
+        // recorta aquí antes que en ningún sitio. Y a 360px, que es el ancho que manda
+        // (móvil primero).
+        const titulo = `Deseo ancho ${Date.now()}`;
+
+        await page.setViewportSize({ width: 360, height: 800 });
+        await page.reload();
+
+        await page.getByLabel('Nuevo deseo').click();
+        await page.getByPlaceholder('¿Qué deseas?').fill(titulo);
+        await page.getByPlaceholder('0,00').fill('9999999999,99');
+        // Un dominio LARGO a propósito: si el enlace es corto, la fila no queda apretada
+        // y la prueba pasaría sin probar nada. Con este, el enlace por sí solo no cabe
+        // junto al precio, así que la fila tiene que elegir: envolver, o recortar el dato.
+        await page.getByPlaceholder('https://tienda.com/articulo').fill(
+            'https://www.tienda-online-muy-larga.example.es/producto'
+        );
+
+        const responsePromise = page.waitForResponse(r =>
+            r.request().method() === 'POST' &&
+            r.url().includes('wishlist_items') &&
+            r.status() === 201
+        );
+        await page.getByText('Guardar', { exact: true }).last().click();
+        const body = await (await responsePromise).json();
+        if (body?.id) createdIds.add(body.id);
+        await expect(page.getByPlaceholder('¿Qué deseas?')).not.toBeVisible();
+
+        // 1) El precio, **medido**. Y se miden los DOS ejes: según cómo recorte cada
+        //    plataforma, un texto con `numberOfLines={1}` desborda a lo ancho (elipsis)
+        //    o a lo alto (line clamp), así que mirar uno solo dejaría pasar el recorte
+        //    del otro. Se localiza por su texto, no por un testID, para que la medición
+        //    valga igual contra la versión anterior (que es lo que la hace falsable).
+        const precio = page.getByText('9999999999,99 €').first();
+        await expect(precio).toBeVisible();
+
+        const medir = (locator: typeof precio) =>
+            locator.evaluate((el) => ({
+                ancho: el.scrollWidth - el.clientWidth,
+                alto: el.scrollHeight - el.clientHeight,
+            }));
+
+        const [textoPrecio, chipPrecio] = await Promise.all([
+            medir(precio),
+            medir(precio.locator('..')),
+        ]);
+
+        expect(textoPrecio.ancho, `el precio se recorta a lo ancho (${textoPrecio.ancho}px)`).toBeLessThanOrEqual(1);
+        expect(textoPrecio.alto, `el precio se recorta a lo alto (${textoPrecio.alto}px)`).toBeLessThanOrEqual(1);
+        expect(chipPrecio.ancho, `el chip del precio desborda la tarjeta (${chipPrecio.ancho}px)`).toBeLessThanOrEqual(1);
+
+        // 2) El enlace es un botón con el dominio, con objetivo táctil de 44px, y no
+        //    pinta la URL.
+        const enlace = page.getByRole('link', { name: /Abrir enlace: tienda-online-muy-larga\.example\.es/ }).first();
+        await expect(enlace).toBeVisible();
+        await expect(enlace).not.toHaveText(/https?:\/\//);
+        const altoEnlace = await enlace.evaluate((el) => el.getBoundingClientRect().height);
+        expect(altoEnlace, 'el botón del enlace no llega a 44px').toBeGreaterThanOrEqual(44);
+
+        // 3) «Ya lo tengo» tiene forma de botón: 44px de alto y fondo propio (no puede
+        //    ser transparente, que es lo que lo hacía parecer un enlace).
+        const yaLoTengo = page.getByTestId('wish-already-have').first();
+        await expect(yaLoTengo).toBeVisible();
+        const boton = await yaLoTengo.evaluate((el) => ({
+            alto: el.getBoundingClientRect().height,
+            fondo: getComputedStyle(el).backgroundColor,
+        }));
+        expect(boton.alto, 'el botón no llega a 44px').toBeGreaterThanOrEqual(44);
+        expect(boton.fondo, 'el botón no tiene fondo: seguiría pareciendo un enlace').not.toBe(
+            'rgba(0, 0, 0, 0)'
+        );
+    });
+
+    test('el control de imagen no se recorta y no compite con Guardar', async ({ page }) => {
+        // La causa que se pudo afirmar leyendo el código es la de **jerarquía**: el
+        // selector usaba `PrimaryButton`, el mismo degradado de la acción principal.
+        // Aquí se comprueba midiendo: el control de imagen no lleva degradado y el de
+        // Guardar sí, así que la app dice cuál es la acción principal.
+        await page.setViewportSize({ width: 360, height: 800 });
+        await page.reload();
+        await page.getByLabel('Nuevo deseo').click();
+
+        const anadir = page.getByRole('button', { name: 'Añadir foto del deseo' });
+        await expect(anadir).toBeVisible();
+
+        const medida = await anadir.evaluate((el) => ({
+            ancho: el.scrollWidth - el.clientWidth,
+            alto: el.scrollHeight - el.clientHeight,
+            caja: el.getBoundingClientRect().height,
+        }));
+
+        // Ni el texto ni el icono pueden desbordar el control: eso es lo que se ve
+        // como «cortado».
+        expect(medida.ancho, `el control se recorta a lo ancho (${medida.ancho}px)`).toBeLessThanOrEqual(1);
+        expect(medida.alto, `el control se recorta a lo alto (${medida.alto}px)`).toBeLessThanOrEqual(1);
+        expect(medida.caja, 'el control no llega a 44px').toBeGreaterThanOrEqual(44);
+
+        // El degradado no vive en el `Pressable` exterior sino en un hijo: así lo pinta
+        // `LinearGradient` en web. Mirar solo el elemento exterior daría «sin degradado»
+        // para la propia acción principal — que es lo que me pasó al escribir esto la
+        // primera vez—, así que se busca en el botón y en sus descendientes.
+        const tieneDegradado = (el: Element): boolean =>
+            getComputedStyle(el).backgroundImage.includes('gradient') ||
+            Array.from(el.querySelectorAll('*')).some((hijo) =>
+                getComputedStyle(hijo).backgroundImage.includes('gradient')
+            );
+
+        const guardar = page.getByRole('button', { name: 'Guardar deseo' });
+        const [degradadoImagen, degradadoGuardar] = await Promise.all([
+            anadir.evaluate(tieneDegradado),
+            guardar.evaluate(tieneDegradado),
+        ]);
+        expect(degradadoImagen, 'el control de imagen no debe llevar el degradado principal').toBe(false);
+        expect(degradadoGuardar, 'Guardar es la acción principal y lleva el degradado').toBe(true);
+    });
 });
