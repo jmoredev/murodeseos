@@ -10,7 +10,7 @@ describe('WishlistCard', () => {
         title: 'Test Gift',
         links: ['https://example.com'],
         imageUrl: 'https://example.com/image.jpg',
-        price: '25',
+        price: 25,
         notes: 'Some notes',
         priority: 'high',
         reservationState: 'available'
@@ -38,7 +38,16 @@ describe('WishlistCard', () => {
 
     it('formats price with Euro symbol correctly', () => {
         render(<WishlistCard item={mockItem} isOwner={true} />);
-        expect(screen.getByText('25 €')).toBeInTheDocument();
+        expect(screen.getByText('25,00 €')).toBeInTheDocument();
+    });
+
+    it('pinta un precio de 0 como precio y no como ausencia', () => {
+        // Cambio de contrato al pasar a número: `'0'` era verdadero y `''` falso,
+        // pero con un número el `0` es falso, así que una comprobación de veracidad
+        // habría escondido un precio real detrás de «Sin precio».
+        render(<WishlistCard item={{ ...mockItem, price: 0 }} isOwner={true} />);
+        expect(screen.getByText('0,00 €')).toBeInTheDocument();
+        expect(screen.queryByText('Sin precio')).not.toBeInTheDocument();
     });
 
     it('anuncia el precio con el mismo símbolo de euro que el texto visible', () => {
@@ -53,7 +62,7 @@ describe('WishlistCard', () => {
             .querySelector('[aria-label]')
             ?.getAttribute('aria-label');
 
-        expect(label).toContain('25 €');
+        expect(label).toContain('25,00 €');
     });
 
     it('displays "Sin precio" when price is missing', () => {

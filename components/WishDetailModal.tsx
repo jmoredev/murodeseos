@@ -64,6 +64,11 @@ export function WishDetailModal({
 
     if (!item) return null;
 
+    // Se calcula una vez: con el precio ya numérico, un `0` es un precio y `0,00`
+    // tiene que pintarse, no caer en «Sin precio» como hacía la comprobación de
+    // veracidad sobre el número.
+    const priceText = formatPrice(item.price);
+
     const reservationState = item.reservationState ?? 'available';
     const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
     const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
@@ -115,9 +120,9 @@ export function WishDetailModal({
                             Prioridad {priorityLabels[item.priority]}
                         </Text>
                     </View>
-                    <View className={`px-4 py-2 rounded-full ${item.price ? 'bg-price/12' : 'bg-surface-container-low'}`}>
-                        <Text className={`text-xs font-sans-bold ${item.price ? 'text-price' : 'text-on-surface/70'}`}>
-                            {formatPrice(item.price) ? `${formatPrice(item.price)} €` : 'Sin precio'}
+                    <View className={`px-4 py-2 rounded-full ${priceText ? 'bg-price/12' : 'bg-surface-container-low'}`}>
+                        <Text className={`text-xs font-sans-bold ${priceText ? 'text-price' : 'text-on-surface/70'}`}>
+                            {priceText ? `${priceText} €` : 'Sin precio'}
                         </Text>
                     </View>
                 </View>

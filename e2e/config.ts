@@ -30,17 +30,17 @@ export const E2E_CONFIG = {
     wishlistItems: [
         {
             title: 'E2E Test Item 1',
-            price: '100.00',
+            price: 100.00,
             priority: 'high'
         },
         {
             title: 'E2E Test Item 2',
-            price: '50.00',
+            price: 50.00,
             priority: 'medium'
         },
         {
             title: 'E2E Test Item 3',
-            price: '25.00',
+            price: 25.00,
             priority: 'low'
         }
     ]

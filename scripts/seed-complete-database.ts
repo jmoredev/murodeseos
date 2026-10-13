@@ -45,18 +45,18 @@ const GROUPS = [
 
 // Datos de wishlist items
 const WISHLIST_ITEMS = [
-    { title: 'Auriculares Sony WH-1000XM5', price: '349.00', image_url: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=500', priority: 'high' },
-    { title: 'Libro: El Archivo de las Tormentas', price: '25.00', image_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=500', priority: 'medium' },
-    { title: 'Zapatillas Nike Air Max', price: '120.00', image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=500', priority: 'high' },
-    { title: 'Cafetera Italiana Bialetti', price: '35.00', image_url: 'https://images.unsplash.com/photo-1561882468-489833355708?auto=format&fit=crop&q=80&w=500', priority: 'low' },
-    { title: 'Set de LEGO Star Wars', price: '89.99', image_url: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&q=80&w=500', priority: 'medium' }
+    { title: 'Auriculares Sony WH-1000XM5', price: 349.00, image_url: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=500', priority: 'high' },
+    { title: 'Libro: El Archivo de las Tormentas', price: 25.00, image_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=500', priority: 'medium' },
+    { title: 'Zapatillas Nike Air Max', price: 120.00, image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=500', priority: 'high' },
+    { title: 'Cafetera Italiana Bialetti', price: 35.00, image_url: 'https://images.unsplash.com/photo-1561882468-489833355708?auto=format&fit=crop&q=80&w=500', priority: 'low' },
+    { title: 'Set de LEGO Star Wars', price: 89.99, image_url: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&q=80&w=500', priority: 'medium' }
 ]
 
 // Wishlist items predecibles para usuario E2E
 const E2E_WISHLIST_ITEMS = [
-    { title: 'E2E Test Item 1', price: '100.00', image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=500', priority: 'high' },
-    { title: 'E2E Test Item 2', price: '50.00', image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=500', priority: 'medium' },
-    { title: 'E2E Test Item 3', price: '25.00', image_url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&q=80&w=500', priority: 'low' }
+    { title: 'E2E Test Item 1', price: 100.00, image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=500', priority: 'high' },
+    { title: 'E2E Test Item 2', price: 50.00, image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=500', priority: 'medium' },
+    { title: 'E2E Test Item 3', price: 25.00, image_url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&q=80&w=500', priority: 'low' }
 ]
 
 async function cleanDatabase() {
@@ -240,7 +240,8 @@ async function createWishlists(userMap: Map<string, string>) {
                 const { error } = await supabase.from('wishlist_items').insert({
                     user_id: userId,
                     title: item.title,
-                    price: item.price,
+                    // El precio vive en la columna numérica; la de texto queda pendiente de borrar.
+                    price_numeric: item.price,
                     image_url: item.image_url,
                     links: [],
                     notes: '',
@@ -266,7 +267,7 @@ async function createWishlists(userMap: Map<string, string>) {
                     .insert({
                         user_id: userId,
                         title: item.title,
-                        price: item.price,
+                        price_numeric: item.price,
                         image_url: item.image_url,
                         links: [],
                         notes: '',

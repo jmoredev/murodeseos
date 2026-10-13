@@ -79,7 +79,7 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
             .insert({
                 user_id: friendUser.id,
                 title: seededFriendWishTitle,
-                price: E2E_CONFIG.wishlistItems[0].price,
+                price_numeric: E2E_CONFIG.wishlistItems[0].price,
                 image_url: null,
                 links: [],
                 notes: '',
