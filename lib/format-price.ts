@@ -58,33 +58,32 @@ export function parsePriceInput(text: string): number | null {
     const [entera, decimales] = trozos;
     if (decimales !== undefined && !/^\d*$/.test(decimales)) return null;
 
-    let digitoEntero: string;
-    let digitoDecimal = decimales ?? '';
+    let parteEntera: string;
+    let parteDecimal = decimales ?? '';
 
     if (entera.includes('.')) {
         if (/^\d{1,3}(\.\d{3})+$/.test(entera)) {
             // Agrupa de tres en tres: son millares, y los millares se van.
-            digitoEntero = entera.replace(/\./g, '');
+            parteEntera = entera.replace(/\./g, '');
         } else if (decimales === undefined && /^\d*\.\d*$/.test(entera)) {
             // Un solo punto que no agrupa y sin coma: es el separador decimal. La parte
             // entera puede estar vacía (`.5` es 0,50), igual que con la coma (`,5`): los
             // dos separadores tienen que leerse igual.
-            const [parteEntera, parteDecimal] = entera.split('.');
-            digitoEntero = parteEntera;
-            digitoDecimal = parteDecimal;
+            [parteEntera, parteDecimal] = entera.split('.');
         } else {
             return null;
         }
     } else if (/^\d*$/.test(entera)) {
-        digitoEntero = entera;
+        parteEntera = entera;
     } else {
         return null;
     }
 
-    // La coma final de una escritura a medias: «12,» es 12.
-    if (digitoEntero === '' && digitoDecimal === '') return null;
+    // Un separador sin ningún dígito —«,» o «.»— no es un precio. La coma o el punto
+    // finales de una escritura a medias sí lo son, y se leen como entero: «12,» es 12.
+    if (parteEntera === '' && parteDecimal === '') return null;
 
-    const value = Number(`${digitoEntero}.${digitoDecimal}`);
+    const value = Number(`${parteEntera}.${parteDecimal}`);
     if (!Number.isFinite(value) || value < 0 || value > PRECIO_MAXIMO) return null;
 
     return value;

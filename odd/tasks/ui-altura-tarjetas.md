@@ -1,6 +1,6 @@
 # Alturas iguales en todas las tarjetas de la lista
 
-**Abierta:** 2026-10-13 · **Rama:** `fix/ui-altura-tarjetas` (desde `main`, `41563fe`) · **Estado:** decisión tomada (rejilla con filas iguales), código sin escribir
+**Abierta:** 2026-10-13 · **Rama:** `fix/ui-altura-tarjetas` (desde `main`, `41563fe`) · **Estado:** **cerrado, revisado y fusionado** en `main` (PR #52, merge `4fd3087`); **sin publicar** por decisión del propietario, así que producción sigue en `v2026.10.13-3`
 
 ## Specs
 

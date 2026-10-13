@@ -94,9 +94,8 @@ export function WishlistCard({
                 accessibilityRole="button"
                 accessibilityLabel={a11yLabel}
                 accessibilityHint="Abrir detalle del deseo"
-                // `flex-1`: con la rejilla de filas iguales todas las tarjetas miden lo
-                // mismo, así que el contenido tiene que **absorber** el espacio que
-                // sobre en vez de dejarlo colgando al final de la tarjeta.
+                // `flex-1`: la rejilla iguala todas las tarjetas, así que el contenido
+                // absorbe el espacio que sobra en vez de dejarlo colgando al final.
                 className="active:opacity-95 flex-1"
             >
                 <View className="aspect-square w-full bg-surface-container-low relative items-center justify-center">

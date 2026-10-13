@@ -17,6 +17,33 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
  */
 const CARD_SOURCE = fs.readFileSync(path.resolve(process.cwd(), 'components/WishlistCard.tsx'), 'utf8');
 
+/**
+ * El `className` que sigue a un `testID` en el código, que es donde vive la regla de
+ * estilo. Se delimita por el testID y el **cierre de su etiqueta**; antes era una
+ * **ventana fija** (`slice(0, 200)`), y una ventana de N caracteres puede incluir o
+ * excluir cosas por accidente si alguien reordena los atributos o alarga las clases.
+ */
+function claseDeLaEtiqueta(source: string, testID: string): string {
+    const desde = source.indexOf(testID);
+    if (desde === -1) throw new Error(`El testID ${testID} no está en el código`);
+
+    const etiqueta = source.slice(desde, finDeLaEtiqueta(source, desde));
+    return etiqueta.match(/className=\{?[`"]([^`"]*)[`"]/)?.[1] ?? '';
+}
+
+/**
+ * Dónde cierra la etiqueta que empieza en `desde`: el primer `>` que **no** sea parte de
+ * una flecha. Buscar solo el primer `>` parece lo mismo y no lo es — en el botón hay un
+ * `onPress={() => {` antes del `className`, así que cortaba dentro del manejador y no
+ * llegaba a leer la clase.
+ */
+function finDeLaEtiqueta(source: string, desde: number): number {
+    for (let i = desde; i < source.length; i += 1) {
+        if (source[i] === '>' && source[i - 1] !== '=') return i;
+    }
+    return source.length;
+}
+
 describe('WishlistCard', () => {
     const mockItem: GiftItem = {
         id: '1',
@@ -160,9 +187,9 @@ describe('WishlistCard', () => {
         // `flex-wrap` (si no caben juntos, el enlace baja de línea). Antes los dos
         // chips encogían y el que se recortaba era el precio.
         expect(CARD_SOURCE).toContain('flex-row flex-wrap items-center justify-between');
-        const desdeElPrecio = CARD_SOURCE.slice(CARD_SOURCE.indexOf('wish-price-'));
-        expect(desdeElPrecio.slice(0, 200)).toContain('shrink-0');
-        expect(desdeElPrecio.slice(0, 200)).not.toContain('shrink ');
+        const claseDelPrecio = claseDeLaEtiqueta(CARD_SOURCE, 'wish-price-');
+        expect(claseDelPrecio).toContain('shrink-0');
+        expect(claseDelPrecio).not.toContain('shrink ');
 
         // Y en el DOM, que el chip existe y pinta el precio entero (formato español).
         render(<WishlistCard item={mockItem} isOwner={true} />);
@@ -182,10 +209,10 @@ describe('WishlistCard', () => {
     it('«Ya lo tengo» tiene forma de botón, no de enlace suelto', () => {
         // La forma, en el código: la MISMA que el botón secundario de la app
         // («Cancelar reserva»). Antes no tenía ni fondo ni borde.
-        const desdeElBoton = CARD_SOURCE.slice(CARD_SOURCE.indexOf('wish-already-have'));
-        expect(desdeElBoton.slice(0, 500)).toContain('bg-surface-container-high');
-        expect(desdeElBoton.slice(0, 500)).toContain('rounded-full');
-        expect(desdeElBoton.slice(0, 500)).toContain('min-h-[44px]');
+        const claseDelBoton = claseDeLaEtiqueta(CARD_SOURCE, 'wish-already-have');
+        expect(claseDelBoton).toContain('bg-surface-container-high');
+        expect(claseDelBoton).toContain('rounded-full');
+        expect(claseDelBoton).toContain('min-h-[44px]');
 
         // Y en el DOM sigue siendo el botón que borra (o marca) el deseo, con su etiqueta.
         const onDelete = vi.fn();

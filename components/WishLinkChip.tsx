@@ -63,7 +63,9 @@ export function WishLinkChip({ url, variant = 'chip', testID }: WishLinkChipProp
     }
 
     // En la tarjeta el chip mantiene `min-w-0 shrink`: **el que cede es el enlace,
-    // nunca el precio**, y la altura la fija el objetivo táctil de 44px.
+    // nunca el precio**, y la altura la fija el objetivo táctil de 44px. La elipsis del
+    // CSS ya no debería hacer falta, porque `wishLinkHost` recorta el dominio antes (con
+    // puntos suspensivos explícitos y probados); se deja como última red.
     return (
         <>
             <Pressable
