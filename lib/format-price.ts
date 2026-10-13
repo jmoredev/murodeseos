@@ -41,7 +41,7 @@ export function formatPrice(price: number | null | undefined): string | null {
  * número con punto decimal se multiplique por mil; y si además hay una coma, un
  * punto que no agrupa se rechaza en vez de adivinar (`1.23,45` no es un precio).
  *
- * Acepta `349`, `349,5`, `349,50`, `349.50`, `1.234`, `1.234,56` y espacios
+ * Acepta `349`, `349,5`, `349,50`, `349.50`, `1.234`, `1.234,56`, `.5` y espacios
  * alrededor; una coma final (`12,`) vale `12`. Devuelve `null` cuando no es un
  * precio: vacío, con letras, con más de una coma, con un grupo de millares mal
  * formado, **negativo**, o por encima del máximo de la columna — un valor que no
@@ -65,8 +65,10 @@ export function parsePriceInput(text: string): number | null {
         if (/^\d{1,3}(\.\d{3})+$/.test(entera)) {
             // Agrupa de tres en tres: son millares, y los millares se van.
             digitoEntero = entera.replace(/\./g, '');
-        } else if (decimales === undefined && /^\d+\.\d*$/.test(entera)) {
-            // Un solo punto que no agrupa y sin coma: es el separador decimal.
+        } else if (decimales === undefined && /^\d*\.\d*$/.test(entera)) {
+            // Un solo punto que no agrupa y sin coma: es el separador decimal. La parte
+            // entera puede estar vacía (`.5` es 0,50), igual que con la coma (`,5`): los
+            // dos separadores tienen que leerse igual.
             const [parteEntera, parteDecimal] = entera.split('.');
             digitoEntero = parteEntera;
             digitoDecimal = parteDecimal;

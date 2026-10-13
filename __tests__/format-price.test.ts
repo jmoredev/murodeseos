@@ -70,6 +70,22 @@ describe('parsePriceInput', () => {
         expect(parsePriceInput('1.23,45')).toBeNull();
     });
 
+    it('lee un decimal sin parte entera, con punto o con coma', () => {
+        // Lo encontró el refutador de la revisión y era una regresión de esta misma
+        // tanda: la rama del punto decimal exigía un dígito **antes** del punto, así
+        // que `.5` dejó de leerse cuando el baseline lo leía. La coma ya funcionaba por
+        // la rama del entero vacío, así que los dos separadores discrepaban en un caso
+        // que la regla de arriba dice que es un decimal. Se leen igual los dos.
+        expect(parsePriceInput('.5')).toBe(0.5);
+        expect(parsePriceInput('.50')).toBe(0.5);
+        expect(parsePriceInput('.05')).toBe(0.05);
+        expect(parsePriceInput(',5')).toBe(0.5);
+        expect(parsePriceInput(',05')).toBe(0.05);
+        // Y un punto solo, sin nada detrás, sigue sin ser un precio.
+        expect(parsePriceInput('.')).toBeNull();
+        expect(parsePriceInput(',')).toBeNull();
+    });
+
     it('tolera espacios alrededor', () => {
         expect(parsePriceInput('  349  ')).toBe(349);
     });
