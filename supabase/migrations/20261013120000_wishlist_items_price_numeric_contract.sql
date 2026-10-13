@@ -26,13 +26,44 @@
 -- reintroduciría la comparación por campos y la excepción para el actor sin `sub`,
 -- es decir volvería a **bloquear al seed y al service_role**, que es justo lo que
 -- el paso 6 de `20260928120000` fue a permitir. Se comprobó en el rojo.
+--
+-- RED DE SEGURIDAD: no se suelta la columna mientras pueda ser la ÚNICA copia de
+-- un precio. La ventana entre el paso 1 y la app nueva la escribió el bundle
+-- viejo, que usaba SOLO esta columna: hay deseos con su precio aquí y
+-- `price_numeric` en NULL, y otros con el precio nuevo aquí y el viejo allí. El
+-- `CHECK` de no negativo no los ve, porque NULL lo satisface. No se reconcilia en
+-- automático a propósito: `updated_at` no se mantiene en esta tabla, así que un
+-- precio de la ventana y uno que el usuario acaba de borrar con la app nueva son
+-- indistinguibles ("odd/tasks/price-numeric.md"). Decide el propietario.
+do $$
+declare
+  n integer;
+begin
+  select count(*) into n
+    from public.wishlist_items
+   where price is not null
+     and btrim(price) <> ''
+     and (
+       price_numeric is null
+       or price_numeric is distinct from
+          case when btrim(price) ~ '^[0-9]+([.,][0-9]+)?$'
+                and replace(btrim(price), ',', '.')::numeric <= 9999999999.99
+               then replace(btrim(price), ',', '.')::numeric(12,2)
+          end
+     );
+  if n > 0 then
+    raise exception 'Paso 2 abortado: % fila(s) guardan en `price` un precio que `price_numeric` no refleja.', n;
+  end if;
+end $$;
+
 ALTER TABLE public.wishlist_items DROP COLUMN price;
 
--- El paso 1 rellenó `price_numeric` con todo lo que se pudo leer (46 de 49 filas);
--- las 2 vacías quedaron en NULL y no pierden nada, y la única no numérica
--- (`'25/30. €'`) se corrigió a mano a `30` el 2026-10-09.
+-- El paso 1 rellenó `price_numeric` con lo que se pudo leer el 2026-10-07, y la
+-- medición de las 49 filas es del 2026-10-09 (la única no numérica, `'25/30. €'`,
+-- se corrigió a `30` ese día). Eso NO cubre la ventana: lo que el bundle viejo
+-- escribió entre esa fecha y la publicación del 2026-10-13.
 --
--- La columna de texto ya no la escribe nadie. Un cliente rezagado que todavía
+-- La app publicada ya no la escribe. Un cliente rezagado que todavía
 -- intentara escribirla recibe `42703`, que es exactamente lo que la recuperación
 -- de desajuste de esquema del repositorio ya sabe interpretar
 -- (`lib/wish-reservation.ts`: `WishSchemaMismatchError` → «Recarga la página»).
