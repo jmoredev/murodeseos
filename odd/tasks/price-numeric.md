@@ -1,6 +1,6 @@
 # Precio como número (`feat/price-numeric`)
 
-**Abierta:** 2026-10-07 · **Rama de esta tanda:** `feat/price-numeric-app` (desde `main`, `a15e924`) · **Estado:** en curso — paso 1 aplicado en producción y aprobado; **cambios de app en esta tanda**, y el paso 2 escrito pendiente de aplicar y de una ventana de compatibilidad
+**Abierta:** 2026-10-07 · **Rama de esta tanda:** `feat/price-numeric-step2` (desde `main`, `3d0fb67`) · **Estado:** paso 1 aplicado en producción (2026-10-07), **cambios de app publicados** en `v2026.10.13` (2026-10-13) y **paso 2 escrito y verificado en local**; sólo falta aplicarlo a producción, y eso espera autorización explícita del propietario
 
 ## Decisión de esta tanda (2026-10-09): **no se renombra la columna**
 
@@ -16,9 +16,9 @@ El plan original del paso 2 renombraba `price_numeric` → `price`. **Se descart
 | A2 | El **formulario** admite sólo entrada numérica (teclado decimal, filtro por pulsación) y guarda en `price_numeric` | **hecho** (`1f0b74c`) |
 | A3 | **Lectura y escritura** sobre `price_numeric` en las dos consultas, y `GiftItem.price` a número | **hecho** (`1f0b74c`) |
 | A4 | **Seed y specs**: los literales de precio pasan a número | **hecho** (`1f0b74c`, `5a76f21`) |
-| A5 | **Paso 2 escrito** (sólo `drop column price` + el `CHECK` de no negativo), **sin aplicar** hasta que la app lleve publicada una ventana | **escrito**, sin aplicar |
+| A5 | **Paso 2 escrito** (`drop column price` + el `CHECK` de no negativo) | **hecho y verificado en local** (`20261013120000`), sin aplicar a producción |
 | A6 | **Arreglo del dato en producción**: la única fila no numérica (`'25/30. €'`) pasa a **30** — autorizado por el propietario, y apaga además el defecto vivo del «25/30. € €» | hecho |
-| A7 | Verificación y publicación | verificado en local (`55 passed / 1 skipped`); falta revisión y publicación |
+| A7 | Verificación y publicación | **publicado** en `v2026.10.13` (PR #47, merge `3d0fb67`) |
 
 ## Objetivo
 
@@ -39,7 +39,7 @@ Que `wishlist_items.price` sea `numeric` en lugar de `text`, para dejar de parse
 
 El paso 1 es **puramente aditivo** (añade una columna y rellena lo que puede): no borra nada, así que puede aplicarse a producción sin esperar a los cambios de app y **da ya los datos de la revisión**. El paso 2 (borrar la columna vieja) es destructivo y **no debe aplicarse hasta revisar qué filas no parsearon**.
 
-El CLI aplica *todas* las migraciones pendientes de golpe, así que esto obliga a **dos `db push` separados**, con las consultas de revisión en medio. De ahí que en esta rama solo viva la migración del paso 1.
+El CLI aplica *todas* las migraciones pendientes de golpe, así que esto obliga a **dos `db push` separados**, con las consultas de revisión en medio. De ahí que **cada paso viva en su propia rama**: el paso 1 en `feat/price-numeric` (fusionada) y el paso 2 en `feat/price-numeric-step2`, de modo que cada `db push` aplique exactamente un paso y ninguno se cuele por ir de la mano del otro.
 
 ## Seguridad del `UPDATE` masivo del paso 1 (verificada antes de escribirlo)
 
@@ -95,7 +95,7 @@ select id, price from public.wishlist_items
 
 Medido en producción el 2026-10-09 (consulta de sólo lectura): **49 filas**, 46 con número, 2 vacías y **una** con texto no numérico. Cero candidatas a redondeo.
 
-## Paso 2 — escrito, NO aplicado (espera a la ventana de compatibilidad)
+## Paso 2 — escrito y verificado en local, sin aplicar a producción
 
 ```sql
 -- El paso 2 con la decisión de «sin renombrar»: la columna numérica conserva su
@@ -112,7 +112,30 @@ alter table public.wishlist_items
 
 **Ventana de compatibilidad antes de aplicarlo**: el paso 2 borra `price`, así que un cliente rezagado que todavía la escriba recibirá un error de columna inexistente. Ese caso ya está cubierto por la **recuperación de desajuste de esquema** que existe en el repositorio (`lib/wish-reservation.ts`: `WishSchemaMismatchError` con los códigos `42703`, `42P01`, `42883`, `PGRST202`, `PGRST204`, mensaje «Recarga la página»), así que no hace falta código nuevo: hace falta que la app nueva esté publicada y que los clientes hayan tenido ocasión de recargarla.
 
-**Nota sobre los dos triggers que nombran `price`** (el guardián de permisos y el espejo de reservas): este SQL **ya no los toca**, porque no hay renombrado. Si en el futuro se decidiera renombrar, seguiría siendo seguro —PL/pgSQL resuelve los nombres en tiempo de ejecución— pero no es el caso.
+**La ventana que la medición no cubría (2026-10-13)**: la medición de las 49 filas es del **2026-10-09**, y el bundle viejo siguió escribiendo solo `price` hasta la publicación de hoy. Un deseo **creado** en esos días tiene su precio en el texto y `price_numeric` en **NULL**; uno **editado** allí tiene el precio nuevo en el texto y el viejo en la numérica. Por eso la migración **aborta** si encuentra una fila así en vez de borrar: `updated_at` no permite decidir cuál columna es más nueva (no hay trigger en esta tabla y el cliente solo lo fija al insertar), así que la reconciliación —rescatar el texto o descartarlo— es decisión del propietario, con la copia de seguridad delante.
+
+**Nota sobre los triggers que nombraban `price` — y corrección de un falso positivo propio (2026-10-13).** Aquí decía antes que el asunto estaba resuelto «porque PL/pgSQL resuelve los nombres en tiempo de ejecución». Eso es cierto para un **RENAME** (el nombre sobrevive) y **falso para un DROP** (el nombre desaparece), así que el argumento no valía para este paso. Lo que sí lo resuelve es otra cosa, y se midió:
+
+- En el repositorio hay **dos versiones históricas** del guardián que comparan `OLD.price IS DISTINCT FROM NEW.price` (`20260102122206:254` y `20260107142656:31`). De ahí salió un falso positivo: se dedujo que soltar la columna rompería el guardián con `42703 record "new" has no field "price"`, y que el paso 2 debía reemplazar la función.
+- **La definición viva no nombra la columna.** La sustituyó el paso 6 de `20260928120000_drop_reserved_by_window.sql` (la fase 2 de la privacidad de reservas) y quedó en «nadie cambia el propietario; un tercero autenticado no edita nada; `auth.uid()` nulo no se bloquea».
+- **El rojo no apareció**: soltando `price` dentro de una transacción revertida, las **dos** rutas de UPDATE que existen —actor = dueño, y actor sin `sub`— dieron `UPDATE 1`.
+- Y el «arreglo» que se iba a escribir era **peor que el problema**: un `CREATE OR REPLACE` preventivo del guardián reintroduce la comparación por campos y la excepción para el actor sin `sub`, es decir **vuelve a bloquear al seed y al service_role**, que es justo lo que el paso 6 de `20260928120000` fue a permitir.
+
+**La regla que queda**: leer una migración antigua no dice cuál es el **cuerpo vivo** (eso lo dice `select prosrc from pg_proc where proname = 'check_wishlist_update_permissions'`), y una función sustituida más tarde deja de nombrar una columna sin que nada lo anuncie.
+
+## Paso 2 — verificación en local (2026-10-13)
+
+Aplicado **con historial** al stack local (`supabase migration up --db-url "postgresql://postgres:postgres@127.0.0.1:54522/postgres?sslmode=disable"`) y comprobado contra la base ya migrada:
+
+| Caso | Resultado |
+| --- | --- |
+| Esquema | `price` fuera · `price_numeric numeric` · constraint `wishlist_items_price_nonnegative` presente |
+| actor = dueño de la fila | `UPDATE 1` |
+| actor sin `sub` (`auth.uid()` nulo: service_role, seed, SQL directo) | `UPDATE 1` |
+| `price_numeric = -5` | `ERROR 23514` nombrando `wishlist_items_price_nonnegative` |
+| tercero autenticado | `UPDATE 0` (la RLS de UPDATE sigue intacta) |
+
+Todos los casos con actor corrieron dentro de **transacciones revertidas**: el dato quedó intacto (`349.00`).
 
 ## Cambios de app — hechos (2026-10-09)
 
@@ -201,6 +224,14 @@ Linaje **`review-457cd4b91a748e26`**: riesgo medio, 1 lente (`review-reliability
 
 **Nota de honestidad sobre la cobertura**: el E2E prueba crear, y las dos sugerencias dicen que **editar** y el **modal** solo están cubiertos por los tests unitarios de la tarjeta. Es deuda de prueba acotada y anotada, no un defecto vivo.
 
+## Publicado: `v2026.10.13` (2026-10-13)
+
+PR **#47** fusionada (merge commit **`3d0fb67`**) con los dos checks en verde, y release **`v2026.10.13`** con tag **anotado**. Deploy run **`38362778169`**, **4 jobs en verde**: verificar el tag en `main` · gate E2E · build · publish.
+
+Verificado **en vivo** (no basta el verde del CI) sobre el bundle servido, `entry-75bdaf55ffa6685e17129ad186a3823e.js` (2 731 411 bytes): `price_numeric` ×2, `decimal-pad` ×2, el mensaje de desajuste de esquema ×2 y el placeholder `0,00` ×1. `public/sw.js` sigue en `v5`: es red-primero y no necesita bump.
+
+Con esto queda cumplida la **ventana de compatibilidad** que exigía la secuencia: la app que lee y escribe la columna numérica **ya está publicada**, así que el paso 2 puede aplicarse sin romper a nadie que haya recargado, y a quien no lo haya hecho lo cubre la recuperación de desajuste de esquema.
+
 ## Commits
 
 - **`848f51a`** — `feat(db): add a numeric price column and backfill what can be read` (paso 1: la migración y esta ficha).
@@ -208,6 +239,8 @@ Linaje **`review-457cd4b91a748e26`**: riesgo medio, 1 lente (`review-reliability
 - **`cd535d7`** — `docs(odd): record the notification findings and decide the price column name` (la decisión de no renombrar, y el registro de notificaciones).
 - **`1f0b74c`** — `feat(price): read and write the numeric price column` (los cambios de app y su suite).
 - **`5a76f21`** — `test(e2e): prove the price field only takes a decimal number`.
+- **`3d0fb67`** — merge de **PR #47** en `main` (los cambios de app, publicados como `v2026.10.13`).
+- **paso 2** — `supabase/migrations/20261013120000_wishlist_items_price_numeric_contract.sql` (el contrato: `drop column price` + el `CHECK`), en la rama `feat/price-numeric-step2`.
 
 ## Aplicado en producción (2026-10-07)
 
