@@ -30,7 +30,9 @@ export function normalizeWishLinks(links: string[]): string[] {
  * se muestra nunca**; el nombre accesible del botón sí lleva el dominio entero.
  *
  * El recorte se hace **aquí y no en el CSS** a propósito: así el texto visible es
- * determinista y se puede probar, en vez de depender de la elipsis del navegador.
+ * determinista y se puede probar, en vez de depender de la elipsis del navegador. Y se
+ * recorta **por delante** (`…dominio.es`): lo que hay que poder leer es **a dónde va** el
+ * enlace, y eso está al final.
  *
  * La normalización se delega en `normalizeWishLink`, que ya vive en este módulo, en vez
  * de repetir un `startsWith('http')` que además es sensible a mayúsculas (`HTTP://x`
@@ -43,7 +45,11 @@ export function wishLinkHost(url: string, maxLength = DOMINIO_MAXIMO): string {
     try {
         const host = new URL(normalized).hostname.replace(/^www\./, '');
         if (!host) return url;
-        return host.length <= maxLength ? host : `${host.slice(0, maxLength - 1)}…`;
+        if (host.length <= maxLength) return host;
+        // Se recorta **por delante**, no por detrás: lo que hay que poder leer es **a dónde va**
+        // el enlace, y eso está al final — el dominio registrable y su TLD. Recortando el
+        // final, `tienda-legitima.es` y `tienda-legitima.evil` se veían igual.
+        return `…${host.slice(-(maxLength - 1))}`;
     } catch {
         return url;
     }

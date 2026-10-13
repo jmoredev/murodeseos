@@ -28,12 +28,16 @@ describe('wish-link-utils', () => {
             expect(wishLinkHost('https://example.com/producto-e2e')).toBe('example.com');
         });
 
-        it('recorta el dominio largo con puntos suspensivos explícitos, y no por CSS', () => {
-            // El chip del enlace lleva `numberOfLines={1}`, así que si el recorte lo hiciera
-            // el CSS no se podría probar. Se hace en el helper: el texto visible es
-            // determinista, y el nombre accesible conserva el dominio completo.
+        it('recorta el dominio largo por delante, para que sobreviva el destino', () => {
+            // El chip del enlace lleva `numberOfLines={1}`, así que si el recorte lo hiciera el
+            // CSS no se podría probar. Se hace en el helper, y **por delante**: lo que hay que
+            // poder leer es **a dónde va** el enlace (el dominio registrable y su TLD), que está
+            // al final. Recortando el final, `tienda-legitima.es` y `tienda-legitima.evil` se
+            // veían igual.
             const largo = wishLinkHost('https://tienda-online-muy-larga.example.es/producto');
-            expect(largo).toBe('tienda-online-muy-larga…');
+            expect(largo.startsWith('…')).toBe(true);
+            expect(largo.endsWith('.example.es')).toBe(true);
+            expect(largo).not.toContain('tienda-online');
             expect(largo.length).toBeLessThanOrEqual(24);
         });
 
