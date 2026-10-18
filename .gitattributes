@@ -1,0 +1,4 @@
+# Los fixtures son páginas comprimidas con gzip: datos binarios, nunca texto. Sin esta
+# regla, un `core.autocrlf=true` (como el de esta máquina) dependía de que la heurística
+# de git detectase el binario por casualidad, y un fixture «normalizado» no descomprime.
+test/fixtures/product-pages/*.html.gz binary
