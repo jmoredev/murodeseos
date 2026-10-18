@@ -38,7 +38,8 @@
     "nativewind-env.d.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "supabase/functions/extract-product/index.ts"
   ],
   "extends": "expo/tsconfig.base"
 }
