@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1, T2 y T3 cerrados y verificados; T4 (capa de red y guarda SSRF) es lo siguiente. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1, T2, T3 y T4 cerrados y verificados; T5 (Edge Function) es lo siguiente y arranca con dos comprobaciones que dependen del entorno. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
 
 ## Objetivo
 
@@ -112,6 +112,7 @@ Lo que estos números fijan (no es opinión):
 | T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3` |
 | T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52` |
 | T3 | Adaptadores por dominio, declarativos, con fixtures | S3, S8, S9 | `c54a666` |
+| T4 | Capa de red: headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | `c0ae2e3` |
 | T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | — |
 | T5 | Edge Function: endpoint autenticado, cuota por usuario y caché por URL normalizada | S1, S3 | — |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | — |
@@ -219,6 +220,17 @@ Lo que estos números fijan (no es opinión):
   tres hallazgos no bloqueantes corregí el que tiene consecuencias: `amazon.es.evil.com` quedaba
   reclamado por nuestra regla. Los otros dos quedan anotados abajo.
 
+- **L16 (2026-10-18) — la guarda SSRF se rompió y se arregló con evidencia, y el verificador
+  corrigió su propia observación.** El verificador adversario encontró el bypass clásico: las
+  direcciones IPv6 de **transición** (NAT64, 6to4, Teredo, `::ffff:0:…`) no se clasificaban, así
+  que `http://[64:ff9b::a9fe:a9fe]/latest/meta-data/` alcanzaba la dirección de metadatos. El fix
+  clasifica la **IPv4 embebida** —no las formas—, que es lo que permite que una tienda servida
+  por NAT64 con una IPv4 pública siga funcionando. La re-auditoría dio PASS, con prueba de
+  mutación (13 tests fallan sin la clasificación). Y en el camino corregimos **la observación del
+  propio verificador**: había afirmado que `Location: /../..///127.0.0.1/` estaba bloqueada, y es
+  una ruta relativa que resuelve contra el mismo host público (`https://shop.example///127.0.0.1/`):
+  no es un bypass, y bloquearla hubiera roto redirecciones legítimas. Reconocido por él mismo.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
@@ -243,11 +255,20 @@ Lo que estos números fijan (no es opinión):
 - **Corregido en la verificación de T3:** la regla de host reclamaba `amazon.es.evil.com`. Apretada
   a `amazon.<2-3 letras>` con a lo sumo un sufijo más, con RED observado en ese caso exacto antes
   de tocarla.
+- **T4**: 129 tests del directorio, 414 en la suite, typecheck y lint limpios. **Verificación
+  independiente adversaria**: encontró un bypass SSRF real (direcciones IPv6 de transición
+  —NAT64 `64:ff9b::/96`, 6to4 `2002::/16`, Teredo `2001:0::/32`, IPv4 traducida y compatible—
+  que llegaban a `169.254.169.254`); se arregló clasificando la **IPv4 embebida**; una
+  re-auditoría del fix dio PASS (los `reason` de los 10 casos previos no cambiaron y las formas
+  de transición con IPv4 pública siguen pasando).
+- **Riesgo declarado de T4: item 2 (seguridad).** Verificación independiente **adversaria** dos
+  veces (la que encontró el bypass y la del fix), con prueba de mutación en las dos.
 
 ## Hallazgos informativos
 
 - **`pccomponentes-es` no se pudo congelar** (403 a undici con los mismos headers con los que
-  `curl` lo abría). Queda como semilla para reintentar cuando exista la capa de red (T4).
+  `curl` lo abría). El fingerprint TLS es independiente de los headers y la capa de red de T4 no
+  lo cambia: sigue pendiente de medir qué alcanza la Edge Function real (T5).
 - **`mercadolibre-ar` y `tiendanimal-es` fallan en el descubrimiento** (patrón sin coincidencia)
   y **`nutritienda-es` da 403 en el listado**: semillas a ajustar cuando T3 evalúe adaptadores.
 - **`description` sale de Open Graph y la heurística queda de respaldo**: Open Graph corre antes y
@@ -262,6 +283,13 @@ Lo que estos números fijan (no es opinión):
 - **`selectAll` se exporta y hoy no lo usa nadie** (utilidad para los próximos adaptadores).
 - **La regla de host del adaptador no concede confianza hoy**, pero si alguien la reusa para decidir
   permisos o claves de caché, ya está apretada (ver L15).
+- **Hallazgos de la re-auditoría del fix SSRF, sin explotabilidad demostrada**: ISATAP bajo un
+  prefijo enrutable (`2001:db8::5efe:127.0.0.1`) y prefijos NAT64 no estándar no se clasifican;
+  el rebinding entre la comprobación del resolvedor y la conexión real (`fetch` vuelve a resolver)
+  sigue sin cubrir; `safeFetch` decodifica el cuerpo solo como UTF-8 (una página en latin-1 sale
+  con acentos rotos — el capturador sí honra el `charset`, el runtime lo verá en T5); y un
+  `fetchImpl` inyectado que ignora la `AbortSignal` hace que el timeout no corte (los `fetch`
+  reales de undici/Deno sí la honran).
 
 ## Riesgos abiertos
 
@@ -270,9 +298,10 @@ Lo que estos números fijan (no es opinión):
   `npm:node-html-parser`) **no está probado**: los tests corren en Node. Es la primera cosa a
   comprobar en T5, antes de escribir nada más, porque si no resolviera el módulo compartido no
   serviría tal como está.
-- **T4 — qué alcanza el runtime real.** Medido: PcComponentes responde 403 a **undici** con los
-  mismos headers con los que `curl` lo abre, o sea que el fingerprint TLS también decide. Falta
-  saber qué alcanza la Edge Function de Deno desde las IPs de Supabase.
+- **T5 — qué alcanza el runtime real.** Medido: PcComponentes responde 403 a **undici** con los
+  mismos headers con los que `curl` lo abre; el fingerprint TLS también decide. Falta medir qué
+  alcanza la Edge Function de Deno desde las IPs de Supabase, y eso exige desplegar o correr
+  `supabase functions serve` (Docker), que es decisión del propietario.
 
 ## Commits
 
@@ -281,4 +310,6 @@ Lo que estos números fijan (no es opinión):
 - `8bfde52` — feat(extraction): extract product data in a tiered cascade (T2).
 - `c54a666` — feat(extraction): adapt Amazon product pages with a host adapter (T3).
 - `f532d3d` — docs(odd): close T1 and T2 and record the measured evidence.
-- (pendiente) `docs(odd)`: cierre de T3.
+- `2d4213f` — docs(odd): close T3 and record the independent verification.
+- `c0ae2e3` — feat(extraction): fetch product pages safely behind an SSRF guard (T4).
+- (pendiente) `docs(odd)`: cierre de T3 y T4.
