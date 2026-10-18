@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1, T2, T3 y T4 cerrados y verificados; T5 (Edge Function) es lo siguiente y arranca con dos comprobaciones que dependen del entorno. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 a T5 cerrados, con las **cinco revisiones nativas** hechas por tramo (tres aprobadas a la primera, T2 aprobada tras corregir lo que el refutador encontró) y **T5 medido contra el runtime real**. Lo siguiente es T6 (la hoja de compartir de la PWA). Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
 
 ## Objetivo
 
@@ -109,12 +109,12 @@ Lo que estos números fijan (no es opinión):
 
 | # | Tarea | Specs | Commit |
 | --- | --- | --- | --- |
-| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3` |
-| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52` |
+| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3`, `d89de4d` |
+| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52`, `beb0e0b`, `1e9b7c4`, `4d4df8a` |
 | T3 | Adaptadores por dominio, declarativos, con fixtures | S3, S8, S9 | `c54a666` |
-| T4 | Capa de red: headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | `c0ae2e3` |
-| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | — |
-| T5 | Edge Function: endpoint autenticado, cuota por usuario y caché por URL normalizada | S1, S3 | — |
+| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | `c0ae2e3` |
+| T5a | Edge Function: endpoint autenticado (JWT de la plataforma) + extracción | S1, S2, S3 | `90ac8a8` |
+| T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | — |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
 | T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
@@ -231,6 +231,45 @@ Lo que estos números fijan (no es opinión):
   una ruta relativa que resuelve contra el mismo host público (`https://shop.example///127.0.0.1/`):
   no es un bypass, y bloquearla hubiera roto redirecciones legítimas. Reconocido por él mismo.
 
+- **L17 (2026-10-18) — las cinco revisiones nativas, y los tres CRITICAL que encontró el paso
+  adversarial.** El propietario decidió revisar los tres tramos que faltaban (T1, T2, T3). El
+  candidato de rama entera **no es revisable** (43 ficheros y 885 KB de fixtures exceden el
+  presupuesto de contexto del proveedor: `lens_context_budget_exceeded`), así que se revisó por
+  tramos con `baseRef` + `committedOnly` y **parando el árbol en el tip de cada uno**
+  (`git switch --detach`); los commits ya estaban por unidad de trabajo y no hubo que reescribir
+  nada. Resultado: T4, T3 y T1 **aprobados**; T2 quedó **escalated** porque el validador rechazó la
+  primera corrección, y se cerró con un **linaje nuevo sobre el corte ya corregido**. Los tres
+  CRITICAL los levantó el **refutador**, no las lentes (las cinco corridas de lentes salieron «a
+  favor»):
+  1. `R4-FABRICATED-PRICE` (T2): la heurística tomaba el **nodo de texto entero** y `parsePriceText`
+     reconstruía la cantidad con los tramos de dígitos → `Pack 2 unidades · 39,99 €` = **239,99**,
+     `2 pen drives` = **2 PEN**. La misma familia del `10125,11 EUR` medido en El Corte Inglés.
+  2. `R3-only-empty-filter` (T1): un `--only=` vacío (variable de shell sin definir) se leía como
+     «opción ausente» → **18 peticiones a todas las tiendas y salida 0**.
+  3. `R4-001` (T2, **en mi propio arreglo**): el código ISO se interpolaba **sin límites de palabra**
+     → `PEN` casaba dentro de `PENDRIVE` (2 PEN) y `AUD` dentro de `AUDIO`.
+  Arreglos: `d89de4d`, `beb0e0b`, `1e9b7c4`, `4d4df8a`. Y una lección de método que costó dos
+  rechazos: **un límite documentado no es un límite aceptado** — el validador llamó regresión a la
+  pérdida de `29.95 USD` («*even though it is documented as a trade-off*») y el refutador convirtió
+  en CRITICAL el prefijo que yo había escrito como «residuo» en el mensaje de commit.
+
+- **L18 (2026-10-18) — T5: medir antes de escribir, y las dos premisas que la medición corrigió.**
+  Las dos incógnitas que esta ficha tenía como bloqueantes se midieron contra el runtime real con
+  una sonda temporal: (a) el mapa de imports de `supabase/functions/deno.json` **resuelve**
+  `node-html-parser` y deja intacto el import del módulo compartido (vitest sigue corriendo el mismo
+  código); (b) `Deno.resolveDns` existe y el runtime **alcanza más que undici**: Amazon `/dp/…` →
+  200 (2,28 MB, el adaptador leyó título, `89,99 EUR` e imagen) y **PcComponentes → 200**, donde
+  undici comía 403. La premisa «el fingerprint TLS decide» era de Node, no del runtime. La misma
+  medición encontró el precio falso de El Corte Inglés (L17).
+  T5 se cerró en dos unidades: **T5a** (`90ac8a8`) el endpoint autenticado por `verify_jwt`, medido
+  en el runtime (401 sin token, 200 con el anon key leyendo Amazon, 405/400 en el resto), y **T5b**
+  (`aa90e2f` la migración, `c6ede3b` el endpoint) con cuota por usuario y caché por URL. La cuota se
+  consume en **una sola sentencia SQL** y la verificación independiente reprodujo la carrera con su
+  propio método; esa verificación además **falsificó una premisa mía**: con `--no-verify-jwt` un
+  token inventado que copiaba el `sub` de otra persona fue aceptado y **gastó su cuota**. La
+  identidad es verificada solo mientras `supabase/config.toml` diga `verify_jwt = true`, así que eso
+  ahora lo vigila un test.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
@@ -263,6 +302,23 @@ Lo que estos números fijan (no es opinión):
   de transición con IPv4 pública siguen pasando).
 - **Riesgo declarado de T4: item 2 (seguridad).** Verificación independiente **adversaria** dos
   veces (la que encontró el bypass y la del fix), con prueba de mutación en las dos.
+- **Revisiones nativas por tramo (L17).** T4 `review-cade8da5617863c2`, T3
+  `review-ea4ddb650dd3ab9f` y T1 `review-e753e0e4cff75cc8`: **aprobados**, autoridad quemada. T2
+  `review-c92b4c397ebaf358` quedó **escalated** (`native_stop_required`) porque el validador rechazó
+  la primera corrección por una regresión, y se cerró con un linaje nuevo sobre el corte ya
+  corregido: `review-8c7a8fb9eef5bcd3`, **aprobado** tras corregir `R4-001`. Tres CRITICAL, los tres
+  encontrados por el refutador; el refutador también **refutó** un CRITICAL de la lente de riesgo.
+- **T5a** (`90ac8a8`): medido en el runtime real — 401 sin cabecera `Authorization` (lo corta la
+  plataforma antes del handler), 200 con el `ANON_KEY` del stack local leyendo Amazon (`89,99 EUR`),
+  `{ok:false}` con `dns-failed` y con `blocked-ip-loopback`, 405 y 400 en el resto. 5 tests del
+  resolvedor puro (fallo cerrado) y la suite en verde.
+- **T5b** (`aa90e2f`, `c6ede3b`): migración aplicada **solo en local** con `supabase migration up`;
+  RLS comprobado por `psql` (`relrowsecurity=t`, cero políticas, `relacl` solo para `postgres` y
+  `service_role`) y la función `security definer` con `search_path` fijado. **Verificación
+  independiente: 6 de 6 PASS, 0 blockers**, con métodos propios — 12 llamadas paralelas contra
+  `limit=2` dieron exactamente 2 permitidas; RLS probado con el rol `anon` y con un JWT de usuario
+  real; la clave de caché probada sobre el módulo real. **Riesgo declarado: items 1 (migración) y 2
+  (permisos).**
 
 ## Hallazgos informativos
 
@@ -293,23 +349,41 @@ Lo que estos números fijan (no es opinión):
 
 ## Riesgos abiertos
 
-- **T5 — el specifier de Deno.** `extract/html.ts` importa `node-html-parser` por nombre pelado,
-  que es lo que resuelve vitest. Que la Edge Function lo resuelva igual (o necesite
-  `npm:node-html-parser`) **no está probado**: los tests corren en Node. Es la primera cosa a
-  comprobar en T5, antes de escribir nada más, porque si no resolviera el módulo compartido no
-  serviría tal como está.
-- **T5 — qué alcanza el runtime real.** Medido: PcComponentes responde 403 a **undici** con los
-  mismos headers con los que `curl` lo abre; el fingerprint TLS también decide. Falta medir qué
-  alcanza la Edge Function de Deno desde las IPs de Supabase, y eso exige desplegar o correr
-  `supabase functions serve` (Docker), que es decisión del propietario.
+- **Las dos incógnitas de T5 quedaron resueltas por medición (L18)**, no por suposición: el mapa de
+  imports de Deno resuelve `node-html-parser` sin tocar el import compartido, y el runtime alcanza
+  Amazon y PcComponentes con 200. **No medido**: si ese mapa es *necesario* o el bundler resolvería
+  igual contra `node_modules` (queda declarado, sin afirmarlo).
+- **`verify_jwt` es lo único que hace que la identidad esté verificada.** `_shared/product-extraction/auth/jwt.ts`
+  decodifica el `sub` de un token que **no** verifica: con `--no-verify-jwt` un token inventado fue
+  aceptado y gastó la cuota de otra persona. La configuración commiteada es correcta y hay un test
+  que la vigila; el riesgo es operativo (un despliegue al que se le pierda la configuración).
+- **Advisories de T5 declarados, sin arreglar aquí**: el `429` no lleva cabecera `Retry-After`
+  (sí `retryAfterSeconds` en el JSON); los `fetch` a PostgREST no llevan timeout, así que un
+  PostgREST colgado cuelga la petición; y la caché está indexada **solo por URL**, así que cualquier
+  usuario autenticado recibe el borrador cacheado de otro sin gastar cuota (deliberado, declarado en
+  la migración).
+- **Informativos de la revisión sin abordar**: 8 de T1 (escritura no atómica del fixture, lectura del
+  descubrimiento sin tope, degradación del manifiesto) y 5 de T2 (entre ellos que `detectCurrency`
+  acepta cualquier valor declarado de tres letras como moneda, sin validar ISO 4217).
+- **Arrastrados de T4**: el rebinding entre la comprobación del DNS y la conexión real sigue sin
+  cubrirse; `safeFetch` decodifica solo UTF-8, así que una página latin-1 queda con mojibake — y
+  desde T5b eso se cachea durante el TTL.
+- **De la migración de T5b**: está aplicada **solo en local**; el proyecto remoto no la tiene hasta
+  que el propietario decida el `db push`.
 
 ## Commits
 
 - `5c1fcc3` — test(fixtures): capture real product pages for offline extraction tests (T1).
+- `d89de4d` — fix(fixtures): refuse an empty --only instead of capturing every shop (T1, `R3-only-empty-filter`).
 - `5c9fc65` — feat(extraction): read product prices from a product page (T2).
 - `8bfde52` — feat(extraction): extract product data in a tiered cascade (T2).
+- `beb0e0b` — fix(extraction): stop fabricating a price from a whole text node (T2, `R4-FABRICATED-PRICE`).
+- `1e9b7c4` — fix(extraction): keep reading the spaced ISO currency code (T2, regresión que rechazó el validador).
+- `4d4df8a` — fix(extraction): require a complete ISO code next to the price (T2, `R4-001`).
 - `c54a666` — feat(extraction): adapt Amazon product pages with a host adapter (T3).
-- `f532d3d` — docs(odd): close T1 and T2 and record the measured evidence.
-- `2d4213f` — docs(odd): close T3 and record the independent verification.
 - `c0ae2e3` — feat(extraction): fetch product pages safely behind an SSRF guard (T4).
-- (pendiente) `docs(odd)`: cierre de T3 y T4.
+- `b83d313` / `1bf2934` / `4591448` — docs(odd): cierres y evidencia medida de T1-T4.
+- `9d0a4ef` — test(extraction): align the cascade test with the token-based heuristic raw.
+- `90ac8a8` — feat(functions): serve product extraction from an authenticated edge function (T5a).
+- `aa90e2f` — feat(db): store product extraction quota and cache (T5b).
+- `c6ede3b` — feat(functions): meter and cache product extraction (T5b).
