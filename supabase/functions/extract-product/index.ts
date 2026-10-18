@@ -44,6 +44,7 @@
  */
 import { readJwtSub } from '../_shared/product-extraction/auth/jwt.ts';
 import { normalizeCacheKey } from '../_shared/product-extraction/cache/normalize-url.ts';
+import { readExtractionConfig } from '../_shared/product-extraction/config/env.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
@@ -117,19 +118,17 @@ type Configuracion = {
     serviceRoleKey: string;
 };
 
-/** Lee un entero positivo de entorno; ante ausencia, `NaN` o cero, usa el valor por defecto. */
-function envEntero(nombre: string, porDefecto: number): number {
-    const crudo = Deno.env.get(nombre);
-    if (crudo === undefined) return porDefecto;
-    const valor = Number.parseInt(crudo, 10);
-    return Number.isFinite(valor) && valor > 0 ? valor : porDefecto;
-}
-
+/**
+ * La lectura del entorno vive en `_shared/.../config/env.ts`, que sí es probable: acá solo se le
+ * inyecta `Deno.env.get`. Ver el porqué de cada valor por defecto en ese módulo.
+ */
 function configuracion(): Configuracion {
+    const { limite, ventanaSegundos, ttlSegundos } = readExtractionConfig((nombre) => Deno.env.get(nombre));
+
     return {
-        limite: envEntero('PRODUCT_EXTRACTION_QUOTA_LIMIT', 30),
-        ventanaSegundos: envEntero('PRODUCT_EXTRACTION_QUOTA_WINDOW_SECONDS', 3600),
-        ttlSegundos: envEntero('PRODUCT_EXTRACTION_CACHE_TTL_SECONDS', 3600),
+        limite,
+        ventanaSegundos,
+        ttlSegundos,
         supabaseUrl: (Deno.env.get('SUPABASE_URL') ?? '').replace(/\/+$/, ''),
         serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     };
