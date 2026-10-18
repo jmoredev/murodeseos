@@ -186,7 +186,7 @@ describe('extractProduct: heurística de precio', () => {
         });
     });
 
-    it('lee un precio con el código ISO 4217 en mayúsculas y pegado al número', () => {
+    it('lee un precio con el código ISO 4217 en mayúsculas, pegado o separado por un espacio', () => {
         const html = '<html><body><div class="precio">29.95USD</div></body></html>';
 
         expect(draftDe(html)).toEqual({
@@ -200,15 +200,13 @@ describe('extractProduct: heurística de precio', () => {
         });
     });
 
-    it('deja fuera de esta capa el código ISO con espacio (`29.95 USD`): trade-off documentado', () => {
-        // Pegado y en mayúsculas es lo que separa una moneda de una palabra (`2 pen drives`).
-        // Con espacio, `USD` no es evidencia de nada en esta capa; el precio se sigue leyendo
-        // cuando la tienda declara la moneda, que es el caso normal.
+    it('lee el código ISO separado por un espacio cuando está en mayúsculas', () => {
+        // El espacio no es lo que separa una moneda de una palabra: las mayúsculas lo son. Este
+        // formato lo leía el código base y el validador dirigido lo exigió de vuelta.
         const html = '<html><body><div class="precio">29.95 USD</div></body></html>';
 
         const draft = draftDe(html);
-        expect(draft.price).toBeNull();
-        expect(draft.notes).toContain('No se encontró el precio en la página.');
+        expect(draft.price).toMatchObject({ amount: 29.95, currency: 'USD', raw: '29.95' });
     });
 
     it('descarta un número pelado sin ninguna marca de moneda', () => {

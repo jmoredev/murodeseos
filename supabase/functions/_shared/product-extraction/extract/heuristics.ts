@@ -11,11 +11,11 @@ import { collapseWhitespace, decodeHtmlEntities, parseAttributes, stripTags } fr
  *    («Menos de 10€» de un filtro, cuotas, envíos, reseñas) y ninguno es fiable. Por eso solo se
  *    acepta el precio si hay **un único** texto candidato en toda la página; con dos o más, la
  *    heurística no adivina y lo deja en `null` con una nota.
- * 2. **Un número sin moneda no es un precio, y la moneda tiene que estar pegada al número.** Se
+ * 2. **Un número sin moneda no es un precio, y la marca tiene que estar junto al número.** Se
  *    exige el símbolo (`€`, `$`, `£`…) antes o después —con o sin espacios— o un código ISO 4217
- *    (`29.95USD`) en mayúsculas y **sin** espacios. El código con espacio (`29.95 USD`) deja de
- *    ser candidato a propósito: `pen` separado era una palabra y de «2 pen drives» salía un
- *    `2 PEN` inventado; el trade-off es que se lee igual cuando la tienda declara la moneda.
+ *    **en mayúsculas**, pegado o separado por un espacio (`29.95USD`, `29.95 USD`). Las
+ *    mayúsculas son lo que separa un código de una palabra: `pen` en minúsculas de «2 pen
+ *    drives» llegó a producir un `2 PEN` inventado.
  *
  * El precio de un rango (`12,99 - 19,99 €`) se detecta como un único candidato y, al no poder
  * leerse, se deja en `null` y se explica en una nota: es exactamente lo que el usuario tiene que
@@ -188,17 +188,17 @@ const NUMERO_DE_PRECIO = String.raw`\d+(?:[.,\u00A0 ]\d{3})*(?:[.,]\d{1,2})?`;
 const CODIGOS_ISO = CURRENCY_CODES.join('|');
 
 /**
- * Un número **con su marca de moneda pegada**: un símbolo a cualquier lado, con o sin espacios
- * (`1.234,56 €`, `€ 39,99`, `$12.99`), o un código ISO 4217 en mayúsculas y sin espacios
- * (`29.95USD`). El código no admite espacios a propósito: `pen` separado era una palabra y de
- * «2 pen drives» salía un `2 PEN` (ver el encabezado). El símbolo delante del número no bloquea.
+ * Un número **con su marca de moneda al lado**: un símbolo a cualquier lado, con o sin espacios
+ * (`1.234,56 €`, `€ 39,99`, `$12.99`), o un código ISO 4217 **en mayúsculas**, pegado o separado
+ * por un espacio (`29.95USD`, `29.95 USD`). Las mayúsculas son lo que separa el código de una
+ * palabra: `pen` en minúsculas de «2 pen drives» llegó a dar un `2 PEN` (ver el encabezado).
  */
 const PRECIO_CON_MARCA = new RegExp(
     String.raw`(?<![\d.,\-–—])` +
         `(?:(?<simboloAntes>${SIMBOLOS_DE_MONEDA})\\s*(?<numeroTrasSimbolo>${NUMERO_DE_PRECIO})` +
         `|(?<numeroAntesDeSimbolo>${NUMERO_DE_PRECIO})\\s*(?<simboloDespues>${SIMBOLOS_DE_MONEDA})` +
-        `|(?<codigoAntes>${CODIGOS_ISO})(?<numeroTrasCodigo>${NUMERO_DE_PRECIO})` +
-        `|(?<numeroAntesDeCodigo>${NUMERO_DE_PRECIO})(?<codigoDespues>${CODIGOS_ISO}))` +
+        `|(?<codigoAntes>${CODIGOS_ISO})\\s*(?<numeroTrasCodigo>${NUMERO_DE_PRECIO})` +
+        `|(?<numeroAntesDeCodigo>${NUMERO_DE_PRECIO})\\s*(?<codigoDespues>${CODIGOS_ISO}))` +
         String.raw`(?!\d)`,
     'g'
 );
