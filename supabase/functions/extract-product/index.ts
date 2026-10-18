@@ -1,30 +1,53 @@
 /**
  * Edge Function `extract-product`: recibe la URL de un producto y devuelve el borrador leído de
- * esa página.
- *
- * Es la primera mitad de T5 (T5a): endpoint autenticado con extracción. La cuota por usuario y la
- * caché por URL normalizada llegan después (T5b), con su propia migración de esquema.
+ * esa página, con cuota por usuario y caché por URL normalizada (T5 de
+ * `odd/tasks/compartir-producto.md`).
  *
  * Contrato:
  *
  * - `POST` con JSON `{ "url": "<url del producto>" }`. Otros métodos → `405`; `url` ausente o no
  *   parseable → `400` con el motivo.
  * - El runtime valida el JWT **antes** de invocar el handler (`verify_jwt` en
- *   `supabase/config.toml`). Sin cabecera `Authorization` la petición ni siquiera llega acá: el
- *   identificador de usuario para T5b sale del claim `sub` de ese token ya verificado. Acá no se
- *   verifica ninguna firma a mano (sería una segunda fuente de verdad y una dependencia de más).
+ *   `supabase/config.toml`). Acá no se verifica ninguna firma a mano: solo se decodifica el `sub`
+ *   del token ya verificado (ver `auth/jwt.ts`). Si no se puede leer → `401`.
+ * - Flujo: leer el `sub` → normalizar la URL → **buscar en la caché**. Si hay acierto vigente se
+ *   devuelve el borrador cacheado sin pedir la página y **sin consumir cuota**, marcado con
+ *   `cached: true` y `cachedAt`. Si no hay acierto, se consume cuota; agotada → `429` con
+ *   `{ ok: false, reason: 'quota-exceeded', retryAfterSeconds }`. Recién entonces se pide la
+ *   página y, si el transporte fue exitoso (`ok: true`, aunque el borrador venga parcial con sus
+ *   `notes`), se guarda en la caché. Un fallo de transporte (`ok: false`) **no** se cachea: es
+ *   transitorio y cachearlo impediría reintentar durante el TTL.
  * - **Siempre `200` para una petición válida**, con un cuerpo discriminado: `{ ok: true, draft }`
- *   cuando se pudo pedir la página (aunque el borrador venga parcial, con sus `notes`) y
- *   `{ ok: false, reason }` cuando el transporte la bloqueó o falló. Un deseo sin datos es mejor
- *   que un fallo al compartir (S2).
+ *   cuando se pudo pedir la página y `{ ok: false, reason }` cuando el transporte la bloqueó o
+ *   falló. Un deseo sin datos es mejor que un fallo al compartir (S2).
  * - Un error inesperado tampoco tumba la petición: `{ ok: false, reason: 'unexpected' }`.
  *
- * Este archivo usa APIs de `Deno` y por eso queda **fuera del `tsc` de la app** (`tsconfig.json`);
- * el comportamiento puro vive en `_shared/`, que sí pasa por `tsc`.
+ * Variables de entorno (todas con valor por defecto, para poder medirlas sin tocar el código):
+ *
+ * - `PRODUCT_EXTRACTION_QUOTA_LIMIT` — extracciones permitidas por usuario y ventana (por defecto
+ *   `30`). Configurable para medir y para la prueba de `429`.
+ * - `PRODUCT_EXTRACTION_QUOTA_WINDOW_SECONDS` — tamaño de la ventana fija, alineada a época (por
+ *   defecto `3600`, una hora).
+ * - `PRODUCT_EXTRACTION_CACHE_TTL_SECONDS` — vida del borrador cacheado (por defecto `3600`, una
+ *   hora). El precio es el dato que más duele si está viejo, así que la caché absorbe ráfagas y
+ *   reintentos de la misma URL y nada más; una antigüedad mayor se sube a propósito con esta
+ *   variable.
+ *
+ * Persistencia: dos tablas (`product_extraction_cache` y `product_extraction_quota`) con RLS
+ * activo y **sin políticas**, solo accesibles con la `service_role` key. Se hablan por PostgREST
+ * con `fetch` —sin cliente de Supabase— para no sumar dependencias (S8). La migración es parte
+ * del despliegue: si la tabla de cuota todavía no existe, la petición responde `503`
+ * (`quota-unavailable`) en vez de saltarse la cuota; si la de caché no existe, el lector la trata
+ * como fallo de caché (miss) y el escritor ignora el error, así que la extracción sigue
+ * funcionando sin caché. **Este archivo usa APIs de `Deno` y por eso queda fuera del `tsc` de la
+ * app** (`tsconfig.json`); el comportamiento puro vive en `_shared/`, que sí pasa por `tsc`.
  */
+import { readJwtSub } from '../_shared/product-extraction/auth/jwt.ts';
+import { normalizeCacheKey } from '../_shared/product-extraction/cache/normalize-url.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
+import { computeQuotaWindow, decideQuota } from '../_shared/product-extraction/quota/decision.ts';
 
 /**
  * Orígenes de desarrollo que el repo ya contempla: `supabase/config.toml` lista ambos en
@@ -34,9 +57,9 @@ const ORIGENES_DE_DESARROLLO = ['http://localhost:8081', 'http://127.0.0.1:8081'
 
 /**
  * Decide si un origen puede recibir la respuesta. La fuente única del origen público es
- * `lib/site-url.ts`: `EXPO_PUBLIC_SITE_URL` cuando está configurada y, si no, el propio
- * navegador cuando el host termina en `github.io`. El runtime no ve ese navegador, así que acá se
- * reconoce `EXPO_PUBLIC_SITE_URL` y el host de GitHub Pages.
+ * `lib/site-url.ts`: `EXPO_PUBLIC_SITE_URL` cuando está configurada y, si no, el propio navegador
+ * cuando el host termina en `github.io`. El runtime no ve ese navegador, así que acá se reconoce
+ * `EXPO_PUBLIC_SITE_URL` y el host de GitHub Pages.
  */
 function origenPermitido(origen: string): boolean {
     if (ORIGENES_DE_DESARROLLO.includes(origen)) return true;
@@ -86,6 +109,156 @@ function respuesta(body: unknown, status: number, request: Request): Response {
 /** El resolvedor cierra el SSRF por DNS: `safeFetch` contrasta cada dirección resuelta. */
 const resolveHost = createResolveHost((host, tipo) => Deno.resolveDns(host, tipo));
 
+type Configuracion = {
+    limite: number;
+    ventanaSegundos: number;
+    ttlSegundos: number;
+    supabaseUrl: string;
+    serviceRoleKey: string;
+};
+
+/** Lee un entero positivo de entorno; ante ausencia, `NaN` o cero, usa el valor por defecto. */
+function envEntero(nombre: string, porDefecto: number): number {
+    const crudo = Deno.env.get(nombre);
+    if (crudo === undefined) return porDefecto;
+    const valor = Number.parseInt(crudo, 10);
+    return Number.isFinite(valor) && valor > 0 ? valor : porDefecto;
+}
+
+function configuracion(): Configuracion {
+    return {
+        limite: envEntero('PRODUCT_EXTRACTION_QUOTA_LIMIT', 30),
+        ventanaSegundos: envEntero('PRODUCT_EXTRACTION_QUOTA_WINDOW_SECONDS', 3600),
+        ttlSegundos: envEntero('PRODUCT_EXTRACTION_CACHE_TTL_SECONDS', 3600),
+        supabaseUrl: (Deno.env.get('SUPABASE_URL') ?? '').replace(/\/+$/, ''),
+        serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    };
+}
+
+function cabecerasServicio(clave: string): Record<string, string> {
+    return { apikey: clave, authorization: `Bearer ${clave}` };
+}
+
+/** Fila de caché vigente: el borrador guardado y cuándo se guardó. */
+type CacheAcierto = { draft: unknown; cachedAt: string };
+
+/**
+ * Busca en la caché una fila vigente para la clave. Cualquier fallo (tabla ausente, red, JSON
+ * raro) se trata como **miss**: la extracción no depende de que la caché exista.
+ */
+async function leerCache(
+    clave: string,
+    ahoraMs: number,
+    conf: Configuracion
+): Promise<CacheAcierto | null> {
+    try {
+        const url = new URL(`${conf.supabaseUrl}/rest/v1/product_extraction_cache`);
+        url.searchParams.set('cache_key', `eq.${clave}`);
+        url.searchParams.set('expires_at', `gt.${new Date(ahoraMs).toISOString()}`);
+        url.searchParams.set('select', 'draft,created_at');
+        url.searchParams.set('limit', '1');
+
+        const respuestaHttp = await fetch(url, {
+            headers: { ...cabecerasServicio(conf.serviceRoleKey), accept: 'application/json' },
+        });
+        if (!respuestaHttp.ok) return null;
+
+        const filas: unknown = await respuestaHttp.json();
+        if (!Array.isArray(filas) || filas.length === 0) return null;
+
+        const fila = filas[0] as { draft?: unknown; created_at?: unknown };
+        if (fila === null || typeof fila !== 'object' || !('draft' in fila)) return null;
+
+        return {
+            draft: fila.draft,
+            cachedAt: typeof fila.created_at === 'string' ? fila.created_at : '',
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Guarda el borrador en la caché. Es **best-effort**: si falla, la respuesta al usuario no cambia
+ * (ya tiene su borrador). Se guardan solo los aciertos de la extracción.
+ */
+async function guardarCache(
+    clave: string,
+    draft: unknown,
+    finalUrl: string,
+    conf: Configuracion,
+    ahoraMs: number
+): Promise<void> {
+    try {
+        await fetch(`${conf.supabaseUrl}/rest/v1/product_extraction_cache`, {
+            method: 'POST',
+            headers: {
+                ...cabecerasServicio(conf.serviceRoleKey),
+                'content-type': 'application/json',
+                prefer: 'resolution=merge-duplicates,return=minimal',
+            },
+            body: JSON.stringify([
+                {
+                    cache_key: clave,
+                    draft,
+                    final_url: finalUrl,
+                    created_at: new Date(ahoraMs).toISOString(),
+                    expires_at: new Date(ahoraMs + conf.ttlSegundos * 1000).toISOString(),
+                },
+            ]),
+        });
+    } catch {
+        // La caché no es un requisito: se ignora el fallo.
+    }
+}
+
+type ConsumoCuota = { allowed: boolean; used: number; windowEndMs: number };
+
+/**
+ * Consume cuota de forma atómica en el SQL (upsert con incremento y `returning`). Devuelve `null`
+ * si el RPC no está disponible: el handler lo traduce a `503` y **no** se salta la cuota.
+ */
+async function consumirCuota(userId: string, conf: Configuracion): Promise<ConsumoCuota | null> {
+    try {
+        const respuestaHttp = await fetch(
+            `${conf.supabaseUrl}/rest/v1/rpc/consume_product_extraction_quota`,
+            {
+                method: 'POST',
+                headers: {
+                    ...cabecerasServicio(conf.serviceRoleKey),
+                    'content-type': 'application/json',
+                    accept: 'application/json',
+                },
+                body: JSON.stringify({
+                    p_user_id: userId,
+                    p_limit: conf.limite,
+                    p_window_seconds: conf.ventanaSegundos,
+                }),
+            }
+        );
+        if (!respuestaHttp.ok) return null;
+
+        const datos: unknown = await respuestaHttp.json();
+        const fila = (Array.isArray(datos) ? datos[0] : datos) as
+            | { allowed?: unknown; used?: unknown; window_end?: unknown }
+            | null;
+        if (fila === null || typeof fila !== 'object' || typeof fila.allowed !== 'boolean') {
+            return null;
+        }
+
+        const ventanaFin = Date.parse(String(fila.window_end));
+        const finRespaldo = computeQuotaWindow(Date.now(), conf.ventanaSegundos).endMs;
+
+        return {
+            allowed: fila.allowed,
+            used: typeof fila.used === 'number' ? fila.used : 0,
+            windowEndMs: Number.isFinite(ventanaFin) ? ventanaFin : finRespaldo,
+        };
+    } catch {
+        return null;
+    }
+}
+
 Deno.serve(async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: corsHeaders(request) });
@@ -117,6 +290,53 @@ Deno.serve(async (request: Request): Promise<Response> => {
         return respuesta({ error: `El campo «url» no es una URL válida: «${url}».` }, 400, request);
     }
 
+    // La firma la validó el runtime; acá solo se lee el identificador que ya garantizó.
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? null;
+    const userId = readJwtSub(token);
+    if (!userId) {
+        return respuesta(
+            { error: 'No se pudo identificar al usuario: el token no trae un «sub» legible.' },
+            401,
+            request
+        );
+    }
+
+    // Clave de caché de la URL. Si no es cacheable (esquema que no sea http/https), seguimos sin
+    // caché: el rechazo del esquema lo decide la capa de red y devuelve su `reason` de siempre.
+    const clave = normalizeCacheKey(url);
+
+    const conf = configuracion();
+    const ahoraMs = Date.now();
+
+    if (clave) {
+        const cache = await leerCache(clave, ahoraMs, conf);
+        if (cache) {
+            return respuesta(
+                { ok: true, draft: cache.draft, cached: true, cachedAt: cache.cachedAt },
+                200,
+                request
+            );
+        }
+    }
+
+    const cuota = await consumirCuota(userId, conf);
+    if (!cuota) {
+        return respuesta({ ok: false, reason: 'quota-unavailable' }, 503, request);
+    }
+    if (!cuota.allowed) {
+        const { retryAfterSeconds } = decideQuota({
+            count: cuota.used,
+            limit: conf.limite,
+            nowMs: ahoraMs,
+            windowEndMs: cuota.windowEndMs,
+        });
+        return respuesta(
+            { ok: false, reason: 'quota-exceeded', retryAfterSeconds },
+            429,
+            request
+        );
+    }
+
     try {
         const resultado = await safeFetch(url, { resolveHost });
         if (!resultado.ok) {
@@ -124,6 +344,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
 
         const draft = extractProduct({ html: resultado.body, url: resultado.finalUrl });
+        if (clave) await guardarCache(clave, draft, resultado.finalUrl, conf, Date.now());
         return respuesta({ ok: true, draft }, 200, request);
     } catch {
         return respuesta({ ok: false, reason: 'unexpected' }, 200, request);
