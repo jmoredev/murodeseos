@@ -134,31 +134,35 @@ describe('testigos negativos: no tiran y no inventan un precio', () => {
         'No se encontró la imagen en la página.',
     ];
 
-    it('Amazon no declara ningún dato estructurado: solo se leen el título y la descripción', () => {
-        // Amazon sirve la página sin JSON-LD, sin Open Graph y sin microdata. Lo único legible es
-        // el `<title>` (y la meta descripción) y la imagen de mayor área declarada, que aquí es
-        // la miniatura de una reseña: exactamente el motivo por el que esta tienda necesita un
-        // adaptador de dominio (T3) y no un capricho de la heurística.
+    it('Amazon no declara datos estructurados, pero el adaptador de dominio sí lee su ficha', () => {
+        // Amazon sirve la página sin JSON-LD, sin Open Graph y sin microdata. T3 agregó un
+        // adaptador por dominio que lee las anclas propias de Amazon (`#productTitle`,
+        // `#landingImage[data-a-dynamic-image]` y el `.a-offscreen` del bloque de precio); con él
+        // esta página pasa de «sin precio ni imagen» a un borrador completo, y la descripción
+        // sigue saliendo de la metaetiqueta genérica.
         expect(draftDe('amazon-es')).toEqual({
             url: fixtureUrl(entrada('amazon-es')),
             title: {
-                value: 'Echo Dot (Última generación) | Altavoz inteligente wifi y Bluetooth, con sonido más potente y de mayor amplitud | Antracita, con Acceso Anticipado a Alexa+ : Amazon.es',
-                source: 'heuristic',
+                value: 'Echo Dot (Última generación) | Altavoz inteligente wifi y Bluetooth, con sonido más potente y de mayor amplitud | Antracita, con Acceso Anticipado a Alexa+',
+                source: 'domain-adapter',
             },
-            price: null,
-            // La heurística **no** devuelve la miniatura de reseña de 154×154 que sí encuentra
-            // (ver `extract.test.ts`, heurística de imagen): sin imagen es mejor que con la
-            // equivocada. La imagen real de Amazon necesita el adaptador de dominio de T3.
-            imageUrl: null,
+            price: {
+                amount: 89.99,
+                currency: 'EUR',
+                ambiguous: false,
+                raw: '89,99€',
+                source: 'domain-adapter',
+            },
+            imageUrl: {
+                value: 'https://m.media-amazon.com/images/I/71G9l50-fGL._AC_SY879_.jpg',
+                source: 'domain-adapter',
+            },
             siteName: null,
             description: {
                 value: 'Echo Dot (Última generación) | Altavoz inteligente wifi y Bluetooth, con sonido más potente y de mayor amplitud | Antracita, con Acceso Anticipado a Alexa+ : Amazon.es',
                 source: 'open-graph',
             },
-            notes: [
-                'La página muestra varios precios; no se puede saber cuál es el del producto.',
-                'No se encontró la imagen en la página.',
-            ],
+            notes: [],
         });
     });
 

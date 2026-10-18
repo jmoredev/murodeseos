@@ -11,7 +11,7 @@
  */
 
 /** De dónde salió un campo. El orden de esta unión es el orden de prioridad de la cascada. */
-export type FieldSource = 'json-ld' | 'open-graph' | 'microdata' | 'heuristic';
+export type FieldSource = 'domain-adapter' | 'json-ld' | 'open-graph' | 'microdata' | 'heuristic';
 
 export type Field<T> = {
     value: T;

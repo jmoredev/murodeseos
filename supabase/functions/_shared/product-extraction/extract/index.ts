@@ -1,3 +1,5 @@
+import { findAdapter } from '../adapters/index.ts';
+import type { DomainAdapterFields } from '../adapters/types.ts';
 import { detectCurrency, parsePriceText } from '../normalize/price.ts';
 import type { DraftPrice, Field, FieldSource, ProductDraft } from '../types.ts';
 import { extractHeuristics, normalizeTitle, type HeuristicFields } from './heuristics.ts';
@@ -11,7 +13,10 @@ import { extractOpenGraph, type OpenGraphFields } from './open-graph.ts';
  * La cascada es **campo por campo** y no «gana la primera capa que traiga algo»: una tienda puede
  * declarar el título en JSON-LD y no publicar `product:price`, y en la misma página el precio
  * está en una metaetiqueta de Open Graph. El orden de prioridad es
- * `json-ld > open-graph > microdata > heurística` para cada campo por separado.
+ * `domain-adapter > json-ld > open-graph > microdata > heurística` para cada campo por separado.
+ *
+ * El adaptador por dominio va **primero** porque está calibrado contra el marcado de su host:
+ * donde habla, gana; donde devuelve `null`, la cascada genérica sigue como si no existiera.
  *
  * Garantías duras:
  *
@@ -42,6 +47,13 @@ const HEURISTICA_VACIA: HeuristicFields = {
     priceNote: null
 };
 
+const ADAPTADOR_VACIO: DomainAdapterFields = {
+    title: null,
+    price: null,
+    currency: null,
+    image: null
+};
+
 export function extractProduct({ html, url }: { html: string; url: string }): ProductDraft {
     const draft: ProductDraft = {
         url,
@@ -55,6 +67,13 @@ export function extractProduct({ html, url }: { html: string; url: string }): Pr
 
     try {
         const pagina = typeof html === 'string' ? html : '';
+
+        // El adaptador por dominio corre antes que todo lo demás y aporta campo por campo. Si su
+        // host no coincide o su HTML cambió, devuelve `null` en cada campo y no cambia nada.
+        const adaptador = intentar(() => findAdapter(url), null);
+        const adaptado = adaptador
+            ? intentar(() => adaptador.extract(pagina), ADAPTADOR_VACIO)
+            : ADAPTADOR_VACIO;
 
         const jsonLd = intentar(() => extractJsonLd(pagina), null);
         const graph = intentar(() => extractOpenGraph(pagina), OG_VACIO);
@@ -70,7 +89,7 @@ export function extractProduct({ html, url }: { html: string; url: string }): Pr
               ? { value: jsonLd.brand, source: 'json-ld' }
               : null;
 
-        draft.title = primerTitulo(jsonLd, graph, microdata, heuristica, draft.siteName?.value ?? null);
+        draft.title = primerTitulo(adaptado, jsonLd, graph, microdata, heuristica, draft.siteName?.value ?? null);
         draft.description = primerTexto([
             [jsonLd?.description ?? null, 'json-ld'],
             [graph.description, 'open-graph'],
@@ -82,6 +101,7 @@ export function extractProduct({ html, url }: { html: string; url: string }): Pr
         // un `<script>`, y una foto equivocada es peor que ninguna).
         draft.imageUrl = primeraImagen(
             [
+                [adaptado.image, 'domain-adapter'],
                 [jsonLd?.image ?? null, 'json-ld'],
                 [graph.image, 'open-graph'],
                 [microdata.image, 'microdata']
@@ -90,7 +110,7 @@ export function extractProduct({ html, url }: { html: string; url: string }): Pr
         );
 
         let notaDePrecio = heuristica.priceNote;
-        for (const [raw, declarada, source] of candidatosDePrecio(jsonLd, graph, microdata, heuristica)) {
+        for (const [raw, declarada, source] of candidatosDePrecio(adaptado, jsonLd, graph, microdata, heuristica)) {
             if (raw === null || raw === undefined) continue;
 
             const leido = parsePriceText(raw);
@@ -135,12 +155,14 @@ function intentar<T>(fn: () => T, porDefecto: T): T {
 }
 
 function candidatosDePrecio(
+    adaptado: DomainAdapterFields,
     jsonLd: JsonLdProduct | null,
     graph: OpenGraphFields,
     microdata: MicrodataFields,
     heuristica: HeuristicFields
 ): [string | number | null, string | null, FieldSource][] {
     return [
+        [adaptado.price, adaptado.currency, 'domain-adapter'],
         [jsonLd?.price ?? null, jsonLd?.currency ?? null, 'json-ld'],
         [graph.price, graph.currency, 'open-graph'],
         [microdata.price, microdata.currency, 'microdata'],
@@ -149,6 +171,7 @@ function candidatosDePrecio(
 }
 
 function primerTitulo(
+    adaptado: DomainAdapterFields,
     jsonLd: JsonLdProduct | null,
     graph: OpenGraphFields,
     microdata: MicrodataFields,
@@ -156,6 +179,7 @@ function primerTitulo(
     siteName: string | null
 ): Field<string> | null {
     const candidatos: [string | null, FieldSource][] = [
+        [adaptado.title, 'domain-adapter'],
         [jsonLd?.title ?? null, 'json-ld'],
         [graph.title, 'open-graph'],
         [microdata.name, 'microdata'],
