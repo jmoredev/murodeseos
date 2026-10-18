@@ -269,6 +269,34 @@ Lo que estos números fijan (no es opinión):
   token inventado que copiaba el `sub` de otra persona fue aceptado y **gastó su cuota**. La
   identidad es verificada solo mientras `supabase/config.toml` diga `verify_jwt = true`, así que eso
   ahora lo vigila un test.
+- **L19 (2026-10-18) — la revisión de T5, y el cuarto caso del mismo patrón.** RDD marcó el árbol
+  como candidato sin revisar; no había ninguna disposición del propietario dejándolo así, y el
+  candidato de rama entera no es revisable (ya medido en L17), así que se revisó **el delta de T5**
+  con `baseRef` (`4591448..HEAD`). El proveedor lo clasificó **`tier: high`** por el path
+  `auth/jwt.ts`, no por su tamaño. El **refutador** levantó `R3-QUOTA-ZERO-LIMIT` (CRITICAL,
+  determinista): `envEntero` exigía `> 0`, así que un `PRODUCT_EXTRACTION_QUOTA_LIMIT=0`
+  explícito se convertía en el 30 por defecto —mientras la función SQL rechaza `p_limit <= 0` sin
+  tocar la tabla y `decideQuota` con 0 nunca permite—. Un operador que apagaba la extracción recibía
+  30 extracciones por usuario **y respuestas 200 con borrador**. Es el cuarto caso del mismo patrón
+  de la sesión: **una defensa escrita que pisa en silencio un valor explícito**, y la cuarta vez que
+  lo encuentra el paso adversarial.
+  Arreglo (`ead975f`): la lectura del entorno sale de `index.ts` —que está fuera del `tsc` y del
+  runner, y por eso nadie la podía probar— a `_shared/product-extraction/config/env.ts`, con
+  **una regla por perilla** (el límite honra el 0 y lee negativos como 0; la ventana no acepta 0
+  porque el SQL la rechaza; el TTL honra el 0 como caché apagada). Rojo observado antes: 30, 30 y
+  3600.
+  **Lo que hay que saber para la próxima:** el arreglo **agregó ficheros** (`config/env.ts` y su
+  test) que no estaban en los caminos congelados del plan de corrección, así que el proveedor ya no
+  ofreció la validación dirigida: ofreció **`recover` con `disposition: scope_changed`**. La
+  recuperación quedó registrada con la autorización de mantenedor
+  (`gentle-ai.review-recovery-authorization/v1`) y creó el linaje sucesor
+  `review-df900a6f11e9c1f7`, que revisó el alcance corregido (1313 líneas) y salió **aprobado**
+  con las tres lentes y **sin refutador**, autoridad quemada. Corolario práctico: **una corrección
+  que se quede dentro de los caminos congelados se ahorra la vuelta de recuperación**.
+  Los 10 hallazgos informativos del sucesor coinciden punto por punto con los de la verificación
+  independiente (CORS por sufijo `github.io`, `verify_jwt` como única garantía de identidad,
+  `fetch` sin timeout, cuota gastada antes de la red, `Retry-After` ausente, caché compartida
+  entre usuarios autenticados): dos procesos independientes diciendo lo mismo.
 
 ## Verificación
 
