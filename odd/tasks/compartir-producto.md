@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 y T2 cerrados; T3 (adaptadores por dominio) es lo siguiente. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1, T2 y T3 cerrados y verificados; T4 (capa de red y guarda SSRF) es lo siguiente. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
 
 ## Objetivo
 
@@ -41,6 +41,16 @@ muchas tiendas distintas y no romperse cuando una tienda cambia su HTML.
 - **S7 — Decisión del propietario (2026-10-18), orden de entrega:** primero **el extractor, con fixtures de
   páginas reales y tests offline**; la UI de compartir va después. Motivo: es la parte que decide el éxito del
   feature y la que se puede probar sin tocar la PWA.
+
+- **S8 — Decisión del propietario (2026-10-18), dependencias:** se autoriza **una** dependencia de
+  runtime, `node-html-parser`, para los adaptadores por dominio. Cualquier otra dependencia —de
+  runtime o de desarrollo— necesita una decisión nueva: sumar una es riesgo de entrega y obliga a
+  verificación independiente.
+
+- **S9 — Decisión del propietario (2026-10-18), alcance de los adaptadores:** T3 cubre **solo
+  Amazon**. Los siguientes adaptadores los decide la telemetría por dominio de T5, con datos de uso
+  reales. Motivo medido: PcComponentes, Fnac y Decathlon no se arreglan con un adaptador (bloquean
+  el transporte antes del parseo), así que escribir adaptadores «por si acaso» sería trabajo tirado.
 
 ## Diagnóstico (medido, no supuesto)
 
@@ -101,7 +111,7 @@ Lo que estos números fijan (no es opinión):
 | --- | --- | --- | --- |
 | T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3` |
 | T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52` |
-| T3 | Adaptadores por dominio, declarativos, con fixtures | S3 | — |
+| T3 | Adaptadores por dominio, declarativos, con fixtures | S3, S8, S9 | `c54a666` |
 | T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | — |
 | T5 | Edge Function: endpoint autenticado, cuota por usuario y caché por URL normalizada | S1, S3 | — |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | — |
@@ -192,6 +202,23 @@ Lo que estos números fijan (no es opinión):
   declarado:** el corte son 1346 líneas en un commit; no se puede partir sin dejar un commit con
   tests en rojo, porque el test de cascada cubre las cinco capas a la vez.
 
+- **L14 (2026-10-18) — T3: una sola dependencia, autorizada por el propietario, y el specifier de
+  Deno aislado en un fichero.** Amazon declara **cero** datos estructurados (2,2 MB, 0 JSON-LD, 0
+  `og:image`), así que el adaptador lee lo que Amazon sí publica: `#productTitle`, el texto
+  accesible `.a-offscreen` del bloque de precio (`89,99€` → `89.99 EUR` por el lector compartido) y
+  la imagen desde `data-a-dynamic-image` por **mayor área declarada** (879×549 = 482.571 gana a seis
+  variantes; el `src` es la de 300×300 y usarlo habría degradado la foto). Precedencia
+  `domain-adapter > json-ld > open-graph > microdata > heuristic`, campo por campo, documentada en
+  `extract/index.ts`. `node-html-parser` se importa **solo** en `extract/html.ts`: la Edge Function
+  corre en Deno, donde puede hacer falta `npm:node-html-parser`, y así es un cambio de una línea en
+  T5 en vez de un refactor.
+
+- **L15 (2026-10-18) — el verificador independiente encontró lo que yo no había pedido.** No repitió
+  mis comandos: hizo una **prueba de mutación** (desactivó el adaptador → 4 tests fallan), un
+  diferencial sobre los 9 fixtures, y comprobó el `sha256` de cada uno contra el manifiesto. De sus
+  tres hallazgos no bloqueantes corregí el que tiene consecuencias: `amazon.es.evil.com` quedaba
+  reclamado por nuestra regla. Los otros dos quedan anotados abajo.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
@@ -204,6 +231,18 @@ Lo que estos números fijan (no es opinión):
 - **Defecto encontrado en la verificación del núcleo y corregido**: la capa heurística de imagen
   devolvía una miniatura de reseña de 154×154 como foto del producto; está eliminada y el motivo
   medido queda pinchado en un test (ver L12).
+- **T3**: 61 tests del directorio, 346 en la suite, `pnpm typecheck` y `pnpm lint` limpios.
+  **Verificación independiente** (agente aparte, sin acceso de escritura), 6 de 6 PASS, con
+  **prueba de mutación**: al desactivar el adaptador fallan 4 tests, así que no pasan por el
+  fallback de la cascada. Diferencial base-vs-cambio sobre los 9 fixtures: solo cambia `amazon-es`
+  (título, precio, imagen). Los `sha256` de los 9 fixtures coinciden con el manifiesto. Lockfile:
+  77 líneas añadidas, **cero** eliminadas.
+- **Riesgo declarado de T3: item 5 (dependencia nueva).** Verificación independiente hecha, según
+  la regla. Lo que la verificación **no** pudo probar: si el runtime de Deno resuelve el specifier
+  sin `npm:` — ver el riesgo abierto abajo.
+- **Corregido en la verificación de T3:** la regla de host reclamaba `amazon.es.evil.com`. Apretada
+  a `amazon.<2-3 letras>` con a lo sumo un sufijo más, con RED observado en ese caso exacto antes
+  de tocarla.
 
 ## Hallazgos informativos
 
@@ -217,7 +256,29 @@ Lo que estos números fijan (no es opinión):
 - **AliExpress declara menos de lo que suponíamos**: su único JSON-LD es un `WebSite` con
   `SearchAction`, sin `Product` ni precio; lo legible sale de Open Graph. Candidato a adaptador si el
   volumen lo justifica.
+- **`extract/html.ts` promete «`parseHtml` nunca tira» y esa garantía la da el `intentar` de
+  `extract/index.ts`, no el módulo.** Es cierto en el uso real, pero la promesa está escrita un
+  nivel más arriba. Hallazgo del verificador independiente, no bloqueante.
+- **`selectAll` se exporta y hoy no lo usa nadie** (utilidad para los próximos adaptadores).
+- **La regla de host del adaptador no concede confianza hoy**, pero si alguien la reusa para decidir
+  permisos o claves de caché, ya está apretada (ver L15).
+
+## Riesgos abiertos
+
+- **T5 — el specifier de Deno.** `extract/html.ts` importa `node-html-parser` por nombre pelado,
+  que es lo que resuelve vitest. Que la Edge Function lo resuelva igual (o necesite
+  `npm:node-html-parser`) **no está probado**: los tests corren en Node. Es la primera cosa a
+  comprobar en T5, antes de escribir nada más, porque si no resolviera el módulo compartido no
+  serviría tal como está.
+- **T4 — qué alcanza el runtime real.** Medido: PcComponentes responde 403 a **undici** con los
+  mismos headers con los que `curl` lo abre, o sea que el fingerprint TLS también decide. Falta
+  saber qué alcanza la Edge Function de Deno desde las IPs de Supabase.
 
 ## Commits
 
-- (vacío por ahora)
+- `5c1fcc3` — test(fixtures): capture real product pages for offline extraction tests (T1).
+- `5c9fc65` — feat(extraction): read product prices from a product page (T2).
+- `8bfde52` — feat(extraction): extract product data in a tiered cascade (T2).
+- `c54a666` — feat(extraction): adapt Amazon product pages with a host adapter (T3).
+- `f532d3d` — docs(odd): close T1 and T2 and record the measured evidence.
+- (pendiente) `docs(odd)`: cierre de T3.
