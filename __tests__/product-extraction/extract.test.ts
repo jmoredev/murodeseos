@@ -209,6 +209,22 @@ describe('extractProduct: heurística de precio', () => {
         expect(draft.price).toMatchObject({ amount: 29.95, currency: 'USD', raw: '29.95' });
     });
 
+    it('no fabrica un precio cuando el código ISO es prefijo de otra palabra', () => {
+        // Medido por el refutador: sin límites de palabra, `PEN` casaba dentro de `PENDRIVE` y
+        // `AUD` dentro de `AUDIO`, y el precio inventado salía sin nota que lo delatara.
+        expect(draftDe('<html><body><p>USB 2.0 PENDRIVE 64GB</p></body></html>').price).toBeNull();
+        expect(draftDe('<html><body><p>5.1 AUDIO</p></body></html>').price).toBeNull();
+    });
+
+    it('no fabrica un precio cuando el código separado por un espacio tiene otra palabra detrás', () => {
+        // `PACK 3 PEN DRIVE` no es un precio de 3 PEN. La forma separada solo vale si el código
+        // cierra el texto; si no, se degrada a `null` y lo completa el usuario.
+        const draft = draftDe('<html><body><p>PACK 3 PEN DRIVE</p></body></html>');
+
+        expect(draft.price).toBeNull();
+        expect(draft.notes).toContain('No se encontró el precio en la página.');
+    });
+
     it('descarta un número pelado sin ninguna marca de moneda', () => {
         const html = '<html><body><div class="precio">1234</div></body></html>';
 

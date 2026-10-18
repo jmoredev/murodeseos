@@ -13,9 +13,10 @@ import { collapseWhitespace, decodeHtmlEntities, parseAttributes, stripTags } fr
  *    heurística no adivina y lo deja en `null` con una nota.
  * 2. **Un número sin moneda no es un precio, y la marca tiene que estar junto al número.** Se
  *    exige el símbolo (`€`, `$`, `£`…) antes o después —con o sin espacios— o un código ISO 4217
- *    **en mayúsculas**, pegado o separado por un espacio (`29.95USD`, `29.95 USD`). Las
- *    mayúsculas son lo que separa un código de una palabra: `pen` en minúsculas de «2 pen
- *    drives» llegó a producir un `2 PEN` inventado.
+ *    **en mayúsculas y completo**, pegado (`29.95USD`) o separado por un espacio cuando cierra el
+ *    texto (`29.95 USD`). Las mayúsculas y los límites de palabra son lo que separa un código de
+ *    una palabra: `pen` en minúsculas, `PEN` dentro de `PENDRIVE` y `PACK 3 PEN DRIVE` llegaron a
+ *    producir precios inventados.
  *
  * El precio de un rango (`12,99 - 19,99 €`) se detecta como un único candidato y, al no poder
  * leerse, se deja en `null` y se explica en una nota: es exactamente lo que el usuario tiene que
@@ -188,17 +189,32 @@ const NUMERO_DE_PRECIO = String.raw`\d+(?:[.,\u00A0 ]\d{3})*(?:[.,]\d{1,2})?`;
 const CODIGOS_ISO = CURRENCY_CODES.join('|');
 
 /**
+ * Un código ISO 4217 **completo y en mayúsculas**: los guardas impiden que `PEN` case dentro de
+ * `PENDRIVE` o `AUD` dentro de `AUDIO`, que es de donde salía un `2 PEN` inventado.
+ */
+const CODIGO_ISO = String.raw`(?<![A-Za-z])(?:${CODIGOS_ISO})(?![A-Za-z])`;
+
+/**
+ * El código **separado por un espacio** solo vale si cierra el texto: `29.95 USD` sí, y `PACK 3
+ * PEN DRIVE` no, porque con otra palabra detrás la lectura ya es una invención. La forma **pegada**
+ * (`29.95USD`) no necesita ese guarda: no hay ambigüedad posible.
+ */
+const CODIGO_ISO_FINAL = String.raw`${CODIGO_ISO}(?!\s*[A-Za-z])`;
+
+/**
  * Un número **con su marca de moneda al lado**: un símbolo a cualquier lado, con o sin espacios
- * (`1.234,56 €`, `€ 39,99`, `$12.99`), o un código ISO 4217 **en mayúsculas**, pegado o separado
- * por un espacio (`29.95USD`, `29.95 USD`). Las mayúsculas son lo que separa el código de una
- * palabra: `pen` en minúsculas de «2 pen drives» llegó a dar un `2 PEN` (ver el encabezado).
+ * (`1.234,56 €`, `€ 39,99`, `$12.99`), o un código ISO 4217 **en mayúsculas**, pegado
+ * (`29.95USD`) o separado por un espacio cuando cierra el texto (`29.95 USD`). Las mayúsculas y
+ * los límites de palabra son lo que separa el código de una palabra: `pen` en minúsculas, `PEN`
+ * dentro de `PENDRIVE` y `PACK 3 PEN DRIVE` llegaron a dar precios inventados (ver el encabezado).
  */
 const PRECIO_CON_MARCA = new RegExp(
     String.raw`(?<![\d.,\-–—])` +
         `(?:(?<simboloAntes>${SIMBOLOS_DE_MONEDA})\\s*(?<numeroTrasSimbolo>${NUMERO_DE_PRECIO})` +
         `|(?<numeroAntesDeSimbolo>${NUMERO_DE_PRECIO})\\s*(?<simboloDespues>${SIMBOLOS_DE_MONEDA})` +
-        `|(?<codigoAntes>${CODIGOS_ISO})\\s*(?<numeroTrasCodigo>${NUMERO_DE_PRECIO})` +
-        `|(?<numeroAntesDeCodigo>${NUMERO_DE_PRECIO})\\s*(?<codigoDespues>${CODIGOS_ISO}))` +
+        `|(?<codigoAntes>${CODIGO_ISO})\\s*(?<numeroTrasCodigo>${NUMERO_DE_PRECIO})` +
+        `|(?<numeroAntesDeCodigo>${NUMERO_DE_PRECIO})(?<codigoDespues>${CODIGO_ISO})` +
+        `|(?<numeroAntesDeCodigoSeparado>${NUMERO_DE_PRECIO})\\s+(?<codigoFinal>${CODIGO_ISO_FINAL}))` +
         String.raw`(?!\d)`,
     'g'
 );
@@ -216,8 +232,14 @@ function numerosConMarca(texto: string): { token: string; marca: string }[] {
             grupos.numeroTrasSimbolo ??
             grupos.numeroAntesDeSimbolo ??
             grupos.numeroTrasCodigo ??
-            grupos.numeroAntesDeCodigo;
-        const marca = grupos.simboloAntes ?? grupos.simboloDespues ?? grupos.codigoAntes ?? grupos.codigoDespues;
+            grupos.numeroAntesDeCodigo ??
+            grupos.numeroAntesDeCodigoSeparado;
+        const marca =
+            grupos.simboloAntes ??
+            grupos.simboloDespues ??
+            grupos.codigoAntes ??
+            grupos.codigoDespues ??
+            grupos.codigoFinal;
 
         if (token !== undefined && marca !== undefined) encontrados.push({ token, marca });
     }
