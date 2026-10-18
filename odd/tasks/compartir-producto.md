@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 cerrado (12 semillas, 9 fixtures), T2 en curso (precio hecho)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 y T2 cerrados; T3 (adaptadores por dominio) es lo siguiente. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
 
 ## Objetivo
 
@@ -99,8 +99,8 @@ Lo que estos números fijan (no es opinión):
 
 | # | Tarea | Specs | Commit |
 | --- | --- | --- | --- |
-| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | — |
-| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | — |
+| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3` |
+| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52` |
 | T3 | Adaptadores por dominio, declarativos, con fixtures | S3 | — |
 | T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | — |
 | T5 | Edge Function: endpoint autenticado, cuota por usuario y caché por URL normalizada | S1, S3 | — |
@@ -170,15 +170,40 @@ Lo que estos números fijan (no es opinión):
   lee en un pipe es el del último comando, no el del que importa. Desde acá los comandos de
   verificación van con `set -o pipefail` y con `EXIT=${PIPESTATUS[0]}` explícito.
 
+- **L12 (2026-10-18) — la capa heurística de imagen se elimina, y es una decisión con evidencia.**
+  Verificando el corte del worker encontré que el test de `amazon-es` fijaba como foto del producto
+  una **miniatura de reseña de 154×154**. Eso es peor que no traer imagen: el usuario no lo nota
+  hasta que el regalo llega distinto. Al exigir un tamaño mínimo declarado, la cascada pasó a
+  devolver el **sprite de navegación**; al exigirle evidencia de que el recurso fuera contenido,
+  pasó a devolver `https://www.amazon.es/dp/%22+t.image+%22`, una URL **armada con texto de un
+  `<script>`**. Tres intentos, tres respuestas equivocadas de la **misma** página. La conclusión no
+  era afinar más la heurística, sino que sin declaración la imagen más grande del HTML es cromo:
+  sin JSON-LD, Open Graph ni microdata no hay imagen, y la foto de esas tiendas es trabajo del
+  adaptador de dominio (T3). Los tres casos medidos quedan pinchados en un test para que nadie
+  reintroduzca la capa sin evidencia nueva.
+
+- **L13 (2026-10-18) — verificación del corte delegado: no me quedé con el reporte del worker.**
+  Comprobé yo: los tres comandos (51 tests del directorio, 336 de la suite, `tsc` y `eslint`
+  limpios), el diff real de `tsconfig.json` (una sola bandera), las superficies tocadas, y leí
+  entero el precio de la cascada (`extract/index.ts`, `extract/heuristics.ts`). El reporte del
+  worker fue honesto en lo que no cerraba —PcComponentes sigue 403, AliExpress tiene menos datos de
+  los que suponía el enunciado, Amazon no declara nada— y declaró su propio límite de TDD: el RED
+  observado fue de resolución de import, no de aserción contra un stub. **Riesgo de revisión
+  declarado:** el corte son 1346 líneas en un commit; no se puede partir sin dejar un commit con
+  tests en rojo, porque el test de cascada cubre las cinco capas a la vez.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
   decodificación por `charset` (windows-1252 y caída a UTF-8), resolución de la URL descubierta
   (relativa, absoluta, sin coincidencia y rechazo de esquemas que no sean http(s)), headers de
   navegador e integridad de la lista de semillas.
-- **T2 (precio)**: `__tests__/product-extraction/price.test.ts` en verde (16 tests), incluida la
-  costura con `lib/format-price.ts`.
-- Pendiente: el resto de T2 (extractores y cascada).
+- **T2 (núcleo)**: `__tests__/product-extraction/` en verde (51 tests) y la suite completa en 336,
+  con `pnpm typecheck` y `pnpm lint` limpios. Cubre los 9 fixtures reales con verificación de
+  `sha256`, los cinco testigos negativos y los casos sintéticos que los fixtures no traen.
+- **Defecto encontrado en la verificación del núcleo y corregido**: la capa heurística de imagen
+  devolvía una miniatura de reseña de 154×154 como foto del producto; está eliminada y el motivo
+  medido queda pinchado en un test (ver L12).
 
 ## Hallazgos informativos
 
@@ -186,6 +211,12 @@ Lo que estos números fijan (no es opinión):
   `curl` lo abría). Queda como semilla para reintentar cuando exista la capa de red (T4).
 - **`mercadolibre-ar` y `tiendanimal-es` fallan en el descubrimiento** (patrón sin coincidencia)
   y **`nutritienda-es` da 403 en el listado**: semillas a ajustar cuando T3 evalúe adaptadores.
+- **`description` sale de Open Graph y la heurística queda de respaldo**: Open Graph corre antes y
+  lee `name="description"`, así que la capa heurística casi nunca la usa. No es un defecto (mismo
+  valor, mejor procedencia), pero conviene saberlo al leer los `source` de los fixtures.
+- **AliExpress declara menos de lo que suponíamos**: su único JSON-LD es un `WebSite` con
+  `SearchAction`, sin `Product` ni precio; lo legible sale de Open Graph. Candidato a adaptador si el
+  volumen lo justifica.
 
 ## Commits
 
