@@ -186,18 +186,29 @@ describe('extractProduct: heurística de precio', () => {
         });
     });
 
-    it('lee un precio acompañado de un código ISO 4217', () => {
-        const html = '<html><body><div class="precio">29.95 USD</div></body></html>';
+    it('lee un precio con el código ISO 4217 en mayúsculas y pegado al número', () => {
+        const html = '<html><body><div class="precio">29.95USD</div></body></html>';
 
         expect(draftDe(html)).toEqual({
             url: URL_BASE,
             title: null,
-            price: { amount: 29.95, currency: 'USD', ambiguous: false, raw: '29.95 USD', source: 'heuristic' },
+            price: { amount: 29.95, currency: 'USD', ambiguous: false, raw: '29.95', source: 'heuristic' },
             imageUrl: null,
             siteName: null,
             description: null,
             notes: ['No se encontró la imagen en la página.'],
         });
+    });
+
+    it('deja fuera de esta capa el código ISO con espacio (`29.95 USD`): trade-off documentado', () => {
+        // Pegado y en mayúsculas es lo que separa una moneda de una palabra (`2 pen drives`).
+        // Con espacio, `USD` no es evidencia de nada en esta capa; el precio se sigue leyendo
+        // cuando la tienda declara la moneda, que es el caso normal.
+        const html = '<html><body><div class="precio">29.95 USD</div></body></html>';
+
+        const draft = draftDe(html);
+        expect(draft.price).toBeNull();
+        expect(draft.notes).toContain('No se encontró el precio en la página.');
     });
 
     it('descarta un número pelado sin ninguna marca de moneda', () => {
@@ -230,6 +241,45 @@ describe('extractProduct: heurística de precio', () => {
                 'No se encontró la imagen en la página.',
             ],
         });
+    });
+
+    it('toma el número pegado a la marca, no el nodo entero (antes daba 239,99)', () => {
+        const draft = draftDe('<html><body><p>Pack 2 unidades · 39,99 €</p></body></html>');
+
+        expect(draft.price).toMatchObject({ amount: 39.99, currency: 'EUR', raw: '39,99' });
+        expect(draft.notes).toEqual(['No se encontró la imagen en la página.']);
+    });
+
+    it('no lee un código ISO en minúsculas separado por un espacio (antes daba 2 PEN)', () => {
+        const draft = draftDe('<html><body><p>2 pen drives</p></body></html>');
+
+        expect(draft.price).toBeNull();
+        expect(draft.notes).toEqual([
+            'No se encontró el precio en la página.',
+            'No se encontró la imagen en la página.',
+        ]);
+    });
+
+    it('lee el símbolo con espacios, el de millares, el «$» suelto y un entero de cuatro dígitos', () => {
+        expect(draftDe('<html><body><p>1 234,56 €</p></body></html>').price).toMatchObject({ amount: 1234.56, currency: 'EUR' });
+        expect(draftDe('<html><body><p>€ 39,99</p></body></html>').price).toMatchObject({ amount: 39.99, currency: 'EUR' });
+        expect(draftDe('<html><body><p>Solo $12.99</p></body></html>').price).toMatchObject({ amount: 12.99, currency: null });
+        expect(draftDe('<html><body><p>1250 €</p></body></html>').price).toMatchObject({ amount: 1250, currency: 'EUR' });
+    });
+
+    it('no fabrica un precio desde un guion (rango o signo)', () => {
+        expect(draftDe('<html><body><p>-5,99 €</p></body></html>').price).toBeNull();
+    });
+
+    it('rechaza un banner con dos precios en el mismo nodo (medido en producción)', () => {
+        const banner =
+            'Consigue una bonificación mensual de 10€ en tu Tarjeta El Corte Inglés comprando 125€/mes en Alimentación. Hasta el 1/12/2026';
+        const draft = draftDe(`<html><body><p>${banner}</p></body></html>`);
+
+        expect(draft.price).toBeNull();
+        expect(draft.notes).toContain(
+            'La página muestra varios precios; no se puede saber cuál es el del producto.'
+        );
     });
 });
 

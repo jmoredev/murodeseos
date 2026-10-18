@@ -60,7 +60,7 @@ const CURRENCY_SYMBOLS: readonly (readonly [RegExp, string | null])[] = [
 ];
 
 /** Códigos ISO 4217 que se aceptan escritos en el texto (`99,00 CHF`). */
-const CURRENCY_CODES = [
+export const CURRENCY_CODES = [
     'EUR', 'USD', 'GBP', 'JPY', 'CHF', 'ARS', 'MXN', 'CLP', 'COP', 'PEN', 'BRL', 'UYU', 'BOB', 'PYG',
     'VES', 'KRW', 'INR', 'RUB', 'TRY', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ILS',
     'CAD', 'AUD', 'CNY',

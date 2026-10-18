@@ -1,4 +1,4 @@
-import { detectCurrency, parsePriceText } from '../normalize/price.ts';
+import { CURRENCY_CODES, detectCurrency, parsePriceText } from '../normalize/price.ts';
 import { collapseWhitespace, decodeHtmlEntities, parseAttributes, stripTags } from './text.ts';
 
 /**
@@ -11,8 +11,11 @@ import { collapseWhitespace, decodeHtmlEntities, parseAttributes, stripTags } fr
  *    («Menos de 10€» de un filtro, cuotas, envíos, reseñas) y ninguno es fiable. Por eso solo se
  *    acepta el precio si hay **un único** texto candidato en toda la página; con dos o más, la
  *    heurística no adivina y lo deja en `null` con una nota.
- * 2. **Un número sin moneda no es un precio.** Se exige el símbolo (`€`, `$`, `£`…) o un código
- *    ISO 4217 (`29.95 USD`) pegado al número.
+ * 2. **Un número sin moneda no es un precio, y la moneda tiene que estar pegada al número.** Se
+ *    exige el símbolo (`€`, `$`, `£`…) antes o después —con o sin espacios— o un código ISO 4217
+ *    (`29.95USD`) en mayúsculas y **sin** espacios. El código con espacio (`29.95 USD`) deja de
+ *    ser candidato a propósito: `pen` separado era una palabra y de «2 pen drives» salía un
+ *    `2 PEN` inventado; el trade-off es que se lee igual cuando la tienda declara la moneda.
  *
  * El precio de un rango (`12,99 - 19,99 €`) se detecta como un único candidato y, al no poder
  * leerse, se deja en `null` y se explica en una nota: es exactamente lo que el usuario tiene que
@@ -123,12 +126,28 @@ function leerPrecio(html: string): { price: string | null; currency: string | nu
         .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
         .replace(/<!--[\s\S]*?-->/g, ' ');
 
-    const candidatos: string[] = [];
+    // Los candidatos son **números con su marca**, no nodos enteros. La clave conserva el nodo
+    // como identidad para que la página siga contando «varios precios» igual que antes.
+    const candidatos: { token: string; marca: string }[] = [];
+    const claves = new Set<string>();
+
     for (const trozo of visible.split(/<[^>]*>/)) {
         const texto = collapseWhitespace(decodeHtmlEntities(trozo));
         if (texto === '' || !/\d/.test(texto)) continue;
-        if (!tieneMarcaDeMoneda(texto)) continue;
-        if (!candidatos.includes(texto)) candidatos.push(texto);
+
+        // Un rango (`12,99 - 19,99 €`) son dos lecturas: se pasa el nodo entero para que
+        // `parsePriceText` lo rechace por el guion y la nota lo explique, en vez de quedarse con
+        // uno de los dos extremos.
+        const encontrados = RANGO_DE_PRECIO.test(texto)
+            ? [{ token: texto, marca: '' }]
+            : numerosConMarca(texto);
+
+        for (const { token, marca } of encontrados) {
+            const clave = `${texto}\u0000${token}`;
+            if (claves.has(clave)) continue;
+            claves.add(clave);
+            candidatos.push({ token, marca });
+        }
     }
 
     if (candidatos.length === 0) return { price: null, currency: null, priceNote: null };
@@ -141,18 +160,67 @@ function leerPrecio(html: string): { price: string | null; currency: string | nu
     }
 
     const unico = candidatos[0];
-    const leido = parsePriceText(unico);
+    const leido = parsePriceText(unico.token);
     if (!leido) {
-        return { price: null, currency: null, priceNote: `El precio no se pudo interpretar: «${unico}».` };
+        return { price: null, currency: null, priceNote: `El precio no se pudo interpretar: «${unico.token}».` };
     }
 
-    return { price: unico, currency: leido.currency, priceNote: null };
+    // La moneda sale de la marca: el token ya no lleva el símbolo, así que `parsePriceText` no la
+    // puede deducir. Un `$` suelto sigue dando `null` (es USD, ARS, MXN… y adivinarlo sería peor).
+    return {
+        price: unico.token,
+        currency: detectCurrency({ declared: null, text: unico.marca }) ?? leido.currency,
+        priceNote: null
+    };
 }
 
+/** Símbolos de moneda: pueden ir antes o después del número, con o sin espacios. */
+const SIMBOLOS_DE_MONEDA = String.raw`R\$|€|\$|£|¥|₩|₹|₽|₺|₪|zł|Kč`;
+
 /**
- * `detectCurrency` no reconoce un `$` suelto **a propósito** (es USD, ARS, MXN…), pero un `$` sí
- * es una marca de moneda para descartar un número pelado. Por eso se comprueba aparte.
+ * La forma de un número de precio, que es la gramática del módulo y **no** una corrida de
+ * dígitos: `\d+(?:[., ]\d{3})*(?:[.,]\d{1,2})?`. El espacio es separador de millares
+ * (`1 234,56`), así que dos números separados nunca se unen (`2 39,99 €` no da 239,99). Los
+ * guardas `(?<!\d)`/`(?!\d)` evitan cortar por la mitad una tirada más larga: `1250 €` no es 250.
  */
-function tieneMarcaDeMoneda(texto: string): boolean {
-    return detectCurrency({ declared: null, text: texto }) !== null || texto.includes('$');
+const NUMERO_DE_PRECIO = String.raw`\d+(?:[.,\u00A0 ]\d{3})*(?:[.,]\d{1,2})?`;
+
+const CODIGOS_ISO = CURRENCY_CODES.join('|');
+
+/**
+ * Un número **con su marca de moneda pegada**: un símbolo a cualquier lado, con o sin espacios
+ * (`1.234,56 €`, `€ 39,99`, `$12.99`), o un código ISO 4217 en mayúsculas y sin espacios
+ * (`29.95USD`). El código no admite espacios a propósito: `pen` separado era una palabra y de
+ * «2 pen drives» salía un `2 PEN` (ver el encabezado). El símbolo delante del número no bloquea.
+ */
+const PRECIO_CON_MARCA = new RegExp(
+    String.raw`(?<![\d.,\-–—])` +
+        `(?:(?<simboloAntes>${SIMBOLOS_DE_MONEDA})\\s*(?<numeroTrasSimbolo>${NUMERO_DE_PRECIO})` +
+        `|(?<numeroAntesDeSimbolo>${NUMERO_DE_PRECIO})\\s*(?<simboloDespues>${SIMBOLOS_DE_MONEDA})` +
+        `|(?<codigoAntes>${CODIGOS_ISO})(?<numeroTrasCodigo>${NUMERO_DE_PRECIO})` +
+        `|(?<numeroAntesDeCodigo>${NUMERO_DE_PRECIO})(?<codigoDespues>${CODIGOS_ISO}))` +
+        String.raw`(?!\d)`,
+    'g'
+);
+
+/** Un guion pegado a un número (rango o signo) son dos lecturas: el nodo entero se rechaza. */
+const RANGO_DE_PRECIO = new RegExp(String.raw`(?:${NUMERO_DE_PRECIO}\s*)?[-–—]\s*${NUMERO_DE_PRECIO}`);
+
+/** Extrae de un nodo de texto cada número pegado a una marca de moneda. */
+function numerosConMarca(texto: string): { token: string; marca: string }[] {
+    const encontrados: { token: string; marca: string }[] = [];
+
+    for (const coincidencia of texto.matchAll(PRECIO_CON_MARCA)) {
+        const grupos: Record<string, string | undefined> = coincidencia.groups ?? {};
+        const token =
+            grupos.numeroTrasSimbolo ??
+            grupos.numeroAntesDeSimbolo ??
+            grupos.numeroTrasCodigo ??
+            grupos.numeroAntesDeCodigo;
+        const marca = grupos.simboloAntes ?? grupos.simboloDespues ?? grupos.codigoAntes ?? grupos.codigoDespues;
+
+        if (token !== undefined && marca !== undefined) encontrados.push({ token, marca });
+    }
+
+    return encontrados;
 }
