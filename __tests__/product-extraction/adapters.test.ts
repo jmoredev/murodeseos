@@ -131,7 +131,10 @@ describe('registro de adaptadores: cobertura por host', () => {
         expect(extractProduct({ html, url: 'https://www.mediamarkt.es/es/product/audio-1542796.html' })).toEqual({
             url: 'https://www.mediamarkt.es/es/product/audio-1542796.html',
             title: { value: 'Audio | Otra tienda', source: 'heuristic' },
-            price: { amount: 79.99, currency: 'EUR', ambiguous: false, raw: '79,99 €', source: 'heuristic' },
+            // El `raw` de un precio heurístico es el **token** del precio, no el nodo de texto
+            // entero: el nodo podía traer otros números por delante y de ahí salían precios
+            // inventados (`Pack 2 unidades · 39,99 €` daba 239,99).
+            price: { amount: 79.99, currency: 'EUR', ambiguous: false, raw: '79,99', source: 'heuristic' },
             imageUrl: null,
             siteName: null,
             description: null,
