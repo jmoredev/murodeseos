@@ -199,3 +199,16 @@ export const FIXTURE_SEEDS: readonly FixtureSeed[] = [
     { id: 'fnac-es', shop: 'Fnac (403, testigo negativo)', url: 'https://www.fnac.es/' },
     { id: 'aliexpress-es', shop: 'AliExpress (bloqueo, testigo negativo)', url: 'https://es.aliexpress.com/' },
 ];
+
+/**
+ * Lista de ids de un `--only=`: `null` significa que **la opción no se pasó** y que hay que
+ * capturar todas las semillas.
+ *
+ * Distinguir «ausente» de «vacío» es el punto: un `--only=` explícito pero vacío —lo que produce
+ * una variable de shell sin definir— es una lista **vacía**, y el capturador tiene que negarse a
+ * hacer nada (sale con 1 y lo dice) en vez de pedir todas las tiendas y reportar éxito.
+ */
+export function parseOnlyList(raw: string | null): string[] | null {
+    if (raw === null) return null;
+    return raw.split(',').map((id) => id.trim()).filter(Boolean);
+}

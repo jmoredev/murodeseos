@@ -34,6 +34,7 @@ import {
     buildBrowserHeaders,
     decodeHtml,
     fixtureFileName,
+    parseOnlyList,
     resolveDiscoveredUrl,
     type FixtureManifest,
     type FixtureRecord,
@@ -71,7 +72,7 @@ function parseOptions(argv: string[]): Options {
     };
 
     return {
-        only: only ? only.split(',').map((id) => id.trim()).filter(Boolean) : null,
+        only: parseOnlyList(only),
         maxBytes: number('max-bytes', DEFAULT_MAX_BYTES),
         delayMs: number('delay-ms', DEFAULT_DELAY_MS),
         timeoutMs: number('timeout-ms', DEFAULT_TIMEOUT_MS),

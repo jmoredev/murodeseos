@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildBrowserHeaders, decodeHtml, resolveDiscoveredUrl, FIXTURE_SEEDS } from '../../scripts/lib/fixture-capture';
+import { buildBrowserHeaders, decodeHtml, resolveDiscoveredUrl, FIXTURE_SEEDS, parseOnlyList } from '../../scripts/lib/fixture-capture';
 
 describe('decodeHtml', () => {
     it('decodifica UTF-8 cuando no hay charset declarado', () => {
@@ -68,5 +68,19 @@ describe('FIXTURE_SEEDS', () => {
             expect(seed.url.startsWith('https://')).toBe(true);
             if (seed.discover) expect(seed.discover.from.startsWith('https://')).toBe(true);
         }
+    });
+});
+
+describe('parseOnlyList', () => {
+    it('trata un `--only=` presente pero vacío como lista vacía, no como opción ausente', () => {
+        // Una variable de shell sin definir expande a `--only=`. Leerlo como ausencia hacía que el
+        // capturador pidiera **todas** las semillas y saliera con éxito.
+        expect(parseOnlyList('')).toEqual([]);
+        expect(parseOnlyList(',')).toEqual([]);
+    });
+
+    it('devuelve null solo cuando la opción no se pasó, y recorta los espacios', () => {
+        expect(parseOnlyList(null)).toBeNull();
+        expect(parseOnlyList('a, b ,c')).toEqual(['a', 'b', 'c']);
     });
 });
