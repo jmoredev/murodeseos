@@ -44,6 +44,7 @@
  */
 import { readJwtSub } from '../_shared/product-extraction/auth/jwt.ts';
 import { normalizeCacheKey } from '../_shared/product-extraction/cache/normalize-url.ts';
+import { guardarEnCache, leerDeCache } from '../_shared/product-extraction/cache/postgrest.ts';
 import { isCacheEnabled, readExtractionConfig } from '../_shared/product-extraction/config/env.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
@@ -139,78 +140,6 @@ function cabecerasServicio(clave: string): Record<string, string> {
 }
 
 /** Fila de caché vigente: el borrador guardado y cuándo se guardó. */
-type CacheAcierto = { draft: unknown; cachedAt: string };
-
-/**
- * Busca en la caché una fila vigente para la clave. Cualquier fallo (tabla ausente, red, JSON
- * raro) se trata como **miss**: la extracción no depende de que la caché exista.
- */
-async function leerCache(
-    clave: string,
-    ahoraMs: number,
-    conf: Configuracion
-): Promise<CacheAcierto | null> {
-    try {
-        const url = new URL(`${conf.supabaseUrl}/rest/v1/product_extraction_cache`);
-        url.searchParams.set('cache_key', `eq.${clave}`);
-        url.searchParams.set('expires_at', `gt.${new Date(ahoraMs).toISOString()}`);
-        url.searchParams.set('select', 'draft,created_at');
-        url.searchParams.set('limit', '1');
-
-        const respuestaHttp = await fetch(url, {
-            headers: { ...cabecerasServicio(conf.serviceRoleKey), accept: 'application/json' },
-        });
-        if (!respuestaHttp.ok) return null;
-
-        const filas: unknown = await respuestaHttp.json();
-        if (!Array.isArray(filas) || filas.length === 0) return null;
-
-        const fila = filas[0] as { draft?: unknown; created_at?: unknown };
-        if (fila === null || typeof fila !== 'object' || !('draft' in fila)) return null;
-
-        return {
-            draft: fila.draft,
-            cachedAt: typeof fila.created_at === 'string' ? fila.created_at : '',
-        };
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Guarda el borrador en la caché. Es **best-effort**: si falla, la respuesta al usuario no cambia
- * (ya tiene su borrador). Se guardan solo los aciertos de la extracción.
- */
-async function guardarCache(
-    clave: string,
-    draft: unknown,
-    finalUrl: string,
-    conf: Configuracion,
-    ahoraMs: number
-): Promise<void> {
-    try {
-        await fetch(`${conf.supabaseUrl}/rest/v1/product_extraction_cache`, {
-            method: 'POST',
-            headers: {
-                ...cabecerasServicio(conf.serviceRoleKey),
-                'content-type': 'application/json',
-                prefer: 'resolution=merge-duplicates,return=minimal',
-            },
-            body: JSON.stringify([
-                {
-                    cache_key: clave,
-                    draft,
-                    final_url: finalUrl,
-                    created_at: new Date(ahoraMs).toISOString(),
-                    expires_at: new Date(ahoraMs + conf.ttlSegundos * 1000).toISOString(),
-                },
-            ]),
-        });
-    } catch {
-        // La caché no es un requisito: se ignora el fallo.
-    }
-}
-
 type ConsumoCuota = { allowed: boolean; used: number; windowEndMs: number };
 
 /**
@@ -312,7 +241,12 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const cacheActiva = isCacheEnabled(conf);
 
     if (clave && cacheActiva) {
-        const cache = await leerCache(clave, ahoraMs, conf);
+        const cache = await leerDeCache({
+            supabaseUrl: conf.supabaseUrl,
+            serviceRoleKey: conf.serviceRoleKey,
+            cacheKey: clave,
+            ahoraMs,
+        });
         if (cache) {
             return respuesta(
                 { ok: true, draft: cache.draft, cached: true, cachedAt: cache.cachedAt },
@@ -347,7 +281,17 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
 
         const draft = extractProduct({ html: resultado.body, url: resultado.finalUrl });
-        if (clave && cacheActiva) await guardarCache(clave, draft, resultado.finalUrl, conf, Date.now());
+        if (clave && cacheActiva) {
+            await guardarEnCache({
+                supabaseUrl: conf.supabaseUrl,
+                serviceRoleKey: conf.serviceRoleKey,
+                cacheKey: clave,
+                draft,
+                finalUrl: resultado.finalUrl,
+                ttlSegundos: conf.ttlSegundos,
+                ahoraMs: Date.now(),
+            });
+        }
         return respuesta({ ok: true, draft }, 200, request);
     } catch {
         return respuesta({ ok: false, reason: 'unexpected' }, 200, request);
