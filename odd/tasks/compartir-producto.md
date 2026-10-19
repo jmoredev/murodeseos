@@ -355,6 +355,12 @@ Lo que estos números fijan (no es opinión):
   `lib/share-target.ts` · `lib/share-draft.ts` · `lib/extract-product-client.ts` ·
   `components/WishListTab.tsx` · `__tests__/{manifest,sw,share-target,share-draft,extract-product-client,compartir-route,wish-share-prefill}.test.*`.
   Commits `aa776ae` y `4fd6be4`.
+  **Disposición del RDD sobre este corte**: `assess` con `baseRef 7da81af` (committedOnly) devolvió
+  **riesgo medium / `reviewDue: false`** (`under_budget`) y **ningún** ítem de riesgo alto
+  escalado, así que **no se arrancó ninguna revisión nativa**: el plan es la verificación del
+  propio escritor, y la revisión nativa es una mirada externa que no reemplaza la verificación.
+  Lo que sí corresponde y **quedó sin hacer por falta de entorno**: el e2e de Playwright (Docker
+  apagado) y la prueba en un teléfono con la PWA instalada, que necesita al propietario.
 
 ## Verificación
 
@@ -467,6 +473,13 @@ Lo que estos números fijan (no es opinión):
   tests que ya existían.
 - **Cosmético, declarado en L20**: en escritorio, mientras la lista carga y el formulario de un
   compartir está abierto, se ve el fondo del modal en lugar de la lista.
+- **Privacidad, menor y aceptada**: el compartir vive en `sessionStorage` hasta que el formulario
+  lo consume, y el `sessionStorage` no distingue usuarios. Si en el mismo dispositivo y la misma
+  pestaña una persona comparte sin iniciar sesión y **después** entra otra, la segunda vería el
+  formulario con el enlace de la primera. La caché del service worker **sí** se vacía al cerrar
+  sesión (`signOut` borra todo `murodeseos-*`), así que el camino que queda es el de la pestaña
+  abierta sin sesión. Lo que se filtra es una URL que se compartió en ese mismo dispositivo, no
+  datos de la cuenta.
 
 ## Commits
 
