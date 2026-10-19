@@ -110,12 +110,21 @@ function shareScope() {
  * ¿Es el POST de la hoja de compartir? Se compara **origen y ruta exacta**: el `action` del
  * manifest es `./compartir`, así que cualquier otro POST del sitio (o de otro origen) sigue su
  * camino y no se intercepta.
+ *
+ * Y se mira **quién lo inicia**: sin eso, un formulario de cualquier web puede forzar el compartir
+ * en el navegador de la víctima —guardarle un enlace ajeno, abrirle la app y gastarle cuota con una
+ * lectura que no pidió—. La trampa es no pasarse: el POST legítimo viene de la **hoja de compartir
+ * del sistema**, no de nuestra página, así que exigir `same-origin` rompería el feature. Solo se
+ * rechaza lo declarado `cross-site`; `none`, `same-origin`, `same-site` o la cabecera ausente (un
+ * navegador que no la manda) siguen pasando.
  */
 function isShareTargetRequest(request) {
   try {
     const action = new URL(SHARE_TARGET_PATH, shareScope());
     const target = new URL(request.url);
-    return target.origin === action.origin && target.pathname === action.pathname;
+    if (target.origin !== action.origin || target.pathname !== action.pathname) return false;
+    if (request.headers.get('sec-fetch-site') === 'cross-site') return false;
+    return true;
   } catch {
     return false;
   }

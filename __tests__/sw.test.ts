@@ -456,3 +456,45 @@ describe('service worker: share target', () => {
         expect(sandbox.cacheApi.store.has('murodeseos-v2')).toBe(false);
     });
 });
+
+/**
+ * Quién **inicia** el POST también decide (hallazgo `R1-share-target-no-initiator-check` de la
+ * revisión de T6). Sin esta comprobación, un formulario de otra web puede forzar el compartir en
+ * el navegador de la víctima: guardar un enlace ajeno, abrir la app y gastarle cuota con una
+ * lectura que no pidió.
+ *
+ * La trampa es no pasarse: el POST legítimo viene de la **hoja de compartir del sistema**, no de
+ * nuestra página, así que no se puede exigir `same-origin`. Solo se rechaza lo declarado
+ * `cross-site`; `none`, `same-origin`, `same-site` o la cabecera ausente siguen pasando.
+ */
+describe('service worker: quién inicia el compartir', () => {
+    const SHARE_URL = `${SW_SCOPE}compartir`;
+
+    function shareRequestCon(secFetchSite?: string) {
+        const form = new FormData();
+        form.append('url', 'https://tienda.example/p/1');
+        const headers: Record<string, string> = {};
+        if (secFetchSite) headers['sec-fetch-site'] = secFetchSite;
+        return new Request(SHARE_URL, { method: 'POST', body: form, headers });
+    }
+
+    it('un POST iniciado por otro sitio no se intercepta', () => {
+        const sandbox = createSandbox();
+
+        const event = dispatchFetch(sandbox, shareRequestCon('cross-site'));
+
+        expect(event.respondWith).not.toHaveBeenCalled();
+    });
+
+    it('el POST de la hoja de compartir del sistema sí se intercepta', async () => {
+        // La hoja del sistema no es «cross-site»: llega como navegación propia.
+        for (const cabecera of ['none', 'same-origin', undefined]) {
+            const sandbox = createSandbox();
+            const event = dispatchFetch(sandbox, shareRequestCon(cabecera));
+
+            expect(event.respondWith).toHaveBeenCalledTimes(1);
+            const response = await event.respondWith.mock.calls[0][0];
+            expect(response.status).toBe(303);
+        }
+    });
+});
