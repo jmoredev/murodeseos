@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { supabaseAdmin } from './supabase-admin';
+import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 const createdIds = new Set<string>();
 
 /**
@@ -70,8 +71,9 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         };
 
         // --- 1. Crear Primer Item ---
-        await page.getByLabel('Nuevo deseo').click();
-        await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
+        // El «+» pasa por la pantalla del enlace: el helper elige «No tengo enlace» y deja el
+        // formulario abierto, que es el punto de partida de siempre.
+        await abrirFormularioDeDeseo(page);
 
         await page.getByPlaceholder('¿Qué deseas?').fill(testItem.title);
         await page.getByPlaceholder('0,00').fill(toPriceText(testItem.price));
@@ -104,7 +106,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await expect(page.getByRole('link', { name: /example\.com/i }).first()).toBeVisible();
 
         // --- 2. Crear Segundo Item (para probar ordenación) ---
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
         await page.getByPlaceholder('¿Qué deseas?').fill(anotherItem.title);
         await page.getByPlaceholder('0,00').fill(toPriceText(anotherItem.price));
         await page.getByText(anotherItem.priority, { exact: true }).first().click();
@@ -198,13 +200,13 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
     });
 
     test('debe validar las entradas del formulario', async ({ page }) => {
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
         await page.getByText('Guardar', { exact: true }).last().click();
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible();
     });
 
     test('el campo de precio sólo admite un número decimal', async ({ page }) => {
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
 
         const price = page.getByPlaceholder('0,00');
 
@@ -244,7 +246,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
     });
 
     test('un precio pegado con separador de millares se guarda como el número que es', async ({ page }) => {
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
 
         const price = page.getByPlaceholder('0,00');
 
@@ -284,7 +286,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         await page.setViewportSize({ width: 360, height: 800 });
         await page.reload();
 
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
         await page.getByPlaceholder('¿Qué deseas?').fill(titulo);
         await page.getByPlaceholder('0,00').fill('9999999999,99');
         // Un dominio LARGO a propósito: si el enlace es corto, la fila no queda apretada
@@ -356,7 +358,7 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         // Guardar sí, así que la app dice cuál es la acción principal.
         await page.setViewportSize({ width: 360, height: 800 });
         await page.reload();
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
 
         const anadir = page.getByRole('button', { name: 'Añadir foto del deseo' });
         await expect(anadir).toBeVisible();

@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real** y **T6 con la puerta del e2e del repo en verde** (L21). Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta de T6 y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 y T9 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real**, **T6 y T9 con la puerta del e2e del repo en verde** (L21, L23) y **la revisión de la rama entera cortada por presupuesto** (L22: la entrega necesita commits encadenados más pequeños). Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
 
 ## Objetivo
 
@@ -116,6 +116,7 @@ Lo que estos números fijan (no es opinión):
 | T5a | Edge Function: endpoint autenticado (JWT de la plataforma) + extracción | S1, S2, S3 | `90ac8a8` |
 | T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
+| T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | — |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
 | T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
 
@@ -398,6 +399,68 @@ Lo que estos números fijan (no es opinión):
   siguen levantados** (los arrancó esta sesión), a la espera de que el propietario diga si se paran.
   **Where**: `.github/workflows/e2e.yml` · `e2e/mobile-layout.spec.ts` · `e2e/wishlist-visibility.spec.ts`
   · `e2e/birthday-reminders.spec.ts`.
+
+- **L22 (2026-10-19) — la revisión de la rama entera no entra, y el proveedor lo dice con nombre.**
+  Con la puerta del e2e en verde y el árbol limpio, se pidió `inspect`: la primera vez se quedó sin
+  estado nativo (`operation_timeout` en `review.status`, `retry_safe: false`, sin linaje creado); el
+  propietario autorizó un reintento manual y la segunda sí respondió `ready` ofreciendo START sobre
+  **la rama entera** (`base-ref=3f4e40c`, `committedOnly`, árbol `54e4b2cc`). Se arrancó con las
+  cuatro lentes —riesgo (endpoint autenticado que sale a la red, JWT, migración), resiliencia
+  (transporte, DNS, degradación), legibilidad y confiabilidad— y el proveedor **cortó en
+  `preflight`** con `lens_context_budget_exceeded`: **no se creó ninguna autoridad de revisión**, no
+  hay nada que abandonar ni reparar, y su propio `cause` dice que reintentar el mismo candidato no
+  puede funcionar. La conclusión operativa es la de siempre en este repo y ahora está firmada por
+  el proveedor: **el candidato acumulado de la rama no es revisable como uno solo**; la entrega
+  necesita una **secuencia encadenada de commits revisables** por debajo del presupuesto. Esa
+  decisión (cómo se parte y en qué orden) es del propietario, no del agente.
+
+- **L23 (2026-10-19) — T9: extraer el producto del enlace que se pega, con una pantalla previa en vez de magia dentro del formulario.**
+  El pedido del propietario: al añadir un deseo, poder sacar del enlace el nombre, el precio y la imagen
+  **al momento, sin guardar**. Yo había empezado por el camino cómodo —disparar la lectura sola al
+  pegar el enlace en el campo, con 700 ms de espera y fusión campo por campo— y **el propietario lo
+  cambió**: una **pantalla antes del formulario** que pida el enlace y ofrezca [Aceptar] o [No tengo
+  enlace]. Se le dio la razón por tres motivos, y quedaron escritos: **el gasto de cuota pasa a ser un
+  acto del usuario** (cada lectura consume 1 de sus 30 por hora y hace salir al servidor a buscar una
+  página de hasta 8 MB), **la latencia deja de ser un misterio** (leer tarda segundos y puede fallar:
+  Cloudflare en Fnac y Decathlon, SPA vacía en Zara), y **se va la carrera** con lo que el usuario está
+  escribiendo. La versión automática se **descartó entera** (espera, deduplicación, fusión en caliente y
+  sus tests); se conservó `lib/link-extraction.ts`, que pasó a ser la validación de la pantalla.
+  **El flujo que queda, con dos entradas al mismo formulario:** el **compartir del sistema** no se tocó
+  —sigue abriendo el formulario al instante con enlace y título y rellenando después— y el **«+»** ahora
+  navega a `/wishlist/add`, que ofrece [Aceptar] (lee la página y llega al formulario con el borrador
+  hecho), [No tengo enlace] (llega al formulario vacío, el de siempre) y, si la página no se pudo leer,
+  se queda con el motivo y un [Continuar a mano] que conserva el enlace. La cuota agotada tiene mensaje
+  propio: decir «no pudimos leer la página» haría que el usuario cambiara de enlace en vez de esperar.
+  **Decisiones de implementación que importan.** El borrador viaja por un espacio **independiente** del
+  compartir en `sessionStorage`, y ahí **`{}` es un valor válido que significa «abre el formulario
+  vacío»**, distinto de «no hay nada pendiente»: confundirlos es exactamente el bug de abrir un deseo
+  fantasma. Y en `lib/link-extraction.ts` el cliente **no duplica** la lista de IPs prohibidas: eso es
+  del servidor, y una segunda verdad en el cliente se separaría de la del guardián.
+  **El defecto que encontró el worker, y que era de producto.** Volver de la pantalla con
+  `router.replace('/?tab=wishlist')` **no vuelve**: apila una segunda copia de la lista. Medido en el DOM
+  real: **18 nodos de tarjeta para 9 deseos**, dos fetches y dos suscripciones vivas; en Playwright, las
+  aserciones `.first()` resolvían al nodo oculto de la copia vieja y `getByLabel('Nuevo deseo')` pasaba a
+  coincidir con dos nodos (modo estricto). Se arregló con **`router.back()`** (y `replace` solo como
+  respaldo si no hay historial), más consumir lo pendiente **al recuperar el foco**
+  (`useFocusEffect`): volver a una pantalla ya montada **no** vuelve a ejecutar su efecto de montaje.
+  Medición posterior: **9 tarjetas para 9 deseos y una sola instancia**.
+  **Y un defecto del arnés, del mismo viaje:** en `vitest.setup.ts` `useFocusEffect` estaba mockeado como
+  `vi.fn()`, o sea que **apagaba en silencio todos los efectos de foco** de la app en cada test. Ahora
+  ejecuta el callback.
+  **Verificación**: rojo observado en los tres tramos (helper puro, borrador pendiente, pantalla) y dos
+  correcciones de rumbo medidas en rojo útil (el contrato de navegación pasó de `replace` a `back`).
+  Suite **543 pasan | 1 todo**, `tsc` y `eslint` en 0, y la **puerta del e2e** completa en el modo que usa
+  el CI: re-siembra → **chromium 62 pasan | 1 skipped** → re-siembra → **Mobile Chrome 63 pasan**, todo
+  con exit 0. Cuatro specs de e2e usan ahora un helper (`abrirFormularioDeDeseo`) que pasa por la
+  pantalla nueva con [No tengo enlace]: **ninguna aserción se debilitó** ni se añadió una espera para
+  cambiar lo que una medición mide.
+  **Lo que sigue sin verificarse y por qué**: el recorrido real en un teléfono —compartir desde una app
+  de compras y pegar un enlace en la pantalla nueva— necesita **desplegar primero** y el móvil del
+  propietario. Y el flake de 44px de `mobile-layout` se vio **una vez** y no se reprodujo al correrlo
+  aislado: se deja declarado, sin retocar la aserción.
+  **Where**: `app/wishlist/add/index.tsx` · `lib/link-extraction.ts` · `lib/share-draft.ts` ·
+  `components/WishListTab.tsx` · `vitest.setup.ts` · `e2e/helpers/nuevo-deseo.ts` ·
+  `__tests__/{link-extraction,wishlist-add,share-draft,WishListTab}.test.*` · `e2e/{wishlist,wishlist-visibility,already-have-it,mobile-layout}.spec.ts`.
 
 ## Verificación
 

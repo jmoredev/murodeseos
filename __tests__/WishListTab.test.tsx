@@ -1,9 +1,65 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { WishListTab } from '@/components/WishListTab';
 import { supabase } from '@/lib/supabase';
+import { savePendingDraft, takePendingDraft } from '@/lib/share-draft';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+// El «+» navega en vez de abrir el modal, así que el push se controla desde el test.
+const push = vi.fn();
+
+/**
+ * El foco de la pantalla, que el test tiene que poder disparar a mano.
+ *
+ * Volver de `/wishlist/add` **no** vuelve a montar la lista, así que «volver» solo se puede
+ * probar si el doble de `useFocusEffect` deja emitir un foco: con un `useEffect` de montaje
+ * (o con un no-op) «regresa el foco» y «montar» serían indistinguibles desde un test.
+ */
+const foco = vi.hoisted(() => {
+    const oyentes = new Set<() => void>();
+    return {
+        oyentes,
+        emitir: () => {
+            Array.from(oyentes).forEach((oyente) => oyente());
+        },
+    };
+});
+
+// `vi.mock` se eleva por encima de los imports, así que el componente recibe estos dobles aunque
+// el import esté arriba. El `push` se lee de forma diferida (al renderizar), no al registrar el
+// mock.
+vi.mock('expo-router', () => {
+    /**
+     * `useFocusEffect` de verdad: corre el callback al montar y **también** cada vez que la
+     * pantalla recupera el foco, con la limpieza del callback anterior entre medias. Un no-op
+     * aquí convertiría cualquier efecto de foco en nada.
+     */
+    function useFocusEffectEnfocado(callback: any) {
+        useEffect(() => {
+            let limpiar = callback();
+            const alEnfocar = () => {
+                if (typeof limpiar === 'function') limpiar();
+                limpiar = callback();
+            };
+            foco.oyentes.add(alEnfocar);
+            return () => {
+                foco.oyentes.delete(alEnfocar);
+                if (typeof limpiar === 'function') limpiar();
+            };
+        }, [callback]);
+    }
+
+    return {
+        useRouter: () => ({ push, replace: vi.fn(), back: vi.fn(), setParams: vi.fn() }),
+        useLocalSearchParams: () => ({}),
+        useGlobalSearchParams: () => ({}),
+        Link: ({ children }: any) => children,
+        useFocusEffect: useFocusEffectEnfocado,
+        useSegments: () => [],
+        usePathname: () => '/',
+    };
+});
 
 // Mock WishlistCard to simplify testing
 vi.mock('@/components/WishlistCard', () => ({
@@ -46,6 +102,10 @@ describe('WishListTab', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        // El borrador pendiente vive en `sessionStorage` (el del setup), que no se limpia solo.
+        sessionStorage.clear();
+        // Los oyentes de foco del test anterior, si alguno quedó, no tienen a quién avisar.
+        foco.oyentes.clear();
 
         // Default success for fetches
         (supabase.from as any).mockImplementation((table: string) => {
@@ -91,25 +151,30 @@ describe('WishListTab', () => {
         });
     });
 
-    it('opens add modal when clicking plus button', async () => {
+    it('el «+» lleva a la pantalla del enlace en vez de abrir el formulario', async () => {
         await act(async () => {
             render(<WishListTab userId={userId} />);
         });
 
-        const addBtn = screen.getByLabelText('Nuevo deseo');
-        fireEvent.click(addBtn);
+        fireEvent.click(screen.getByLabelText('Nuevo deseo'));
 
-        expect(screen.getByText('Nuevo deseo')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('¿Qué deseas?')).toBeInTheDocument();
+        // El formulario no se abre acá: la pantalla del enlace decide **si hay enlace** y qué se
+        // pudo leer antes de abrirlo.
+        expect(push).toHaveBeenCalledWith('/wishlist/add');
+        expect(screen.queryByPlaceholderText('¿Qué deseas?')).not.toBeInTheDocument();
     });
 
     it('adds a new wish successfully', async () => {
+        // El formulario se abre desde un borrador pendiente, que es como lo deja la pantalla del
+        // enlace. Se escribe con el módulo real (`savePendingDraft`), sin doblarlo.
+        savePendingDraft({ title: 'Borrador inicial', links: ['https://tienda.example/p/1'] });
+
         await act(async () => {
             render(<WishListTab userId={userId} />);
         });
 
-        // Open modal
-        fireEvent.click(screen.getByLabelText('Nuevo deseo'));
+        // El borrador abre el formulario con lo que traía.
+        expect(screen.getByPlaceholderText('¿Qué deseas?')).toHaveValue('Borrador inicial');
 
         // Fill form
         fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'New Wish' } });
@@ -127,6 +192,42 @@ describe('WishListTab', () => {
         });
 
         expect(screen.getByText('New Wish')).toBeInTheDocument();
+    });
+
+    it('un borrador vacío abre el formulario vacío, como el «+» de antes', async () => {
+        // `{}` es lo que deja «No tengo enlace»: es un borrador válido, no «no hay nada», y el
+        // formulario tiene que abrirse igual que siempre.
+        savePendingDraft({});
+
+        await act(async () => {
+            render(<WishListTab userId={userId} />);
+        });
+
+        expect(screen.getByText('Nuevo deseo')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('¿Qué deseas?')).toHaveValue('');
+        expect(screen.getByPlaceholderText('https://tienda.com/articulo')).toHaveValue('');
+    });
+
+    it('al volver a una lista ya montada se consume el borrador que dejó la pantalla del enlace', async () => {
+        // Ir a `/wishlist/add` y volver **no** vuelve a montar la lista: si el borrador solo se
+        // leyera al montar, el deseo que esa pantalla acaba de preparar se quedaría sin abrir.
+        await act(async () => {
+            render(<WishListTab userId={userId} />);
+        });
+
+        expect(screen.queryByPlaceholderText('¿Qué deseas?')).not.toBeInTheDocument();
+
+        // Es lo que deja `/wishlist/add` justo antes de volver.
+        savePendingDraft({ title: 'Vuelto del enlace', links: ['https://tienda.example/p/2'] });
+
+        await act(async () => {
+            foco.emitir();
+        });
+
+        expect(screen.getByPlaceholderText('¿Qué deseas?')).toHaveValue('Vuelto del enlace');
+        expect(screen.getByPlaceholderText('https://tienda.com/articulo')).toHaveValue('https://tienda.example/p/2');
+        // Se consume una sola vez: un segundo foco sin borrador no vuelve a abrir nada.
+        expect(takePendingDraft()).toBeNull();
     });
 
     it('edits a wish successfully', async () => {

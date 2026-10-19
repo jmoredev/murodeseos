@@ -4,6 +4,9 @@ import {
     mergeUntouchedWishFields,
     savePendingShare,
     takePendingShare,
+    savePendingDraft,
+    takePendingDraft,
+    PENDING_DRAFT_KEY,
     PENDING_SHARE_KEY,
 } from '@/lib/share-draft';
 
@@ -56,6 +59,98 @@ describe('compartir pendiente entre la ruta y el formulario', () => {
         try {
             expect(() => savePendingShare(payload)).not.toThrow();
             expect(takePendingShare()).toBeNull();
+        } finally {
+            (globalThis as any).sessionStorage = original;
+        }
+    });
+});
+
+describe('borrador pendiente del formulario (pantalla del enlace)', () => {
+    it('guarda y devuelve el borrador, y lo consume una sola vez', () => {
+        const draft = { title: 'Lámpara de pie', priceText: '89,99', links: ['https://tienda.example/p/1'] };
+
+        savePendingDraft(draft);
+
+        expect(takePendingDraft()).toEqual(draft);
+        // Consumido una vez: el formulario no se reabre solo en el siguiente montaje.
+        expect(takePendingDraft()).toBeNull();
+        expect(sessionStorage.getItem(PENDING_DRAFT_KEY)).toBeNull();
+    });
+
+    it('un borrador vacío es un borrador: `{}` vuelve como `{}`, no como null', () => {
+        // «No tengo enlace» deja el formulario **vacío**, y eso no es lo mismo que «no hay
+        // nada pendiente»: con null el formulario no se abriría.
+        savePendingDraft({});
+
+        expect(takePendingDraft()).toEqual({});
+        expect(takePendingDraft()).toBeNull();
+    });
+
+    it('sin nada guardado devuelve null', () => {
+        expect(takePendingDraft()).toBeNull();
+    });
+
+    it('lo guardado corrupto se descarta y se borra igual', () => {
+        // Un pendiente corrupto no se arregla reintentando, y dejarlo ahí haría que cada
+        // apertura fallara igual.
+        sessionStorage.setItem(PENDING_DRAFT_KEY, '{no es json');
+
+        expect(takePendingDraft()).toBeNull();
+        expect(sessionStorage.getItem(PENDING_DRAFT_KEY)).toBeNull();
+    });
+
+    it('lo guardado que no es un objeto plano se descarta y se borra igual', () => {
+        for (const raw of ['[]', '"texto"', '7', 'null', '["https://tienda.example"]']) {
+            sessionStorage.setItem(PENDING_DRAFT_KEY, raw);
+
+            expect(takePendingDraft(), raw).toBeNull();
+            expect(sessionStorage.getItem(PENDING_DRAFT_KEY), raw).toBeNull();
+        }
+    });
+
+    it('se queda con los campos del tipo correcto y tira el resto', () => {
+        sessionStorage.setItem(
+            PENDING_DRAFT_KEY,
+            JSON.stringify({
+                title: 7,
+                notes: 'Talla M',
+                imageUrl: false,
+                priceText: null,
+                links: ['https://tienda.example/p/1', 'https://tienda.example/p/2'],
+                desconocido: 'no viaja al formulario',
+            }),
+        );
+
+        const draft = takePendingDraft();
+
+        expect(draft).toEqual({
+            notes: 'Talla M',
+            links: ['https://tienda.example/p/1', 'https://tienda.example/p/2'],
+        });
+        expect(draft).not.toHaveProperty('desconocido');
+        expect(draft).not.toHaveProperty('title');
+    });
+
+    it('un campo con el tipo equivocado se tira entero, no se «arregla»', () => {
+        sessionStorage.setItem(
+            PENDING_DRAFT_KEY,
+            JSON.stringify({ links: 'https://tienda.example/p/1', linksMixtos: 1, title: 'Lámpara' }),
+        );
+
+        expect(takePendingDraft()).toEqual({ title: 'Lámpara' });
+
+        sessionStorage.setItem(PENDING_DRAFT_KEY, JSON.stringify({ links: ['https://a.example', 3] }));
+
+        expect(takePendingDraft()).toEqual({});
+    });
+
+    it('sin sessionStorage (SSR) no tira y no devuelve nada', () => {
+        const original = (globalThis as any).sessionStorage;
+        (globalThis as any).sessionStorage = undefined;
+
+        try {
+            expect(() => savePendingDraft({ title: 'Lámpara' })).not.toThrow();
+            expect(takePendingDraft()).toBeNull();
         } finally {
             (globalThis as any).sessionStorage = original;
         }

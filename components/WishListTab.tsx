@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useTransition } from 'react'
+import React, { useState, useEffect, useRef, useTransition, useCallback } from 'react'
 import { View, Text, Pressable, TextInput, Modal, ActivityIndicator, ScrollView, Platform, Image, KeyboardAvoidingView, BackHandler } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRouter, useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import {
     buildWishImageStoragePath,
@@ -8,7 +9,7 @@ import {
     resolveWishImageUploadPayload,
 } from '@/lib/wish-image-upload'
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
-import { draftFromShare, mergeUntouchedWishFields, takePendingShare, type WishDraftFields } from '@/lib/share-draft'
+import { draftFromShare, mergeUntouchedWishFields, takePendingDraft, takePendingShare, type WishDraftFields } from '@/lib/share-draft'
 import { requestProductDraft } from '@/lib/extract-product-client'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
@@ -73,6 +74,7 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [sortBy, setSortBy] = useState<'name' | 'price' | 'priority'>('name');
     const [userGroups, setUserGroups] = useState<{ id: string; name: string; icon: string }[]>([]);
     const isDesktop = useIsDesktop();
+    const router = useRouter();
     const insets = useSafeAreaInsets();
     // En web `KeyboardAvoidingView` no encoge: estimamos el solape del teclado
     // con `visualViewport` y lo sumamos al padding inferior del formulario móvil.
@@ -183,8 +185,25 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     // Un compartir del sistema abre el deseo ya mismo: si esperáramos a la extracción, el
     // usuario vería la lista de siempre y creería que compartir no hizo nada.
-    useEffect(() => {
+    // Va en el **foco** y no en el montaje: volver de `/wishlist/add` devuelve a esta misma lista
+    // ya montada, y un efecto de montaje no se vuelve a ejecutar. Un borrador que dejó esa
+    // pantalla se consume al volver, que es justo cuando llega.
+    useFocusEffect(useCallback(() => {
         if (!userId) return undefined;
+
+        // El borrador que dejó la pantalla del enlace (`/wishlist/add`) llega **antes** que el
+        // compartir: esa pantalla ya decidió si hay enlace y qué se pudo leer, así que acá no se
+        // vuelve a preguntar la página (cada extracción gasta cuota) ni se lee el compartir. Un
+        // borrador vacío también es un borrador: significa «abre el formulario vacío».
+        const draft = takePendingDraft();
+        if (draft) {
+            // Se consume una sola vez por la misma razón que el compartir: es una fuente externa
+            // y un inicializador de `useState` la consumiría dos veces bajo StrictMode.
+            // Ya no hace falta el `disable` de `react-hooks/set-state-in-effect`: este cuerpo es
+            // el callback del foco, no el de un `useEffect`, y la regla no lo inspecciona.
+            startNewWish(draft);
+            return undefined;
+        }
 
         const payload = takePendingShare();
         if (!payload) return undefined;
@@ -192,9 +211,8 @@ export function WishListTab({ userId }: WishListTabProps) {
         const prefilled = draftFromShare(payload);
         // El compartir es una fuente externa que se consume **una sola vez**, así que no hay
         // render del que derivarlo: un inicializador de `useState` lo consumiría dos veces bajo
-        // StrictMode y la segunda leería `null`. El efecto de montaje es el único sitio donde
-        // se aplica una vez, y es lo que pide el formulario abierto al instante.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // StrictMode y la segunda leería `null`. El efecto de foco es el único sitio donde se
+        // aplica una vez, y es lo que pide el formulario abierto al instante.
         startNewWish(prefilled);
 
         // Sin enlace no hay página que leer: lo compartido es todo lo que hay.
@@ -254,9 +272,9 @@ export function WishListTab({ userId }: WishListTabProps) {
             cancelled = true;
         };
         // `startNewWish` y `showToast` se rearman en cada render y aquí solo escriben estado;
-        // con `userId` alcanza para que el compartir se consuma una vez por montaje.
+        // con `userId` alcanza para que el compartir se consuma una vez por foco.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userId]);
+    }, [userId]));
 
     const sortedItems = [...items].sort((a, b) => {
         if (sortBy === 'name') {
@@ -458,7 +476,9 @@ export function WishListTab({ userId }: WishListTabProps) {
                     <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
                 <PrimaryButton
-                    onPress={() => openForm()}
+                    // El «+» no abre el formulario: va a la pantalla del enlace, que decide si
+                    // hay enlace (y lo lee) o si el deseo se escribe a mano.
+                    onPress={() => router.push('/wishlist/add' as any)}
                     accessibilityLabel="Nuevo deseo"
                     variant="icon"
                     className="w-12 h-12 rounded-2xl"

@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { E2E_CONFIG } from './config';
+import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 
 /**
  * Mobile verification harness (`feat/mobile-first`, Unit F).
@@ -476,7 +477,8 @@ test.describe('Diseño móvil a 360px', () => {
         // The wish form save button only exists while the form is open
         // (client state, nothing is written to the database); each test gets
         // its own fresh page context, so no teardown is needed afterwards.
-        await page.getByRole('button', { name: 'Nuevo deseo' }).click();
+        // El «+» pasa antes por la pantalla del enlace y el helper elige «No tengo enlace».
+        await abrirFormularioDeDeseo(page);
         const saveButton = page.getByRole('button', { name: 'Guardar deseo' });
         await expect(saveButton).toBeVisible({ timeout: 10000 });
         await expectPrimaryActionAtLeast44('/?tab=wishlist', 'Guardar deseo', saveButton);
@@ -490,9 +492,10 @@ test.describe('Diseño móvil a 360px', () => {
 
     test('form controls render at least 16px on every input surface', async ({ page }) => {
         // 1) /?tab=wishlist: open the wish form via the FAB (same flow
-        //    wishlist.spec.ts uses) and scan the form's inputs.
+        //    wishlist.spec.ts uses) and scan the form's inputs. El helper recorre el paso nuevo
+        //    por `/wishlist/add` («No tengo enlace») y deja el formulario abierto.
         await waitAppShellLoaded(page, '/');
-        await page.getByRole('button', { name: 'Nuevo deseo' }).click();
+        await abrirFormularioDeDeseo(page);
         await expect(page.getByPlaceholder('¿Qué deseas?')).toBeVisible({ timeout: 10000 });
         await expectFormFontSizeAtLeast16(page, '/?tab=wishlist (formulario abierto)');
 

@@ -14,6 +14,15 @@ import { parseSharedPayload, type SharedPayload } from './share-target';
 /** Clave del compartir pendiente. Con prefijo propio para no chocar con nada del navegador. */
 export const PENDING_SHARE_KEY = 'murodeseos:pending-share';
 
+/**
+ * Clave del **borrador** pendiente, que es otra cosa que un compartir.
+ *
+ * La escribe la pantalla del enlace (`/wishlist/add`) cuando ya decidió si hay enlace y qué se
+ * pudo leer de la página. Es un espacio independiente a propósito: un compartir del sistema y
+ * un borrador de esa pantalla no se pisan, y cada uno tiene su propia política de consumo.
+ */
+export const PENDING_DRAFT_KEY = 'murodeseos:pending-wish-draft';
+
 /** Los campos del formulario que un compartir puede prellenar. */
 export type WishDraftFields = {
     title?: string;
@@ -58,6 +67,76 @@ export function takePendingShare(): SharedPayload | null {
     } catch {
         return null;
     }
+}
+
+/**
+ * Guarda el borrador que abrirá el formulario en su siguiente montaje.
+ *
+ * Acepta `{}` y eso es un caso de uso, no un descuido: significa «abre el formulario vacío»
+ * (botón «No tengo enlace»), que es distinto de no tener nada pendiente.
+ */
+export function savePendingDraft(fields: WishDraftFields): void {
+    try {
+        sessionStorage?.setItem(PENDING_DRAFT_KEY, JSON.stringify(fields));
+    } catch {
+        // Sin almacenamiento el borrador se pierde, pero el formulario se abre igual: el
+        // usuario completa a mano, que es el comportamiento de antes de esta pantalla.
+    }
+}
+
+function asDraftRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value as Record<string, unknown>;
+}
+
+/**
+ * Devuelve el borrador pendiente y lo borra.
+ *
+ * Misma política que `takePendingShare`: se borra **antes** de validar, porque un pendiente
+ * corrupto no se arregla reintentando y dejarlo ahí haría que cada apertura fallara igual.
+ * La diferencia es que un objeto vacío sí es un borrador válido: es el que deja «No tengo
+ * enlace».
+ */
+export function takePendingDraft(): WishDraftFields | null {
+    if (typeof sessionStorage === 'undefined' || !sessionStorage) return null;
+
+    let raw: string | null;
+    try {
+        raw = sessionStorage.getItem(PENDING_DRAFT_KEY);
+        if (raw === null) return null;
+        sessionStorage.removeItem(PENDING_DRAFT_KEY);
+    } catch {
+        return null;
+    }
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        return null;
+    }
+
+    const record = asDraftRecord(parsed);
+    if (!record) return null;
+
+    // Se copia campo a campo y con el tipo comprobado: esto viene de `sessionStorage`, o sea
+    // de fuera del programa, y el formulario no puede recibir un `title` numérico.
+    const draft: WishDraftFields = {};
+    for (const field of DRAFT_FIELDS) {
+        const value = record[field];
+        if (value === undefined) continue;
+
+        if (field === 'links') {
+            if (Array.isArray(value) && value.every((link) => typeof link === 'string')) {
+                draft.links = [...value] as string[];
+            }
+            continue;
+        }
+
+        if (typeof value === 'string') draft[field] = value;
+    }
+
+    return draft;
 }
 
 /**
