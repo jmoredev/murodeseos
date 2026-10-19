@@ -1,10 +1,23 @@
-/* PWA service worker — GitHub Pages bajo /<repo>/. v5: la cáscara NO se cachea (una cáscara guardada puede referenciar chunks que el despliegue siguiente ya borró, y eso dejaba la pantalla en negro sin recuperación: se sirve una página de sin conexión autocontenida), las respuestas no-ok de un recurso no se entregan como si fueran el recurso, y siguen sin entrar en caché las peticiones a otros orígenes (los datos privados de Supabase nunca se guardan). Activos red-primero. */
+/* PWA service worker — GitHub Pages bajo /<repo>/. v6: recibe el **share target** (`POST` de la hoja de compartir de Android) y lo entrega a la app. Mantiene lo de la v5: la cáscara NO se cachea (una cáscara guardada puede referenciar chunks que el despliegue siguiente ya borró, y eso dejaba la pantalla en negro sin recuperación: se sirve una página de sin conexión autocontenida), las respuestas no-ok de un recurso no se entregan como si fueran el recurso, y siguen sin entrar en caché las peticiones a otros orígenes (los datos privados de Supabase nunca se guardan). Activos red-primero. */
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE_NAME = `murodeseos-${VERSION}`;
 // El origen de GitHub Pages se comparte entre repositorios: solo tocamos las
 // caches con nuestro prefijo, nunca las de otros proyectos alojados ahí.
 const CACHE_PREFIX = 'murodeseos-';
+
+/**
+ * Caché del share target, **aparte** de la de activos y sin versión propia.
+ *
+ * Aparte porque un compartir pendiente no es un activo: no se refresca ni se invalida con un
+ * despliegue, y vive minutos, no días. Y sin versión (`murodeseos-share`, no `murodeseos-share-v1`)
+ * para que el barrido de `activate` no pueda borrar un compartir a medio abrir.
+ */
+const SHARE_CACHE = 'murodeseos-share';
+/** Prefijo de la clave con la que la app encuentra el compartir (`lib/share-target.ts`). */
+const SHARE_KEY_PREFIX = 'share-payload/';
+/** Mismo destino que `share_target.action` del manifest (`./compartir`). */
+const SHARE_TARGET_PATH = 'compartir';
 
 const NAV_FETCH_MS = 14_000;
 
@@ -68,7 +81,9 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys
+          .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME && k !== SHARE_CACHE)
+          .map((k) => caches.delete(k))
       );
       await self.clients.claim();
     })()
@@ -79,9 +94,112 @@ function isNavigationRequest(request) {
   return request.mode === 'navigate' || (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
 }
 
+/**
+ * Ámbito del SW como URL absoluta. Es lo que permite que el mismo `sw.js` funcione en
+ * `/<repo>/` y en la raíz sin escribir la base en el código.
+ */
+function shareScope() {
+  try {
+    return new URL(self.registration.scope);
+  } catch {
+    return new URL('.', self.location.href);
+  }
+}
+
+/**
+ * ¿Es el POST de la hoja de compartir? Se compara **origen y ruta exacta**: el `action` del
+ * manifest es `./compartir`, así que cualquier otro POST del sitio (o de otro origen) sigue su
+ * camino y no se intercepta.
+ */
+function isShareTargetRequest(request) {
+  try {
+    const action = new URL(SHARE_TARGET_PATH, shareScope());
+    const target = new URL(request.url);
+    return target.origin === action.origin && target.pathname === action.pathname;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * El primer `http(s)` que aparezca en el texto compartido.
+ *
+ * Muchas apps de compras no rellenan el campo `url` del share: mandan todo junto en `text`
+ * («Mira esto https://…»). Sin esto, compartir desde esas apps abriría un deseo sin enlace y sin
+ * extracción, que es justo el caso que el feature existe para resolver.
+ */
+function firstUrlInText(text) {
+  const match = /https?:\/\/[^\s<>"']+/i.exec(text || '');
+  return match ? match[0] : null;
+}
+
+/**
+ * Guarda el compartir y devuelve el id con el que la app lo va a buscar, o `null` si el cuerpo
+ * no era un formulario o no traía nada. Nunca tira: un share ilegible tiene que terminar en la
+ * app, no en un error del navegador.
+ */
+async function storeShare(request) {
+  let fields;
+  try {
+    const form = await request.formData();
+    const read = (name) => {
+      const value = form.get(name);
+      return typeof value === 'string' ? value.trim() : '';
+    };
+    fields = { title: read('title'), text: read('text'), url: read('url') };
+  } catch {
+    return null;
+  }
+
+  const payload = {
+    url: fields.url || firstUrlInText(fields.text),
+    title: fields.title,
+    text: fields.text,
+    createdAt: Date.now(),
+  };
+
+  if (!payload.url && !payload.title && !payload.text) return null;
+
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  try {
+    const cache = await caches.open(SHARE_CACHE);
+    await cache.put(
+      new URL(`${SHARE_KEY_PREFIX}${id}`, shareScope()).href,
+      new Response(JSON.stringify(payload), {
+        headers: { 'content-type': 'application/json; charset=utf-8' },
+      })
+    );
+  } catch {
+    // Sin Cache Storage no hay dónde dejar el compartir; igual se abre la app.
+    return null;
+  }
+
+  return id;
+}
+
+/**
+ * El `POST` de la hoja de compartir: guarda el payload y contesta un `303` (ver-otro) al
+ * formulario, que es un `GET` normal y lo sirve la página estática con normalidad.
+ */
+async function handleShareTarget(request) {
+  const action = new URL(SHARE_TARGET_PATH, shareScope());
+  const id = await storeShare(request);
+  if (id) action.searchParams.set('share', id);
+
+  return new Response(null, { status: 303, headers: { location: action.href } });
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET') return;
+  if (request.method !== 'GET') {
+    // La hoja de compartir de Android entrega un POST que ninguna página estática puede
+    // atender: se guarda acá y se responde un 303 al formulario. Cualquier otro método o ruta
+    // sigue sin tocarse.
+    if (request.method === 'POST' && isShareTargetRequest(request)) {
+      event.respondWith(handleShareTarget(request));
+    }
+    return;
+  }
 
   // El origen de GitHub Pages se comparte entre proyectos: las peticiones a otros
   // orígenes (p. ej. la REST/Storage de Supabase con datos privados) no pasan por
