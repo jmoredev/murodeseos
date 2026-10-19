@@ -505,6 +505,26 @@ Lo que estos números fijan (no es opinión):
 
 ## Verificación
 
+- **L26 (2026-10-19) — quinto ciclo: APROBADO, y la lección de por qué recién ahora.**
+  `review-12b4fabd57e2f8b4` (22 archivos, **1870 líneas**, `high`): las tres lentes corrieron y el
+  proveedor **no pidió refutador** — la autoridad cerró en **`approved`** en el último evento
+  admitido y se reconoció (`authority: burned`, `gentle-ai.review-acknowledged/v1`,
+  `delivery: ordinary-repository-policy`). Primera aprobación después de cinco ciclos.
+  **Por qué recién ahora**: los cuatro ciclos anteriores fueron encontrando **instancias de la misma
+  clase** —contratos de configuración que mentían (cuota en 0, TTL en 0, parámetros repetidos) y
+  **llamadas a PostgREST sin tope**—. El quinto candidato es el primero en el que esa clase está
+  **enumerada y cerrada**: las tres llamadas del handler (dos de caché, una de cuota) tienen `fetch`
+  inyectable, tope de 2 s y tests. El paso adversarial dejó de tener una instancia nueva que sacar.
+  **Los 12 hallazgos informativos** (5 de riesgo, 3 de confiabilidad, 4 de resiliencia) coinciden
+  punto por punto con los advisories que esta ficha ya declaraba —CORS por sufijo `github.io`,
+  identidad colgando de una línea de configuración, caché indexada por URL completa, lectura pública
+  sin comillas, rebinding DNS (TOCTOU), y los de cuota y caché—. Son **no bloqueantes**, no reabren
+  la revisión y quedan como trabajo posterior, no como razón para repetirla.
+  **Lo que sigue abierto**: la ruta del plan de corrección rechaza sus propios bindings, así que los
+  linajes de los ciclos 1-4 quedan en `correction_required` y sus hallazgos se arreglaron **por
+  fuera** de la fontanería; y la rama entera sigue sin ser revisable como un candidato (L22): faltan
+  **T6, T9 y el extractor**.
+
 - **L25 (2026-10-19) — el linaje nuevo encontró un segundo CRITICAL, y el bucle se vuelve caro.**
   Sobre el árbol ya corregido (`68e9e2bb`), el linaje `review-b65ac1d1aeb6ec23` corrió las tres
   lentes y el refutador volvió a cerrar en `correction_required` con **`R3-001`** (CRITICAL
