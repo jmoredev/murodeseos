@@ -8,6 +8,8 @@ import {
     resolveWishImageUploadPayload,
 } from '@/lib/wish-image-upload'
 import { normalizeWishLinks } from '@/lib/wish-link-utils'
+import { draftFromShare, mergeUntouchedWishFields, takePendingShare, type WishDraftFields } from '@/lib/share-draft'
+import { requestProductDraft } from '@/lib/extract-product-client'
 import { useKeyboardInset } from '@/lib/use-keyboard-inset'
 import { useIsDesktop } from '@/lib/use-is-desktop'
 import { useBackToClose } from '@/lib/use-back-to-close'
@@ -161,6 +163,101 @@ export function WishListTab({ userId }: WishListTabProps) {
         fetchItems();
     }, [userId]);
 
+    // Estado inicial de un deseo nuevo. Vive aparte de `openForm` porque un compartir abre el
+    // formulario con el borrador ya puesto: el formulario arranca en un sitio, no en dos.
+    const startNewWish = (draft: WishDraftFields) => {
+        setEditingItem(null);
+        setFormData({
+            title: draft.title ?? '',
+            links: draft.links ?? [],
+            imageUrl: draft.imageUrl,
+            priority: 'medium',
+            notes: draft.notes ?? '',
+            price: null,
+            excludedGroupIds: [],
+        });
+        setPriceInput(draft.priceText ?? '');
+        setPriceError(null);
+        setIsFormOpen(true);
+    };
+
+    // Un compartir del sistema abre el deseo ya mismo: si esperáramos a la extracción, el
+    // usuario vería la lista de siempre y creería que compartir no hizo nada.
+    useEffect(() => {
+        if (!userId) return undefined;
+
+        const payload = takePendingShare();
+        if (!payload) return undefined;
+
+        const prefilled = draftFromShare(payload);
+        // El compartir es una fuente externa que se consume **una sola vez**, así que no hay
+        // render del que derivarlo: un inicializador de `useState` lo consumiría dos veces bajo
+        // StrictMode y la segunda leería `null`. El efecto de montaje es el único sitio donde
+        // se aplica una vez, y es lo que pide el formulario abierto al instante.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        startNewWish(prefilled);
+
+        // Sin enlace no hay página que leer: lo compartido es todo lo que hay.
+        if (!payload.url) return undefined;
+
+        let cancelled = false;
+
+        void requestProductDraft(payload.url).then((result) => {
+            // El deseo ya está abierto; con la pestaña cerrada no hay a quién contarle nada.
+            if (cancelled) return;
+
+            if (result.status === 'unavailable') {
+                // El enlace nunca se pierde (S2, S5): se explica el hueco y se completa a mano.
+                showToast('No pudimos leer la página. Completa los datos a mano.', 'error');
+                return;
+            }
+
+            const extracted: WishDraftFields = {
+                title: result.draft.title ?? undefined,
+                notes: result.draft.notes ?? undefined,
+                imageUrl: result.draft.imageUrl ?? undefined,
+                priceText: result.draft.priceText ?? undefined,
+            };
+
+            // La extracción tarda y el formulario está abierto: solo se rellena lo que el
+            // usuario no tocó desde el borrador instantáneo.
+            setFormData((current) => {
+                const merged = mergeUntouchedWishFields({
+                    current: {
+                        title: current.title ?? '',
+                        notes: current.notes ?? '',
+                        imageUrl: current.imageUrl ?? '',
+                        links: current.links ?? [],
+                    },
+                    prefilled,
+                    extracted,
+                });
+
+                return {
+                    ...current,
+                    title: merged.title ?? '',
+                    notes: merged.notes ?? '',
+                    imageUrl: merged.imageUrl ?? '',
+                    links: merged.links ?? [],
+                };
+            });
+
+            // El precio vive aparte porque es texto que se está tecleando.
+            setPriceInput((current) => mergeUntouchedWishFields({
+                current: { priceText: current },
+                prefilled,
+                extracted,
+            }).priceText ?? '');
+        });
+
+        return () => {
+            cancelled = true;
+        };
+        // `startNewWish` y `showToast` se rearman en cada render y aquí solo escriben estado;
+        // con `userId` alcanza para que el compartir se consuma una vez por montaje.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId]);
+
     const sortedItems = [...items].sort((a, b) => {
         if (sortBy === 'name') {
             return a.title.localeCompare(b.title);
@@ -178,23 +275,16 @@ export function WishListTab({ userId }: WishListTabProps) {
     });
 
     const openForm = (item?: GiftItem) => {
-        if (item) {
-            setEditingItem(item);
-            setFormData({ ...item });
-            // Se precarga el número ya formateado, que es como aparece en la tarjeta.
-            setPriceInput(formatPrice(item.price) ?? '');
-        } else {
-            setEditingItem(null);
-            setFormData({
-                title: '',
-                links: [],
-                priority: 'medium',
-                notes: '',
-                price: null,
-                excludedGroupIds: []
-            });
-            setPriceInput('');
+        // Un deseo nuevo arranca igual que uno que llega compartido, solo que sin borrador.
+        if (!item) {
+            startNewWish({});
+            return;
         }
+
+        setEditingItem(item);
+        setFormData({ ...item });
+        // Se precarga el número ya formateado, que es como aparece en la tarjeta.
+        setPriceInput(formatPrice(item.price) ?? '');
         setPriceError(null);
         setIsFormOpen(true);
     };
@@ -348,7 +438,10 @@ export function WishListTab({ userId }: WishListTabProps) {
         }
     };
 
-    if (loading) {
+    // «Cargando deseos…» es un estado de la **lista**. Con un compartir recién abierto el
+    // usuario está mirando el formulario, y taparlo con el cargando lo dejaría sin ver lo que
+    // acaba de compartir; fuera de ese caso la puerta no cambia.
+    if (loading && !isFormOpen) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
@@ -444,6 +537,12 @@ export function WishListTab({ userId }: WishListTabProps) {
                                 onDelete={(i) => setItemToDelete(i)}
                             />
                         ))}
+                    </View>
+                ) : loading ? (
+                    // La lista todavía no llegó y el formulario ya está abierto (un compartir):
+                    // decir «Tu lista está vacía» sería afirmar algo que no se sabe.
+                    <View className="items-center justify-center py-20">
+                        <ActivityIndicator size="large" color="#aa2c32" />
                     </View>
                 ) : (
                     <View className="items-center justify-center py-20 text-center">
