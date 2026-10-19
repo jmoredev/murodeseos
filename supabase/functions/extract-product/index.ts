@@ -44,7 +44,7 @@
  */
 import { readJwtSub } from '../_shared/product-extraction/auth/jwt.ts';
 import { normalizeCacheKey } from '../_shared/product-extraction/cache/normalize-url.ts';
-import { readExtractionConfig } from '../_shared/product-extraction/config/env.ts';
+import { isCacheEnabled, readExtractionConfig } from '../_shared/product-extraction/config/env.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
@@ -307,7 +307,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
     const conf = configuracion();
     const ahoraMs = Date.now();
 
-    if (clave) {
+    // La caché apagada se pregunta antes de **leer y de escribir**: con TTL 0 las filas viejas
+    // siguen vigentes hasta su vencimiento, así que un simple filtro por fecha las serviría igual.
+    const cacheActiva = isCacheEnabled(conf);
+
+    if (clave && cacheActiva) {
         const cache = await leerCache(clave, ahoraMs, conf);
         if (cache) {
             return respuesta(
@@ -343,7 +347,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
 
         const draft = extractProduct({ html: resultado.body, url: resultado.finalUrl });
-        if (clave) await guardarCache(clave, draft, resultado.finalUrl, conf, Date.now());
+        if (clave && cacheActiva) await guardarCache(clave, draft, resultado.finalUrl, conf, Date.now());
         return respuesta({ ok: true, draft }, 200, request);
     } catch {
         return respuesta({ ok: false, reason: 'unexpected' }, 200, request);

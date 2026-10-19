@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    isCacheEnabled,
     LIMITE_POR_DEFECTO,
     readExtractionConfig,
     TTL_POR_DEFECTO,
@@ -63,9 +64,18 @@ describe('readExtractionConfig: la ventana y el TTL', () => {
     });
 
     it('acepta un TTL de cero como caché apagada', () => {
-        // Con TTL 0 el borrador expira al guardarse, así que toda lectura es un fallo de caché: es
-        // la forma de apagarla durante un incidente sin desplegar código.
+        // Con TTL 0 el borrador expira al guardarse, pero eso **no basta**: las filas que se
+        // escribieron con el TTL anterior siguen vigentes hasta su vencimiento, así que el
+        // consumidor tiene que preguntar `isCacheEnabled` antes de leer y antes de escribir.
         expect(readExtractionConfig(entorno({ [TTL]: '0' })).ttlSegundos).toBe(0);
+        expect(isCacheEnabled(readExtractionConfig(entorno({ [TTL]: '0' })))).toBe(false);
+    });
+
+    it('con la caché apagada no se sirven las filas que dejó el TTL anterior', () => {
+        // La regla que faltaba: apagar la caché no puede depender de `expires_at`, porque una fila
+        // escrita con TTL 3600 sigue viva una hora después de apagarla a mano.
+        expect(isCacheEnabled(readExtractionConfig(entorno({ [TTL]: '3600' })))).toBe(true);
+        expect(isCacheEnabled(readExtractionConfig(entorno()))).toBe(true);
     });
 
     it('no acepta un TTL negativo', () => {

@@ -73,3 +73,16 @@ export function readExtractionConfig(getEnv: GetEnv): ExtractionConfig {
         ttlSegundos: leerTtl(getEnv),
     };
 }
+
+/**
+ * ¿Se usa la caché con esta configuración?
+ *
+ * La regla la define este módulo, y quien la consume **tiene que preguntarla** en vez de mirar
+ * `expires_at` por su cuenta: con la caché apagada a mano durante un incidente, las filas que se
+ * escribieron antes siguen vigentes hasta su vencimiento original, así que filtrar solo por fecha
+ * las seguiría sirviendo —y con TTL 0 se seguiría escribiendo—, que es lo contrario de lo que pidió
+ * quien apagó la caché.
+ */
+export function isCacheEnabled(config: Pick<ExtractionConfig, 'ttlSegundos'>): boolean {
+    return config.ttlSegundos > 0;
+}
