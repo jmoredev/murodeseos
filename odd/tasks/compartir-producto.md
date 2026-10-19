@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró) y **T5 y T6 medidos contra el runtime real**. Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta de T6 y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada** (declarado en L20)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real** y **T6 con la puerta del e2e del repo en verde** (L21). Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta de T6 y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
 
 ## Objetivo
 
@@ -359,8 +359,45 @@ Lo que estos números fijan (no es opinión):
   **riesgo medium / `reviewDue: false`** (`under_budget`) y **ningún** ítem de riesgo alto
   escalado, así que **no se arrancó ninguna revisión nativa**: el plan es la verificación del
   propio escritor, y la revisión nativa es una mirada externa que no reemplaza la verificación.
-  Lo que sí corresponde y **quedó sin hacer por falta de entorno**: el e2e de Playwright (Docker
-  apagado) y la prueba en un teléfono con la PWA instalada, que necesita al propietario.
+  Lo que sí corresponde: el e2e de Playwright (L21) y la prueba en un teléfono con la PWA
+  instalada, que necesita al propietario y **un despliegue previo**.
+
+- **L21 (2026-10-19) — la verificación de navegador de T6: corrió, y los cuatro fallos tienen nombre y dueño.**
+  El e2e **sí se pudo correr** (Docker Desktop estaba instalado por-usuario y apagado). Lo primero
+  que hay que saber es qué es la puerta de este repo, porque condiciona la lectura de todo lo demás:
+  `.github/workflows/e2e.yml` corre **un proyecto por paso y re-siembra la base entre pasos**
+  (`test:e2e:prepare`), porque el defecto declarado **E-10** dice que la suite **no es
+  auto-limpiante**. El paso de WebKit está **acotado a `mobile-layout.spec.ts` y
+  `responsive-wishlist.spec.ts`** por costo —«the full WebKit desktop suite stays out of CI on cost
+  grounds»—, y **Firefox y WebKit de escritorio no están en CI en absoluto**.
+  Con eso, los resultados, en orden:
+  - **chromium completo + Mobile Chrome completo: 124 pasan, 0 fallan.** Esa es la puerta del CI, y
+    ahí entra justo lo que tocó T6: crear, ordenar, borrar, validar precio, precio a 360px, control
+    de imagen, editar y el cero en el modal, alturas de tarjeta y los layouts móvil y escritorio.
+  - Los **5 proyectos en paralelo contra una sola base sembrada** dieron 168 fallos que **no eran
+    tests**: 112 + 56 eran `browserType.launch: Executable doesn't exist` (faltaban los binarios de
+    webkit y firefox). No es que el e2e fallara: es que el e2e **no llegó a arrancar** en 3 de los 5
+    proyectos. Cero errores de otro tipo.
+  - Con los binarios instalados y corriendo esos 3 proyectos: **179 pasan, 4 fallan**. Los cuatro:
+    `birthday-reminders:213` (firefox y Mobile Safari), `mobile-layout:462` (webkit) y
+    `wishlist-visibility:9` (Mobile Safari). **Ninguno falla en los otros motores en la misma
+    corrida** — el mismo test, en el mismo commit, pasa en el motor de al lado.
+  - **Tres de los cuatro pasan en serie** (reintento con `--workers=1`, resultado `0 1 0`), así que
+    eran interferencia entre proyectos contra una base compartida, que es exactamente lo que la
+    estructura del CI evita.
+  - **El cuarto no es de T6, y está medido.** `wishlist-visibility:9` en Mobile Safari **falla
+    idéntico en el commit base `7da81af`**, sin una línea de T6: mismo spec, mismo proyecto, misma
+    base, misma línea 126 (`BASE_VISIBILITY_EXIT=1`). El diferencial se hizo con `git archive
+    7da81af` a un directorio de `mktemp -d` con `node_modules` enlazado, **borrado al terminar y
+    nunca commiteado**. Y encaja con la estructura: la vista que falla **no monta `WishListTab`**
+    (que solo vive en `app/index.tsx`), así que el código de T6 no está en ese camino.
+  **Conclusión**: T6 no rompe nada del e2e. Lo verificado en navegador es la puerta del repo en
+  verde; lo que el e2e **no** puede decir es si la hoja de compartir aparece en un teléfono, porque
+  eso necesita una PWA instalada. Efectos secundarios de esta corrida, declarados: la base local
+  quedó con los restos que E-10 describe (la suite no limpia), y **Docker y el stack de Supabase
+  siguen levantados** (los arrancó esta sesión), a la espera de que el propietario diga si se paran.
+  **Where**: `.github/workflows/e2e.yml` · `e2e/mobile-layout.spec.ts` · `e2e/wishlist-visibility.spec.ts`
+  · `e2e/birthday-reminders.spec.ts`.
 
 ## Verificación
 
@@ -464,9 +501,15 @@ Lo que estos números fijan (no es opinión):
   que el propietario decida el `db push`.
 - **T6 no está probado en un teléfono.** El `share_target` solo lo ofrece Android a una PWA
   **instalada** (Chrome 76+; Firefox y Safari no lo soportan: iOS queda para T8). Lo verificado acá
-  es el contrato (manifest, service worker y ruta), la suite y el build; el recorrido real
-  —compartir desde una app de compras y ver el deseo creado— lo tiene que hacer el propietario en
-  su móvil. Mientras eso no pase, **T6 está cerrado en código, no en producción**.
+  es el contrato (manifest, service worker y ruta), la suite unitaria, el build y **la puerta del
+  e2e del repo en verde** (L21); el recorrido real —compartir desde una app de compras y ver el
+  deseo creado— lo tiene que hacer el propietario en su móvil, y **para eso hay que desplegar
+  antes** (el service worker solo se registra en la web publicada, no en local). Mientras eso no
+  pase, **T6 está cerrado en código, no en producción**.
+- **Un fallo de e2e preexistente, ya medido, para que nadie lo persiga de nuevo**:
+  `wishlist-visibility.spec.ts:9` en el proyecto **Mobile Safari** falla en el commit base `7da81af`
+  igual que con T6 aplicado. No es una regresión de esta feature, y el CI nunca corre ese spec en
+  ese proyecto (el paso de Mobile Safari está acotado a `mobile-layout` y `responsive-wishlist`).
 - **El `sw.js` sirve activos de toda la app**, así que un error en él no rompe el compartir: rompe
   la app entera (es la historia de la pantalla negra). El tramo de T6 solo **agrega** una rama para
   `POST` y excluye una caché del barrido: el camino `GET` no cambió una línea, y eso lo vigilan los
