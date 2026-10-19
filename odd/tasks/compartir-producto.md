@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 a T5 cerrados, con las **cinco revisiones nativas** hechas por tramo (tres aprobadas a la primera, T2 aprobada tras corregir lo que el refutador encontró) y **T5 medido contra el runtime real**. Lo siguiente es T6 (la hoja de compartir de la PWA). Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró) y **T5 y T6 medidos contra el runtime real**. Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta de T6 y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada** (declarado en L20)
 
 ## Objetivo
 
@@ -115,7 +115,7 @@ Lo que estos números fijan (no es opinión):
 | T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | `c0ae2e3` |
 | T5a | Edge Function: endpoint autenticado (JWT de la plataforma) + extracción | S1, S2, S3 | `90ac8a8` |
 | T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
-| T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | — |
+| T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
 | T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
 
@@ -298,6 +298,64 @@ Lo que estos números fijan (no es opinión):
   `fetch` sin timeout, cuota gastada antes de la red, `Retry-After` ausente, caché compartida
   entre usuarios autenticados): dos procesos independientes diciendo lo mismo.
 
+- **L20 (2026-10-19) — T6: la hoja de compartir, construida con el Eje A que la ficha ya tenía
+  fijado, y dos decisiones que la medición del navegador obligó a tomar.**
+  El recorrido quedó así: la hoja de «Compartir» de Android postea `multipart/form-data` al
+  `action` del manifest → el **service worker** lo recibe (ninguna página estática puede
+  contestar un POST), guarda `{url, title, text, createdAt}` en Cache Storage, y responde **`303`**
+  a `/compartir?share=<id>` → esa ruta lo lee, lo deja pendiente y vuelve a la app → el
+  formulario de deseos lo toma al montar, **abre el deseo ya mismo** con el enlace y el título, y
+  rellena el resto cuando la extracción de T5 contesta.
+  **Decisión 1, `files` fuera del manifest.** La ficha preveía `files: [{accept: "image/*"}]`.
+  Se dejó fuera porque aceptar ficheros hace que Android ofrezca la app al compartir una foto
+  suelta: el payload traería un fichero que nadie usa y el usuario vería un formulario vacío sin
+  saber por qué. La imagen del producto la trae la extracción de la página (S1 habla de webs y
+  apps de compras, no de la galería). Un test prohíbe reintroducir la clave sin pensarlo.
+  **Decisión 2, dos almacenamientos distintos y cada uno por una razón.** El SW **no** tiene
+  acceso al `sessionStorage` de la página, así que el primer salto va en Cache Storage; pero ese
+  payload tiene que sobrevivir al login —quien comparte sin sesión iniciada perdería el producto—,
+  así que el segundo salto (de la ruta al formulario) va en `sessionStorage`, que muere con la
+  pestaña. Toqué el **flujo de login cero**: el pendiente espera a que el usuario entre y recién
+  entonces el formulario lo consume y pide la extracción.
+  **La caché del compartir va aparte y sin versión a propósito.** `murodeseos-share` no es un
+  activo: no se refresca con un despliegue y vive minutos. Como el barrido de `activate` borra
+  todo lo que empieza con `murodeseos-`, hubo que excluirla explícitamente o un despliegue en
+  medio se comería un compartir a medio abrir.
+  **Rojo observado, no declarado.** Los tres tramos (manifest, service worker, ruta+prellenado)
+  empezaron con sus tests en rojo: 3 fallos en el manifest, 6 en el service worker (incluidos dos
+  tests viejos que fijaban la versión `v5` en el nombre de la caché — ahora la versión se **lee**
+  del `sw.js` en vez de repetirse, que era el motivo por el que una subida de versión rompía
+  tests ajenos al cambio), 6 de 7 en el prellenado. Las dos reglas que más importan se probaron
+  por mutación: con `cache.delete` comentado y con la validación de payload aflojada, **3 tests se
+  cayeron**.
+  **Un fallo mío, y de los baratos: el lint.** `__tests__/compartir-route.test.tsx` quedó con los
+  `import` debajo de los `vi.mock` (3 `import/first`), y como el repo corre `eslint` con
+  `--max-warnings 0`, eso es una corrida en rojo. Se corrigió subiendo los imports al tope: el
+  `vi.mock` se eleva por encima igual y las variables se leen de forma diferida.
+  **Un estado nuevo que el cambio hizo alcanzable, y su límite.** El formulario abierto durante la
+  carga de la lista es algo que antes no existía: el «Cargando deseos…» tapaba todo. Al dejar ver
+  el modal, la lista de atrás decía «Tu lista está vacía» **sin saberlo** (y con el modal
+  transparente del escritorio se leía). Se pinchó con un test en rojo antes de arreglarlo: ahora,
+  mientras carga, muestra el indicador y no afirma nada. Queda declarado un efecto cosmético
+  menor: en escritorio, esos pocos cientos de milisegundos se ve el fondo del modal en vez de la
+  lista.
+  **Lo que NO está verificado y no se puede desde acá:** el `share_target` solo lo ofrece Android
+  a una **PWA instalada** (Chrome 76+; Firefox y Safari no lo soportan, y por eso iOS queda para
+  T8). La verificación real de punta a punta —compartir desde una app de compras en un teléfono y
+  ver el deseo creado— **necesita el teléfono del propietario**. Lo que sí se verificó: la suite
+  completa (**517 pasan | 1 todo**), `tsc` y `eslint` en 0, y el **build real de la PWA**
+  (`expo export` + `postbuild`) con `/compartir` exportada como ruta estática (`EXPORT_EXIT=0`,
+  `POSTBUILD_EXIT=0`).
+  **Un detalle de tamaño, para que el revisor lo sepa antes de abrir el diff:** el tramo de T6
+  son dos commits y ~1.240 líneas autoradas, de las cuales ~820 son tests. Es comparable a lo que
+  midió el linaje de T5 (1.313 líneas), así que se deja entero; si el revisor prefiere partirlo,
+  el corte natural es `aa776ae` (manifest + service worker) por un lado y `4fd6be4` (ruta +
+  prellenado) por el otro.
+  **Where**: `public/manifest.json` · `public/sw.js` · `app/compartir/index.tsx` ·
+  `lib/share-target.ts` · `lib/share-draft.ts` · `lib/extract-product-client.ts` ·
+  `components/WishListTab.tsx` · `__tests__/{manifest,sw,share-target,share-draft,extract-product-client,compartir-route,wish-share-prefill}.test.*`.
+  Commits `aa776ae` y `4fd6be4`.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
@@ -398,6 +456,17 @@ Lo que estos números fijan (no es opinión):
   desde T5b eso se cachea durante el TTL.
 - **De la migración de T5b**: está aplicada **solo en local**; el proyecto remoto no la tiene hasta
   que el propietario decida el `db push`.
+- **T6 no está probado en un teléfono.** El `share_target` solo lo ofrece Android a una PWA
+  **instalada** (Chrome 76+; Firefox y Safari no lo soportan: iOS queda para T8). Lo verificado acá
+  es el contrato (manifest, service worker y ruta), la suite y el build; el recorrido real
+  —compartir desde una app de compras y ver el deseo creado— lo tiene que hacer el propietario en
+  su móvil. Mientras eso no pase, **T6 está cerrado en código, no en producción**.
+- **El `sw.js` sirve activos de toda la app**, así que un error en él no rompe el compartir: rompe
+  la app entera (es la historia de la pantalla negra). El tramo de T6 solo **agrega** una rama para
+  `POST` y excluye una caché del barrido: el camino `GET` no cambió una línea, y eso lo vigilan los
+  tests que ya existían.
+- **Cosmético, declarado en L20**: en escritorio, mientras la lista carga y el formulario de un
+  compartir está abierto, se ve el fondo del modal en lugar de la lista.
 
 ## Commits
 
@@ -414,4 +483,5 @@ Lo que estos números fijan (no es opinión):
 - `9d0a4ef` — test(extraction): align the cascade test with the token-based heuristic raw.
 - `90ac8a8` — feat(functions): serve product extraction from an authenticated edge function (T5a).
 - `aa90e2f` — feat(db): store product extraction quota and cache (T5b).
-- `c6ede3b` — feat(functions): meter and cache product extraction (T5b).
+- `aa776ae` — feat(pwa): receive the Android share target in the service worker (T6).
+- `4fd6be4` — feat(pwa): open the wish form from a shared product (T6).
