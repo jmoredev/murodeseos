@@ -43,8 +43,14 @@ describe('normalizeCacheKey', () => {
         );
     });
 
-    it('ordena por clave y después por valor, de forma estable', () => {
-        expect(normalizeCacheKey('https://shop.example/producto?a=2&a=1')).toBe(
+    it('ordena por clave y **conserva el orden de los parámetros repetidos**', () => {
+        // Ordenar los repetidos por valor los colapsaría: `?a=2&a=1` y `?a=1&a=2` son la misma URL
+        // solo si el servidor ignora cuál es el último, y muchos no lo ignoran (`last-wins`). Dos
+        // variantes distintas compartiendo fila de caché es servir el borrador de una para la otra.
+        expect(normalizeCacheKey('https://shop.example/producto?b=2&a=2&a=1')).toBe(
+            'https://shop.example/producto?a=2&a=1&b=2'
+        );
+        expect(normalizeCacheKey('https://shop.example/producto?a=1&a=2')).toBe(
             'https://shop.example/producto?a=1&a=2'
         );
     });

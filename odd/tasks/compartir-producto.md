@@ -505,6 +505,23 @@ Lo que estos números fijan (no es opinión):
 
 ## Verificación
 
+- **L25 (2026-10-19) — el linaje nuevo encontró un segundo CRITICAL, y el bucle se vuelve caro.**
+  Sobre el árbol ya corregido (`68e9e2bb`), el linaje `review-b65ac1d1aeb6ec23` corrió las tres
+  lentes y el refutador volvió a cerrar en `correction_required` con **`R3-001`** (CRITICAL
+  **inferencial**, lente de confiabilidad): la normalización de la clave de caché ordenaba los
+  parámetros repetidos **por valor**, así que `?a=2&a=1` y `?a=1&a=2` compartían clave — y un
+  servidor que se queda con el último valor los distingue. El test nuevo **fijaba ese error**.
+  **Arreglo**: se ordena **solo por clave** y el `sort` estable de JS conserva el orden relativo de
+  los repetidos; el test se reescribió para afirmar lo correcto (variante con repetidos que
+  **no** se colapsa). Rojo observado antes (`?a=1&a=2`), verde después. Suite **544 | 1 todo**,
+  `tsc` y `eslint` en 0.
+  **La economía del bucle, que es lo que hay que decidir**: como la ruta del plan de corrección
+  rechaza sus propios bindings (L24), **cada hallazgo severo cuesta un linaje nuevo completo**
+  —3 lentes + refutador, ~280 KB de prompts y 4 ejecuciones de modelo— porque el linaje que lo
+  encontró no se puede corregir, solo reemplazar. Dos hallazgos, dos ciclos. Los dos eran reales y
+  los dos están arreglados: eso es lo que compra el bucle. Lo que no compra es un cierre: hasta
+  ahora, ninguno de los dos linajes llegó a `approved`.
+
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
   decodificación por `charset` (windows-1252 y caída a UTF-8), resolución de la URL descubierta
   (relativa, absoluta, sin coincidencia y rechazo de esquemas que no sean http(s)), headers de

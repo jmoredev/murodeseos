@@ -47,11 +47,11 @@ export function normalizeCacheKey(rawUrl: unknown): string | null {
     url.hash = '';
 
     const parametros = [...url.searchParams.entries()];
-    parametros.sort((a, b) => {
-        if (a[0] !== b[0]) return a[0] < b[0] ? -1 : 1;
-        if (a[1] !== b[1]) return a[1] < b[1] ? -1 : 1;
-        return 0;
-    });
+    // Se ordena **solo por clave**, y el orden entre parámetros repetidos se deja como estaba: el
+    // `sort` de JS es estable, así que dos `?color=` conservan su orden relativo. Ordenarlos también
+    // por valor colapsaría variantes que un servidor distingue (muchos se quedan con el último
+    // valor), y eso es servir el borrador cacheado de un producto para otro.
+    parametros.sort((a, b) => (a[0] === b[0] ? 0 : a[0] < b[0] ? -1 : 1));
 
     url.search = '';
     for (const [clave, valor] of parametros) url.searchParams.append(clave, valor);
