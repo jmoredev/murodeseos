@@ -49,7 +49,8 @@ import { isCacheEnabled, readExtractionConfig } from '../_shared/product-extract
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
-import { computeQuotaWindow, decideQuota } from '../_shared/product-extraction/quota/decision.ts';
+import { decideQuota } from '../_shared/product-extraction/quota/decision.ts';
+import { consumirCuota } from '../_shared/product-extraction/quota/postgrest.ts';
 
 /**
  * Orígenes de desarrollo que el repo ya contempla: `supabase/config.toml` lista ambos en
@@ -135,58 +136,6 @@ function configuracion(): Configuracion {
     };
 }
 
-function cabecerasServicio(clave: string): Record<string, string> {
-    return { apikey: clave, authorization: `Bearer ${clave}` };
-}
-
-/** Fila de caché vigente: el borrador guardado y cuándo se guardó. */
-type ConsumoCuota = { allowed: boolean; used: number; windowEndMs: number };
-
-/**
- * Consume cuota de forma atómica en el SQL (upsert con incremento y `returning`). Devuelve `null`
- * si el RPC no está disponible: el handler lo traduce a `503` y **no** se salta la cuota.
- */
-async function consumirCuota(userId: string, conf: Configuracion): Promise<ConsumoCuota | null> {
-    try {
-        const respuestaHttp = await fetch(
-            `${conf.supabaseUrl}/rest/v1/rpc/consume_product_extraction_quota`,
-            {
-                method: 'POST',
-                headers: {
-                    ...cabecerasServicio(conf.serviceRoleKey),
-                    'content-type': 'application/json',
-                    accept: 'application/json',
-                },
-                body: JSON.stringify({
-                    p_user_id: userId,
-                    p_limit: conf.limite,
-                    p_window_seconds: conf.ventanaSegundos,
-                }),
-            }
-        );
-        if (!respuestaHttp.ok) return null;
-
-        const datos: unknown = await respuestaHttp.json();
-        const fila = (Array.isArray(datos) ? datos[0] : datos) as
-            | { allowed?: unknown; used?: unknown; window_end?: unknown }
-            | null;
-        if (fila === null || typeof fila !== 'object' || typeof fila.allowed !== 'boolean') {
-            return null;
-        }
-
-        const ventanaFin = Date.parse(String(fila.window_end));
-        const finRespaldo = computeQuotaWindow(Date.now(), conf.ventanaSegundos).endMs;
-
-        return {
-            allowed: fila.allowed,
-            used: typeof fila.used === 'number' ? fila.used : 0,
-            windowEndMs: Number.isFinite(ventanaFin) ? ventanaFin : finRespaldo,
-        };
-    } catch {
-        return null;
-    }
-}
-
 Deno.serve(async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: corsHeaders(request) });
@@ -256,7 +205,16 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
     }
 
-    const cuota = await consumirCuota(userId, conf);
+    // El RPC vive en `_shared` para poder probar su timeout: sin tope, un PostgREST que no
+    // contesta colgaría la extracción entera, que lo espera antes de pedir la página.
+    const cuota = await consumirCuota({
+        supabaseUrl: conf.supabaseUrl,
+        serviceRoleKey: conf.serviceRoleKey,
+        userId,
+        limite: conf.limite,
+        ventanaSegundos: conf.ventanaSegundos,
+        ahoraMs,
+    });
     if (!cuota) {
         return respuesta({ ok: false, reason: 'quota-unavailable' }, 503, request);
     }
