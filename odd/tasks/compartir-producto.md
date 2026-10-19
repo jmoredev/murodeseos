@@ -471,6 +471,38 @@ Lo que estos números fijan (no es opinión):
   `components/WishListTab.tsx` · `vitest.setup.ts` · `e2e/helpers/nuevo-deseo.ts` ·
   `__tests__/{link-extraction,wishlist-add,share-draft,WishListTab}.test.*` · `e2e/{wishlist,wishlist-visibility,already-have-it,mobile-layout}.spec.ts`.
 
+- **L24 (2026-10-19) — la revisión del candidato 3 encontró un CRITICAL real, y la fontanería no deja cerrarla.**
+  El alcance reducido se montó en un **worktree del mismo clon** con HEAD en `7da81af`
+  (`node_modules/.review/t5`, ruta ignorada por git, el checkout del propietario intacto), porque la fachada
+  proyecta `baseRef..HEAD` y el tramo de T5 termina ahí. START creó
+  **`review-b18298085c38efd0`**, nivel **`high`** por `auth/jwt.ts`, 1341 líneas, lentes
+  risk + resilience + reliability; las tres corrieron (prompts de ~92 KB), y el proveedor pidió
+  **refutador**, que cerró con un hallazgo severo.
+  **El hallazgo es el mismo patrón de siempre, y es correcto**: `R4-001` (CRITICAL, determinista,
+  `introduced`) — `PRODUCT_EXTRACTION_CACHE_TTL_SECONDS=0` estaba documentado como «caché apagada»
+  pero el handler **nunca preguntaba** `conf.ttlSegundos`: `leerCache` filtra solo por `expires_at`,
+  así que las filas escritas con el TTL anterior se seguían sirviendo hasta su vencimiento y con TTL=0
+  se seguía **escribiendo**. Un operador que apaga la caché en un incidente recibía datos viejos.
+  **Arreglo** (`55b1874`): la regla vive en el módulo de configuración
+  (`isCacheEnabled(ttlSegundos)`) y el handler la pregunta **antes de leer y de escribir**; el test de
+  `env-config` se corrigió donde mentía («toda lectura es un fallo de caché»: falso para las filas
+  anteriores). **37 líneas de diff**, dentro del presupuesto de 200, y **dentro de los archivos ya
+  congelados** a propósito: crear un módulo nuevo obligaría a un `recover` con `scope_changed`, que es
+  la lección de L19. Suite **544 pasan | 1 todo**, `tsc` y `eslint` en 0.
+  **Lo que no se pudo: cerrar la revisión.** El plan de corrección se rechazó **cuatro veces** con
+  `capture-binding-rejected: collectBinding is missing or stale for current STATUS`, con STATUS fresco
+  antes de cada envío, en las dos formas (objeto y copia serializada exacta), con el árbol sucio y
+  **con el árbol limpio**. Es el defecto que esta fontanería ya tenía medido («un linaje que llega a
+  corrección no puede cerrarse»), ahora con una segunda medición independiente y más precisa. Sin
+  mutación en ningún intento: el linaje queda en `correction_required`, no hay nada quemado, y el árbol
+  no está bloqueado. Lo que sí está bloqueado es **la puerta de entrega de este candidato**: el
+  hallazgo está encontrado y arreglado, pero no puede aprobarse.
+  **Caminos para el propietario** (ninguno lo puedo decidir yo): (a) **linaje nuevo sobre el árbol
+  corregido** —el candidato cambia, hay target nuevo— con el costo de otras 3 lentes + refutador;
+  (b) **`D`**: desactivar el interruptor de revisión para este clon y que decida la política ordinaria,
+  aceptando por escrito que la puerta no cerró por una herramienta rota; (c) que se arregle el
+  proveedor, que no está en mis manos.
+
 ## Verificación
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
