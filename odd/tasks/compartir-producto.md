@@ -413,6 +413,15 @@ Lo que estos números fijan (no es opinión):
   el proveedor: **el candidato acumulado de la rama no es revisable como uno solo**; la entrega
   necesita una **secuencia encadenada de commits revisables** por debajo del presupuesto. Esa
   decisión (cómo se parte y en qué orden) es del propietario, no del agente.
+  **Confirmación con T9 encima (mismo día)**: el candidato volvió a cambiar de árbol al commitear T9
+  (`53a4555e`), `inspect` volvió a ofrecer START (`review-a1c7a079f0a47587`, `base-ref=3f4e40c`) y el
+  proveedor **volvió a cortar en `preflight` con `lens_context_budget_exceeded`**, otra vez con
+  `mutation_outcome: none` y sin linaje. Es decir: **no es un estado de autoridad sucio** (el inventario
+  de reparación da 0 linajes y 0 eventos, no hay nada que abandonar) sino el **tamaño del candidato**,
+  y crece con cada tramo. La única salida que nombra el proveedor es la de arriba: **partirlo en una
+  secuencia encadenada de commits revisables** por debajo del presupuesto y refrescar el estado nativo
+  para el alcance reducido. Mientras eso no pase, **la rama no se puede revisar y por lo tanto no se
+  puede entregar** (RDD está activo), y con la entrega queda bloqueada también la prueba en el móvil.
 
 - **L23 (2026-10-19) — T9: extraer el producto del enlace que se pega, con una pantalla previa en vez de magia dentro del formulario.**
   El pedido del propietario: al añadir un deseo, poder sacar del enlace el nombre, el precio y la imagen
