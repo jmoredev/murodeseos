@@ -598,6 +598,34 @@ Lo que estos números fijan (no es opinión):
   memoria — sale de la fuente** (`$API_URL`, `$?` explícito). Un intento que no mide nada no cuenta
   como evidencia.
 
+**L29 — Alcance cerrado por decisión del propietario: la red se cierra con B1 y B2; A (T1-T2) y T9
+quedan documentados con la evidencia que ya existe.** Después de siete ciclos el costo por tramo dejó
+de ser despreciable (cuatro ejecuciones de modelo y entre quince y veinticinco minutos de relé), así
+que se cerró el código de red —el que decide a qué host se pide y cómo se interpreta lo que vuelve,
+que es el requisito de robustez— y no se abrieron más ciclos para la cascada de extracción ni para la
+pantalla de agregar. Esas dos piezas quedan cubiertas por la suite y por la medición real contra
+Amazon y MediaMarkt, **sin acta de revisión nativa**; la diferencia está declarada acá y no se
+disimula.
+
+**L30 — Acta: cuatro tramos aprobados con la autoridad quemada.** T5 (`review-12b4fabd57e2f8b4`),
+T6 (`review-9db6c34204f14e55`), B1 —el cliente HTTP con IP fijada— (`review-58d3b10668f4684b`) y
+B2 —adaptadores y capa de red— (`review-3be6f12e02a7d2eb`). Los dos últimos cerraron **sin
+refutador**: cuando el código dejó de tener defectos graves, la revisión lo reconoció. La revisión
+encontró y se arreglaron **quince defectos reales** que ni los tests ni la medición del runtime
+habían visto: una caché que no se apagaba, parámetros repetidos que se colapsaban, dos llamadas sin
+tope, un POST aceptado desde cualquier sitio, una extracción tardía que se mezclaba con otro deseo,
+el DNS rebinding, el fallo abierto sin direcciones, el truncado silencioso, las respuestas 1xx, las
+direcciones múltiples sin respaldo, una 205 válida, la conexión que llega después del aborto, el
+saludo TLS colgado y el presupuesto por dirección.
+
+**L31 — Lo que costó el proceso, medido, para no repetirlo.** (1) El relé tiene un **techo práctico
+por debajo del presupuesto de lentes**: con 2301 líneas pasó y con 3598 cortó a los 982 s, así que
+los candidatos se parten por debajo de ~2400. (2) La ruta `capture-correction-plan` del proveedor
+**rechaza sus propios bindings** seis veces con `collectBinding is missing or stale`, de modo que
+cada corrección grave cuesta un linaje nuevo. (3) Un linaje que cierra en `escalated` **no se puede
+abandonar**. (4) El `--base-ref` que imprime una continuación puede ser el id del **árbol** y no el
+del commit, y el id del linaje que vale es el que devuelve `start`, no el del comando del `inspect`.
+
 ## Verificación
 
 
@@ -675,6 +703,18 @@ Lo que estos números fijan (no es opinión):
   con acentos rotos — el capturador sí honra el `charset`, el runtime lo verá en T5); y un
   `fetchImpl` inyectado que ignora la `AbortSignal` hace que el timeout no corte (los `fetch`
   reales de undici/Deno sí la honran).
+- **Hallazgos del acta de B1 (todos informativos, ninguno bloqueante)**: hueco de DNS cuando no hay
+  resolvedor (`pinned-http.ts:144`); nombre de cabecera sin sanitizar (`pinned-http.ts:225`); y cuatro
+  más sobre el cuerpo y el cierre (`safe-fetch.ts:242`, `pinned-http.ts:575`, `pinned-http.ts:220`,
+  `safe-fetch.ts:265`) y uno sobre el reparto de presupuesto (`safe-fetch.ts:233-234`). El proveedor
+  es explícito: **ninguno abre corrección ni justifica repetir la revisión de ese candidato**.
+- **Hallazgos del acta de B2 (todos informativos)**: el esquema de la imagen del adaptador
+  (`adapters/amazon.ts:71`) y el rango cero de IPv4 (`net/url-guard.ts:245`) como sugerencias; el DNS
+  de la guarda apagado por defecto (`safe-fetch.ts:163`) y el rebinding residual
+  (`safe-fetch.ts:194`) como avisos —el rebinding del **transporte** está cerrado por B1, éste es el
+  que queda si alguien llama a `safeFetch` sin resolvedor—; más `safe-fetch.ts:213-214`,
+  `adapters/amazon.ts:32`, `adapters/amazon.ts:63-64`, `safe-fetch.ts:247-250` y
+  `extract/html.ts:13`.
 
 ## Riesgos abiertos
 
@@ -741,3 +781,23 @@ Lo que estos números fijan (no es opinión):
 - `aa90e2f` — feat(db): store product extraction quota and cache (T5b).
 - `aa776ae` — feat(pwa): receive the Android share target in the service worker (T6).
 - `4fd6be4` — feat(pwa): open the wish form from a shared product (T6).
+- `55636fc` — docs(odd): record the T6 browser verification.
+- `560a216` — feat(wishlist): read the product from a pasted link before the form (T9).
+- `f613a69` — docs(odd): record the second review cut on candidate size.
+- `55b1874` — fix(functions): honour a disabled extraction cache (T5).
+- `a04efc6` — docs(odd): record the T5 CRITICAL, its fix and the stuck correction route.
+- `9d1173c` — fix(extraction): keep the order of repeated query parameters in the cache key (T5).
+- `da9a9f2` — fix(functions): bound the cache calls with a timeout (T5).
+- `b37a86b` — fix(functions): bound the quota RPC too (T5).
+- `6cab4e7` — docs(odd): record the T5 approval and why it took five cycles.
+- `230114d` — fix(pwa): refuse a share POST started by another site (T6).
+- `09a149e` — fix(wishlist): keep a late share extraction out of another wish (T6).
+- `9ddb6a8` — docs(odd): record the T6 approval.
+- `a11aee1` — fix(extraction): reconfirm the DNS answer before connecting (T4).
+- `9db03d8` — fix(extraction): refuse a host that resolves to nothing (T4, `R4-001`).
+- `1f9f813` — docs(odd): record the pinned-IP client measurement (T4).
+- `0faf969` — feat(extraction): connect to the validated IP, not to the name (T4).
+- `dcae468` — fix(extraction): fail closed on truncated bodies and follow the final response (T4).
+- `2e0aad5` — test(extraction): keep the new cases in the file's one-line call style (T4).
+- `74ea954` — fix(extraction): close the socket on a late connect and on a 205 (T4).
+- `55e1651` — fix(extraction): abort a hung TLS handshake and give each address a slice (T4).
