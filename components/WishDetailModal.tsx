@@ -122,7 +122,7 @@ export function WishDetailModal({
                     </View>
                     <View className={`px-4 py-2 rounded-full ${priceText ? 'bg-price/12' : 'bg-surface-container-low'}`}>
                         <Text className={`text-xs font-sans-bold ${priceText ? 'text-price' : 'text-on-surface/70'}`}>
-                            {priceText ? `${priceText} €` : 'Sin precio'}
+                            {priceText ?? 'Sin precio'}
                         </Text>
                     </View>
                 </View>

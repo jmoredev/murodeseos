@@ -141,6 +141,15 @@ export function takePendingDraft(): WishDraftFields | null {
             continue;
         }
 
+        // La moneda es el único campo donde `null` **significa algo**: «no se sabe». Descartarlo
+        // convertiría un `$` ambiguo en un borrador sin moneda, indistinguible del que nunca la
+        // trajo, y el formulario elegiría EUR por defecto.
+        if (field === 'currency') {
+            if (value === null) draft.currency = null;
+            else if (typeof value === 'string') draft.currency = value;
+            continue;
+        }
+
         if (typeof value === 'string') draft[field] = value;
     }
 

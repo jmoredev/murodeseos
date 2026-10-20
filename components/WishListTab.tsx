@@ -423,9 +423,15 @@ export function WishListTab({ userId }: WishListTabProps) {
                 // La columna numérica es la única que se escribe; la de texto queda
                 // pendiente de borrar y ya no se toca desde aquí.
                 price_numeric: parsedPrice,
-                // La moneda acompaña al precio: sin precio no hay nada que denominar, y sin
-                // elección el formulario arranca en EUR (decisión del propietario, T7).
-                currency: parsedPrice === null ? null : (toCurrencyCode(formData.currency) ?? 'EUR'),
+                // «Sin moneda» llega como cadena vacía y **no** es lo mismo que no haber elegido
+                // nada: `''` significa «lo dejo sin moneda» y se guarda NULL; ausente es el
+                // formulario que nunca tocó el selector, y ahí sí manda el EUR por defecto.
+                currency:
+                    parsedPrice === null
+                        ? null
+                        : formData.currency === ''
+                          ? null
+                          : (toCurrencyCode(formData.currency) ?? 'EUR'),
                 notes: formData.notes,
                 priority: formData.priority || 'medium',
                 excluded_group_ids: formData.excludedGroupIds || []
