@@ -505,6 +505,35 @@ Lo que estos números fijan (no es opinión):
 
 ## Verificación
 
+- **L27 (2026-10-19) — T6 aprobado en el tercer ciclo, después de cuatro defectos reales.**
+  `review-9db6c34204f14e55` (15 archivos, **2100 líneas**, `medium`): las tres lentes cerraron en
+  **`approved`** en el último evento admitido, **sin refutador**, y la autoridad quedó quemada
+  (`gentle-ai.review-acknowledged/v1`). Los 12 hallazgos informativos son no bloqueantes y
+  coinciden con lo que la ficha ya declaraba (payload sin TTL, esquema de URL sin validar, `{}`
+  compartido entre usuarios, y los de la carrera y el almacenamiento bloqueado, ya arreglados).
+  **Los cuatro defectos que costaron los dos ciclos anteriores eran reales, y los tres últimos los
+  encontró el paso adversarial, no yo**:
+  1. `R1-share-target-no-initiator-check` (CRITICAL, riesgo): el POST de compartir se aceptaba desde
+     cualquier sitio — un formulario ajeno podía guardar un enlace, abrir la app y gastar cuota de
+     la víctima. Arreglado rechazando **solo** `sec-fetch-site: cross-site` (exigir `same-origin`
+     habría roto la hoja del sistema).
+  2. `R3-001` + `R4-async-merge-after-form-change` (CRITICAL, deterministas, dos lentes el mismo
+     defecto): la extracción tardía se fusionaba en **el formulario que estuviera abierto** al
+     resolver. Cerrar el deseo compartido y abrir otro antes de que llegara la respuesta escribía
+     precio, foto y notas del producto anterior en el deseo nuevo, y **guardar los persistía**.
+     Arreglado con una **marca de sesión del formulario** capturada al compartir y comparada antes
+     de fusionar.
+  3. `R3-002` (CRITICAL, inferencial): `takePendingShare`/`takePendingDraft` tocaban
+     `sessionStorage` **fuera del `try`**; con el almacenamiento bloqueado, el `SecurityError`
+     escapaba al efecto de foco y podía romper la pantalla de deseos. Arreglado moviéndolo dentro.
+  Los tres con **rojo observado antes del arreglo** — la carrera se reprodujo literalmente como
+  `Expected '' / Received 89,99` en el segundo deseo. Y **el ciclo 3 salió limpio a la primera**,
+  igual que en T5: cuando la clase de defecto se cierra, el paso adversarial deja de tener qué
+  encontrar.
+  **Nota de fontanería**: el primer lanzamiento del ciclo 3 murió por **transporte del relé**
+  (`Stream ended without finish_reason`, `prepared_reviewers: 0`, sin mutación); el STATUS reofreció
+  el mismo grupo y el segundo lanzamiento pasó. No hubo que reparar nada.
+
 - **L26 (2026-10-19) — quinto ciclo: APROBADO, y la lección de por qué recién ahora.**
   `review-12b4fabd57e2f8b4` (22 archivos, **1870 líneas**, `high`): las tres lentes corrieron y el
   proveedor **no pidió refutador** — la autoridad cerró en **`approved`** en el último evento
