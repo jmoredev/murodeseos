@@ -16,17 +16,39 @@
 /** El máximo que admite `numeric(12,2)`: diez dígitos enteros y dos decimales. */
 export const PRECIO_MAXIMO = 9999999999.99;
 
+/** Un código ISO 4217 tal como lo acepta `Intl`: tres letras. */
+const CODIGO_ISO = /^[A-Z]{3}$/;
+
 /**
- * Formatea un precio para mostrarlo: **siempre dos decimales con coma**, que es
- * como se escribe el dinero en español.
+ * Normaliza una moneda leída de la base o de la extracción.
  *
- * `null`, `undefined` y los números no finitos (`NaN`, `±Infinity`) devuelven
- * `null`, porque los consumidores ya pintan «Sin precio» y un `NaN` no tiene texto
- * honesto que dar.
+ * Devuelve `null` —no `'XXX'`, no una adivinanza— cuando no hay un código de tres letras: la
+ * columna es libre y la extracción puede traer cualquier cosa, y un precio sin moneda se pinta
+ * como número pelado en vez de mentir con un símbolo.
  */
-export function formatPrice(price: number | null | undefined): string | null {
+export function toCurrencyCode(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+    const codigo = value.trim().toUpperCase();
+    return CODIGO_ISO.test(codigo) ? codigo : null;
+}
+
+/**
+ * Formatea un precio para mostrarlo.
+ *
+ * Con una moneda válida se pinta con su símbolo (`89,99 €`), que es lo que el usuario espera y
+ * lo que respeta el formato de cada moneda. **Sin moneda se pinta sólo el número** (`89,99`),
+ * que es como estaban todos los precios antes de T7 y como quedan las filas viejas y las páginas
+ * que no declaran moneda: nunca se asume EUR.
+ *
+ * `null`, `undefined` y los números no finitos (`NaN`, `±Infinity`) devuelven `null`, porque los
+ * consumidores ya pintan «Sin precio» y un `NaN` no tiene texto honesto que dar.
+ */
+export function formatPrice(price: number | null | undefined, currency?: string | null): string | null {
     if (price === null || price === undefined) return null;
     if (!Number.isFinite(price)) return null;
+
+    const codigo = toCurrencyCode(currency);
+    if (codigo) return new Intl.NumberFormat('es-ES', { style: 'currency', currency: codigo }).format(price);
 
     return price.toFixed(2).replace('.', ',');
 }
