@@ -14,6 +14,8 @@ export interface GiftItem {
     links: string[];
     imageUrl?: string;
     price?: number | null;
+    /** Moneda ISO 4217 del precio; `null`/ausente = no se conoce y se pinta sólo el número. */
+    currency?: string | null;
     notes?: string;
     priority: Priority;
     reservationState?: ReservationState;

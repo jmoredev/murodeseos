@@ -320,4 +320,75 @@ describe('WishListTab', () => {
             expect(sortedItems[2]).toHaveTextContent('A_Low');
         });
     });
+
+    describe('la moneda del precio (T7)', () => {
+        const cadenaDelGuardado = (fila: Record<string, unknown>) => {
+            const chain = createMockChain();
+            chain.single = vi.fn().mockResolvedValue({ data: fila, error: null });
+            vi.mocked(supabase.from).mockReturnValueOnce(chain as any);
+            return chain;
+        };
+
+        it('con precio y sin elegir moneda guarda EUR, que es el valor por defecto', async () => {
+            savePendingDraft({});
+            await act(async () => {
+                render(<WishListTab userId={userId} />);
+            });
+
+            fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'Regalo' } });
+            fireEvent.change(screen.getByPlaceholderText('0,00'), { target: { value: '50' } });
+
+            const chain = cadenaDelGuardado({ id: '9', title: 'Regalo', price_numeric: 50, currency: 'EUR', priority: 'medium' });
+            await act(async () => {
+                fireEvent.click(screen.getByText('Guardar'));
+            });
+
+            expect(chain.insert.mock.calls[0][0]).toMatchObject({ price_numeric: 50, currency: 'EUR' });
+        });
+
+        it('guarda la moneda que elige el usuario en el selector', async () => {
+            savePendingDraft({});
+            await act(async () => {
+                render(<WishListTab userId={userId} />);
+            });
+
+            fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'Regalo' } });
+            fireEvent.change(screen.getByPlaceholderText('0,00'), { target: { value: '50' } });
+            await act(async () => {
+                fireEvent.click(screen.getByText('US$'));
+            });
+
+            const chain = cadenaDelGuardado({ id: '9', title: 'Regalo', price_numeric: 50, currency: 'USD', priority: 'medium' });
+            await act(async () => {
+                fireEvent.click(screen.getByText('Guardar'));
+            });
+
+            expect(chain.insert.mock.calls[0][0]).toMatchObject({ currency: 'USD' });
+        });
+
+        it('sin precio no guarda moneda: no hay nada que denominar', async () => {
+            savePendingDraft({});
+            await act(async () => {
+                render(<WishListTab userId={userId} />);
+            });
+
+            fireEvent.change(screen.getByPlaceholderText('¿Qué deseas?'), { target: { value: 'Solo titulo' } });
+
+            const chain = cadenaDelGuardado({ id: '10', title: 'Solo titulo', priority: 'medium' });
+            await act(async () => {
+                fireEvent.click(screen.getByText('Guardar'));
+            });
+
+            expect(chain.insert.mock.calls[0][0]).toMatchObject({ price_numeric: null, currency: null });
+        });
+
+        it('el selector arranca en EUR al abrir un deseo nuevo', async () => {
+            savePendingDraft({});
+            await act(async () => {
+                render(<WishListTab userId={userId} />);
+            });
+
+            expect(screen.getByText('€ EUR').closest('[aria-pressed]')).toHaveAttribute('aria-pressed', 'true');
+        });
+    });
 });

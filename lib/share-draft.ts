@@ -30,9 +30,11 @@ export type WishDraftFields = {
     imageUrl?: string;
     links?: string[];
     priceText?: string;
+    /** Moneda ISO 4217 que trajo la extracción, si la página la declaraba. */
+    currency?: string | null;
 };
 
-const DRAFT_FIELDS = ['title', 'notes', 'imageUrl', 'links', 'priceText'] as const;
+const DRAFT_FIELDS = ['title', 'notes', 'imageUrl', 'links', 'priceText', 'currency'] as const;
 
 /** Guarda el compartir para el siguiente montaje del formulario. */
 export function savePendingShare(payload: SharedPayload): void {
