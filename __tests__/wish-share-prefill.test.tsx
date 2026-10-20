@@ -80,6 +80,7 @@ describe('formulario prellenado desde un compartir', () => {
                 title: 'Lámpara de pie',
                 priceText: '89,99',
                 imageUrl: 'https://tienda.example/img.jpg',
+                currency: 'EUR',
             },
         });
 
@@ -257,7 +258,7 @@ describe('formulario prellenado desde un compartir', () => {
         });
         requestProductDraftMock.mockResolvedValue({
             status: 'ok',
-            draft: { title: 'Lámpara', priceText: null, imageUrl: null },
+            draft: { title: 'Lámpara', priceText: null, imageUrl: null, currency: null },
         });
 
         const first = render(<WishListTab userId="user-1" />);

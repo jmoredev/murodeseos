@@ -119,7 +119,7 @@ Lo que estos números fijan (no es opinión):
 | T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
 | T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | `560a216` |
-| T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
+| T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | `62a24c4`, `24e3a2c`, `4a3e227`, `b775c5b`, `405ab2d` |
 
 ## Log
 
@@ -642,6 +642,19 @@ Se reescribió **S4** (solo PWA, sin build nativo ni plan posterior) y se retir�
 tareas. Consecuencia aceptada: **iOS queda fuera de alcance**, porque WebKit no soporta `share_target` y
 ya no hay camino nativo previsto. No hubo código que tocar: `expo-share-intent` nunca se instaló ni se
 usó, y nada en la app dependía de esa fase.
+
+**L34 (2026-10-20) — T7 implementado: la moneda del precio.** Tres decisiones del propietario: **sin
+moneda se pinta sólo el número** (no se asume EUR, y la columna queda `NULL` en vez de rellenarse con un
+valor inventado que después nadie podría distinguir de uno declarado); **el formulario ofrece un selector
+con EUR por defecto** y una opción «sin moneda»; **con moneda se pinta el símbolo** que da `Intl` para ese
+código.
+
+Cinco trozos, cada uno con su test: el formateador (`formatPrice(price, currency?)` y `toCurrencyCode`), la
+migración (`currency text` nullable con `CHECK ^[A-Z]{3}$`), el cliente (el borrador lleva la moneda que el
+servidor ya devolvía dentro de `price`), el formulario (selector, escritura sólo si hay precio, lectura
+normalizada) y los sitios que pintan —donde la tarjeta **dejó de agregar «€» a mano**, que era lo que
+pintaba en euros un precio en dólares—. El campo de precio sigue mostrando un número pelado a propósito: es
+numérico y un símbolo ahí rompería `parsePriceInput`.
 
 ## Verificación
 

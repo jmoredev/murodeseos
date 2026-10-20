@@ -129,6 +129,7 @@ test.describe('Lista de Deseos de Amigo Responsiva', () => {
                 user_id: friendUserId,
                 title: friendWishTitle,
                 price_numeric: E2E_CONFIG.wishlistItems[0].price,
+                currency: 'EUR',
                 image_url: null,
                 links: [],
                 notes: '',

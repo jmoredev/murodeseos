@@ -19,8 +19,21 @@ import { AppIcon, type AppIconName } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
 import { useToast } from './Toast'
-import { comparePriceValues, filterPriceInputText, formatPrice, parsePriceInput, toPriceNumber } from '@/lib/format-price'
+import { comparePriceValues, filterPriceInputText, formatPrice, parsePriceInput, toCurrencyCode, toPriceNumber } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+
+/**
+ * Las monedas que ofrece el formulario. La última **borra** la moneda: el precio se pinta como
+ * número pelado, que es lo correcto cuando no se sabe (filas viejas, `$` ambiguo).
+ */
+const MONEDAS = [
+    { codigo: 'EUR', etiqueta: '€ EUR' },
+    { codigo: 'USD', etiqueta: 'US$' },
+    { codigo: 'GBP', etiqueta: '£' },
+    { codigo: 'ARS', etiqueta: 'ARS' },
+    { codigo: 'MXN', etiqueta: 'MXN' },
+    { codigo: '', etiqueta: 'Sin moneda' },
+] as const;
 
 /**
  * Acción secundaria del bloque de imagen.
@@ -153,6 +166,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     links: item.links || [],
                     imageUrl: item.image_url,
                     price: toPriceNumber(item.price_numeric),
+                    currency: toCurrencyCode(item.currency),
                     notes: item.notes,
                     priority: item.priority as Priority,
                     excludedGroupIds: item.excluded_group_ids || []
@@ -183,6 +197,10 @@ export function WishListTab({ userId }: WishListTabProps) {
             priority: 'medium',
             notes: draft.notes ?? '',
             price: null,
+            // Un deseo nuevo arranca en EUR —es el caso normal y lo eligió el propietario—, salvo
+            // que lo compartido traiga una moneda explícita: un `$` ambiguo llega como `null`, y
+            // ahí «no se sabe» se respeta en vez de taparlo con EUR.
+            currency: draft.currency === undefined ? 'EUR' : (toCurrencyCode(draft.currency) ?? ''),
             excludedGroupIds: [],
         });
         setPriceInput(draft.priceText ?? '');
@@ -246,6 +264,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                 title: result.draft.title ?? undefined,
                 imageUrl: result.draft.imageUrl ?? undefined,
                 priceText: result.draft.priceText ?? undefined,
+                currency: result.draft.currency,
             };
 
             // La extracción tarda y el formulario está abierto: solo se rellena lo que el
@@ -404,6 +423,15 @@ export function WishListTab({ userId }: WishListTabProps) {
                 // La columna numérica es la única que se escribe; la de texto queda
                 // pendiente de borrar y ya no se toca desde aquí.
                 price_numeric: parsedPrice,
+                // «Sin moneda» llega como cadena vacía y **no** es lo mismo que no haber elegido
+                // nada: `''` significa «lo dejo sin moneda» y se guarda NULL; ausente es el
+                // formulario que nunca tocó el selector, y ahí sí manda el EUR por defecto.
+                currency:
+                    parsedPrice === null
+                        ? null
+                        : formData.currency === ''
+                          ? null
+                          : (toCurrencyCode(formData.currency) ?? 'EUR'),
                 notes: formData.notes,
                 priority: formData.priority || 'medium',
                 excluded_group_ids: formData.excludedGroupIds || []
@@ -431,6 +459,7 @@ export function WishListTab({ userId }: WishListTabProps) {
                     links: data.links || [],
                     imageUrl: data.image_url,
                     price: toPriceNumber(data.price_numeric),
+                    currency: toCurrencyCode(data.currency),
                     notes: data.notes,
                     priority: data.priority as Priority
                 };
@@ -706,7 +735,7 @@ export function WishListTab({ userId }: WishListTabProps) {
 
                             <View className="flex-row gap-3 mb-4 min-w-0 w-full">
                                 <View className="flex-1 min-w-0">
-                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Precio (€)</Text>
+                                    <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Precio</Text>
                                     <TextInput
                                         value={priceInput}
                                         onChangeText={(text) => {
@@ -724,6 +753,24 @@ export function WishListTab({ userId }: WishListTabProps) {
                                     {priceError ? (
                                         <Text className="text-xs text-red-600 font-sans-semibold mt-1.5">{priceError}</Text>
                                     ) : null}
+                                    <View className="flex-row flex-wrap gap-1.5 mt-2">
+                                        {MONEDAS.map((moneda) => {
+                                            const elegida = (toCurrencyCode(formData.currency) ?? '') === moneda.codigo;
+                                            return (
+                                                <Pressable
+                                                    key={moneda.codigo || 'sin'}
+                                                    onPress={() => setFormData({ ...formData, currency: moneda.codigo })}
+                                                    accessibilityRole="button"
+                                                    aria-pressed={elegida}
+                                                    className={`px-2.5 py-1 rounded-xl ${elegida ? 'bg-primary' : 'bg-surface-container-high'}`}
+                                                >
+                                                    <Text className={`text-xs font-sans-bold ${elegida ? 'text-on-primary' : 'text-on-surface/70'}`}>
+                                                        {moneda.etiqueta}
+                                                    </Text>
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </View>
                                 </View>
                                 <View className="flex-1 min-w-0">
                                     <Text className="text-xs font-sans-bold text-on-surface/70 uppercase tracking-widest mb-2">Prioridad</Text>

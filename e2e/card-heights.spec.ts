@@ -53,6 +53,7 @@ async function sembrarTarjetas() {
         user_id: user.id,
         title: `${fila.titulo} ${sello}-${indice}`,
         price_numeric: 10 + indice,
+        currency: 'EUR',
         notes: fila.notas,
         links: [],
         image_url: null,

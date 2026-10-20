@@ -140,7 +140,7 @@ describe('pantalla del enlace del deseo', () => {
     it('lo que la extracción no leyó queda como campo vacío en el borrador, no ausente', async () => {
         requestProductDraftMock.mockResolvedValue({
             status: 'ok',
-            draft: { title: null, priceText: null, imageUrl: null },
+            draft: { title: null, priceText: null, imageUrl: null, currency: null },
         });
 
         render(<WishlistAddPage />);
@@ -154,6 +154,9 @@ describe('pantalla del enlace del deseo', () => {
             title: '',
             priceText: '',
             imageUrl: '',
+            // La moneda sí viaja como `null` explícito: acá `null` significa «la página no la
+            // declara», que es distinto de no traer el campo (ahí el formulario pone EUR).
+            currency: null,
             links: [LINK_NORMALIZADO],
         });
         expect(back).toHaveBeenCalledTimes(1);

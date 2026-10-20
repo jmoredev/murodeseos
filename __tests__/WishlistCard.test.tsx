@@ -95,9 +95,22 @@ describe('WishlistCard', () => {
         expect(screen.getByLabelText(new RegExp(mockItem.title))).toBeInTheDocument();
     });
 
-    it('formats price with Euro symbol correctly', () => {
+    it('sin moneda pinta sólo el número: no se asume EUR', () => {
         render(<WishlistCard item={mockItem} isOwner={true} />);
-        expect(screen.getByText('25,00 €')).toBeInTheDocument();
+        expect(screen.getByText('25,00')).toBeInTheDocument();
+    });
+
+    it('con moneda pinta su símbolo', () => {
+        render(<WishlistCard item={{ ...mockItem, currency: 'EUR' }} isOwner={true} />);
+        // El espacio entre número y símbolo es el duro que pone `Intl`, así que se afirma con una
+        // expresión y no con el carácter exacto: lo que importa es que el símbolo esté y pegado al
+        // número, no qué clase de espacio eligió la plataforma.
+        expect(screen.getByText(/25,00\s€/)).toBeInTheDocument();
+    });
+
+    it('con una moneda que no es el euro pinta la suya', () => {
+        render(<WishlistCard item={{ ...mockItem, currency: 'USD' }} isOwner={true} />);
+        expect(screen.getByText(/25,00\sUS\$/)).toBeInTheDocument();
     });
 
     it('pinta un precio de 0 como precio y no como ausencia', () => {
@@ -105,7 +118,7 @@ describe('WishlistCard', () => {
         // pero con un número el `0` es falso, así que una comprobación de veracidad
         // habría escondido un precio real detrás de «Sin precio».
         render(<WishlistCard item={{ ...mockItem, price: 0 }} isOwner={true} />);
-        expect(screen.getByText('0,00 €')).toBeInTheDocument();
+        expect(screen.getByText('0,00')).toBeInTheDocument();
         expect(screen.queryByText('Sin precio')).not.toBeInTheDocument();
     });
 
@@ -121,7 +134,7 @@ describe('WishlistCard', () => {
             .querySelector('[aria-label]')
             ?.getAttribute('aria-label');
 
-        expect(label).toContain('25,00 €');
+        expect(label).toContain('25,00');
     });
 
     it('displays "Sin precio" when price is missing', () => {
@@ -210,10 +223,10 @@ describe('WishlistCard', () => {
         expect(claseDelPrecio).toContain('shrink-0');
         expect(claseDelPrecio).not.toContain('shrink ');
 
-        // Y en el DOM, que el chip existe y pinta el precio entero (formato español).
-        render(<WishlistCard item={mockItem} isOwner={true} />);
+        // Y en el DOM, que el chip existe y pinta el precio entero con su símbolo.
+        render(<WishlistCard item={{ ...mockItem, currency: 'EUR' }} isOwner={true} />);
         const chip = screen.getByTestId(`wish-price-${mockItem.id}`);
-        expect(chip).toHaveTextContent('25,00 €');
+        expect(chip).toHaveTextContent(/25,00\s€/);
     });
 
     it('el enlace es un botón con el dominio y dice a dónde va', () => {

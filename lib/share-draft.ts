@@ -30,9 +30,11 @@ export type WishDraftFields = {
     imageUrl?: string;
     links?: string[];
     priceText?: string;
+    /** Moneda ISO 4217 que trajo la extracción, si la página la declaraba. */
+    currency?: string | null;
 };
 
-const DRAFT_FIELDS = ['title', 'notes', 'imageUrl', 'links', 'priceText'] as const;
+const DRAFT_FIELDS = ['title', 'notes', 'imageUrl', 'links', 'priceText', 'currency'] as const;
 
 /** Guarda el compartir para el siguiente montaje del formulario. */
 export function savePendingShare(payload: SharedPayload): void {
@@ -136,6 +138,15 @@ export function takePendingDraft(): WishDraftFields | null {
             if (Array.isArray(value) && value.every((link) => typeof link === 'string')) {
                 draft.links = [...value] as string[];
             }
+            continue;
+        }
+
+        // La moneda es el único campo donde `null` **significa algo**: «no se sabe». Descartarlo
+        // convertiría un `$` ambiguo en un borrador sin moneda, indistinguible del que nunca la
+        // trajo, y el formulario elegiría EUR por defecto.
+        if (field === 'currency') {
+            if (value === null) draft.currency = null;
+            else if (typeof value === 'string') draft.currency = value;
             continue;
         }
 

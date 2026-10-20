@@ -5,6 +5,7 @@ import {
     filterPriceInputText,
     formatPrice,
     parsePriceInput,
+    toCurrencyCode,
     toPriceNumber
 } from '../lib/format-price';
 
@@ -214,5 +215,58 @@ describe('comparePriceValues', () => {
         // `sort` es estable en V8: los dos ausentes (clave igual) conservan su orden
         // relativo en vez de quedar indefinidos.
         expect([...items].sort(comparePriceValues)).toEqual([25, 349, null, null]);
+    });
+});
+
+describe('formatPrice con moneda', () => {
+    // `Intl` separa el número del símbolo con un espacio **duro** (U+00A0), no con uno normal: se
+    // afirma el carácter exacto porque es lo que termina viendo el usuario.
+    const DURO = '\u00a0';
+
+    it('pinta el símbolo de la moneda cuando se conoce', () => {
+        expect(formatPrice(89.99, 'EUR')).toBe(`89,99${DURO}€`);
+        expect(formatPrice(89.99, 'USD')).toBe(`89,99${DURO}US$`);
+    });
+
+    it('normaliza el código antes de formatear', () => {
+        expect(formatPrice(1, 'eur')).toBe(`1,00${DURO}€`);
+        expect(formatPrice(1, ' eur ')).toBe(`1,00${DURO}€`);
+    });
+
+    it('sin moneda utilizable vuelve al número pelado, sin tirar', () => {
+        expect(formatPrice(89.99)).toBe('89,99');
+        expect(formatPrice(89.99, null)).toBe('89,99');
+        expect(formatPrice(89.99, 'XX')).toBe('89,99');
+        expect(formatPrice(89.99, 'EURO')).toBe('89,99');
+        expect(formatPrice(89.99, '')).toBe('89,99');
+    });
+
+    it('no agrega separador de miles: el ancho del precio es el de siempre', () => {
+        // Es el peor caso de la columna, el que el e2e mide a 360px: con agrupación saldría
+        // `9.999.999.999,99 €` y cambaría el ancho que la app siempre tuvo.
+        expect(formatPrice(9999999999.99, 'EUR')).toBe(`9999999999,99${DURO}€`);
+    });
+
+    it('un precio ausente sigue siendo null aunque haya moneda', () => {
+        expect(formatPrice(null, 'EUR')).toBeNull();
+        expect(formatPrice(NaN, 'EUR')).toBeNull();
+    });
+});
+
+describe('toCurrencyCode', () => {
+    it('acepta un ISO 4217 de tres letras y lo devuelve en mayúsculas', () => {
+        expect(toCurrencyCode('EUR')).toBe('EUR');
+        expect(toCurrencyCode('usd')).toBe('USD');
+        expect(toCurrencyCode('  ars  ')).toBe('ARS');
+    });
+
+    it('rechaza lo que no es un código de tres letras', () => {
+        expect(toCurrencyCode('EURO')).toBeNull();
+        expect(toCurrencyCode('EU')).toBeNull();
+        expect(toCurrencyCode('E1R')).toBeNull();
+        expect(toCurrencyCode('')).toBeNull();
+        expect(toCurrencyCode(null)).toBeNull();
+        expect(toCurrencyCode(undefined)).toBeNull();
+        expect(toCurrencyCode(42)).toBeNull();
     });
 });

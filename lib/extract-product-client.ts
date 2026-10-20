@@ -1,4 +1,4 @@
-import { formatPrice } from './format-price';
+import { formatPrice, toCurrencyCode } from './format-price';
 import { supabase } from './supabase';
 
 /**
@@ -20,6 +20,11 @@ export type ExtractedProductDraft = {
     /** El precio ya formateado con la convención del repo, que es lo que come el formulario. */
     priceText: string | null;
     imageUrl: string | null;
+    /**
+     * Moneda ISO 4217 del precio, o `null` si la página no la declara. Va **aparte** de `priceText`
+     * porque el campo de precio es numérico: meterle `89,99 €` rompería `parsePriceInput`.
+     */
+    currency: string | null;
     // Las notas **no** forman parte del borrador: las escribe el usuario. La descripción de la
     // página se extrae igual, pero no es una nota y no se auto-rellena.
 };
@@ -66,6 +71,7 @@ function readDraft(value: unknown): ExtractedProductDraft | null {
         title: fieldValue(draft.title),
         priceText: priceTextOf(draft.price),
         imageUrl: fieldValue(draft.imageUrl),
+        currency: toCurrencyCode(asRecord(draft.price)?.currency),
     };
 }
 

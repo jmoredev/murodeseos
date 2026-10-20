@@ -36,6 +36,7 @@ async function sembrarDeseo(userId: string, extra: Record<string, unknown>) {
             user_id: userId,
             title: `Deseo de prueba ${Date.now()}`,
             price_numeric: 10,
+            currency: 'EUR',
             notes: '',
             links: [],
             image_url: null,
