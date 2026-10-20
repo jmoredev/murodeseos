@@ -67,7 +67,7 @@ export function WishDetailModal({
     // Se calcula una vez: con el precio ya numérico, un `0` es un precio y `0,00`
     // tiene que pintarse, no caer en «Sin precio» como hacía la comprobación de
     // veracidad sobre el número.
-    const priceText = formatPrice(item.price);
+    const priceText = formatPrice(item.price, item.currency);
 
     const reservationState = item.reservationState ?? 'available';
     const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';

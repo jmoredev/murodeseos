@@ -55,8 +55,10 @@ export function WishlistCard({
     const isReservedByMe = !isOwner && reservationState === 'reserved_by_me';
     const isReservedByOther = !isOwner && reservationState === 'reserved_by_other';
     const isAvailable = !isOwner && reservationState === 'available';
-    const a11yPriceText = formatPrice(item.price);
-    const priceText = a11yPriceText ? `${a11yPriceText} €` : null;
+    // El símbolo lo pone el formateador con la moneda real del deseo. Antes se agregaba «€» a
+    // mano, así que un precio en dólares se pintaba como si fuera euros (T7). Sin moneda no hay
+    // símbolo: se pinta el número pelado, que es el contrato del formateador.
+    const priceText = formatPrice(item.price, item.currency);
 
     const a11yReservation = isOwner
         ? undefined
