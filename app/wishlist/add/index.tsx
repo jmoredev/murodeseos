@@ -80,7 +80,6 @@ export default function WishlistAddPage() {
                     title: result.draft.title ?? '',
                     priceText: result.draft.priceText ?? '',
                     imageUrl: result.draft.imageUrl ?? '',
-                    notes: result.draft.notes ?? '',
                     links: [link],
                 });
                 volverAlFormulario();

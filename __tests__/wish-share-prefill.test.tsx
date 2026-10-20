@@ -80,7 +80,6 @@ describe('formulario prellenado desde un compartir', () => {
                 title: 'Lámpara de pie',
                 priceText: '89,99',
                 imageUrl: 'https://tienda.example/img.jpg',
-                notes: 'Una descripción',
             },
         });
 
@@ -90,7 +89,8 @@ describe('formulario prellenado desde un compartir', () => {
         expect(screen.getByPlaceholderText(QUERY.price)).toHaveValue('89,99');
         expect(screen.getByPlaceholderText(QUERY.link)).toHaveValue(sharePayload.url);
         expect(screen.getByPlaceholderText(QUERY.image)).toHaveValue('https://tienda.example/img.jpg');
-        expect(screen.getByPlaceholderText(QUERY.notes)).toHaveValue('Una descripción');
+        // La descripción de la página no es una nota: las notas las escribe el usuario.
+        expect(screen.getByPlaceholderText(QUERY.notes)).toHaveValue('');
         expect(requestProductDraftMock).toHaveBeenCalledWith(sharePayload.url);
     });
 
@@ -257,7 +257,7 @@ describe('formulario prellenado desde un compartir', () => {
         });
         requestProductDraftMock.mockResolvedValue({
             status: 'ok',
-            draft: { title: 'Lámpara', priceText: null, imageUrl: null, notes: null },
+            draft: { title: 'Lámpara', priceText: null, imageUrl: null },
         });
 
         const first = render(<WishListTab userId="user-1" />);

@@ -41,7 +41,7 @@ describe('cliente de extracción', () => {
                 // misma que usa la tarjeta: una sola lectura de precio en toda la app.
                 priceText: '89,99',
                 imageUrl: 'https://m.media-amazon.com/images/I/71x.jpg',
-                notes: 'Una descripción del producto',
+                // `notes` no viene: las notas son del usuario y la página no las rellena.
             },
         });
     });
@@ -65,7 +65,7 @@ describe('cliente de extracción', () => {
 
         expect(result).toEqual({
             status: 'ok',
-            draft: { title: null, priceText: null, imageUrl: null, notes: null },
+            draft: { title: null, priceText: null, imageUrl: null },
         });
     });
 

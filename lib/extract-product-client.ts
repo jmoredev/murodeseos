@@ -20,7 +20,8 @@ export type ExtractedProductDraft = {
     /** El precio ya formateado con la convención del repo, que es lo que come el formulario. */
     priceText: string | null;
     imageUrl: string | null;
-    notes: string | null;
+    // Las notas **no** forman parte del borrador: las escribe el usuario. La descripción de la
+    // página se extrae igual, pero no es una nota y no se auto-rellena.
 };
 
 export type ExtractionResult =
@@ -65,7 +66,6 @@ function readDraft(value: unknown): ExtractedProductDraft | null {
         title: fieldValue(draft.title),
         priceText: priceTextOf(draft.price),
         imageUrl: fieldValue(draft.imageUrl),
-        notes: fieldValue(draft.description),
     };
 }
 
