@@ -21,18 +21,17 @@
  * `Deno.resolveDns`) y entonces **cada** dirección resuelta se contrasta contra
  * `blockedIpReason`. Sin ese resolvedor, esta guarda es incompleta frente a DNS rebinding.
  *
- * **Residual conocido del DNS, con o sin `resolveHost`: DNS rebinding entre la validación y la
- * conexión.** El `fetch` de abajo recibe la URL, no la IP: vuelve a resolver el nombre por su
- * cuenta. Un nombre controlado por el atacante puede responder público a `resolveHost` y privado
- * al socket, y llegar así a una dirección que nadie contrastó. La mitigación de acá es resolver
- * **otra vez** justo antes de pedir cada salto y negarse si la respuesta cambió, lo que estrecha
- * la ventana al tramo entre esa segunda resolución y el socket —no la cierra—. Cerrarla del todo
- * necesita un cliente HTTP propio sobre `Deno.connect` con la IP fijada y el SNI explícito, que
- * es otra unidad de trabajo: mientras el transporte sea `fetch`, este TOCTOU sigue abierto, más
- * angosto.
+ * **DNS rebinding: cerrado por el transporte, no por la guarda.** Validar el nombre no alcanza
+ * mientras la conexión la haga un `fetch` que vuelve a resolver: un nombre controlado por el
+ * atacante puede responder público al resolvedor y privado al socket. Por eso el transporte por
+ * defecto es `pinnedFetch` (`pinned-http.ts`), que conecta a la **dirección ya validada** y usa el
+ * nombre real solo como SNI. La segunda resolución de cada salto se queda igual como defensa en
+ * profundidad: si el nombre cambió de opinión entre la validación y la conexión, se corta sin
+ * pedir, y eso sigue nombrando el fallo con un motivo propio.
  */
 
 import { buildBrowserHeaders } from './headers.ts';
+import { pinnedFetch } from './pinned-http.ts';
 import { blockedIpReason, guardUrl, isIpLiteral, type GuardReason } from './url-guard.ts';
 
 /** Motivos de fallo de `safeFetch`. Incluye los de `guardUrl` y los propios de la red. */
@@ -69,24 +68,29 @@ export type FetchInitLike = {
     redirect: 'manual';
     headers: Record<string, string>;
     signal: AbortSignal;
+    /**
+     * Dirección ya validada de este salto. El transporte por defecto conecta ahí en vez de volver a
+     * resolver el nombre; un `fetch` de verdad la ignora, y los dobles de test también.
+     */
+    address?: string;
 };
 
-/** Firma inyectable de `fetch`; el `fetch` global la satisface. */
+/** Firma inyectable de `fetch`; `pinnedFetch` (y el `fetch` global) la satisfacen. */
 export type FetchLike = (url: string, init: FetchInitLike) => Promise<FetchResponseLike>;
 
 /** Resolvedor de DNS inyectable. Cada dirección devuelta se contrasta contra la guarda. */
 export type ResolveHost = (host: string) => Promise<string[]>;
 
 export type SafeFetchOptions = {
-    /** Implementación de `fetch`. Por defecto, la global. */
+    /** Implementación de `fetch`. Por defecto, `pinnedFetch` sobre la dirección validada. */
     fetchImpl?: FetchLike;
     /**
      * Resolvedor inyectable. En T5 será `Deno.resolveDns`. **Sin él no se cubre el SSRF por
      * DNS**: un nombre público que resuelve a una dirección privada pasa la guarda de texto.
      *
-     * Con él se resuelve **dos veces por salto**: la primera para validar cada dirección, la
-     * segunda justo antes de pedir, para negarse si el nombre cambió de opinión (DNS rebinding).
-     * Es una mitigación: el `fetch` vuelve a resolver por su cuenta y no acepta una IP fijada.
+     * Con él se resuelve **dos veces por salto**: la primera para validar cada dirección y para
+     * tener la IP a la que se conecta (el transporte la fija, así que el nombre no se vuelve a
+     * resolver), la segunda justo antes de pedir, para negarse si el nombre cambió de opinión.
      */
     resolveHost?: ResolveHost;
     /** Saltos permitidos. Por defecto `DEFAULT_MAX_REDIRECTS`. */
@@ -148,8 +152,9 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
     }, timeoutMs);
 
     try {
-        const fetchImpl = options.fetchImpl ?? (globalThis.fetch as FetchLike | undefined);
-        if (!fetchImpl) return fallo('fetch-failed', finalUrl, null);
+        // Por defecto, el cliente propio: conecta a la IP validada y no vuelve a resolver el
+        // nombre, que es lo que cierra el DNS rebinding. Los tests inyectan su doble de siempre.
+        const fetchImpl = options.fetchImpl ?? pinnedFetch;
 
         const maxRedirects = options.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
         const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
@@ -159,6 +164,10 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
             const guarda = guardUrl(actual);
             if (!guarda.ok) return fallo(guarda.reason, finalUrl, null);
             finalUrl = guarda.url;
+
+            // Dirección a la que el transporte tiene que conectar en este salto. Se resuelve por
+            // salto: la que valida un salto no sirve para el siguiente.
+            let direccion: string | undefined;
 
             if (options.resolveHost) {
                 const host = new URL(guarda.url).hostname;
@@ -177,18 +186,16 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                     // transitoria). No hay nada que validar, así que se falla cerrado con el
                     // motivo que ya existe para «el nombre no resolvió a nada usable».
                     if (direcciones.length === 0) return fallo('dns-failed', finalUrl, null);
-                    for (const direccion of direcciones) {
-                        const bloqueo = blockedIpReason(direccion);
+                    for (const candidata of direcciones) {
+                        const bloqueo = blockedIpReason(candidata);
                         if (bloqueo) return fallo(bloqueo, finalUrl, null);
                     }
 
-                    // Mitigación de DNS rebinding (TOCTOU), y el residual que queda: `fetch`
-                    // recibe la URL y resuelve el nombre **otra vez**; no acepta una IP fijada ni
-                    // un dialer. Se resuelve de nuevo acá, una sola vez, y se compara con el
-                    // conjunto ya validado: si cambió, se corta sin pedir. Esto no verifica el DNS
-                    // contra la conexión, solo estrecha la ventana hasta el tramo entre esta
-                    // segunda resolución y el socket. Cerrarla necesita un cliente HTTP propio
-                    // sobre `Deno.connect` con IP fijada y SNI, que es otra unidad de trabajo.
+                    // Defensa en profundidad: se resuelve de nuevo, una sola vez, y se compara con
+                    // el conjunto ya validado. El transporte ya conecta a la IP, así que este
+                    // control es redundante para el rebinding; se queda porque un nombre que
+                    // cambia de opinión merece su propio motivo (`dns-changed`) y porque cerrar
+                    // cerrado ante un DNS inestable no cuesta nada.
                     let reconfirmadas: string[];
                     try {
                         reconfirmadas = await conAborto(options.resolveHost(host), controller.signal);
@@ -204,8 +211,8 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
 
                     // Si la nueva respuesta trae una dirección prohibida, el motivo que ya existe
                     // para ese rango es el que nombra lo que pasó.
-                    for (const direccion of reconfirmadas) {
-                        const bloqueo = blockedIpReason(direccion);
+                    for (const candidata of reconfirmadas) {
+                        const bloqueo = blockedIpReason(candidata);
                         if (bloqueo) return fallo(bloqueo, finalUrl, null);
                     }
                     // Cambiar a **otra dirección pública** tampoco se pide: ninguna regla
@@ -213,6 +220,10 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                     if (!mismoConjuntoDeDirecciones(direcciones, reconfirmadas)) {
                         return fallo('dns-changed', finalUrl, null);
                     }
+
+                    // La IP fijada del salto: todas las direcciones de arriba pasaron la guarda, así
+                    // que cualquiera sirve como destino del socket.
+                    direccion = direcciones[0];
                 }
             }
 
@@ -222,6 +233,7 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                     redirect: 'manual',
                     headers: buildBrowserHeaders(),
                     signal: controller.signal,
+                    address: direccion,
                 });
             } catch {
                 return fallo(timedOut ? 'timeout' : 'fetch-failed', finalUrl, null);
