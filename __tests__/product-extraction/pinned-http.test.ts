@@ -806,3 +806,59 @@ describe('pinnedFetch · cuerpo nulo y aborto', () => {
         expect(conexion.cerrada()).toBe(true);
     });
 });
+
+describe('pinnedFetch · saludo TLS y presupuesto por dirección', () => {
+    it('cierra el TCP cuando el aborto llega durante el saludo TLS', async () => {
+        // `Deno.startTls` no acepta la señal. Un servidor que acepta TCP y nunca completa el
+        // saludo deja la apertura pendiente para siempre: si el aborto no cierra el TCP, el socket
+        // queda abierto hasta que Deno lo corte por su cuenta.
+        const tcp = crearConexionFalsa(() => null);
+        const controlador = new AbortController();
+        const original = (globalThis as unknown as { Deno?: unknown }).Deno;
+
+        (globalThis as unknown as { Deno?: unknown }).Deno = {
+            connect: async () => tcp,
+            startTls: () => new Promise<ConexionHttp>(() => {}),
+        };
+
+        try {
+            const promesa = pinnedFetch('https://shop.example/', {
+                headers: {},
+                address: '93.184.216.34',
+                signal: controlador.signal,
+            });
+
+            // Se deja que el TCP conecte y que el saludo quede colgado: es el escenario del hallazgo.
+            await new Promise((listo) => setTimeout(listo, 10));
+            controlador.abort();
+            await expect(promesa).rejects.toThrow();
+            expect(tcp.cerrada()).toBe(true);
+        } finally {
+            (globalThis as unknown as { Deno?: unknown }).Deno = original;
+        }
+    });
+
+    it('no deja que una dirección que no contesta se coma el presupuesto de las demás', async () => {
+        // El reparto de tiempo es lo que hace útil al bucle: con un solo reloj global, una IP en
+        // negro consume todo el presupuesto y la dirección sana nunca se prueba.
+        const intentos: (string | undefined)[] = [];
+
+        const resultado = await safeFetch('https://shop.example/', {
+            timeoutMs: 300,
+            resolveHost: async () => ['93.184.216.34', '93.184.216.35'],
+            fetchImpl: async (_url, init) => {
+                intentos.push(init?.address);
+                if (init?.address === '93.184.216.34') {
+                    // Acepta la conexión y nunca contesta.
+                    return new Promise<FetchResponseLike>((_, rechazar) => {
+                        init?.signal?.addEventListener('abort', () => rechazar(new Error('turno agotado')));
+                    });
+                }
+                throw new Error('sin ruta');
+            },
+        });
+
+        expect(resultado.ok).toBe(false);
+        expect(intentos).toEqual(['93.184.216.34', '93.184.216.35']);
+    });
+});

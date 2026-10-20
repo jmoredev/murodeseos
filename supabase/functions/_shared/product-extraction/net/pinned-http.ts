@@ -45,6 +45,8 @@ export type ParametrosConexion = {
     port: number;
     tls: boolean;
     sni: string;
+    /** Aborto de la petición: permite cortar un saludo TLS que no termina nunca. */
+    signal?: AbortSignal;
 };
 
 /** Apertura de conexión inyectable. Los tests la reemplazan por una conexión en memoria. */
@@ -83,20 +85,38 @@ type DenoMinimo = {
 };
 
 /** Apertura real: el socket va a la IP y el TLS se negocia con el nombre real. */
-const abrirConexionPorDefecto: AbrirConexion = async ({ hostname, port, tls, sni }) => {
+const abrirConexionPorDefecto: AbrirConexion = async ({ hostname, port, tls, sni, signal }) => {
     const deno = (globalThis as unknown as { Deno?: DenoMinimo }).Deno;
     if (!deno) throw new Error('Deno.connect no está disponible en este runtime');
 
     const conexion = await deno.connect({ hostname, port });
     if (!tls) return conexion;
 
+    // El aborto pudo llegar mientras se conectaba: el TCP ya no se usa.
+    if (signal?.aborted) {
+        conexion.close();
+        throw errorDeAborto();
+    }
+
+    // `Deno.startTls` no acepta la señal: si el aborto llega durante el saludo, la única forma de
+    // cortarlo es cerrar el TCP, o el socket queda abierto hasta que Deno lo corte por su cuenta.
+    let negociado = false;
+    const alAbortar = () => {
+        if (!negociado) conexion.close();
+    };
+    signal?.addEventListener('abort', alAbortar, { once: true });
+
     try {
         // SNI y certificado contra el nombre de la tienda, aunque el socket haya ido a la IP.
-        return await deno.startTls(conexion, { hostname: sni });
+        const seguro = await deno.startTls(conexion, { hostname: sni });
+        negociado = true;
+        return seguro;
     } catch (error) {
         // Un TLS fallido deja el socket TCP abierto si no se cierra acá.
         conexion.close();
         throw error;
+    } finally {
+        signal?.removeEventListener('abort', alAbortar);
     }
 };
 
@@ -135,7 +155,7 @@ export async function pinnedFetch(url: string, init: PinnedHttpInit): Promise<Re
         // `abrir` no se puede cancelar. Si el aborto gana la carrera, la conexión puede llegar
         // cuando ya nadie la espera: se cierra al llegar, o queda un socket filtrado por cada
         // intento que se pasa de tiempo.
-        const apertura = abrir({ hostname: objetivo, port: puerto, tls, sni: nombre });
+        const apertura = abrir({ hostname: objetivo, port: puerto, tls, sni: nombre, signal });
         let conexion: ConexionHttp;
         try {
             conexion = await conAborto(apertura, signal);

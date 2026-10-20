@@ -227,22 +227,41 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                 }
             }
 
+            // Cada dirección recibe una porción del presupuesto que queda: una IP en negro no puede
+            // comerse el tiempo de las demás, o el bucle no sirve para nada. El reloj global sigue
+            // siendo el tope duro, y su aborto corta todo.
+            const inicioSalto = Date.now();
+            const restante = () => Math.max(1, timeoutMs - (Date.now() - inicioSalto));
             let response: FetchResponseLike | null = null;
-            for (const destino of destinos) {
+
+            for (let indice = 0; indice < destinos.length; indice += 1) {
+                const destino = destinos[indice];
+                const porcion = Math.max(25, Math.floor(restante() / (destinos.length - indice)));
+                const turno = new AbortController();
+                const alAbortarGlobal = () => turno.abort();
+                controller.signal.addEventListener('abort', alAbortarGlobal, { once: true });
+                const relojDelTurno = setTimeout(() => turno.abort(), porcion);
+
                 try {
                     response = await fetchImpl(guarda.url, {
                         redirect: 'manual',
                         headers: buildBrowserHeaders(),
-                        signal: controller.signal,
+                        signal: turno.signal,
                         address: destino,
                     });
+                    // El cuerpo sigue vivo después del intento: el turno deja de correr, pero el
+                    // aborto global se queda enganchado para poder cortar la lectura.
+                    clearTimeout(relojDelTurno);
                     break;
                 } catch {
-                    // Un destino que no contesta no condena la página: se prueba el siguiente. Sin
-                    // tiempo ya no tiene sentido seguir probando.
+                    clearTimeout(relojDelTurno);
+                    controller.signal.removeEventListener('abort', alAbortarGlobal);
+                    // Una dirección que no contesta dentro de su turno no condena la página: se pasa
+                    // a la siguiente. Es el tope global el que corta todo.
                     if (timedOut) break;
                 }
             }
+
             if (response === null) return fallo(timedOut ? 'timeout' : 'fetch-failed', finalUrl, null);
 
             if (response.status >= 300 && response.status < 400) {
