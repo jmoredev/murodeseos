@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 y T9 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real**, **T6 y T9 con la puerta del e2e del repo en verde** (L21, L23) y **la revisión de la rama entera cortada por presupuesto** (L22: la entrega necesita commits encadenados más pequeños). Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 y T9 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real**, **T6 y T9 con la puerta del e2e del repo en verde** (L21, L23) y **la revisión de la rama entera cortada por presupuesto** (L22: la entrega necesita commits encadenados más pequeños). Lo siguiente es **T7** (`currency`), el único requisito de producto que queda; **la fase nativa se descartó** (L33). Lo que falta y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
 
 ## Objetivo
 
@@ -27,8 +27,10 @@ muchas tiendas distintas y no romperse cuando una tienda cambia su HTML.
 > El como se haga el scrapping es super importante porque va a determinar que se pueda utilizar en multiples web
 > y sea muy robusto, algo que es primordial.
 
-- **S4 — Decisión del propietario (2026-10-18), plataforma:** fase 1 **PWA en Android** (Web Share Target), sin
-  build nativo; el nativo Android+iOS (`expo-share-intent`) **después**, y esa decisión **no cambia el extractor**.
+- **S4 — Decisión del propietario (2026-10-18, revisada el 2026-10-20), plataforma: solo PWA.** Fase 1 **PWA en Android**
+  (Web Share Target), sin build nativo. La fase nativa Android+iOS (`expo-share-intent`) **se descarta por
+  completo** (L33): no se implementa ni se planifica. iOS queda fuera de alcance, porque WebKit no soporta
+  `share_target` y no hay camino nativo previsto. Esta decisión **no cambia el extractor**.
 
 - **S5 — Decisión del propietario (2026-10-18), extracción:** **solo cascada propia, sin costo externo**. No se
   contrata ninguna API de preview/scraping. Consecuencia **aceptada**: las tiendas que bloquean o que solo
@@ -88,7 +90,7 @@ Lo que estos números fijan (no es opinión):
   `enctype: "multipart/form-data"` y `params` `title`/`text`/`url` + `files: [{ accept: "image/*" }]`. El service
   worker intercepta el POST (hoy `public/sw.js` descarta todo lo que no sea GET), guarda el payload y responde un
   `303` a la ruta del formulario. Requiere la app **instalada**; Chrome Android 76+; **Firefox y Safari no lo
-  soportan** (bug de WebKit abierto desde 2019) → iOS queda para la fase nativa de S4.
+  soportan** (bug de WebKit abierto desde 2019) → **iOS queda fuera de alcance** (L33).
 - **Eje B — cómo se extrae:** **cascada por tiers**, con procedencia y confianza **por campo**:
   1. JSON-LD `schema.org/Product` · 2. Open Graph / Twitter cards · 3. microdata / RDFa ·
   4. heurística sobre el HTML · 5. adaptador por dominio (declarativo, con fixtures).
@@ -118,7 +120,6 @@ Lo que estos números fijan (no es opinión):
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
 | T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | `560a216` |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
-| T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
 
 ## Log
 
@@ -341,8 +342,8 @@ Lo que estos números fijan (no es opinión):
   menor: en escritorio, esos pocos cientos de milisegundos se ve el fondo del modal en vez de la
   lista.
   **Lo que NO está verificado y no se puede desde acá:** el `share_target` solo lo ofrece Android
-  a una **PWA instalada** (Chrome 76+; Firefox y Safari no lo soportan, y por eso iOS queda para
-  T8). La verificación real de punta a punta —compartir desde una app de compras en un teléfono y
+  a una **PWA instalada** (Chrome 76+; Firefox y Safari no lo soportan, y por eso iOS queda fuera
+  de alcance, L33). La verificación real de punta a punta —compartir desde una app de compras en un teléfono y
   ver el deseo creado— **necesita el teléfono del propietario**. Lo que sí se verificó: la suite
   completa (**517 pasan | 1 todo**), `tsc` y `eslint` en 0, y el **build real de la PWA**
   (`expo export` + `postbuild`) con `/compartir` exportada como ruta estática (`EXPORT_EXIT=0`,
@@ -636,6 +637,12 @@ verificó la suite en cada uno de los diez tips: 424, 465, 517, 543, 560, 564, 5
 todos en verde. La regla que queda: **al cortar una cadena se verifica cada tip, no sólo el último**,
 y no se confía en el mensaje de un commit para decidir a qué unidad pertenece.
 
+**L33 (2026-10-20) — decisión del propietario, literal:** «La fase nativa la vamos a quitar por completo».
+Se reescribió **S4** (solo PWA, sin build nativo ni plan posterior) y se retiró **T8** de la tabla de
+tareas. Consecuencia aceptada: **iOS queda fuera de alcance**, porque WebKit no soporta `share_target` y
+ya no hay camino nativo previsto. No hubo código que tocar: `expo-share-intent` nunca se instaló ni se
+usó, y nada en la app dependía de esa fase.
+
 ## Verificación
 
 
@@ -750,7 +757,7 @@ y no se confía en el mensaje de un commit para decidir a qué unidad pertenece.
 - **De la migración de T5b**: está aplicada **solo en local**; el proyecto remoto no la tiene hasta
   que el propietario decida el `db push`.
 - **T6 no está probado en un teléfono.** El `share_target` solo lo ofrece Android a una PWA
-  **instalada** (Chrome 76+; Firefox y Safari no lo soportan: iOS queda para T8). Lo verificado acá
+  **instalada** (Chrome 76+; Firefox y Safari no lo soportan: iOS queda fuera de alcance, L33). Lo verificado acá
   es el contrato (manifest, service worker y ruta), la suite unitaria, el build y **la puerta del
   e2e del repo en verde** (L21); el recorrido real —compartir desde una app de compras y ver el
   deseo creado— lo tiene que hacer el propietario en su móvil, y **para eso hay que desplegar
