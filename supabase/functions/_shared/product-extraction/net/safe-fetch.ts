@@ -171,6 +171,12 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                     } catch {
                         return fallo(timedOut ? 'timeout' : 'dns-failed', finalUrl, null);
                     }
+                    // Una lista vacía no es una aprobación: sin direcciones el bucle de abajo no
+                    // itera y el `fetch` seguiría hacia una dirección que nadie contrastó (pasa
+                    // con un resolvedor que solo consulta una familia, o con una respuesta vacía
+                    // transitoria). No hay nada que validar, así que se falla cerrado con el
+                    // motivo que ya existe para «el nombre no resolvió a nada usable».
+                    if (direcciones.length === 0) return fallo('dns-failed', finalUrl, null);
                     for (const direccion of direcciones) {
                         const bloqueo = blockedIpReason(direccion);
                         if (bloqueo) return fallo(bloqueo, finalUrl, null);
@@ -191,6 +197,10 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                         // un resolvedor que revienta no es permiso para pedir.
                         return fallo(timedOut ? 'timeout' : 'dns-failed', finalUrl, null);
                     }
+
+                    // La reconfirmación vacía tampoco se puede comparar: sin direcciones no hay
+                    // conjunto, y un nombre que dejó de resolver no es permiso para pedir.
+                    if (reconfirmadas.length === 0) return fallo('dns-failed', finalUrl, null);
 
                     // Si la nueva respuesta trae una dirección prohibida, el motivo que ya existe
                     // para ese rango es el que nombra lo que pasó.

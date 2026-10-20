@@ -277,6 +277,71 @@ describe('guarda SSRF: DNS rebinding entre la validación y la conexión', () =>
         expect(resoluciones).toBe(2);
     });
 
+    it('no pide nada cuando la primera resolución devuelve una lista vacía', async () => {
+        // Una respuesta vacía no es una respuesta pública: no hay ninguna dirección que contrastar,
+        // así que el bucle por dirección no itera y antes se pedía igual. Un resolvedor que solo
+        // consulta una familia, o una respuesta transitoriamente vacía, dejaba pasar el `fetch`
+        // hacia una dirección que nadie validó. Se falla cerrado con el motivo que ya existe para
+        // «el nombre no resolvió a nada usable».
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return [];
+        };
+
+        const resultado = await safeFetch('https://vacio.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual([]);
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'dns-failed',
+            finalUrl: 'https://vacio.example/producto',
+            status: null,
+        });
+        // Se corta en la primera resolución: no hay nada validado que reconfirmar.
+        expect(resoluciones).toBe(1);
+    });
+
+    it('no pide nada cuando la segunda resolución devuelve una lista vacía', async () => {
+        // La mitigación compara conjuntos: `['93.184.216.34']` contra `[]` no son el mismo
+        // conjunto, así que este caso ya se negaba, pero por `dns-changed`. Una segunda respuesta
+        // vacía no es un cambio de dirección: es el nombre sin nada usable, y el motivo que lo
+        // nombra es el mismo `dns-failed` de una resolución que tira. Se fija el motivo exacto
+        // para que un futuro atajo en la comparación de conjuntos no reabra la puerta.
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return resoluciones === 1 ? ['93.184.216.34'] : [];
+        };
+
+        const resultado = await safeFetch('https://vacio.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual([]);
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'dns-failed',
+            finalUrl: 'https://vacio.example/producto',
+            status: null,
+        });
+        expect(resoluciones).toBe(2);
+    });
+
     it('no reconfirma un literal IP, que no tiene nombre que rebindear', async () => {
         // La reconfirmación es una consulta por nombre: un literal IP no se resuelve ni la primera
         // vez, así que tampoco la segunda. Fija también que la mitigación no duplique la guarda.
