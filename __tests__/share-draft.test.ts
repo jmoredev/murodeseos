@@ -157,6 +157,32 @@ describe('borrador pendiente del formulario (pantalla del enlace)', () => {
     });
 });
 
+describe('almacenamiento bloqueado por el navegador', () => {
+    it('tomar un pendiente devuelve null en vez de lanzar si acceder a sessionStorage lanza', () => {
+        // R3-002: con el almacenamiento bloqueado (iframe de terceros, cookies desactivadas)
+        // **acceder** a `sessionStorage` lanza `SecurityError`, y eso no es distinto de no
+        // tener nada pendiente. La lista de deseos llama a esto sin red: una excepción aquí
+        // tumba la pantalla entera en vez de solo no encontrar un compartir.
+        const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
+        Object.defineProperty(globalThis, 'sessionStorage', {
+            configurable: true,
+            get() {
+                throw new DOMException('El almacenamiento está bloqueado', 'SecurityError');
+            },
+        });
+
+        try {
+            expect(() => takePendingShare()).not.toThrow();
+            expect(takePendingShare()).toBeNull();
+            expect(() => takePendingDraft()).not.toThrow();
+            expect(takePendingDraft()).toBeNull();
+        } finally {
+            if (descriptor) Object.defineProperty(globalThis, 'sessionStorage', descriptor);
+            else delete (globalThis as any).sessionStorage;
+        }
+    });
+});
+
 describe('borrador inicial a partir del compartir', () => {
     it('con enlace: título de la hoja y el enlace como único vínculo', () => {
         expect(draftFromShare(payload)).toEqual({

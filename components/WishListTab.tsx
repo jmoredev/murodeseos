@@ -91,6 +91,10 @@ export function WishListTab({ userId }: WishListTabProps) {
     const [itemToDelete, setItemToDelete] = useState<GiftItem | null>(null);
     const [isPending, startTransition] = useTransition();
     const webImageInputRef = useRef<HTMLInputElement | null>(null);
+    // La **sesión del formulario**: sube cada vez que se abre uno. Sirve para saber a qué
+    // formulario pertenece una respuesta que llega tarde —la extracción de un compartir puede
+    // volver cuando el usuario ya cerró ese deseo y abrió otro, y ese otro no es suyo.
+    const formSessionRef = useRef(0);
 
     useEffect(() => {
         // `BackHandler` no existe en web: RNW ignora (y registra error en consola).
@@ -168,6 +172,9 @@ export function WishListTab({ userId }: WishListTabProps) {
     // Estado inicial de un deseo nuevo. Vive aparte de `openForm` porque un compartir abre el
     // formulario con el borrador ya puesto: el formulario arranca en un sitio, no en dos.
     const startNewWish = (draft: WishDraftFields) => {
+        // Cada apertura estrena sesión, y este es el único sitio de los deseos nuevos: lo que
+        // estrena la marca es abrir el formulario, no lo que llegue después.
+        formSessionRef.current += 1;
         setEditingItem(null);
         setFormData({
             title: draft.title ?? '',
@@ -214,6 +221,9 @@ export function WishListTab({ userId }: WishListTabProps) {
         // StrictMode y la segunda leería `null`. El efecto de foco es el único sitio donde se
         // aplica una vez, y es lo que pide el formulario abierto al instante.
         startNewWish(prefilled);
+        // La respuesta de la red llega a **este** formulario o a ninguno: si el usuario lo cerró
+        // y abrió otro deseo, la sesión ya no es esta y lo extraído no es suyo.
+        const sesionDelCompartir = formSessionRef.current;
 
         // Sin enlace no hay página que leer: lo compartido es todo lo que hay.
         if (!payload.url) return undefined;
@@ -221,8 +231,10 @@ export function WishListTab({ userId }: WishListTabProps) {
         let cancelled = false;
 
         void requestProductDraft(payload.url).then((result) => {
-            // El deseo ya está abierto; con la pestaña cerrada no hay a quién contarle nada.
-            if (cancelled) return;
+            // El deseo ya está abierto; con la pestaña cerrada no hay a quién contarle nada. Y si
+            // la sesión cambió, el formulario abierto es otro: no se le toca nada, ni siquiera
+            // para avisar de un fallo de una página que el usuario ya no está viendo.
+            if (cancelled || formSessionRef.current !== sesionDelCompartir) return;
 
             if (result.status === 'unavailable') {
                 // El enlace nunca se pierde (S2, S5): se explica el hueco y se completa a mano.
@@ -299,6 +311,8 @@ export function WishListTab({ userId }: WishListTabProps) {
             return;
         }
 
+        // Un deseo que se edita también estrena sesión: es otro formulario, no el del compartir.
+        formSessionRef.current += 1;
         setEditingItem(item);
         setFormData({ ...item });
         // Se precarga el número ya formateado, que es como aparece en la tarjeta.

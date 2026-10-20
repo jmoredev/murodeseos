@@ -51,10 +51,14 @@ export function savePendingShare(payload: SharedPayload): void {
  * ahí haría que cada apertura fallara igual.
  */
 export function takePendingShare(): SharedPayload | null {
-    if (typeof sessionStorage === 'undefined' || !sessionStorage) return null;
-
     let raw: string | null;
     try {
+        // La comprobación va **dentro** del `try` a propósito: con el almacenamiento bloqueado
+        // (iframe de terceros, cookies desactivadas) **acceder** a `sessionStorage` lanza
+        // `SecurityError`, y eso es un fallo de almacenamiento como cualquier otro: aquí se
+        // degrada a «no hay nada pendiente» en vez de tumbar la pantalla que llama.
+        if (typeof sessionStorage === 'undefined' || !sessionStorage) return null;
+
         raw = sessionStorage.getItem(PENDING_SHARE_KEY);
         if (raw === null) return null;
         sessionStorage.removeItem(PENDING_SHARE_KEY);
@@ -98,10 +102,12 @@ function asDraftRecord(value: unknown): Record<string, unknown> | null {
  * enlace».
  */
 export function takePendingDraft(): WishDraftFields | null {
-    if (typeof sessionStorage === 'undefined' || !sessionStorage) return null;
-
     let raw: string | null;
     try {
+        // Misma razón que en `takePendingShare`: acceder a `sessionStorage` puede lanzar, y eso
+        // se comporta igual que un almacenamiento vacío.
+        if (typeof sessionStorage === 'undefined' || !sessionStorage) return null;
+
         raw = sessionStorage.getItem(PENDING_DRAFT_KEY);
         if (raw === null) return null;
         sessionStorage.removeItem(PENDING_DRAFT_KEY);

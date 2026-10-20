@@ -8,8 +8,14 @@ import { takePendingShare } from '@/lib/share-draft';
 import { requestProductDraft } from '@/lib/extract-product-client';
 
 // La tarjeta no hace falta para probar el formulario, y montarla traería medio árbol de la app.
+// Pero sí tiene que ser **pulsable**: abrir otro deseo —la carrera que aquí se prueba— pasa por
+// su `onClick`, que es lo que llama a `openForm(item)` en modo edición.
 vi.mock('@/components/WishlistCard', () => ({
-    WishlistCard: () => <div data-testid="wishlist-card" />,
+    WishlistCard: ({ item, onClick }: any) => (
+        <button type="button" data-testid={`wishlist-card-${item.id}`} onClick={() => onClick?.(item)}>
+            {item.title}
+        </button>
+    ),
     Priority: { LOW: 'low', MEDIUM: 'medium', HIGH: 'high' },
 }));
 
@@ -137,6 +143,71 @@ describe('formulario prellenado desde un compartir', () => {
         expect(screen.getByPlaceholderText(QUERY.title)).toHaveValue('Mi título');
         // El precio no lo tocó nadie, así que entra.
         expect(screen.getByPlaceholderText(QUERY.price)).toHaveValue('89,99');
+    });
+
+    it('la respuesta tardía no se cuela en el deseo que el usuario abrió después', async () => {
+        // R3-001: la extracción tarda, y mientras tanto el usuario puede cerrar el deseo del
+        // compartir y abrir **otro**. La respuesta pertenece al formulario que abrió el
+        // compartir; aplicarla a este otro escribiría el producto compartido en un deseo que
+        // estaba bien, y guardarlo persistiría datos que nadie pidió.
+        takePendingShareMock.mockReturnValue(sharePayload);
+        let resolverExtraccion: (value: any) => void = () => {};
+        requestProductDraftMock.mockReturnValue(
+            new Promise((resolve) => {
+                resolverExtraccion = resolve;
+            }) as any,
+        );
+
+        // El deseo propio: título y notas suyos, y ni precio ni foto. Justo los campos que la
+        // extracción rellenaría sin preguntar si el formulario fuera el suyo.
+        (supabase.from as any).mockImplementation((table: string) =>
+            table === 'wishlist_items'
+                ? createMockChain([
+                      {
+                          id: 'deseo-propio',
+                          title: 'Auriculares viejos',
+                          links: [],
+                          image_url: null,
+                          price_numeric: null,
+                          notes: 'Notas propias',
+                          priority: 'medium',
+                          excluded_group_ids: [],
+                      },
+                  ])
+                : createMockChain([]),
+        );
+
+        render(<WishListTab userId="user-1" />);
+
+        // El compartir abrió su propio deseo con el borrador instantáneo.
+        expect(screen.getByPlaceholderText(QUERY.title)).toHaveValue('Producto de prueba');
+        const tarjeta = await screen.findByTestId('wishlist-card-deseo-propio');
+
+        // Se cierra ese formulario y se abre el otro deseo.
+        fireEvent.click(screen.getByLabelText('Cerrar formulario'));
+        fireEvent.click(tarjeta);
+
+        expect(screen.getByPlaceholderText(QUERY.title)).toHaveValue('Auriculares viejos');
+        expect(screen.getByPlaceholderText(QUERY.notes)).toHaveValue('Notas propias');
+
+        // Y ahora, tarde, llega la respuesta de la red.
+        await act(async () => {
+            resolverExtraccion({
+                status: 'ok',
+                draft: {
+                    title: 'Lámpara de pie',
+                    priceText: '89,99',
+                    imageUrl: 'https://tienda.example/img.jpg',
+                    notes: 'Una descripción',
+                },
+            });
+        });
+
+        // Este formulario sigue siendo el del deseo propio: nada del producto compartido.
+        expect(screen.getByPlaceholderText(QUERY.title)).toHaveValue('Auriculares viejos');
+        expect(screen.getByPlaceholderText(QUERY.notes)).toHaveValue('Notas propias');
+        expect(screen.getByPlaceholderText(QUERY.price)).toHaveValue('');
+        expect(screen.getByPlaceholderText(QUERY.image)).toHaveValue('');
     });
 
     it('sin compartir pendiente no abre nada ni llama a la extracción', async () => {
