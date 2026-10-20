@@ -48,7 +48,16 @@ export function formatPrice(price: number | null | undefined, currency?: string 
     if (!Number.isFinite(price)) return null;
 
     const codigo = toCurrencyCode(currency);
-    if (codigo) return new Intl.NumberFormat('es-ES', { style: 'currency', currency: codigo }).format(price);
+    if (codigo) {
+        // `useGrouping: false` a propósito: la app nunca pintó separador de miles
+        // (`9999999999,99`), y agregarlo cambiaría el ancho del chip, que el e2e mide a 360px.
+        // Lo que T7 suma es el símbolo, no una notación nueva.
+        return new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: codigo,
+            useGrouping: false,
+        }).format(price);
+    }
 
     return price.toFixed(2).replace('.', ',');
 }

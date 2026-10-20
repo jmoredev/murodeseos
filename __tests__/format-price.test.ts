@@ -241,6 +241,12 @@ describe('formatPrice con moneda', () => {
         expect(formatPrice(89.99, '')).toBe('89,99');
     });
 
+    it('no agrega separador de miles: el ancho del precio es el de siempre', () => {
+        // Es el peor caso de la columna, el que el e2e mide a 360px: con agrupación saldría
+        // `9.999.999.999,99 €` y cambaría el ancho que la app siempre tuvo.
+        expect(formatPrice(9999999999.99, 'EUR')).toBe(`9999999999,99${DURO}€`);
+    });
+
     it('un precio ausente sigue siendo null aunque haya moneda', () => {
         expect(formatPrice(null, 'EUR')).toBeNull();
         expect(formatPrice(NaN, 'EUR')).toBeNull();

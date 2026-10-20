@@ -82,6 +82,7 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
                 user_id: friendUser.id,
                 title: seededFriendWishTitle,
                 price_numeric: E2E_CONFIG.wishlistItems[0].price,
+                currency: 'EUR',
                 image_url: null,
                 links: [],
                 notes: '',
