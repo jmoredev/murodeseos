@@ -681,11 +681,7 @@ describe('pinnedFetch · averías de la red', () => {
         const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nContent-Length: 50\r\n\r\nHola mundo!');
         const { abrir } = abridorFalso(conexion);
 
-        const respuesta = await pinnedFetch('https://shop.example/', {
-            headers: {},
-            address: '93.184.216.34',
-            abrirConexion: abrir,
-        });
+        const respuesta = await pinnedFetch('https://shop.example/', { headers: {}, address: '93.184.216.34', abrirConexion: abrir });
 
         // El cuerpo es un stream: el corte no se ve al abrir la respuesta sino al leerla, y ahí
         // tiene que tirar en vez de cerrarse como si el cuerpo hubiera terminado.
@@ -709,11 +705,7 @@ describe('pinnedFetch · averías de la red', () => {
         const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nb\r\nHola mun');
         const { abrir } = abridorFalso(conexion);
 
-        const respuesta = await pinnedFetch('https://shop.example/', {
-            headers: {},
-            address: '93.184.216.34',
-            abrirConexion: abrir,
-        });
+        const respuesta = await pinnedFetch('https://shop.example/', { headers: {}, address: '93.184.216.34', abrirConexion: abrir });
 
         await expect(respuesta.text()).rejects.toThrow(/cuerpo/);
     });
@@ -723,11 +715,7 @@ describe('pinnedFetch · averías de la red', () => {
         const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nb\r\nHola mundo!');
         const { abrir } = abridorFalso(conexion);
 
-        const respuesta = await pinnedFetch('https://shop.example/', {
-            headers: {},
-            address: '93.184.216.34',
-            abrirConexion: abrir,
-        });
+        const respuesta = await pinnedFetch('https://shop.example/', { headers: {}, address: '93.184.216.34', abrirConexion: abrir });
 
         await expect(respuesta.text()).rejects.toThrow(/cuerpo/);
     });
@@ -738,11 +726,7 @@ describe('pinnedFetch · averías de la red', () => {
         );
         const { abrir } = abridorFalso(conexion);
 
-        const respuesta = await pinnedFetch('https://shop.example/', {
-            headers: {},
-            address: '93.184.216.34',
-            abrirConexion: abrir,
-        });
+        const respuesta = await pinnedFetch('https://shop.example/', { headers: {}, address: '93.184.216.34', abrirConexion: abrir });
 
         expect(respuesta.status).toBe(200);
         await expect(respuesta.text()).resolves.toBe('Hola mundo!');
