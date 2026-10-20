@@ -24,6 +24,7 @@ desarrollo local y nunca contra el proyecto de producción.
 | `seed-complete-database.ts` | Reinicia y puebla la base de datos de prueba: usuarios, perfiles, grupos, membresías y listas de deseos. |
 | `setup-e2e-user.ts` | Borra y recrea el usuario de pruebas E2E con su perfil completo. |
 | `postbuild.cjs` | Paso posterior al export web: genera `404.html`, `.nojekyll`, copia los activos de la PWA e inyecta los enlaces del manifiesto, favicon e `apple-touch-icon` con base path absoluto en el HTML. El idioma vive en `app/+html.tsx`. |
+| `capture-product-fixtures.ts` | Captura páginas de producto reales a `test/fixtures/product-pages/` (`<id>.html.gz` + `manifest.json`) para los tests de extracción de producto. Es la única excepción al «no uses estos scripts contra producción»: no toca Supabase, solo descarga HTML público, con una petición por semilla, pausa y sin reintentos. Detalle en `test/fixtures/product-pages/README.md`. |
 
 ## Uso
 
@@ -40,6 +41,20 @@ npm run build:deploy
 
 Los scripts de TypeScript se ejecutan con `tsx`, que ya es una dependencia de
 desarrollo. No necesitas instalarlo por separado.
+
+### Fixtures de páginas de producto
+
+```bash
+# Congelar las páginas de las tiendas declaradas en scripts/lib/fixture-capture.ts
+npx tsx scripts/capture-product-fixtures.ts
+
+# Solo algunas (una o varias, separadas por coma)
+npx tsx scripts/capture-product-fixtures.ts --only=mediamarkt-es,zara-es
+```
+
+No requiere Docker ni `.env.local`: descarga HTML público. Las semillas, el criterio de la
+lista y la convención de los fixtures están en `scripts/lib/fixture-capture.ts` y en
+`test/fixtures/product-pages/README.md`.
 
 ## Usuarios de prueba
 
