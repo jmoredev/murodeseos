@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { useEffect } from 'react';
 import { vi } from 'vitest';
 
 vi.mock('expo-splash-screen', () => ({
@@ -140,6 +141,17 @@ vi.mock('@/lib/group-utils', () => ({
 
 // Mock de expo-router
 vi.mock('expo-router', () => {
+    /**
+     * `useFocusEffect` de verdad, no un no-op.
+     *
+     * Apagarlo (`vi.fn()`) convierte cada efecto de foco en nada: los caminos que dependen de él
+     * quedan sin ejecutar y, peor, sin poder probarse. Aquí corre el callback al montar y cada vez
+     * que cambia, igual que el efecto que sustituye.
+     */
+    function useFocusEffectEnfocado(callback: any) {
+        useEffect(callback, [callback]);
+    }
+
     return {
         Link: ({ children, href, asChild, ...props }: any) => {
             return children;
@@ -150,7 +162,7 @@ vi.mock('expo-router', () => {
             back: vi.fn(),
             setParams: vi.fn(),
         }),
-        useFocusEffect: vi.fn(),
+        useFocusEffect: useFocusEffectEnfocado,
         useSegments: () => [],
         usePathname: () => '/',
         useLocalSearchParams: () => ({}),

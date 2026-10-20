@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import packageJson from '../package.json';
 import { supabaseAdmin } from './supabase-admin';
+import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 
 test.describe('Visibilidad de Deseos por Grupo', () => {
     // El usuario E2E ya está logueado por auth.setup.ts
@@ -15,14 +16,15 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         await expect(page).toHaveURL('/');
 
         // Crear Regalo Público
-        await page.getByLabel('Nuevo deseo').click();
+        // El «+» pasa primero por la pantalla del enlace; el helper elige «No tengo enlace».
+        await abrirFormularioDeDeseo(page);
         await page.fill('input[placeholder="¿Qué deseas?"]', publicTitle);
         const saveBtn1 = page.getByText('Guardar', { exact: true }).last();
         await saveBtn1.evaluate((el) => (el as HTMLElement).click());
         await expect(page.locator(`text=${publicTitle}`)).toBeVisible();
 
         // Crear Regalo Secreto (Excluido de E2E Test Group)
-        await page.getByLabel('Nuevo deseo').click();
+        await abrirFormularioDeDeseo(page);
         await page.fill('input[placeholder="¿Qué deseas?"]', secretTitle);
 
         // Marcar exclusión para E2E Test Group

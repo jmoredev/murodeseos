@@ -6,12 +6,33 @@ import vm from 'node:vm';
 const SW_SOURCE = readFileSync(join(__dirname, '..', 'public', 'sw.js'), 'utf8');
 
 const SW_ORIGIN = 'https://user.github.io';
-const VERSION = 'v5';
-const CACHE_NAME = `murodeseos-${VERSION}`;
+/**
+ * La versión se **lee** del propio `sw.js` en vez de repetirla acá: el nombre de la caché activa
+ * se deriva de ella, y una versión nueva en el SW no debería romper estos tests ni pasar
+ * desapercibida. Lo que sí se afirma con literales es lo viejo que `activate` tiene que barrer.
+ */
+const SW_VERSION = /const VERSION = '([^']+)'/.exec(SW_SOURCE)?.[1];
+const CACHE_NAME = `murodeseos-${SW_VERSION}`;
 
 type Bucket = Map<string, Response>;
 
 const SW_SCOPE = `${SW_ORIGIN}/murodeseos/`;
+
+/**
+ * Contrato de cable del share target, declarado acá a propósito.
+ *
+ * Estos dos literales son lo que el service worker y la página se tienen que decir: la caché
+ * donde el SW deja el compartir y la forma de la clave con la que la app lo encuentra. La app
+ * los declara por su lado (`lib/share-target.ts`) y un test de ese módulo comprueba que el
+ * `sw.js` sigue usando los mismos, que es lo que evita que los dos lados se separen.
+ */
+const SHARE_CACHE_NAME = 'murodeseos-share';
+const SHARE_KEY_PREFIX = 'share-payload/';
+
+/** La clave exacta que arma el SW para un compartir: `«ámbito»/share-payload/<id>`. */
+function shareCacheKey(id: string) {
+    return `${SW_SCOPE}${SHARE_KEY_PREFIX}${id}`;
+}
 
 /**
  * `caches.match` acepta un `Request` **o una ruta relativa** (`'./'`).
@@ -66,7 +87,10 @@ function createCacheApi() {
 function createSandbox() {
     const listeners: Record<string, ((event: any) => void)[]> = {};
     const self = {
-        location: { origin: SW_ORIGIN },
+        location: { origin: SW_ORIGIN, href: `${SW_SCOPE}sw.js` },
+        // El ámbito real del SW es lo que permite distinguir el destino de compartir sin
+        // escribir `/murodeseos` en el código: el mismo `sw.js` sirve en cualquier base.
+        registration: { scope: SW_SCOPE },
         skipWaiting: vi.fn(async () => {}),
         clients: { claim: vi.fn(async () => {}) },
         addEventListener: vi.fn((name: string, handler: (event: any) => void) => {
@@ -80,11 +104,20 @@ function createSandbox() {
         self,
         caches: cacheApi,
         fetch: fetchMock,
+        // El SW parsea el `multipart/form-data` de la hoja de compartir y devuelve respuestas:
+        // ambos constructores tienen que existir dentro del contexto aislado.
+        Request,
         Response,
+        Headers,
+        FormData,
+        Blob,
+        File,
         AbortController,
         setTimeout,
         clearTimeout,
         URL,
+        Date,
+        Math,
         console,
     });
     vm.runInContext(SW_SOURCE, sandbox);
@@ -286,5 +319,182 @@ describe('service worker (public/sw.js)', () => {
 
         expect(sandbox.cacheApi.addAllCalls.length).toBeGreaterThan(0);
         expect(sandbox.cacheApi.addAllCalls[0]).not.toContain('./');
+    });
+});
+
+/**
+ * Share Target (T6 de `odd/tasks/compartir-producto.md`).
+ *
+ * Android entrega el compartir como un **POST** `multipart/form-data` al `action` del manifest.
+ * Una página estática no sabe responder a un POST, así que el service worker es el único que
+ * puede recibirlo: guarda el payload y contesta un `303` a la ruta del formulario, que ya es un
+ * GET normal. Si esto no existe, elegir «Muro de Deseos» en la hoja de compartir no hace nada.
+ */
+describe('service worker: share target', () => {
+    const SHARE_URL = `${SW_SCOPE}compartir`;
+
+    function shareRequest(fields: Record<string, string>) {
+        const form = new FormData();
+        for (const [name, value] of Object.entries(fields)) form.append(name, value);
+        return new Request(SHARE_URL, { method: 'POST', body: form });
+    }
+
+    it('guarda el compartir y responde 303 a la ruta del formulario, sin ir a la red', async () => {
+        const sandbox = createSandbox();
+        const event = dispatchFetch(
+            sandbox,
+            shareRequest({
+                title: 'Producto de prueba',
+                text: 'Mira esto https://www.amazon.es/dp/B09B8X9RGM',
+                url: 'https://www.amazon.es/dp/B09B8X9RGM',
+            }),
+        );
+
+        expect(event.respondWith).toHaveBeenCalledTimes(1);
+        const response = await event.respondWith.mock.calls[0][0];
+
+        expect(response.status).toBe(303);
+        const location = new URL(response.headers.get('location')!);
+        expect(location.pathname).toBe('/murodeseos/compartir');
+        const id = location.searchParams.get('share');
+        expect(id).toBeTruthy();
+
+        const stored = sandbox.cacheApi.store.get(SHARE_CACHE_NAME)?.get(shareCacheKey(id!));
+        expect(stored).toBeDefined();
+        expect(await stored!.json()).toMatchObject({
+            url: 'https://www.amazon.es/dp/B09B8X9RGM',
+            title: 'Producto de prueba',
+        });
+
+        // El POST no se reenvía: no hay servidor que lo entienda.
+        expect(sandbox.fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('si la hoja no manda `url`, la saca del texto compartido', async () => {
+        const sandbox = createSandbox();
+        const event = dispatchFetch(
+            sandbox,
+            shareRequest({ text: 'Increíble: https://tienda.example/producto/42?ref=share' }),
+        );
+        const response = await event.respondWith.mock.calls[0][0];
+        const id = new URL(response.headers.get('location')!).searchParams.get('share')!;
+        const payload = await sandbox.cacheApi.store.get(SHARE_CACHE_NAME)!.get(shareCacheKey(id))!.json();
+
+        expect(payload.url).toBe('https://tienda.example/producto/42?ref=share');
+    });
+
+    it('un compartir sin nada legible redirige igual, sin inventar un id', async () => {
+        // Dos formas de «no hay nada que guardar»: un cuerpo que no es un formulario y un
+        // formulario con los tres campos vacíos. En ninguna de las dos se guarda un payload
+        // vacío que después abriría un deseo en blanco sin explicación.
+        const sandbox = createSandbox();
+
+        const ilegible = dispatchFetch(
+            sandbox,
+            new Request(SHARE_URL, {
+                method: 'POST',
+                body: 'no soy multipart',
+                headers: { 'content-type': 'text/plain' },
+            }),
+        );
+        const vacio = dispatchFetch(
+            sandbox,
+            shareRequest({ title: '   ', text: '', url: '' }),
+        );
+
+        for (const event of [ilegible, vacio]) {
+            const response = await event.respondWith.mock.calls[0][0];
+            expect(response.status).toBe(303);
+            expect(new URL(response.headers.get('location')!).searchParams.get('share')).toBeNull();
+        }
+
+        expect(sandbox.cacheApi.store.get(SHARE_CACHE_NAME)?.size ?? 0).toBe(0);
+    });
+
+    it('un POST a otra ruta del sitio sigue sin interceptarse', () => {
+        const sandbox = createSandbox();
+        const event = dispatchFetch(
+            sandbox,
+            new Request(`${SW_SCOPE}api/otra-cosa`, { method: 'POST', body: 'x' }),
+        );
+
+        expect(event.respondWith).not.toHaveBeenCalled();
+    });
+
+    it('un POST a otro origen no se toca', () => {
+        const sandbox = createSandbox();
+        const form = new FormData();
+        form.append('url', 'https://example.com');
+        const event = dispatchFetch(
+            sandbox,
+            new Request('https://otro.example/murodeseos/compartir', { method: 'POST', body: form }),
+        );
+
+        expect(event.respondWith).not.toHaveBeenCalled();
+    });
+
+    it('el GET de la ruta del formulario sigue navegando: el share no se la come', async () => {
+        const sandbox = createSandbox();
+        const event = dispatchFetch(sandbox, navigationRequest(`${SHARE_URL}?share=abc`));
+
+        const response = await event.respondWith.mock.calls[0][0];
+
+        expect(sandbox.fetchMock).toHaveBeenCalledTimes(1);
+        expect(await response.text()).toBe('fresh');
+    });
+
+    it('activate no borra un compartir pendiente de abrir', async () => {
+        // El prefijo de la caché del SW es `murodeseos-`, así que el barrido de caches
+        // antiguas del `activate` se llevaría por delante el compartir pendiente si no se
+        // excluyera a mano.
+        const sandbox = createSandbox();
+        seedCache(sandbox, [CACHE_NAME, SHARE_CACHE_NAME, 'murodeseos-v2']);
+
+        await dispatchActivate(sandbox);
+
+        expect(sandbox.cacheApi.store.has(SHARE_CACHE_NAME)).toBe(true);
+        expect(sandbox.cacheApi.store.has('murodeseos-v2')).toBe(false);
+    });
+});
+
+/**
+ * Quién **inicia** el POST también decide (hallazgo `R1-share-target-no-initiator-check` de la
+ * revisión de T6). Sin esta comprobación, un formulario de otra web puede forzar el compartir en
+ * el navegador de la víctima: guardar un enlace ajeno, abrir la app y gastarle cuota con una
+ * lectura que no pidió.
+ *
+ * La trampa es no pasarse: el POST legítimo viene de la **hoja de compartir del sistema**, no de
+ * nuestra página, así que no se puede exigir `same-origin`. Solo se rechaza lo declarado
+ * `cross-site`; `none`, `same-origin`, `same-site` o la cabecera ausente siguen pasando.
+ */
+describe('service worker: quién inicia el compartir', () => {
+    const SHARE_URL = `${SW_SCOPE}compartir`;
+
+    function shareRequestCon(secFetchSite?: string) {
+        const form = new FormData();
+        form.append('url', 'https://tienda.example/p/1');
+        const headers: Record<string, string> = {};
+        if (secFetchSite) headers['sec-fetch-site'] = secFetchSite;
+        return new Request(SHARE_URL, { method: 'POST', body: form, headers });
+    }
+
+    it('un POST iniciado por otro sitio no se intercepta', () => {
+        const sandbox = createSandbox();
+
+        const event = dispatchFetch(sandbox, shareRequestCon('cross-site'));
+
+        expect(event.respondWith).not.toHaveBeenCalled();
+    });
+
+    it('el POST de la hoja de compartir del sistema sí se intercepta', async () => {
+        // La hoja del sistema no es «cross-site»: llega como navegación propia.
+        for (const cabecera of ['none', 'same-origin', undefined]) {
+            const sandbox = createSandbox();
+            const event = dispatchFetch(sandbox, shareRequestCon(cabecera));
+
+            expect(event.respondWith).toHaveBeenCalledTimes(1);
+            const response = await event.respondWith.mock.calls[0][0];
+            expect(response.status).toBe(303);
+        }
     });
 });

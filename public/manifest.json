@@ -9,6 +9,16 @@
   "background_color": "#fff4f4",
   "theme_color": "#aa2c32",
   "description": "Comparte tus sueños y organiza tus regalos.",
+  "share_target": {
+    "action": "./compartir",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "icons": [
     {
       "src": "./AppIcons/android/mipmap-xxxhdpi/app_icon.png",

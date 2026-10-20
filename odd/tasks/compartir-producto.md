@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — T1 y T2 cerrados; T3 (adaptadores por dominio) es lo siguiente. Se entrega el extractor primero, sin UI de compartir, por decisión del propietario (S7)
+**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 y T9 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real**, **T6 y T9 con la puerta del e2e del repo en verde** (L21, L23) y **la revisión de la rama entera cortada por presupuesto** (L22: la entrega necesita commits encadenados más pequeños). Lo siguiente es **T7** (`currency`) o **T8** (la fase nativa). Lo que falta y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
 
 ## Objetivo
 
@@ -41,6 +41,16 @@ muchas tiendas distintas y no romperse cuando una tienda cambia su HTML.
 - **S7 — Decisión del propietario (2026-10-18), orden de entrega:** primero **el extractor, con fixtures de
   páginas reales y tests offline**; la UI de compartir va después. Motivo: es la parte que decide el éxito del
   feature y la que se puede probar sin tocar la PWA.
+
+- **S8 — Decisión del propietario (2026-10-18), dependencias:** se autoriza **una** dependencia de
+  runtime, `node-html-parser`, para los adaptadores por dominio. Cualquier otra dependencia —de
+  runtime o de desarrollo— necesita una decisión nueva: sumar una es riesgo de entrega y obliga a
+  verificación independiente.
+
+- **S9 — Decisión del propietario (2026-10-18), alcance de los adaptadores:** T3 cubre **solo
+  Amazon**. Los siguientes adaptadores los decide la telemetría por dominio de T5, con datos de uso
+  reales. Motivo medido: PcComponentes, Fnac y Decathlon no se arreglan con un adaptador (bloquean
+  el transporte antes del parseo), así que escribir adaptadores «por si acaso» sería trabajo tirado.
 
 ## Diagnóstico (medido, no supuesto)
 
@@ -99,12 +109,14 @@ Lo que estos números fijan (no es opinión):
 
 | # | Tarea | Specs | Commit |
 | --- | --- | --- | --- |
-| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3` |
-| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52` |
-| T3 | Adaptadores por dominio, declarativos, con fixtures | S3 | — |
-| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | — |
-| T5 | Edge Function: endpoint autenticado, cuota por usuario y caché por URL normalizada | S1, S3 | — |
-| T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | — |
+| T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3`, `d89de4d` |
+| T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52`, `beb0e0b`, `1e9b7c4`, `4d4df8a` |
+| T3 | Adaptadores por dominio, declarativos, con fixtures | S3, S8, S9 | `c54a666` |
+| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF**, y el transporte propio que conecta a la IP validada | S3 | `c0ae2e3`, `a11aee1`, `9db03d8`, `0faf969`, `dcae468`, `74ea954`, `55e1651` |
+| T5a | Edge Function: endpoint autenticado (JWT de la plataforma) + extracción | S1, S2, S3 | `90ac8a8` |
+| T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
+| T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
+| T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | `560a216` |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
 | T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
 
@@ -192,7 +204,440 @@ Lo que estos números fijan (no es opinión):
   declarado:** el corte son 1346 líneas en un commit; no se puede partir sin dejar un commit con
   tests en rojo, porque el test de cascada cubre las cinco capas a la vez.
 
+- **L14 (2026-10-18) — T3: una sola dependencia, autorizada por el propietario, y el specifier de
+  Deno aislado en un fichero.** Amazon declara **cero** datos estructurados (2,2 MB, 0 JSON-LD, 0
+  `og:image`), así que el adaptador lee lo que Amazon sí publica: `#productTitle`, el texto
+  accesible `.a-offscreen` del bloque de precio (`89,99€` → `89.99 EUR` por el lector compartido) y
+  la imagen desde `data-a-dynamic-image` por **mayor área declarada** (879×549 = 482.571 gana a seis
+  variantes; el `src` es la de 300×300 y usarlo habría degradado la foto). Precedencia
+  `domain-adapter > json-ld > open-graph > microdata > heuristic`, campo por campo, documentada en
+  `extract/index.ts`. `node-html-parser` se importa **solo** en `extract/html.ts`: la Edge Function
+  corre en Deno, donde puede hacer falta `npm:node-html-parser`, y así es un cambio de una línea en
+  T5 en vez de un refactor.
+
+- **L15 (2026-10-18) — el verificador independiente encontró lo que yo no había pedido.** No repitió
+  mis comandos: hizo una **prueba de mutación** (desactivó el adaptador → 4 tests fallan), un
+  diferencial sobre los 9 fixtures, y comprobó el `sha256` de cada uno contra el manifiesto. De sus
+  tres hallazgos no bloqueantes corregí el que tiene consecuencias: `amazon.es.evil.com` quedaba
+  reclamado por nuestra regla. Los otros dos quedan anotados abajo.
+
+- **L16 (2026-10-18) — la guarda SSRF se rompió y se arregló con evidencia, y el verificador
+  corrigió su propia observación.** El verificador adversario encontró el bypass clásico: las
+  direcciones IPv6 de **transición** (NAT64, 6to4, Teredo, `::ffff:0:…`) no se clasificaban, así
+  que `http://[64:ff9b::a9fe:a9fe]/latest/meta-data/` alcanzaba la dirección de metadatos. El fix
+  clasifica la **IPv4 embebida** —no las formas—, que es lo que permite que una tienda servida
+  por NAT64 con una IPv4 pública siga funcionando. La re-auditoría dio PASS, con prueba de
+  mutación (13 tests fallan sin la clasificación). Y en el camino corregimos **la observación del
+  propio verificador**: había afirmado que `Location: /../..///127.0.0.1/` estaba bloqueada, y es
+  una ruta relativa que resuelve contra el mismo host público (`https://shop.example///127.0.0.1/`):
+  no es un bypass, y bloquearla hubiera roto redirecciones legítimas. Reconocido por él mismo.
+
+- **L17 (2026-10-18) — las cinco revisiones nativas, y los tres CRITICAL que encontró el paso
+  adversarial.** El propietario decidió revisar los tres tramos que faltaban (T1, T2, T3). El
+  candidato de rama entera **no es revisable** (43 ficheros y 885 KB de fixtures exceden el
+  presupuesto de contexto del proveedor: `lens_context_budget_exceeded`), así que se revisó por
+  tramos con `baseRef` + `committedOnly` y **parando el árbol en el tip de cada uno**
+  (`git switch --detach`); los commits ya estaban por unidad de trabajo y no hubo que reescribir
+  nada. Resultado: T4, T3 y T1 **aprobados**; T2 quedó **escalated** porque el validador rechazó la
+  primera corrección, y se cerró con un **linaje nuevo sobre el corte ya corregido**. Los tres
+  CRITICAL los levantó el **refutador**, no las lentes (las cinco corridas de lentes salieron «a
+  favor»):
+  1. `R4-FABRICATED-PRICE` (T2): la heurística tomaba el **nodo de texto entero** y `parsePriceText`
+     reconstruía la cantidad con los tramos de dígitos → `Pack 2 unidades · 39,99 €` = **239,99**,
+     `2 pen drives` = **2 PEN**. La misma familia del `10125,11 EUR` medido en El Corte Inglés.
+  2. `R3-only-empty-filter` (T1): un `--only=` vacío (variable de shell sin definir) se leía como
+     «opción ausente» → **18 peticiones a todas las tiendas y salida 0**.
+  3. `R4-001` (T2, **en mi propio arreglo**): el código ISO se interpolaba **sin límites de palabra**
+     → `PEN` casaba dentro de `PENDRIVE` (2 PEN) y `AUD` dentro de `AUDIO`.
+  Arreglos: `d89de4d`, `beb0e0b`, `1e9b7c4`, `4d4df8a`. Y una lección de método que costó dos
+  rechazos: **un límite documentado no es un límite aceptado** — el validador llamó regresión a la
+  pérdida de `29.95 USD` («*even though it is documented as a trade-off*») y el refutador convirtió
+  en CRITICAL el prefijo que yo había escrito como «residuo» en el mensaje de commit.
+
+- **L18 (2026-10-18) — T5: medir antes de escribir, y las dos premisas que la medición corrigió.**
+  Las dos incógnitas que esta ficha tenía como bloqueantes se midieron contra el runtime real con
+  una sonda temporal: (a) el mapa de imports de `supabase/functions/deno.json` **resuelve**
+  `node-html-parser` y deja intacto el import del módulo compartido (vitest sigue corriendo el mismo
+  código); (b) `Deno.resolveDns` existe y el runtime **alcanza más que undici**: Amazon `/dp/…` →
+  200 (2,28 MB, el adaptador leyó título, `89,99 EUR` e imagen) y **PcComponentes → 200**, donde
+  undici comía 403. La premisa «el fingerprint TLS decide» era de Node, no del runtime. La misma
+  medición encontró el precio falso de El Corte Inglés (L17).
+  T5 se cerró en dos unidades: **T5a** (`90ac8a8`) el endpoint autenticado por `verify_jwt`, medido
+  en el runtime (401 sin token, 200 con el anon key leyendo Amazon, 405/400 en el resto), y **T5b**
+  (`aa90e2f` la migración, `c6ede3b` el endpoint) con cuota por usuario y caché por URL. La cuota se
+  consume en **una sola sentencia SQL** y la verificación independiente reprodujo la carrera con su
+  propio método; esa verificación además **falsificó una premisa mía**: con `--no-verify-jwt` un
+  token inventado que copiaba el `sub` de otra persona fue aceptado y **gastó su cuota**. La
+  identidad es verificada solo mientras `supabase/config.toml` diga `verify_jwt = true`, así que eso
+  ahora lo vigila un test.
+- **L19 (2026-10-18) — la revisión de T5, y el cuarto caso del mismo patrón.** RDD marcó el árbol
+  como candidato sin revisar; no había ninguna disposición del propietario dejándolo así, y el
+  candidato de rama entera no es revisable (ya medido en L17), así que se revisó **el delta de T5**
+  con `baseRef` (`4591448..HEAD`). El proveedor lo clasificó **`tier: high`** por el path
+  `auth/jwt.ts`, no por su tamaño. El **refutador** levantó `R3-QUOTA-ZERO-LIMIT` (CRITICAL,
+  determinista): `envEntero` exigía `> 0`, así que un `PRODUCT_EXTRACTION_QUOTA_LIMIT=0`
+  explícito se convertía en el 30 por defecto —mientras la función SQL rechaza `p_limit <= 0` sin
+  tocar la tabla y `decideQuota` con 0 nunca permite—. Un operador que apagaba la extracción recibía
+  30 extracciones por usuario **y respuestas 200 con borrador**. Es el cuarto caso del mismo patrón
+  de la sesión: **una defensa escrita que pisa en silencio un valor explícito**, y la cuarta vez que
+  lo encuentra el paso adversarial.
+  Arreglo (`ead975f`): la lectura del entorno sale de `index.ts` —que está fuera del `tsc` y del
+  runner, y por eso nadie la podía probar— a `_shared/product-extraction/config/env.ts`, con
+  **una regla por perilla** (el límite honra el 0 y lee negativos como 0; la ventana no acepta 0
+  porque el SQL la rechaza; el TTL honra el 0 como caché apagada). Rojo observado antes: 30, 30 y
+  3600.
+  **Lo que hay que saber para la próxima:** el arreglo **agregó ficheros** (`config/env.ts` y su
+  test) que no estaban en los caminos congelados del plan de corrección, así que el proveedor ya no
+  ofreció la validación dirigida: ofreció **`recover` con `disposition: scope_changed`**. La
+  recuperación quedó registrada con la autorización de mantenedor
+  (`gentle-ai.review-recovery-authorization/v1`) y creó el linaje sucesor
+  `review-df900a6f11e9c1f7`, que revisó el alcance corregido (1313 líneas) y salió **aprobado**
+  con las tres lentes y **sin refutador**, autoridad quemada. Corolario práctico: **una corrección
+  que se quede dentro de los caminos congelados se ahorra la vuelta de recuperación**.
+  Los 10 hallazgos informativos del sucesor coinciden punto por punto con los de la verificación
+  independiente (CORS por sufijo `github.io`, `verify_jwt` como única garantía de identidad,
+  `fetch` sin timeout, cuota gastada antes de la red, `Retry-After` ausente, caché compartida
+  entre usuarios autenticados): dos procesos independientes diciendo lo mismo.
+
+- **L20 (2026-10-19) — T6: la hoja de compartir, construida con el Eje A que la ficha ya tenía
+  fijado, y dos decisiones que la medición del navegador obligó a tomar.**
+  El recorrido quedó así: la hoja de «Compartir» de Android postea `multipart/form-data` al
+  `action` del manifest → el **service worker** lo recibe (ninguna página estática puede
+  contestar un POST), guarda `{url, title, text, createdAt}` en Cache Storage, y responde **`303`**
+  a `/compartir?share=<id>` → esa ruta lo lee, lo deja pendiente y vuelve a la app → el
+  formulario de deseos lo toma al montar, **abre el deseo ya mismo** con el enlace y el título, y
+  rellena el resto cuando la extracción de T5 contesta.
+  **Decisión 1, `files` fuera del manifest.** La ficha preveía `files: [{accept: "image/*"}]`.
+  Se dejó fuera porque aceptar ficheros hace que Android ofrezca la app al compartir una foto
+  suelta: el payload traería un fichero que nadie usa y el usuario vería un formulario vacío sin
+  saber por qué. La imagen del producto la trae la extracción de la página (S1 habla de webs y
+  apps de compras, no de la galería). Un test prohíbe reintroducir la clave sin pensarlo.
+  **Decisión 2, dos almacenamientos distintos y cada uno por una razón.** El SW **no** tiene
+  acceso al `sessionStorage` de la página, así que el primer salto va en Cache Storage; pero ese
+  payload tiene que sobrevivir al login —quien comparte sin sesión iniciada perdería el producto—,
+  así que el segundo salto (de la ruta al formulario) va en `sessionStorage`, que muere con la
+  pestaña. Toqué el **flujo de login cero**: el pendiente espera a que el usuario entre y recién
+  entonces el formulario lo consume y pide la extracción.
+  **La caché del compartir va aparte y sin versión a propósito.** `murodeseos-share` no es un
+  activo: no se refresca con un despliegue y vive minutos. Como el barrido de `activate` borra
+  todo lo que empieza con `murodeseos-`, hubo que excluirla explícitamente o un despliegue en
+  medio se comería un compartir a medio abrir.
+  **Rojo observado, no declarado.** Los tres tramos (manifest, service worker, ruta+prellenado)
+  empezaron con sus tests en rojo: 3 fallos en el manifest, 6 en el service worker (incluidos dos
+  tests viejos que fijaban la versión `v5` en el nombre de la caché — ahora la versión se **lee**
+  del `sw.js` en vez de repetirse, que era el motivo por el que una subida de versión rompía
+  tests ajenos al cambio), 6 de 7 en el prellenado. Las dos reglas que más importan se probaron
+  por mutación: con `cache.delete` comentado y con la validación de payload aflojada, **3 tests se
+  cayeron**.
+  **Un fallo mío, y de los baratos: el lint.** `__tests__/compartir-route.test.tsx` quedó con los
+  `import` debajo de los `vi.mock` (3 `import/first`), y como el repo corre `eslint` con
+  `--max-warnings 0`, eso es una corrida en rojo. Se corrigió subiendo los imports al tope: el
+  `vi.mock` se eleva por encima igual y las variables se leen de forma diferida.
+  **Un estado nuevo que el cambio hizo alcanzable, y su límite.** El formulario abierto durante la
+  carga de la lista es algo que antes no existía: el «Cargando deseos…» tapaba todo. Al dejar ver
+  el modal, la lista de atrás decía «Tu lista está vacía» **sin saberlo** (y con el modal
+  transparente del escritorio se leía). Se pinchó con un test en rojo antes de arreglarlo: ahora,
+  mientras carga, muestra el indicador y no afirma nada. Queda declarado un efecto cosmético
+  menor: en escritorio, esos pocos cientos de milisegundos se ve el fondo del modal en vez de la
+  lista.
+  **Lo que NO está verificado y no se puede desde acá:** el `share_target` solo lo ofrece Android
+  a una **PWA instalada** (Chrome 76+; Firefox y Safari no lo soportan, y por eso iOS queda para
+  T8). La verificación real de punta a punta —compartir desde una app de compras en un teléfono y
+  ver el deseo creado— **necesita el teléfono del propietario**. Lo que sí se verificó: la suite
+  completa (**517 pasan | 1 todo**), `tsc` y `eslint` en 0, y el **build real de la PWA**
+  (`expo export` + `postbuild`) con `/compartir` exportada como ruta estática (`EXPORT_EXIT=0`,
+  `POSTBUILD_EXIT=0`).
+  **Un detalle de tamaño, para que el revisor lo sepa antes de abrir el diff:** el tramo de T6
+  son dos commits y ~1.240 líneas autoradas, de las cuales ~820 son tests. Es comparable a lo que
+  midió el linaje de T5 (1.313 líneas), así que se deja entero; si el revisor prefiere partirlo,
+  el corte natural es `aa776ae` (manifest + service worker) por un lado y `4fd6be4` (ruta +
+  prellenado) por el otro.
+  **Where**: `public/manifest.json` · `public/sw.js` · `app/compartir/index.tsx` ·
+  `lib/share-target.ts` · `lib/share-draft.ts` · `lib/extract-product-client.ts` ·
+  `components/WishListTab.tsx` · `__tests__/{manifest,sw,share-target,share-draft,extract-product-client,compartir-route,wish-share-prefill}.test.*`.
+  Commits `aa776ae` y `4fd6be4`.
+  **Disposición del RDD sobre este corte**: `assess` con `baseRef 7da81af` (committedOnly) devolvió
+  **riesgo medium / `reviewDue: false`** (`under_budget`) y **ningún** ítem de riesgo alto
+  escalado, así que **no se arrancó ninguna revisión nativa**: el plan es la verificación del
+  propio escritor, y la revisión nativa es una mirada externa que no reemplaza la verificación.
+  Lo que sí corresponde: el e2e de Playwright (L21) y la prueba en un teléfono con la PWA
+  instalada, que necesita al propietario y **un despliegue previo**.
+
+- **L21 (2026-10-19) — la verificación de navegador de T6: corrió, y los cuatro fallos tienen nombre y dueño.**
+  El e2e **sí se pudo correr** (Docker Desktop estaba instalado por-usuario y apagado). Lo primero
+  que hay que saber es qué es la puerta de este repo, porque condiciona la lectura de todo lo demás:
+  `.github/workflows/e2e.yml` corre **un proyecto por paso y re-siembra la base entre pasos**
+  (`test:e2e:prepare`), porque el defecto declarado **E-10** dice que la suite **no es
+  auto-limpiante**. El paso de WebKit está **acotado a `mobile-layout.spec.ts` y
+  `responsive-wishlist.spec.ts`** por costo —«the full WebKit desktop suite stays out of CI on cost
+  grounds»—, y **Firefox y WebKit de escritorio no están en CI en absoluto**.
+  Con eso, los resultados, en orden:
+  - **chromium completo + Mobile Chrome completo: 124 pasan, 0 fallan.** Esa es la puerta del CI, y
+    ahí entra justo lo que tocó T6: crear, ordenar, borrar, validar precio, precio a 360px, control
+    de imagen, editar y el cero en el modal, alturas de tarjeta y los layouts móvil y escritorio.
+  - Los **5 proyectos en paralelo contra una sola base sembrada** dieron 168 fallos que **no eran
+    tests**: 112 + 56 eran `browserType.launch: Executable doesn't exist` (faltaban los binarios de
+    webkit y firefox). No es que el e2e fallara: es que el e2e **no llegó a arrancar** en 3 de los 5
+    proyectos. Cero errores de otro tipo.
+  - Con los binarios instalados y corriendo esos 3 proyectos: **179 pasan, 4 fallan**. Los cuatro:
+    `birthday-reminders:213` (firefox y Mobile Safari), `mobile-layout:462` (webkit) y
+    `wishlist-visibility:9` (Mobile Safari). **Ninguno falla en los otros motores en la misma
+    corrida** — el mismo test, en el mismo commit, pasa en el motor de al lado.
+  - **Tres de los cuatro pasan en serie** (reintento con `--workers=1`, resultado `0 1 0`), así que
+    eran interferencia entre proyectos contra una base compartida, que es exactamente lo que la
+    estructura del CI evita.
+  - **El cuarto no es de T6, y está medido.** `wishlist-visibility:9` en Mobile Safari **falla
+    idéntico en el commit base `7da81af`**, sin una línea de T6: mismo spec, mismo proyecto, misma
+    base, misma línea 126 (`BASE_VISIBILITY_EXIT=1`). El diferencial se hizo con `git archive
+    7da81af` a un directorio de `mktemp -d` con `node_modules` enlazado, **borrado al terminar y
+    nunca commiteado**. Y encaja con la estructura: la vista que falla **no monta `WishListTab`**
+    (que solo vive en `app/index.tsx`), así que el código de T6 no está en ese camino.
+  **Conclusión**: T6 no rompe nada del e2e. Lo verificado en navegador es la puerta del repo en
+  verde; lo que el e2e **no** puede decir es si la hoja de compartir aparece en un teléfono, porque
+  eso necesita una PWA instalada. Efectos secundarios de esta corrida, declarados: la base local
+  quedó con los restos que E-10 describe (la suite no limpia), y **Docker y el stack de Supabase
+  siguen levantados** (los arrancó esta sesión), a la espera de que el propietario diga si se paran.
+  **Where**: `.github/workflows/e2e.yml` · `e2e/mobile-layout.spec.ts` · `e2e/wishlist-visibility.spec.ts`
+  · `e2e/birthday-reminders.spec.ts`.
+
+- **L22 (2026-10-19) — la revisión de la rama entera no entra, y el proveedor lo dice con nombre.**
+  Con la puerta del e2e en verde y el árbol limpio, se pidió `inspect`: la primera vez se quedó sin
+  estado nativo (`operation_timeout` en `review.status`, `retry_safe: false`, sin linaje creado); el
+  propietario autorizó un reintento manual y la segunda sí respondió `ready` ofreciendo START sobre
+  **la rama entera** (`base-ref=3f4e40c`, `committedOnly`, árbol `54e4b2cc`). Se arrancó con las
+  cuatro lentes —riesgo (endpoint autenticado que sale a la red, JWT, migración), resiliencia
+  (transporte, DNS, degradación), legibilidad y confiabilidad— y el proveedor **cortó en
+  `preflight`** con `lens_context_budget_exceeded`: **no se creó ninguna autoridad de revisión**, no
+  hay nada que abandonar ni reparar, y su propio `cause` dice que reintentar el mismo candidato no
+  puede funcionar. La conclusión operativa es la de siempre en este repo y ahora está firmada por
+  el proveedor: **el candidato acumulado de la rama no es revisable como uno solo**; la entrega
+  necesita una **secuencia encadenada de commits revisables** por debajo del presupuesto. Esa
+  decisión (cómo se parte y en qué orden) es del propietario, no del agente.
+  **Confirmación con T9 encima (mismo día)**: el candidato volvió a cambiar de árbol al commitear T9
+  (`53a4555e`), `inspect` volvió a ofrecer START (`review-a1c7a079f0a47587`, `base-ref=3f4e40c`) y el
+  proveedor **volvió a cortar en `preflight` con `lens_context_budget_exceeded`**, otra vez con
+  `mutation_outcome: none` y sin linaje. Es decir: **no es un estado de autoridad sucio** (el inventario
+  de reparación da 0 linajes y 0 eventos, no hay nada que abandonar) sino el **tamaño del candidato**,
+  y crece con cada tramo. La única salida que nombra el proveedor es la de arriba: **partirlo en una
+  secuencia encadenada de commits revisables** por debajo del presupuesto y refrescar el estado nativo
+  para el alcance reducido. Mientras eso no pase, **la rama no se puede revisar y por lo tanto no se
+  puede entregar** (RDD está activo), y con la entrega queda bloqueada también la prueba en el móvil.
+
+- **L23 (2026-10-19) — T9: extraer el producto del enlace que se pega, con una pantalla previa en vez de magia dentro del formulario.**
+  El pedido del propietario: al añadir un deseo, poder sacar del enlace el nombre, el precio y la imagen
+  **al momento, sin guardar**. Yo había empezado por el camino cómodo —disparar la lectura sola al
+  pegar el enlace en el campo, con 700 ms de espera y fusión campo por campo— y **el propietario lo
+  cambió**: una **pantalla antes del formulario** que pida el enlace y ofrezca [Aceptar] o [No tengo
+  enlace]. Se le dio la razón por tres motivos, y quedaron escritos: **el gasto de cuota pasa a ser un
+  acto del usuario** (cada lectura consume 1 de sus 30 por hora y hace salir al servidor a buscar una
+  página de hasta 8 MB), **la latencia deja de ser un misterio** (leer tarda segundos y puede fallar:
+  Cloudflare en Fnac y Decathlon, SPA vacía en Zara), y **se va la carrera** con lo que el usuario está
+  escribiendo. La versión automática se **descartó entera** (espera, deduplicación, fusión en caliente y
+  sus tests); se conservó `lib/link-extraction.ts`, que pasó a ser la validación de la pantalla.
+  **El flujo que queda, con dos entradas al mismo formulario:** el **compartir del sistema** no se tocó
+  —sigue abriendo el formulario al instante con enlace y título y rellenando después— y el **«+»** ahora
+  navega a `/wishlist/add`, que ofrece [Aceptar] (lee la página y llega al formulario con el borrador
+  hecho), [No tengo enlace] (llega al formulario vacío, el de siempre) y, si la página no se pudo leer,
+  se queda con el motivo y un [Continuar a mano] que conserva el enlace. La cuota agotada tiene mensaje
+  propio: decir «no pudimos leer la página» haría que el usuario cambiara de enlace en vez de esperar.
+  **Decisiones de implementación que importan.** El borrador viaja por un espacio **independiente** del
+  compartir en `sessionStorage`, y ahí **`{}` es un valor válido que significa «abre el formulario
+  vacío»**, distinto de «no hay nada pendiente»: confundirlos es exactamente el bug de abrir un deseo
+  fantasma. Y en `lib/link-extraction.ts` el cliente **no duplica** la lista de IPs prohibidas: eso es
+  del servidor, y una segunda verdad en el cliente se separaría de la del guardián.
+  **El defecto que encontró el worker, y que era de producto.** Volver de la pantalla con
+  `router.replace('/?tab=wishlist')` **no vuelve**: apila una segunda copia de la lista. Medido en el DOM
+  real: **18 nodos de tarjeta para 9 deseos**, dos fetches y dos suscripciones vivas; en Playwright, las
+  aserciones `.first()` resolvían al nodo oculto de la copia vieja y `getByLabel('Nuevo deseo')` pasaba a
+  coincidir con dos nodos (modo estricto). Se arregló con **`router.back()`** (y `replace` solo como
+  respaldo si no hay historial), más consumir lo pendiente **al recuperar el foco**
+  (`useFocusEffect`): volver a una pantalla ya montada **no** vuelve a ejecutar su efecto de montaje.
+  Medición posterior: **9 tarjetas para 9 deseos y una sola instancia**.
+  **Y un defecto del arnés, del mismo viaje:** en `vitest.setup.ts` `useFocusEffect` estaba mockeado como
+  `vi.fn()`, o sea que **apagaba en silencio todos los efectos de foco** de la app en cada test. Ahora
+  ejecuta el callback.
+  **Verificación**: rojo observado en los tres tramos (helper puro, borrador pendiente, pantalla) y dos
+  correcciones de rumbo medidas en rojo útil (el contrato de navegación pasó de `replace` a `back`).
+  Suite **543 pasan | 1 todo**, `tsc` y `eslint` en 0, y la **puerta del e2e** completa en el modo que usa
+  el CI: re-siembra → **chromium 62 pasan | 1 skipped** → re-siembra → **Mobile Chrome 63 pasan**, todo
+  con exit 0. Cuatro specs de e2e usan ahora un helper (`abrirFormularioDeDeseo`) que pasa por la
+  pantalla nueva con [No tengo enlace]: **ninguna aserción se debilitó** ni se añadió una espera para
+  cambiar lo que una medición mide.
+  **Lo que sigue sin verificarse y por qué**: el recorrido real en un teléfono —compartir desde una app
+  de compras y pegar un enlace en la pantalla nueva— necesita **desplegar primero** y el móvil del
+  propietario. Y el flake de 44px de `mobile-layout` se vio **una vez** y no se reprodujo al correrlo
+  aislado: se deja declarado, sin retocar la aserción.
+  **Where**: `app/wishlist/add/index.tsx` · `lib/link-extraction.ts` · `lib/share-draft.ts` ·
+  `components/WishListTab.tsx` · `vitest.setup.ts` · `e2e/helpers/nuevo-deseo.ts` ·
+  `__tests__/{link-extraction,wishlist-add,share-draft,WishListTab}.test.*` · `e2e/{wishlist,wishlist-visibility,already-have-it,mobile-layout}.spec.ts`.
+
+- **L24 (2026-10-19) — la revisión del candidato 3 encontró un CRITICAL real, y la fontanería no deja cerrarla.**
+  El alcance reducido se montó en un **worktree del mismo clon** con HEAD en `7da81af`
+  (`node_modules/.review/t5`, ruta ignorada por git, el checkout del propietario intacto), porque la fachada
+  proyecta `baseRef..HEAD` y el tramo de T5 termina ahí. START creó
+  **`review-b18298085c38efd0`**, nivel **`high`** por `auth/jwt.ts`, 1341 líneas, lentes
+  risk + resilience + reliability; las tres corrieron (prompts de ~92 KB), y el proveedor pidió
+  **refutador**, que cerró con un hallazgo severo.
+  **El hallazgo es el mismo patrón de siempre, y es correcto**: `R4-001` (CRITICAL, determinista,
+  `introduced`) — `PRODUCT_EXTRACTION_CACHE_TTL_SECONDS=0` estaba documentado como «caché apagada»
+  pero el handler **nunca preguntaba** `conf.ttlSegundos`: `leerCache` filtra solo por `expires_at`,
+  así que las filas escritas con el TTL anterior se seguían sirviendo hasta su vencimiento y con TTL=0
+  se seguía **escribiendo**. Un operador que apaga la caché en un incidente recibía datos viejos.
+  **Arreglo** (`55b1874`): la regla vive en el módulo de configuración
+  (`isCacheEnabled(ttlSegundos)`) y el handler la pregunta **antes de leer y de escribir**; el test de
+  `env-config` se corrigió donde mentía («toda lectura es un fallo de caché»: falso para las filas
+  anteriores). **37 líneas de diff**, dentro del presupuesto de 200, y **dentro de los archivos ya
+  congelados** a propósito: crear un módulo nuevo obligaría a un `recover` con `scope_changed`, que es
+  la lección de L19. Suite **544 pasan | 1 todo**, `tsc` y `eslint` en 0.
+  **Lo que no se pudo: cerrar la revisión.** El plan de corrección se rechazó **cuatro veces** con
+  `capture-binding-rejected: collectBinding is missing or stale for current STATUS`, con STATUS fresco
+  antes de cada envío, en las dos formas (objeto y copia serializada exacta), con el árbol sucio y
+  **con el árbol limpio**. Es el defecto que esta fontanería ya tenía medido («un linaje que llega a
+  corrección no puede cerrarse»), ahora con una segunda medición independiente y más precisa. Sin
+  mutación en ningún intento: el linaje queda en `correction_required`, no hay nada quemado, y el árbol
+  no está bloqueado. Lo que sí está bloqueado es **la puerta de entrega de este candidato**: el
+  hallazgo está encontrado y arreglado, pero no puede aprobarse.
+  **Caminos para el propietario** (ninguno lo puedo decidir yo): (a) **linaje nuevo sobre el árbol
+  corregido** —el candidato cambia, hay target nuevo— con el costo de otras 3 lentes + refutador;
+  (b) **`D`**: desactivar el interruptor de revisión para este clon y que decida la política ordinaria,
+  aceptando por escrito que la puerta no cerró por una herramienta rota; (c) que se arregle el
+  proveedor, que no está en mis manos.
+
+
+
+- **L25 (2026-10-19) — el linaje nuevo encontró un segundo CRITICAL, y el bucle se vuelve caro.**
+  Sobre el árbol ya corregido (`68e9e2bb`), el linaje `review-b65ac1d1aeb6ec23` corrió las tres
+  lentes y el refutador volvió a cerrar en `correction_required` con **`R3-001`** (CRITICAL
+  **inferencial**, lente de confiabilidad): la normalización de la clave de caché ordenaba los
+  parámetros repetidos **por valor**, así que `?a=2&a=1` y `?a=1&a=2` compartían clave — y un
+  servidor que se queda con el último valor los distingue. El test nuevo **fijaba ese error**.
+  **Arreglo**: se ordena **solo por clave** y el `sort` estable de JS conserva el orden relativo de
+  los repetidos; el test se reescribió para afirmar lo correcto (variante con repetidos que
+  **no** se colapsa). Rojo observado antes (`?a=1&a=2`), verde después. Suite **544 | 1 todo**,
+  `tsc` y `eslint` en 0.
+  **La economía del bucle, que es lo que hay que decidir**: como la ruta del plan de corrección
+  rechaza sus propios bindings (L24), **cada hallazgo severo cuesta un linaje nuevo completo**
+  —3 lentes + refutador, ~280 KB de prompts y 4 ejecuciones de modelo— porque el linaje que lo
+  encontró no se puede corregir, solo reemplazar. Dos hallazgos, dos ciclos. Los dos eran reales y
+  los dos están arreglados: eso es lo que compra el bucle. Lo que no compra es un cierre: hasta
+  ahora, ninguno de los dos linajes llegó a `approved`.
+
+- **L26 (2026-10-19) — quinto ciclo: APROBADO, y la lección de por qué recién ahora.**
+  `review-12b4fabd57e2f8b4` (22 archivos, **1870 líneas**, `high`): las tres lentes corrieron y el
+  proveedor **no pidió refutador** — la autoridad cerró en **`approved`** en el último evento
+  admitido y se reconoció (`authority: burned`, `gentle-ai.review-acknowledged/v1`,
+  `delivery: ordinary-repository-policy`). Primera aprobación después de cinco ciclos.
+  **Por qué recién ahora**: los cuatro ciclos anteriores fueron encontrando **instancias de la misma
+  clase** —contratos de configuración que mentían (cuota en 0, TTL en 0, parámetros repetidos) y
+  **llamadas a PostgREST sin tope**—. El quinto candidato es el primero en el que esa clase está
+  **enumerada y cerrada**: las tres llamadas del handler (dos de caché, una de cuota) tienen `fetch`
+  inyectable, tope de 2 s y tests. El paso adversarial dejó de tener una instancia nueva que sacar.
+  **Los 12 hallazgos informativos** (5 de riesgo, 3 de confiabilidad, 4 de resiliencia) coinciden
+  punto por punto con los advisories que esta ficha ya declaraba —CORS por sufijo `github.io`,
+  identidad colgando de una línea de configuración, caché indexada por URL completa, lectura pública
+  sin comillas, rebinding DNS (TOCTOU), y los de cuota y caché—. Son **no bloqueantes**, no reabren
+  la revisión y quedan como trabajo posterior, no como razón para repetirla.
+  **Lo que sigue abierto**: la ruta del plan de corrección rechaza sus propios bindings, así que los
+  linajes de los ciclos 1-4 quedan en `correction_required` y sus hallazgos se arreglaron **por
+  fuera** de la fontanería; y la rama entera sigue sin ser revisable como un candidato (L22): faltan
+  **T6, T9 y el extractor**.
+
+- **L27 (2026-10-19) — T6 aprobado en el tercer ciclo, después de cuatro defectos reales.**
+  `review-9db6c34204f14e55` (15 archivos, **2100 líneas**, `medium`): las tres lentes cerraron en
+  **`approved`** en el último evento admitido, **sin refutador**, y la autoridad quedó quemada
+  (`gentle-ai.review-acknowledged/v1`). Los 12 hallazgos informativos son no bloqueantes y
+  coinciden con lo que la ficha ya declaraba (payload sin TTL, esquema de URL sin validar, `{}`
+  compartido entre usuarios, y los de la carrera y el almacenamiento bloqueado, ya arreglados).
+  **Los cuatro defectos que costaron los dos ciclos anteriores eran reales, y los tres últimos los
+  encontró el paso adversarial, no yo**:
+  1. `R1-share-target-no-initiator-check` (CRITICAL, riesgo): el POST de compartir se aceptaba desde
+     cualquier sitio — un formulario ajeno podía guardar un enlace, abrir la app y gastar cuota de
+     la víctima. Arreglado rechazando **solo** `sec-fetch-site: cross-site` (exigir `same-origin`
+     habría roto la hoja del sistema).
+  2. `R3-001` + `R4-async-merge-after-form-change` (CRITICAL, deterministas, dos lentes el mismo
+     defecto): la extracción tardía se fusionaba en **el formulario que estuviera abierto** al
+     resolver. Cerrar el deseo compartido y abrir otro antes de que llegara la respuesta escribía
+     precio, foto y notas del producto anterior en el deseo nuevo, y **guardar los persistía**.
+     Arreglado con una **marca de sesión del formulario** capturada al compartir y comparada antes
+     de fusionar.
+  3. `R3-002` (CRITICAL, inferencial): `takePendingShare`/`takePendingDraft` tocaban
+     `sessionStorage` **fuera del `try`**; con el almacenamiento bloqueado, el `SecurityError`
+     escapaba al efecto de foco y podía romper la pantalla de deseos. Arreglado moviéndolo dentro.
+  Los tres con **rojo observado antes del arreglo** — la carrera se reprodujo literalmente como
+  `Expected '' / Received 89,99` en el segundo deseo. Y **el ciclo 3 salió limpio a la primera**,
+  igual que en T5: cuando la clase de defecto se cierra, el paso adversarial deja de tener qué
+  encontrar.
+  **Nota de fontanería**: el primer lanzamiento del ciclo 3 murió por **transporte del relé**
+  (`Stream ended without finish_reason`, `prepared_reviewers: 0`, sin mutación); el STATUS reofreció
+  el mismo grupo y el segundo lanzamiento pasó. No hubo que reparar nada.
+
+- **L28 (2026-10-20) — el rebinding se cerró con un cliente propio, y se midió antes de creerle.**
+  La revisión de T3-T4 rechazó la mitigación de doble resolución por un motivo que no admite
+  réplica: `fetch` vuelve a resolver, así que la dirección final la sigue eligiendo el atacante.
+  La única salida era conectar a la **IP validada** por nuestra cuenta (Deno no expone el dialer):
+  `pinned-http.ts` escribe HTTP/1.1 a mano sobre `Deno.connect`, con TLS a la **SNI real** para el
+  certificado y el socket a la dirección ya validada. `content-length`, `chunked` y lectura hasta EOF;
+  cabeceras case-insensitive; cuerpo *pull-based* para que el tope de bytes de `safeFetch` siga siendo
+  la única autoridad; socket cerrado en todos los caminos. **25 tests** sobre una conexión falsa y un
+  diferencial de 16 casos contra la implementación anterior sin diferencias no pedidas.
+  **Medido en el runtime real** (`supabase functions serve`, runtime `1.77.1` / Deno 2.1.4), con un
+  token de usuario del arnés E2E porque el anon key no trae `sub` y el handler muere antes de la red:
+
+  | Caso | Resultado |
+  | --- | --- |
+  | Amazon `/dp/B09B8X9RGM` | `ok:true` · `89.99 EUR` (`raw: "89,99€"`, `domain-adapter`), título e imagen — 2,2 MB por TLS |
+  | MediaMarkt (y **redirección** de por medio) | `ok:true` · `89.99 EUR` por `json-ld`, título e imagen |
+  | `no-existe.invalid` | `ok:false · dns-failed` |
+  | `http://127.0.0.1/x` | `ok:false · blocked-ip-loopback` |
+
+  Los dos últimos son el control que más importaba: **la guarda sigue viva después de cambiarle el
+  transporte**. Sin ellos, «lee Amazon» habría sido un éxito ambiguo.
+  **Tres intentos, dos fallos míos de script** (registrados porque son el mismo error dos veces):
+  puerto `54321` hardcodeado cuando el stack usa `API_URL=127.0.0.1:3001`, y el anon key sin `sub`.
+  La lección vale para todo lo que sigue: **en los comandos de verificación nada se escribe de
+  memoria — sale de la fuente** (`$API_URL`, `$?` explícito). Un intento que no mide nada no cuenta
+  como evidencia.
+
+**L29 — Alcance cerrado por decisión del propietario: la red se cierra con B1 y B2; A (T1-T2) y T9
+quedan documentados con la evidencia que ya existe.** Después de siete ciclos el costo por tramo dejó
+de ser despreciable (cuatro ejecuciones de modelo y entre quince y veinticinco minutos de relé), así
+que se cerró el código de red —el que decide a qué host se pide y cómo se interpreta lo que vuelve,
+que es el requisito de robustez— y no se abrieron más ciclos para la cascada de extracción ni para la
+pantalla de agregar. Esas dos piezas quedan cubiertas por la suite y por la medición real contra
+Amazon y MediaMarkt, **sin acta de revisión nativa**; la diferencia está declarada acá y no se
+disimula.
+
+**L30 — Acta: cuatro tramos aprobados con la autoridad quemada.** T5 (`review-12b4fabd57e2f8b4`),
+T6 (`review-9db6c34204f14e55`), B1 —el cliente HTTP con IP fijada— (`review-58d3b10668f4684b`) y
+B2 —adaptadores y capa de red— (`review-3be6f12e02a7d2eb`). Los dos últimos cerraron **sin
+refutador**: cuando el código dejó de tener defectos graves, la revisión lo reconoció. La revisión
+encontró y se arreglaron **quince defectos reales** que ni los tests ni la medición del runtime
+habían visto: una caché que no se apagaba, parámetros repetidos que se colapsaban, dos llamadas sin
+tope, un POST aceptado desde cualquier sitio, una extracción tardía que se mezclaba con otro deseo,
+el DNS rebinding, el fallo abierto sin direcciones, el truncado silencioso, las respuestas 1xx, las
+direcciones múltiples sin respaldo, una 205 válida, la conexión que llega después del aborto, el
+saludo TLS colgado y el presupuesto por dirección.
+
+**L31 — Lo que costó el proceso, medido, para no repetirlo.** (1) El relé tiene un **techo práctico
+por debajo del presupuesto de lentes**: con 2301 líneas pasó y con 3598 cortó a los 982 s, así que
+los candidatos se parten por debajo de ~2400. (2) La ruta `capture-correction-plan` del proveedor
+**rechaza sus propios bindings** seis veces con `collectBinding is missing or stale`, de modo que
+cada corrección grave cuesta un linaje nuevo. (3) Un linaje que cierra en `escalated` **no se puede
+abandonar**. (4) El `--base-ref` que imprime una continuación puede ser el id del **árbol** y no el
+del commit, y el id del linaje que vale es el que devuelve `start`, no el del comando del `inspect`.
+
+**L32 — La cadena se publicó en diez PRs y el corte tenía un eslabón roto.** `git branch -f` en los
+cortes más `gh pr create --base <rama anterior>` publicaron diez PRs apilados sobre `main` sin
+reescribir la historia. Pero el tramo 02 salió en rojo: `9d0a4ef` arregla un test de los
+**adaptadores** y su mensaje dice «align the cascade test», así que quedó del lado del tramo 03. El
+final de la cadena estaba verde y aun así ese eslabón intermedio no pasaba sus propios tests. Se
+arregló **moviendo el borde un commit** —fast-forward, sin `--force`, sin tocar los otros nueve— y se
+verificó la suite en cada uno de los diez tips: 424, 465, 517, 543, 560, 564, 596, 607 y 607 tests,
+todos en verde. La regla que queda: **al cortar una cadena se verifica cada tip, no sólo el último**,
+y no se confía en el mensaje de un commit para decidir a qué unidad pertenece.
+
 ## Verificación
+
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
   decodificación por `charset` (windows-1252 y caída a UTF-8), resolución de la URL descubierta
@@ -204,11 +649,49 @@ Lo que estos números fijan (no es opinión):
 - **Defecto encontrado en la verificación del núcleo y corregido**: la capa heurística de imagen
   devolvía una miniatura de reseña de 154×154 como foto del producto; está eliminada y el motivo
   medido queda pinchado en un test (ver L12).
+- **T3**: 61 tests del directorio, 346 en la suite, `pnpm typecheck` y `pnpm lint` limpios.
+  **Verificación independiente** (agente aparte, sin acceso de escritura), 6 de 6 PASS, con
+  **prueba de mutación**: al desactivar el adaptador fallan 4 tests, así que no pasan por el
+  fallback de la cascada. Diferencial base-vs-cambio sobre los 9 fixtures: solo cambia `amazon-es`
+  (título, precio, imagen). Los `sha256` de los 9 fixtures coinciden con el manifiesto. Lockfile:
+  77 líneas añadidas, **cero** eliminadas.
+- **Riesgo declarado de T3: item 5 (dependencia nueva).** Verificación independiente hecha, según
+  la regla. Lo que la verificación **no** pudo probar: si el runtime de Deno resuelve el specifier
+  sin `npm:` — ver el riesgo abierto abajo.
+- **Corregido en la verificación de T3:** la regla de host reclamaba `amazon.es.evil.com`. Apretada
+  a `amazon.<2-3 letras>` con a lo sumo un sufijo más, con RED observado en ese caso exacto antes
+  de tocarla.
+- **T4**: 129 tests del directorio, 414 en la suite, typecheck y lint limpios. **Verificación
+  independiente adversaria**: encontró un bypass SSRF real (direcciones IPv6 de transición
+  —NAT64 `64:ff9b::/96`, 6to4 `2002::/16`, Teredo `2001:0::/32`, IPv4 traducida y compatible—
+  que llegaban a `169.254.169.254`); se arregló clasificando la **IPv4 embebida**; una
+  re-auditoría del fix dio PASS (los `reason` de los 10 casos previos no cambiaron y las formas
+  de transición con IPv4 pública siguen pasando).
+- **Riesgo declarado de T4: item 2 (seguridad).** Verificación independiente **adversaria** dos
+  veces (la que encontró el bypass y la del fix), con prueba de mutación en las dos.
+- **Revisiones nativas por tramo (L17).** T4 `review-cade8da5617863c2`, T3
+  `review-ea4ddb650dd3ab9f` y T1 `review-e753e0e4cff75cc8`: **aprobados**, autoridad quemada. T2
+  `review-c92b4c397ebaf358` quedó **escalated** (`native_stop_required`) porque el validador rechazó
+  la primera corrección por una regresión, y se cerró con un linaje nuevo sobre el corte ya
+  corregido: `review-8c7a8fb9eef5bcd3`, **aprobado** tras corregir `R4-001`. Tres CRITICAL, los tres
+  encontrados por el refutador; el refutador también **refutó** un CRITICAL de la lente de riesgo.
+- **T5a** (`90ac8a8`): medido en el runtime real — 401 sin cabecera `Authorization` (lo corta la
+  plataforma antes del handler), 200 con el `ANON_KEY` del stack local leyendo Amazon (`89,99 EUR`),
+  `{ok:false}` con `dns-failed` y con `blocked-ip-loopback`, 405 y 400 en el resto. 5 tests del
+  resolvedor puro (fallo cerrado) y la suite en verde.
+- **T5b** (`aa90e2f`, `c6ede3b`): migración aplicada **solo en local** con `supabase migration up`;
+  RLS comprobado por `psql` (`relrowsecurity=t`, cero políticas, `relacl` solo para `postgres` y
+  `service_role`) y la función `security definer` con `search_path` fijado. **Verificación
+  independiente: 6 de 6 PASS, 0 blockers**, con métodos propios — 12 llamadas paralelas contra
+  `limit=2` dieron exactamente 2 permitidas; RLS probado con el rol `anon` y con un JWT de usuario
+  real; la clave de caché probada sobre el módulo real. **Riesgo declarado: items 1 (migración) y 2
+  (permisos).**
 
 ## Hallazgos informativos
 
 - **`pccomponentes-es` no se pudo congelar** (403 a undici con los mismos headers con los que
-  `curl` lo abría). Queda como semilla para reintentar cuando exista la capa de red (T4).
+  `curl` lo abría). El fingerprint TLS es independiente de los headers y la capa de red de T4 no
+  lo cambia: sigue pendiente de medir qué alcanza la Edge Function real (T5).
 - **`mercadolibre-ar` y `tiendanimal-es` fallan en el descubrimiento** (patrón sin coincidencia)
   y **`nutritienda-es` da 403 en el listado**: semillas a ajustar cuando T3 evalúe adaptadores.
 - **`description` sale de Open Graph y la heurística queda de respaldo**: Open Graph corre antes y
@@ -217,7 +700,114 @@ Lo que estos números fijan (no es opinión):
 - **AliExpress declara menos de lo que suponíamos**: su único JSON-LD es un `WebSite` con
   `SearchAction`, sin `Product` ni precio; lo legible sale de Open Graph. Candidato a adaptador si el
   volumen lo justifica.
+- **`extract/html.ts` promete «`parseHtml` nunca tira» y esa garantía la da el `intentar` de
+  `extract/index.ts`, no el módulo.** Es cierto en el uso real, pero la promesa está escrita un
+  nivel más arriba. Hallazgo del verificador independiente, no bloqueante.
+- **`selectAll` se exporta y hoy no lo usa nadie** (utilidad para los próximos adaptadores).
+- **La regla de host del adaptador no concede confianza hoy**, pero si alguien la reusa para decidir
+  permisos o claves de caché, ya está apretada (ver L15).
+- **Hallazgos de la re-auditoría del fix SSRF, sin explotabilidad demostrada**: ISATAP bajo un
+  prefijo enrutable (`2001:db8::5efe:127.0.0.1`) y prefijos NAT64 no estándar no se clasifican;
+  el rebinding entre la comprobación del resolvedor y la conexión real (`fetch` vuelve a resolver)
+  sigue sin cubrir; `safeFetch` decodifica el cuerpo solo como UTF-8 (una página en latin-1 sale
+  con acentos rotos — el capturador sí honra el `charset`, el runtime lo verá en T5); y un
+  `fetchImpl` inyectado que ignora la `AbortSignal` hace que el timeout no corte (los `fetch`
+  reales de undici/Deno sí la honran).
+- **Hallazgos del acta de B1 (todos informativos, ninguno bloqueante)**: hueco de DNS cuando no hay
+  resolvedor (`pinned-http.ts:144`); nombre de cabecera sin sanitizar (`pinned-http.ts:225`); y cuatro
+  más sobre el cuerpo y el cierre (`safe-fetch.ts:242`, `pinned-http.ts:575`, `pinned-http.ts:220`,
+  `safe-fetch.ts:265`) y uno sobre el reparto de presupuesto (`safe-fetch.ts:233-234`). El proveedor
+  es explícito: **ninguno abre corrección ni justifica repetir la revisión de ese candidato**.
+- **Hallazgos del acta de B2 (todos informativos)**: el esquema de la imagen del adaptador
+  (`adapters/amazon.ts:71`) y el rango cero de IPv4 (`net/url-guard.ts:245`) como sugerencias; el DNS
+  de la guarda apagado por defecto (`safe-fetch.ts:163`) y el rebinding residual
+  (`safe-fetch.ts:194`) como avisos —el rebinding del **transporte** está cerrado por B1, éste es el
+  que queda si alguien llama a `safeFetch` sin resolvedor—; más `safe-fetch.ts:213-214`,
+  `adapters/amazon.ts:32`, `adapters/amazon.ts:63-64`, `safe-fetch.ts:247-250` y
+  `extract/html.ts:13`.
+
+## Riesgos abiertos
+
+- **Las dos incógnitas de T5 quedaron resueltas por medición (L18)**, no por suposición: el mapa de
+  imports de Deno resuelve `node-html-parser` sin tocar el import compartido, y el runtime alcanza
+  Amazon y PcComponentes con 200. **No medido**: si ese mapa es *necesario* o el bundler resolvería
+  igual contra `node_modules` (queda declarado, sin afirmarlo).
+- **`verify_jwt` es lo único que hace que la identidad esté verificada.** `_shared/product-extraction/auth/jwt.ts`
+  decodifica el `sub` de un token que **no** verifica: con `--no-verify-jwt` un token inventado fue
+  aceptado y gastó la cuota de otra persona. La configuración commiteada es correcta y hay un test
+  que la vigila; el riesgo es operativo (un despliegue al que se le pierda la configuración).
+- **Advisories de T5 declarados, sin arreglar aquí**: el `429` no lleva cabecera `Retry-After`
+  (sí `retryAfterSeconds` en el JSON); los `fetch` a PostgREST no llevan timeout, así que un
+  PostgREST colgado cuelga la petición; y la caché está indexada **solo por URL**, así que cualquier
+  usuario autenticado recibe el borrador cacheado de otro sin gastar cuota (deliberado, declarado en
+  la migración).
+- **Informativos de la revisión sin abordar**: 8 de T1 (escritura no atómica del fixture, lectura del
+  descubrimiento sin tope, degradación del manifiesto) y 5 de T2 (entre ellos que `detectCurrency`
+  acepta cualquier valor declarado de tres letras como moneda, sin validar ISO 4217).
+- **Arrastrados de T4**: el rebinding entre la comprobación del DNS y la conexión real sigue sin
+  cubrirse; `safeFetch` decodifica solo UTF-8, así que una página latin-1 queda con mojibake — y
+  desde T5b eso se cachea durante el TTL.
+- **De la migración de T5b**: está aplicada **solo en local**; el proyecto remoto no la tiene hasta
+  que el propietario decida el `db push`.
+- **T6 no está probado en un teléfono.** El `share_target` solo lo ofrece Android a una PWA
+  **instalada** (Chrome 76+; Firefox y Safari no lo soportan: iOS queda para T8). Lo verificado acá
+  es el contrato (manifest, service worker y ruta), la suite unitaria, el build y **la puerta del
+  e2e del repo en verde** (L21); el recorrido real —compartir desde una app de compras y ver el
+  deseo creado— lo tiene que hacer el propietario en su móvil, y **para eso hay que desplegar
+  antes** (el service worker solo se registra en la web publicada, no en local). Mientras eso no
+  pase, **T6 está cerrado en código, no en producción**.
+- **Un fallo de e2e preexistente, ya medido, para que nadie lo persiga de nuevo**:
+  `wishlist-visibility.spec.ts:9` en el proyecto **Mobile Safari** falla en el commit base `7da81af`
+  igual que con T6 aplicado. No es una regresión de esta feature, y el CI nunca corre ese spec en
+  ese proyecto (el paso de Mobile Safari está acotado a `mobile-layout` y `responsive-wishlist`).
+- **El `sw.js` sirve activos de toda la app**, así que un error en él no rompe el compartir: rompe
+  la app entera (es la historia de la pantalla negra). El tramo de T6 solo **agrega** una rama para
+  `POST` y excluye una caché del barrido: el camino `GET` no cambió una línea, y eso lo vigilan los
+  tests que ya existían.
+- **Cosmético, declarado en L20**: en escritorio, mientras la lista carga y el formulario de un
+  compartir está abierto, se ve el fondo del modal en lugar de la lista.
+- **Privacidad, menor y aceptada**: el compartir vive en `sessionStorage` hasta que el formulario
+  lo consume, y el `sessionStorage` no distingue usuarios. Si en el mismo dispositivo y la misma
+  pestaña una persona comparte sin iniciar sesión y **después** entra otra, la segunda vería el
+  formulario con el enlace de la primera. La caché del service worker **sí** se vacía al cerrar
+  sesión (`signOut` borra todo `murodeseos-*`), así que el camino que queda es el de la pestaña
+  abierta sin sesión. Lo que se filtra es una URL que se compartió en ese mismo dispositivo, no
+  datos de la cuenta.
 
 ## Commits
 
-- (vacío por ahora)
+- `5c1fcc3` — test(fixtures): capture real product pages for offline extraction tests (T1).
+- `d89de4d` — fix(fixtures): refuse an empty --only instead of capturing every shop (T1, `R3-only-empty-filter`).
+- `5c9fc65` — feat(extraction): read product prices from a product page (T2).
+- `8bfde52` — feat(extraction): extract product data in a tiered cascade (T2).
+- `beb0e0b` — fix(extraction): stop fabricating a price from a whole text node (T2, `R4-FABRICATED-PRICE`).
+- `1e9b7c4` — fix(extraction): keep reading the spaced ISO currency code (T2, regresión que rechazó el validador).
+- `4d4df8a` — fix(extraction): require a complete ISO code next to the price (T2, `R4-001`).
+- `c54a666` — feat(extraction): adapt Amazon product pages with a host adapter (T3).
+- `c0ae2e3` — feat(extraction): fetch product pages safely behind an SSRF guard (T4).
+- `b83d313` / `1bf2934` / `4591448` — docs(odd): cierres y evidencia medida de T1-T4.
+- `9d0a4ef` — test(extraction): align the cascade test with the token-based heuristic raw.
+- `90ac8a8` — feat(functions): serve product extraction from an authenticated edge function (T5a).
+- `aa90e2f` — feat(db): store product extraction quota and cache (T5b).
+- `aa776ae` — feat(pwa): receive the Android share target in the service worker (T6).
+- `4fd6be4` — feat(pwa): open the wish form from a shared product (T6).
+- `55636fc` — docs(odd): record the T6 browser verification.
+- `560a216` — feat(wishlist): read the product from a pasted link before the form (T9).
+- `f613a69` — docs(odd): record the second review cut on candidate size.
+- `55b1874` — fix(functions): honour a disabled extraction cache (T5).
+- `a04efc6` — docs(odd): record the T5 CRITICAL, its fix and the stuck correction route.
+- `9d1173c` — fix(extraction): keep the order of repeated query parameters in the cache key (T5).
+- `da9a9f2` — fix(functions): bound the cache calls with a timeout (T5).
+- `b37a86b` — fix(functions): bound the quota RPC too (T5).
+- `6cab4e7` — docs(odd): record the T5 approval and why it took five cycles.
+- `230114d` — fix(pwa): refuse a share POST started by another site (T6).
+- `09a149e` — fix(wishlist): keep a late share extraction out of another wish (T6).
+- `9ddb6a8` — docs(odd): record the T6 approval.
+- `a11aee1` — fix(extraction): reconfirm the DNS answer before connecting (T4).
+- `9db03d8` — fix(extraction): refuse a host that resolves to nothing (T4, `R4-001`).
+- `1f9f813` — docs(odd): record the pinned-IP client measurement (T4).
+- `0faf969` — feat(extraction): connect to the validated IP, not to the name (T4).
+- `dcae468` — fix(extraction): fail closed on truncated bodies and follow the final response (T4).
+- `2e0aad5` — test(extraction): keep the new cases in the file's one-line call style (T4).
+- `74ea954` — fix(extraction): close the socket on a late connect and on a 205 (T4).
+- `55e1651` — fix(extraction): abort a hung TLS handshake and give each address a slice (T4).

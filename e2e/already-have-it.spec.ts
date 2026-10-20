@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
 import { supabaseAdmin } from './supabase-admin';
+import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 
 test.describe('Funcionalidad "Ya lo tengo"', () => {
 
@@ -28,7 +29,8 @@ test.describe('Funcionalidad "Ya lo tengo"', () => {
     test('debe permitir borrar un deseo rápidamente con el botón "Ya lo tengo"', async ({ page }) => {
         // 1. Crear un deseo de prueba
         const testTitle = `Deseo de prueba ${Date.now()}`;
-        await page.getByLabel('Nuevo deseo').click();
+        // El «+» pasa por la pantalla del enlace: el helper elige «No tengo enlace» y abre el formulario.
+        await abrirFormularioDeDeseo(page);
         await page.getByPlaceholder('¿Qué deseas?').fill(testTitle);
 
         // Interceptar respuesta para confirmar creación

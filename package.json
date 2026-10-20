@@ -46,6 +46,7 @@
     "expo-status-bar": "^3.0.9",
     "gh-pages": "^6.3.0",
     "nativewind": "^4.0.0-rc.3",
+    "node-html-parser": "^9.0.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
