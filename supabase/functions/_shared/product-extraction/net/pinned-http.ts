@@ -100,6 +100,17 @@ const abrirConexionPorDefecto: AbrirConexion = async ({ hostname, port, tls, sni
     }
 };
 
+/** Un servidor que encadena más de esto no está negociando: está colgado. */
+const MAX_RESPUESTAS_INTERINAS = 5;
+
+/**
+ * Un cuerpo que termina antes de lo prometido no es un final: es un corte. Se tira para que
+ * `safeFetch` lo traduzca a un fallo, en vez de devolver `ok:true` con media página.
+ */
+function cuerpoTruncado(): Error {
+    return new Error('el cuerpo se cortó antes de terminar');
+}
+
 /**
  * Pide una URL conectando a `init.address`. Devuelve un `Response` real; tira en cualquier fallo de
  * red, igual que `fetch`, y el llamador (`safeFetch`) traduce el tiro a un motivo.
@@ -127,10 +138,20 @@ export async function pinnedFetch(url: string, init: PinnedHttpInit): Promise<Re
         await conAborto(escribirTodo(conexion, construirPeticion(destino, init.headers)), signal);
 
         const fuente = crearFuente(conexion, signal);
-        const { status, statusText, headers } = parsearRespuesta(await leerCabeceras(fuente));
 
-        // 204/304/1xx no llevan cuerpo, y `new Response` tira si se le pasa uno.
-        if (status === 204 || status === 304 || (status >= 100 && status < 200)) {
+        // Una respuesta 1xx (103 Early Hints) es interina: la final viene detrás, en la misma
+        // conexión. No se puede devolver tal cual porque `Response` sólo acepta 200-599, así que
+        // se saltea y se lee la siguiente. El tope corta a un servidor que encadena 1xx.
+        let respuesta = parsearRespuesta(await leerCabeceras(fuente));
+        for (let interinas = 0; respuesta.status >= 100 && respuesta.status < 200; interinas += 1) {
+            if (interinas >= MAX_RESPUESTAS_INTERINAS) throw new Error('demasiadas respuestas intermedias');
+            respuesta = parsearRespuesta(await leerCabeceras(fuente));
+        }
+
+        const { status, statusText, headers } = respuesta;
+
+        // 204 y 304 no llevan cuerpo, y `new Response` tira si se le pasa uno.
+        if (status === 204 || status === 304) {
             return new Response(null, { status, statusText, headers });
         }
 
@@ -274,11 +295,13 @@ function marcoPorLongitud(fuente: Fuente, total: number): Marco {
     return {
         async siguiente() {
             if (restante <= 0) return null;
-            if (fuente.disponibles().length === 0 && !(await fuente.rellenar())) return null;
+            // El `fetch` nativo rechaza un cuerpo más corto que su Content-Length; aceptarlo acá
+            // sería entregar una página a medias como si estuviera entera.
+            if (fuente.disponibles().length === 0 && !(await fuente.rellenar())) throw cuerpoTruncado();
 
             const disponibles = fuente.disponibles();
             const cuantos = Math.min(restante, disponibles.length);
-            if (cuantos === 0) return null;
+            if (cuantos === 0) throw cuerpoTruncado();
 
             restante -= cuantos;
             return fuente.consumir(cuantos);
@@ -313,44 +336,35 @@ function marcoChunked(fuente: Fuente): Marco {
                         estado = 'fin-de-datos';
                         continue;
                     }
-                    if (fuente.disponibles().length === 0 && !(await fuente.rellenar())) {
-                        estado = 'fin';
-                        return null;
-                    }
+                    // Cortarse en medio de los datos de un chunk es un corte, no el final del cuerpo.
+                    if (fuente.disponibles().length === 0 && !(await fuente.rellenar())) throw cuerpoTruncado();
                     const disponibles = fuente.disponibles();
                     const cuantos = Math.min(restante, disponibles.length);
-                    if (cuantos === 0) {
-                        estado = 'fin';
-                        return null;
-                    }
+                    if (cuantos === 0) throw cuerpoTruncado();
                     restante -= cuantos;
                     return fuente.consumir(cuantos);
                 }
 
                 if (estado === 'fin-de-datos') {
-                    // El CRLF que cierra los datos del chunk.
-                    if ((await leerLinea(fuente)) === null) {
-                        estado = 'fin';
-                        return null;
-                    }
+                    // El CRLF que cierra los datos del chunk: sin él el chunk quedó a medias.
+                    if ((await leerLinea(fuente)) === null) throw cuerpoTruncado();
                     estado = 'tamano';
                     continue;
                 }
 
                 if (estado === 'trailers') {
                     const trailer = await leerLinea(fuente);
-                    if (trailer === null || trailer === '') {
+                    // La línea vacía sí termina el cuerpo; un EOF antes de completarla, no.
+                    if (trailer === '') {
                         estado = 'fin';
                         return null;
                     }
+                    if (trailer === null) throw cuerpoTruncado();
                     continue;
                 }
 
                 const linea = await leerLinea(fuente);
-                if (linea === null) {
-                    estado = 'fin';
-                    return null;
-                }
+                if (linea === null) throw cuerpoTruncado();
 
                 // El tamaño puede traer extensiones después de `;` (`1a;nombre=valor`).
                 const tamano = Number.parseInt(linea.split(';')[0].trim(), 16);

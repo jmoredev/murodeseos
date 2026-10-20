@@ -165,9 +165,9 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
             if (!guarda.ok) return fallo(guarda.reason, finalUrl, null);
             finalUrl = guarda.url;
 
-            // Dirección a la que el transporte tiene que conectar en este salto. Se resuelve por
-            // salto: la que valida un salto no sirve para el siguiente.
-            let direccion: string | undefined;
+            // Direcciones a las que el transporte puede conectar en este salto, en orden. Se
+            // resuelven por salto: la que valida un salto no sirve para el siguiente.
+            let destinos: (string | undefined)[] = [undefined];
 
             if (options.resolveHost) {
                 const host = new URL(guarda.url).hostname;
@@ -222,22 +222,28 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                     }
 
                     // La IP fijada del salto: todas las direcciones de arriba pasaron la guarda, así
-                    // que cualquiera sirve como destino del socket.
-                    direccion = direcciones[0];
+                    // que todas sirven como destino y se prueban en orden hasta que una conteste.
+                    destinos = direcciones;
                 }
             }
 
-            let response: FetchResponseLike;
-            try {
-                response = await fetchImpl(guarda.url, {
-                    redirect: 'manual',
-                    headers: buildBrowserHeaders(),
-                    signal: controller.signal,
-                    address: direccion,
-                });
-            } catch {
-                return fallo(timedOut ? 'timeout' : 'fetch-failed', finalUrl, null);
+            let response: FetchResponseLike | null = null;
+            for (const destino of destinos) {
+                try {
+                    response = await fetchImpl(guarda.url, {
+                        redirect: 'manual',
+                        headers: buildBrowserHeaders(),
+                        signal: controller.signal,
+                        address: destino,
+                    });
+                    break;
+                } catch {
+                    // Un destino que no contesta no condena la página: se prueba el siguiente. Sin
+                    // tiempo ya no tiene sentido seguir probando.
+                    if (timedOut) break;
+                }
             }
+            if (response === null) return fallo(timedOut ? 'timeout' : 'fetch-failed', finalUrl, null);
 
             if (response.status >= 300 && response.status < 400) {
                 const location = response.headers.get('location');

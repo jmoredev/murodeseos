@@ -665,3 +665,111 @@ describe('safeFetch · cableado con el transporte fijado', () => {
         expect(conn.cerrada()).toBe(true);
     });
 });
+
+/* ------------------------------------------------------------------ *
+ * Averías de la red, no caminos felices de framing
+ * ------------------------------------------------------------------ */
+
+/**
+ * El refutador de la revisión encontró que estas tres se aceptaban en silencio: un cuerpo cortado
+ * se entregaba como `ok:true` con `truncated:false`, y un sitio que manda `103 Early Hints`
+ * tumbaba la petición entera. El `fetch` nativo rechaza las tres, así que el cliente tiene que
+ * hacer lo mismo: si no, la extracción lee una página a medias como si estuviera completa.
+ */
+describe('pinnedFetch · averías de la red', () => {
+    it('rechaza un cuerpo más corto que el Content-Length prometido', async () => {
+        const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nContent-Length: 50\r\n\r\nHola mundo!');
+        const { abrir } = abridorFalso(conexion);
+
+        const respuesta = await pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+        });
+
+        // El cuerpo es un stream: el corte no se ve al abrir la respuesta sino al leerla, y ahí
+        // tiene que tirar en vez de cerrarse como si el cuerpo hubiera terminado.
+        await expect(respuesta.text()).rejects.toThrow(/cuerpo/);
+    });
+
+    it('no devuelve ok a través de safeFetch cuando el cuerpo llegó cortado', async () => {
+        const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nContent-Length: 50\r\n\r\nHola mundo!');
+        const { abrir } = abridorFalso(conexion);
+
+        const resultado = await safeFetch('https://shop.example/', {
+            resolveHost: async () => ['93.184.216.34'],
+            fetchImpl: (url, init) => pinnedFetch(url, { ...init, abrirConexion: abrir }),
+        });
+
+        expect(resultado.ok).toBe(false);
+    });
+
+    it('rechaza un chunked cortado a mitad de chunk', async () => {
+        // El chunk declara 11 bytes y llegan 8: la conexión se cerró en medio del cuerpo.
+        const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nb\r\nHola mun');
+        const { abrir } = abridorFalso(conexion);
+
+        const respuesta = await pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+        });
+
+        await expect(respuesta.text()).rejects.toThrow(/cuerpo/);
+    });
+
+    it('rechaza un chunked cortado antes del CRLF que cierra el último chunk', async () => {
+        // El chunk está completo (`b` = 11 bytes) pero falta el CRLF que lo cierra y el chunk `0`.
+        const conexion = conexionConRespuesta('HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nb\r\nHola mundo!');
+        const { abrir } = abridorFalso(conexion);
+
+        const respuesta = await pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+        });
+
+        await expect(respuesta.text()).rejects.toThrow(/cuerpo/);
+    });
+
+    it('saltea una respuesta interina 103 y devuelve la final', async () => {
+        const conexion = conexionConRespuesta(
+            'HTTP/1.1 103 Early Hints\r\nLink: </estilo.css>; rel=preload\r\n\r\n' + OK_CON_LONGITUD
+        );
+        const { abrir } = abridorFalso(conexion);
+
+        const respuesta = await pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+        });
+
+        expect(respuesta.status).toBe(200);
+        await expect(respuesta.text()).resolves.toBe('Hola mundo!');
+    });
+
+    it('corta un servidor que encadena respuestas 1xx sin llegar nunca a la final', async () => {
+        const interina = bytes('HTTP/1.1 103 Early Hints\r\n\r\n');
+        const conexion = crearConexionFalsa(() => interina);
+        const { abrir } = abridorFalso(conexion);
+
+        await expect(
+            pinnedFetch('https://shop.example/', { headers: {}, address: '93.184.216.34', abrirConexion: abrir })
+        ).rejects.toThrow(/intermedias/);
+    });
+
+    it('prueba todas las direcciones validadas antes de darse por vencido', async () => {
+        const intentos: (string | undefined)[] = [];
+
+        const resultado = await safeFetch('https://shop.example/', {
+            resolveHost: async () => ['93.184.216.34', '93.184.216.35'],
+            fetchImpl: async (_url, init) => {
+                intentos.push(init?.address);
+                throw new Error('sin ruta');
+            },
+        });
+
+        expect(resultado.ok).toBe(false);
+        expect(intentos).toEqual(['93.184.216.34', '93.184.216.35']);
+    });
+});
