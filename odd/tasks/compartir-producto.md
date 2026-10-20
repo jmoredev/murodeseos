@@ -503,7 +503,44 @@ Lo que estos números fijan (no es opinión):
   aceptando por escrito que la puerta no cerró por una herramienta rota; (c) que se arregle el
   proveedor, que no está en mis manos.
 
-## Verificación
+
+
+- **L25 (2026-10-19) — el linaje nuevo encontró un segundo CRITICAL, y el bucle se vuelve caro.**
+  Sobre el árbol ya corregido (`68e9e2bb`), el linaje `review-b65ac1d1aeb6ec23` corrió las tres
+  lentes y el refutador volvió a cerrar en `correction_required` con **`R3-001`** (CRITICAL
+  **inferencial**, lente de confiabilidad): la normalización de la clave de caché ordenaba los
+  parámetros repetidos **por valor**, así que `?a=2&a=1` y `?a=1&a=2` compartían clave — y un
+  servidor que se queda con el último valor los distingue. El test nuevo **fijaba ese error**.
+  **Arreglo**: se ordena **solo por clave** y el `sort` estable de JS conserva el orden relativo de
+  los repetidos; el test se reescribió para afirmar lo correcto (variante con repetidos que
+  **no** se colapsa). Rojo observado antes (`?a=1&a=2`), verde después. Suite **544 | 1 todo**,
+  `tsc` y `eslint` en 0.
+  **La economía del bucle, que es lo que hay que decidir**: como la ruta del plan de corrección
+  rechaza sus propios bindings (L24), **cada hallazgo severo cuesta un linaje nuevo completo**
+  —3 lentes + refutador, ~280 KB de prompts y 4 ejecuciones de modelo— porque el linaje que lo
+  encontró no se puede corregir, solo reemplazar. Dos hallazgos, dos ciclos. Los dos eran reales y
+  los dos están arreglados: eso es lo que compra el bucle. Lo que no compra es un cierre: hasta
+  ahora, ninguno de los dos linajes llegó a `approved`.
+
+- **L26 (2026-10-19) — quinto ciclo: APROBADO, y la lección de por qué recién ahora.**
+  `review-12b4fabd57e2f8b4` (22 archivos, **1870 líneas**, `high`): las tres lentes corrieron y el
+  proveedor **no pidió refutador** — la autoridad cerró en **`approved`** en el último evento
+  admitido y se reconoció (`authority: burned`, `gentle-ai.review-acknowledged/v1`,
+  `delivery: ordinary-repository-policy`). Primera aprobación después de cinco ciclos.
+  **Por qué recién ahora**: los cuatro ciclos anteriores fueron encontrando **instancias de la misma
+  clase** —contratos de configuración que mentían (cuota en 0, TTL en 0, parámetros repetidos) y
+  **llamadas a PostgREST sin tope**—. El quinto candidato es el primero en el que esa clase está
+  **enumerada y cerrada**: las tres llamadas del handler (dos de caché, una de cuota) tienen `fetch`
+  inyectable, tope de 2 s y tests. El paso adversarial dejó de tener una instancia nueva que sacar.
+  **Los 12 hallazgos informativos** (5 de riesgo, 3 de confiabilidad, 4 de resiliencia) coinciden
+  punto por punto con los advisories que esta ficha ya declaraba —CORS por sufijo `github.io`,
+  identidad colgando de una línea de configuración, caché indexada por URL completa, lectura pública
+  sin comillas, rebinding DNS (TOCTOU), y los de cuota y caché—. Son **no bloqueantes**, no reabren
+  la revisión y quedan como trabajo posterior, no como razón para repetirla.
+  **Lo que sigue abierto**: la ruta del plan de corrección rechaza sus propios bindings, así que los
+  linajes de los ciclos 1-4 quedan en `correction_required` y sus hallazgos se arreglaron **por
+  fuera** de la fontanería; y la rama entera sigue sin ser revisable como un candidato (L22): faltan
+  **T6, T9 y el extractor**.
 
 - **L27 (2026-10-19) — T6 aprobado en el tercer ciclo, después de cuatro defectos reales.**
   `review-9db6c34204f14e55` (15 archivos, **2100 líneas**, `medium`): las tres lentes cerraron en
@@ -534,42 +571,35 @@ Lo que estos números fijan (no es opinión):
   (`Stream ended without finish_reason`, `prepared_reviewers: 0`, sin mutación); el STATUS reofreció
   el mismo grupo y el segundo lanzamiento pasó. No hubo que reparar nada.
 
-- **L26 (2026-10-19) — quinto ciclo: APROBADO, y la lección de por qué recién ahora.**
-  `review-12b4fabd57e2f8b4` (22 archivos, **1870 líneas**, `high`): las tres lentes corrieron y el
-  proveedor **no pidió refutador** — la autoridad cerró en **`approved`** en el último evento
-  admitido y se reconoció (`authority: burned`, `gentle-ai.review-acknowledged/v1`,
-  `delivery: ordinary-repository-policy`). Primera aprobación después de cinco ciclos.
-  **Por qué recién ahora**: los cuatro ciclos anteriores fueron encontrando **instancias de la misma
-  clase** —contratos de configuración que mentían (cuota en 0, TTL en 0, parámetros repetidos) y
-  **llamadas a PostgREST sin tope**—. El quinto candidato es el primero en el que esa clase está
-  **enumerada y cerrada**: las tres llamadas del handler (dos de caché, una de cuota) tienen `fetch`
-  inyectable, tope de 2 s y tests. El paso adversarial dejó de tener una instancia nueva que sacar.
-  **Los 12 hallazgos informativos** (5 de riesgo, 3 de confiabilidad, 4 de resiliencia) coinciden
-  punto por punto con los advisories que esta ficha ya declaraba —CORS por sufijo `github.io`,
-  identidad colgando de una línea de configuración, caché indexada por URL completa, lectura pública
-  sin comillas, rebinding DNS (TOCTOU), y los de cuota y caché—. Son **no bloqueantes**, no reabren
-  la revisión y quedan como trabajo posterior, no como razón para repetirla.
-  **Lo que sigue abierto**: la ruta del plan de corrección rechaza sus propios bindings, así que los
-  linajes de los ciclos 1-4 quedan en `correction_required` y sus hallazgos se arreglaron **por
-  fuera** de la fontanería; y la rama entera sigue sin ser revisable como un candidato (L22): faltan
-  **T6, T9 y el extractor**.
+- **L28 (2026-10-20) — el rebinding se cerró con un cliente propio, y se midió antes de creerle.**
+  La revisión de T3-T4 rechazó la mitigación de doble resolución por un motivo que no admite
+  réplica: `fetch` vuelve a resolver, así que la dirección final la sigue eligiendo el atacante.
+  La única salida era conectar a la **IP validada** por nuestra cuenta (Deno no expone el dialer):
+  `pinned-http.ts` escribe HTTP/1.1 a mano sobre `Deno.connect`, con TLS a la **SNI real** para el
+  certificado y el socket a la dirección ya validada. `content-length`, `chunked` y lectura hasta EOF;
+  cabeceras case-insensitive; cuerpo *pull-based* para que el tope de bytes de `safeFetch` siga siendo
+  la única autoridad; socket cerrado en todos los caminos. **25 tests** sobre una conexión falsa y un
+  diferencial de 16 casos contra la implementación anterior sin diferencias no pedidas.
+  **Medido en el runtime real** (`supabase functions serve`, runtime `1.77.1` / Deno 2.1.4), con un
+  token de usuario del arnés E2E porque el anon key no trae `sub` y el handler muere antes de la red:
 
-- **L25 (2026-10-19) — el linaje nuevo encontró un segundo CRITICAL, y el bucle se vuelve caro.**
-  Sobre el árbol ya corregido (`68e9e2bb`), el linaje `review-b65ac1d1aeb6ec23` corrió las tres
-  lentes y el refutador volvió a cerrar en `correction_required` con **`R3-001`** (CRITICAL
-  **inferencial**, lente de confiabilidad): la normalización de la clave de caché ordenaba los
-  parámetros repetidos **por valor**, así que `?a=2&a=1` y `?a=1&a=2` compartían clave — y un
-  servidor que se queda con el último valor los distingue. El test nuevo **fijaba ese error**.
-  **Arreglo**: se ordena **solo por clave** y el `sort` estable de JS conserva el orden relativo de
-  los repetidos; el test se reescribió para afirmar lo correcto (variante con repetidos que
-  **no** se colapsa). Rojo observado antes (`?a=1&a=2`), verde después. Suite **544 | 1 todo**,
-  `tsc` y `eslint` en 0.
-  **La economía del bucle, que es lo que hay que decidir**: como la ruta del plan de corrección
-  rechaza sus propios bindings (L24), **cada hallazgo severo cuesta un linaje nuevo completo**
-  —3 lentes + refutador, ~280 KB de prompts y 4 ejecuciones de modelo— porque el linaje que lo
-  encontró no se puede corregir, solo reemplazar. Dos hallazgos, dos ciclos. Los dos eran reales y
-  los dos están arreglados: eso es lo que compra el bucle. Lo que no compra es un cierre: hasta
-  ahora, ninguno de los dos linajes llegó a `approved`.
+  | Caso | Resultado |
+  | --- | --- |
+  | Amazon `/dp/B09B8X9RGM` | `ok:true` · `89.99 EUR` (`raw: "89,99€"`, `domain-adapter`), título e imagen — 2,2 MB por TLS |
+  | MediaMarkt (y **redirección** de por medio) | `ok:true` · `89.99 EUR` por `json-ld`, título e imagen |
+  | `no-existe.invalid` | `ok:false · dns-failed` |
+  | `http://127.0.0.1/x` | `ok:false · blocked-ip-loopback` |
+
+  Los dos últimos son el control que más importaba: **la guarda sigue viva después de cambiarle el
+  transporte**. Sin ellos, «lee Amazon» habría sido un éxito ambiguo.
+  **Tres intentos, dos fallos míos de script** (registrados porque son el mismo error dos veces):
+  puerto `54321` hardcodeado cuando el stack usa `API_URL=127.0.0.1:3001`, y el anon key sin `sub`.
+  La lección vale para todo lo que sigue: **en los comandos de verificación nada se escribe de
+  memoria — sale de la fuente** (`$API_URL`, `$?` explícito). Un intento que no mide nada no cuenta
+  como evidencia.
+
+## Verificación
+
 
 - **T1**: `__tests__/product-extraction/fixture-capture.test.ts` en verde (9 tests):
   decodificación por `charset` (windows-1252 y caída a UTF-8), resolución de la URL descubierta
