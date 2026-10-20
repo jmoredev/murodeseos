@@ -121,7 +121,6 @@ describe('pantalla del enlace del deseo', () => {
                     title: 'Lámpara de pie',
                     priceText: '89,99',
                     imageUrl: 'https://tienda.example/img.jpg',
-                    notes: 'Una descripción',
                 },
             });
         });
@@ -130,7 +129,6 @@ describe('pantalla del enlace del deseo', () => {
             title: 'Lámpara de pie',
             priceText: '89,99',
             imageUrl: 'https://tienda.example/img.jpg',
-            notes: 'Una descripción',
             links: [LINK_NORMALIZADO],
         });
         // Vuelve a la lista que ya estaba montada: `replace` sobre el índice apilaría una segunda
@@ -142,7 +140,7 @@ describe('pantalla del enlace del deseo', () => {
     it('lo que la extracción no leyó queda como campo vacío en el borrador, no ausente', async () => {
         requestProductDraftMock.mockResolvedValue({
             status: 'ok',
-            draft: { title: null, priceText: null, imageUrl: null, notes: null },
+            draft: { title: null, priceText: null, imageUrl: null },
         });
 
         render(<WishlistAddPage />);
@@ -156,7 +154,6 @@ describe('pantalla del enlace del deseo', () => {
             title: '',
             priceText: '',
             imageUrl: '',
-            notes: '',
             links: [LINK_NORMALIZADO],
         });
         expect(back).toHaveBeenCalledTimes(1);

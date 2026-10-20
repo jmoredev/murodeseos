@@ -244,7 +244,6 @@ export function WishListTab({ userId }: WishListTabProps) {
 
             const extracted: WishDraftFields = {
                 title: result.draft.title ?? undefined,
-                notes: result.draft.notes ?? undefined,
                 imageUrl: result.draft.imageUrl ?? undefined,
                 priceText: result.draft.priceText ?? undefined,
             };
