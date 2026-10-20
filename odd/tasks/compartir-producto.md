@@ -626,6 +626,16 @@ cada corrección grave cuesta un linaje nuevo. (3) Un linaje que cierra en `esca
 abandonar**. (4) El `--base-ref` que imprime una continuación puede ser el id del **árbol** y no el
 del commit, y el id del linaje que vale es el que devuelve `start`, no el del comando del `inspect`.
 
+**L32 — La cadena se publicó en diez PRs y el corte tenía un eslabón roto.** `git branch -f` en los
+cortes más `gh pr create --base <rama anterior>` publicaron diez PRs apilados sobre `main` sin
+reescribir la historia. Pero el tramo 02 salió en rojo: `9d0a4ef` arregla un test de los
+**adaptadores** y su mensaje dice «align the cascade test», así que quedó del lado del tramo 03. El
+final de la cadena estaba verde y aun así ese eslabón intermedio no pasaba sus propios tests. Se
+arregló **moviendo el borde un commit** —fast-forward, sin `--force`, sin tocar los otros nueve— y se
+verificó la suite en cada uno de los diez tips: 424, 465, 517, 543, 560, 564, 596, 607 y 607 tests,
+todos en verde. La regla que queda: **al cortar una cadena se verifica cada tip, no sólo el último**,
+y no se confía en el mensaje de un commit para decidir a qué unidad pertenece.
+
 ## Verificación
 
 
