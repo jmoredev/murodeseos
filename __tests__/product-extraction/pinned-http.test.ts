@@ -757,3 +757,52 @@ describe('pinnedFetch · averías de la red', () => {
         expect(intentos).toEqual(['93.184.216.34', '93.184.216.35']);
     });
 });
+
+describe('pinnedFetch · cuerpo nulo y aborto', () => {
+    it('devuelve una 205 sin cuerpo y cierra el socket', async () => {
+        // 205 también exige cuerpo nulo: construir el `Response` con un stream tira, y si el
+        // socket ya se había declarado cedido, el `finally` no lo cerraba y quedaba colgado.
+        const conexion = conexionConRespuesta('HTTP/1.1 205 Reset Content\r\nContent-Length: 0\r\n\r\n');
+        const { abrir } = abridorFalso(conexion);
+
+        const respuesta = await pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+        });
+
+        expect(respuesta.status).toBe(205);
+        await expect(respuesta.text()).resolves.toBe('');
+        expect(conexion.cerrada()).toBe(true);
+    });
+
+    it('cierra la conexión que llega después del aborto', async () => {
+        // `Deno.connect` no se cancela: si el tiempo se agota mientras conecta y la conexión
+        // llega igual, nadie la va a usar, así que hay que cerrarla o se filtra un socket por
+        // cada intento que se pasa de tiempo.
+        const conexion = conexionConRespuesta(OK_CON_LONGITUD);
+        const controlador = new AbortController();
+        let entregar: ((conexion: ConexionHttp) => void) | null = null;
+
+        const abrir: AbrirConexion = () =>
+            new Promise<ConexionHttp>((resolver) => {
+                entregar = resolver;
+            });
+
+        const promesa = pinnedFetch('https://shop.example/', {
+            headers: {},
+            address: '93.184.216.34',
+            abrirConexion: abrir,
+            signal: controlador.signal,
+        });
+
+        controlador.abort();
+        await expect(promesa).rejects.toThrow();
+
+        // La conexión llega recién ahora, cuando ya nadie la espera.
+        entregar!(conexion);
+        await new Promise((listo) => setTimeout(listo, 0));
+
+        expect(conexion.cerrada()).toBe(true);
+    });
+});

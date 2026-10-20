@@ -132,7 +132,17 @@ export async function pinnedFetch(url: string, init: PinnedHttpInit): Promise<Re
     let cedido = false;
 
     try {
-        const conexion = await conAborto(abrir({ hostname: objetivo, port: puerto, tls, sni: nombre }), signal);
+        // `abrir` no se puede cancelar. Si el aborto gana la carrera, la conexión puede llegar
+        // cuando ya nadie la espera: se cierra al llegar, o queda un socket filtrado por cada
+        // intento que se pasa de tiempo.
+        const apertura = abrir({ hostname: objetivo, port: puerto, tls, sni: nombre });
+        let conexion: ConexionHttp;
+        try {
+            conexion = await conAborto(apertura, signal);
+        } catch (error) {
+            apertura.then((tardia) => tardia.close()).catch(() => {});
+            throw error;
+        }
         cierre = crearCierre(conexion, signal);
 
         await conAborto(escribirTodo(conexion, construirPeticion(destino, init.headers)), signal);
@@ -150,8 +160,8 @@ export async function pinnedFetch(url: string, init: PinnedHttpInit): Promise<Re
 
         const { status, statusText, headers } = respuesta;
 
-        // 204 y 304 no llevan cuerpo, y `new Response` tira si se le pasa uno.
-        if (status === 204 || status === 304) {
+        // 204, 205 y 304 no llevan cuerpo, y `new Response` tira si se le pasa uno.
+        if (status === 204 || status === 205 || status === 304) {
             return new Response(null, { status, statusText, headers });
         }
 
@@ -160,10 +170,14 @@ export async function pinnedFetch(url: string, init: PinnedHttpInit): Promise<Re
             cerrar: cierre.cerrar,
         });
 
+        // Se arma la respuesta **antes** de declarar el socket cedido: si el constructor tira
+        // (un estado que exige cuerpo nulo, por ejemplo) el `finally` todavía puede cerrarlo.
+        const respuestaFinal = new Response(cuerpo, { status, statusText, headers });
+
         // A partir de acá el `ReadableStream` es dueño del socket: lo cierra al terminar, al
         // cancelarse o al abortarse la señal.
         cedido = true;
-        return new Response(cuerpo, { status, statusText, headers });
+        return respuestaFinal;
     } finally {
         // Cubre todos los caminos que no llegan a entregar el cuerpo (conexión, escritura,
         // cabeceras ilegibles): sin esto un fallo de parseo dejaría el socket abierto.
