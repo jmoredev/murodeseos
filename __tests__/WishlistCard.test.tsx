@@ -1,6 +1,7 @@
 import React from 'react';
 import fs from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { WishlistCard, GiftItem } from '@/components/WishlistCard';
@@ -18,30 +19,48 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 const CARD_SOURCE = fs.readFileSync(path.resolve(process.cwd(), 'components/WishlistCard.tsx'), 'utf8');
 
 /**
- * El `className` que sigue a un `testID` en el código, que es donde vive la regla de
- * estilo. Se delimita por el testID y el **cierre de su etiqueta**; antes era una
- * **ventana fija** (`slice(0, 200)`), y una ventana de N caracteres puede incluir o
- * excluir cosas por accidente si alguien reordena los atributos o alarga las clases.
+ * El `className` de la etiqueta JSX cuyo `testID` contiene `testID`, leído del **AST** y no
+ * del texto.
+ *
+ * Antes era un escáner de caracteres con una heurística —«el primer `>` que no forme parte
+ * de una flecha»— y una heurística así se rompe con un `>=`, con un `>` dentro de una cadena
+ * o con un `=>` anidado. En este repositorio **ya se parsea en tests**
+ * (`icon-chrome.test.ts`), así que aquí se hace igual: se busca el elemento y se lee su
+ * atributo, sin parsear a mano.
  */
 function claseDeLaEtiqueta(source: string, testID: string): string {
-    const desde = source.indexOf(testID);
-    if (desde === -1) throw new Error(`El testID ${testID} no está en el código`);
+    const file = ts.createSourceFile(
+        'WishlistCard.tsx',
+        source,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX
+    );
+    const encontradas: string[] = [];
 
-    const etiqueta = source.slice(desde, finDeLaEtiqueta(source, desde));
-    return etiqueta.match(/className=\{?[`"]([^`"]*)[`"]/)?.[1] ?? '';
-}
+    const visitar = (nodo: ts.Node): void => {
+        if (ts.isJsxSelfClosingElement(nodo) || ts.isJsxOpeningElement(nodo)) {
+            const atributos = nodo.attributes.properties;
+            const id = atributos.find(
+                (a): a is ts.JsxAttribute => ts.isJsxAttribute(a) && a.name.getText(file) === 'testID'
+            );
+            const clase = atributos.find(
+                (a): a is ts.JsxAttribute => ts.isJsxAttribute(a) && a.name.getText(file) === 'className'
+            );
 
-/**
- * Dónde cierra la etiqueta que empieza en `desde`: el primer `>` que **no** sea parte de
- * una flecha. Buscar solo el primer `>` parece lo mismo y no lo es — en el botón hay un
- * `onPress={() => {` antes del `className`, así que cortaba dentro del manejador y no
- * llegaba a leer la clase.
- */
-function finDeLaEtiqueta(source: string, desde: number): number {
-    for (let i = desde; i < source.length; i += 1) {
-        if (source[i] === '>' && source[i - 1] !== '=') return i;
+            if (id?.initializer && clase?.initializer && id.initializer.getText(file).includes(testID)) {
+                encontradas.push(clase.initializer.getText(file));
+            }
+        }
+        ts.forEachChild(nodo, visitar);
+    };
+
+    visitar(file);
+
+    if (encontradas.length === 0) {
+        throw new Error(`No hay ninguna etiqueta con un testID que contenga ${testID}`);
     }
-    return source.length;
+    return encontradas.join(' ');
 }
 
 describe('WishlistCard', () => {
@@ -221,5 +240,22 @@ describe('WishlistCard', () => {
         expect(boton).toHaveAccessibleName('Marcar como ya lo tengo');
         fireEvent.click(boton);
         expect(onDelete).toHaveBeenCalledWith(mockItem);
+    });
+
+    it('el enlace conserva el dominio entero en el nombre accesible aunque el visible se recorte', () => {
+        // El helper **promete** que el nombre accesible no se recorta, y eso no estaba probado:
+        // la prueba del helper solo miraba la cadena devuelta. Aquí se afirman las dos cosas a
+        // la vez, que es lo que quien usa un lector de pantalla necesita: lo visible lleva
+        // puntos suspensivos y lo que se **oye** lleva el dominio entero.
+        render(
+            <WishlistCard
+                item={{ ...mockItem, links: ['https://tienda-online-muy-larga.example.es/producto'] }}
+                isOwner={true}
+            />
+        );
+
+        const enlace = screen.getByLabelText(/Abrir enlace:/);
+        expect(enlace).toHaveTextContent('…');
+        expect(enlace).toHaveAccessibleName(/tienda-online-muy-larga\.example\.es/);
     });
 });

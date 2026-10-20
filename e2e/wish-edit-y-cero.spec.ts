@@ -79,8 +79,12 @@ test.describe('Editar un deseo y el cero en el modal', () => {
         expect(payload.price_numeric, 'el precio editado no viaja en el cuerpo').toBe(25.5);
         expect(payload.notes, 'las notas editadas no viajan en el cuerpo').toBe('después');
 
-        // Y queda pintado en la tarjeta, que es lo que ve el usuario.
-        await expect(page.getByText('25,50 €').first()).toBeVisible({ timeout: 10000 });
+        // Y queda pintado **en esa tarjeta**, acotado por su testID: sin acotar, valdría
+        // cualquier tarjeta de la lista que tuviera ese precio y la prueba podría pasar por
+        // accidente, que es justo lo que no se quiere.
+        await expect(page.getByTestId(`wishlist-card-${deseo.id}`).getByText('25,50 €')).toBeVisible({
+            timeout: 10000,
+        });
     });
 
     test('un precio de 0 se pinta 0,00 € en el modal, no «Sin precio»', async ({ page }) => {
