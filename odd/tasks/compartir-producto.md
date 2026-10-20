@@ -112,11 +112,11 @@ Lo que estos números fijan (no es opinión):
 | T1 | Convención de fixtures + script de captura de páginas reales + `manifest.json` de fixtures | S3, S7 | `5c1fcc3`, `d89de4d` |
 | T2 | Núcleo de extracción puro (normalizadores, JSON-LD, Open Graph, microdata, heurística) con tests offline | S2, S3 | `5c9fc65`, `8bfde52`, `beb0e0b`, `1e9b7c4`, `4d4df8a` |
 | T3 | Adaptadores por dominio, declarativos, con fixtures | S3, S8, S9 | `c54a666` |
-| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF** | S3 | `c0ae2e3` |
+| T4 | Capa de red: fetch con headers de navegador, topes de tamaño y tiempo, **guarda SSRF**, y el transporte propio que conecta a la IP validada | S3 | `c0ae2e3`, `a11aee1`, `9db03d8`, `0faf969`, `dcae468`, `74ea954`, `55e1651` |
 | T5a | Edge Function: endpoint autenticado (JWT de la plataforma) + extracción | S1, S2, S3 | `90ac8a8` |
 | T5b | Cuota por usuario y caché por URL normalizada, con su migración | S1, S3, S5 | `aa90e2f`, `c6ede3b` |
 | T6 | PWA: `share_target` + service worker que maneja el POST + ruta que prellena el formulario | S1, S2 | `aa776ae`, `4fd6be4` |
-| T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | — |
+| T9 | Pantalla previa `/wishlist/add` (pegar enlace · Aceptar · No tengo enlace) y la extracción al momento, sin guardar | S2 | `560a216` |
 | T7 | Persistencia: migración de `currency` (ISO 4217) y mostrarla en la UI | S6 | — |
 | T8 | Fase nativa: `expo-share-intent` para Android e iOS | S4 | — |
 
