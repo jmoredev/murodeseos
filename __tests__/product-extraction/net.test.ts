@@ -519,7 +519,7 @@ describe('safeFetch · resolvedor inyectable', () => {
             },
         });
 
-        expect(hosts).toEqual(['shop.example']);
+        expect(hosts).toEqual(['shop.example', 'shop.example']);
         expect(resultado.ok).toBe(true);
     });
 

@@ -134,3 +134,167 @@ describe('guarda SSRF: transición IPv6 con el motivo exacto', () => {
         expect(blockedIpReason('2002:7f00:1::')).toBe('blocked-ip-loopback');
     });
 });
+
+/**
+ * El otro hueco que encontró la auditoría adversarial de T4: **DNS rebinding (TOCTOU)**. La
+ * validación del resolvedor solo bendecía el *nombre*; el `fetch` de verdad volvía a resolverlo, así
+ * que un nombre controlado por el atacante podía responder público a la guarda y privado al socket
+ * y llegar a una dirección que nadie contrastó.
+ *
+ * La mitigación no puede cerrar la ventana (Deno no permite fijar la IP del socket desde `fetch`),
+ * pero sí estrecharla: se resuelve otra vez **justo antes** de pedir y se rechaza si la respuesta
+ * cambió. Lo que se prueba acá es que un cambio de respuesta (o una segunda resolución que tira)
+ * termina en rechazo, y que el `fetch` **no se llama**: si se llamara, la comprobación llegaría
+ * tarde para tener efecto.
+ */
+describe('guarda SSRF: DNS rebinding entre la validación y la conexión', () => {
+    /** Respuesta 200 mínima: el cuerpo es `null`, así que no hace falta simular lectura. */
+    const respuestaVacia = (): FetchResponseLike => ({
+        status: 200,
+        headers: { get: (nombre) => (nombre.toLowerCase() === 'content-type' ? 'text/html' : null) },
+        body: null,
+    });
+
+    it('no pide nada cuando la segunda resolución cambia a una dirección privada', async () => {
+        // El caso del ataque: la primera respuesta es pública y pasa la guarda; la segunda, la que
+        // se acerca al socket, es privada. `blocked-ip-private` es el motivo que ya existe para una
+        // dirección privada, así que se reutiliza el nombre en vez de inventar uno nuevo.
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return resoluciones === 1 ? ['93.184.216.34'] : ['10.0.0.7'];
+        };
+
+        const resultado = await safeFetch('https://rebind.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual([]);
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'blocked-ip-private',
+            finalUrl: 'https://rebind.example/producto',
+            status: null,
+        });
+        // Una sola resolución extra, no un bucle: validar + reconfirmar.
+        expect(resoluciones).toBe(2);
+    });
+
+    it('no pide nada cuando la segunda resolución cambia a otra dirección pública', async () => {
+        // Ninguna de las dos direcciones está prohibida, así que ninguna regla `blocked-ip-*` nombra
+        // lo que pasó: el problema es que el nombre **cambió de opinión** entre la guarda y la
+        // conexión, y el vocabulario necesita un motivo para eso (`dns-changed`).
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return resoluciones === 1 ? ['93.184.216.34'] : ['93.184.216.35'];
+        };
+
+        const resultado = await safeFetch('https://rebind.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual([]);
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'dns-changed',
+            finalUrl: 'https://rebind.example/producto',
+            status: null,
+        });
+    });
+
+    it('no pide nada si la segunda resolución tira', async () => {
+        // Un resolvedor que falla en la reconfirmación no es permiso para pedir: sin segunda
+        // respuesta no hay nada que comparar, así que se falla cerrado con el mismo `dns-failed`
+        // que ya usa la primera resolución.
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            if (resoluciones === 1) return ['93.184.216.34'];
+            throw new Error('DNS inestable');
+        };
+
+        const resultado = await safeFetch('https://shop.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual([]);
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'dns-failed',
+            finalUrl: 'https://shop.example/producto',
+            status: null,
+        });
+        expect(resoluciones).toBe(2);
+    });
+
+    it('pide una sola vez cuando las dos resoluciones coinciden', async () => {
+        // La preservación: la reconfirmación no puede romper el caso normal de una tienda que
+        // resuelve estable. Se afirma el resultado entero, no solo `ok`, para fijar el contrato.
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return ['93.184.216.34'];
+        };
+
+        const resultado = await safeFetch('https://shop.example/producto', {
+            fetchImpl: fetchFalso,
+            resolveHost,
+        });
+
+        expect(pedidas).toEqual(['https://shop.example/producto']);
+        expect(resultado).toEqual({
+            ok: true,
+            status: 200,
+            finalUrl: 'https://shop.example/producto',
+            contentType: 'text/html',
+            body: '',
+            truncated: false,
+        });
+        expect(resoluciones).toBe(2);
+    });
+
+    it('no reconfirma un literal IP, que no tiene nombre que rebindear', async () => {
+        // La reconfirmación es una consulta por nombre: un literal IP no se resuelve ni la primera
+        // vez, así que tampoco la segunda. Fija también que la mitigación no duplique la guarda.
+        const pedidas: string[] = [];
+        const fetchFalso: FetchLike = async (url) => {
+            pedidas.push(url);
+            return respuestaVacia();
+        };
+        let resoluciones = 0;
+        const resolveHost = async (): Promise<string[]> => {
+            resoluciones += 1;
+            return ['10.0.0.7'];
+        };
+
+        const resultado = await safeFetch('http://8.8.8.8/producto', { fetchImpl: fetchFalso, resolveHost });
+
+        expect(pedidas).toEqual(['http://8.8.8.8/producto']);
+        expect(resultado.ok).toBe(true);
+        expect(resoluciones).toBe(0);
+    });
+});

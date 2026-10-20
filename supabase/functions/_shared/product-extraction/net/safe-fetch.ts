@@ -20,6 +20,16 @@
  * asíncrona que este módulo no hace. En T5 el runtime inyecta `resolveHost` (con
  * `Deno.resolveDns`) y entonces **cada** dirección resuelta se contrasta contra
  * `blockedIpReason`. Sin ese resolvedor, esta guarda es incompleta frente a DNS rebinding.
+ *
+ * **Residual conocido del DNS, con o sin `resolveHost`: DNS rebinding entre la validación y la
+ * conexión.** El `fetch` de abajo recibe la URL, no la IP: vuelve a resolver el nombre por su
+ * cuenta. Un nombre controlado por el atacante puede responder público a `resolveHost` y privado
+ * al socket, y llegar así a una dirección que nadie contrastó. La mitigación de acá es resolver
+ * **otra vez** justo antes de pedir cada salto y negarse si la respuesta cambió, lo que estrecha
+ * la ventana al tramo entre esa segunda resolución y el socket —no la cierra—. Cerrarla del todo
+ * necesita un cliente HTTP propio sobre `Deno.connect` con la IP fijada y el SNI explícito, que
+ * es otra unidad de trabajo: mientras el transporte sea `fetch`, este TOCTOU sigue abierto, más
+ * angosto.
  */
 
 import { buildBrowserHeaders } from './headers.ts';
@@ -29,6 +39,7 @@ import { blockedIpReason, guardUrl, isIpLiteral, type GuardReason } from './url-
 export type SafeFetchReason =
     | GuardReason
     | 'dns-failed'
+    | 'dns-changed'
     | 'redirect-without-location'
     | 'redirect-invalid-location'
     | 'too-many-redirects'
@@ -72,6 +83,10 @@ export type SafeFetchOptions = {
     /**
      * Resolvedor inyectable. En T5 será `Deno.resolveDns`. **Sin él no se cubre el SSRF por
      * DNS**: un nombre público que resuelve a una dirección privada pasa la guarda de texto.
+     *
+     * Con él se resuelve **dos veces por salto**: la primera para validar cada dirección, la
+     * segunda justo antes de pedir, para negarse si el nombre cambió de opinión (DNS rebinding).
+     * Es una mitigación: el `fetch` vuelve a resolver por su cuenta y no acepta una IP fijada.
      */
     resolveHost?: ResolveHost;
     /** Saltos permitidos. Por defecto `DEFAULT_MAX_REDIRECTS`. */
@@ -160,6 +175,34 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
                         const bloqueo = blockedIpReason(direccion);
                         if (bloqueo) return fallo(bloqueo, finalUrl, null);
                     }
+
+                    // Mitigación de DNS rebinding (TOCTOU), y el residual que queda: `fetch`
+                    // recibe la URL y resuelve el nombre **otra vez**; no acepta una IP fijada ni
+                    // un dialer. Se resuelve de nuevo acá, una sola vez, y se compara con el
+                    // conjunto ya validado: si cambió, se corta sin pedir. Esto no verifica el DNS
+                    // contra la conexión, solo estrecha la ventana hasta el tramo entre esta
+                    // segunda resolución y el socket. Cerrarla necesita un cliente HTTP propio
+                    // sobre `Deno.connect` con IP fijada y SNI, que es otra unidad de trabajo.
+                    let reconfirmadas: string[];
+                    try {
+                        reconfirmadas = await conAborto(options.resolveHost(host), controller.signal);
+                    } catch {
+                        // Sin segunda respuesta no hay nada que comparar: se falla cerrado, porque
+                        // un resolvedor que revienta no es permiso para pedir.
+                        return fallo(timedOut ? 'timeout' : 'dns-failed', finalUrl, null);
+                    }
+
+                    // Si la nueva respuesta trae una dirección prohibida, el motivo que ya existe
+                    // para ese rango es el que nombra lo que pasó.
+                    for (const direccion of reconfirmadas) {
+                        const bloqueo = blockedIpReason(direccion);
+                        if (bloqueo) return fallo(bloqueo, finalUrl, null);
+                    }
+                    // Cambiar a **otra dirección pública** tampoco se pide: ninguna regla
+                    // `blocked-ip-*` lo nombra, así que el motivo es el cambio en sí.
+                    if (!mismoConjuntoDeDirecciones(direcciones, reconfirmadas)) {
+                        return fallo('dns-changed', finalUrl, null);
+                    }
                 }
             }
 
@@ -218,6 +261,21 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
 
 function fallo(reason: SafeFetchReason, finalUrl: string | null, status: number | null): SafeFetchFailure {
     return { ok: false, reason, finalUrl, status };
+}
+
+/**
+ * Compara dos respuestas del resolvedor como **conjuntos**: el orden y las repeticiones no
+ * significan nada, lo que importa es el conjunto de direcciones que el nombre contestó. La
+ * comparación es textual a propósito: dos formas distintas de escribir la misma IPv6 se cuentan
+ * como cambio, y ese falso positivo empuja a rechazar (fallar cerrado), nunca a pedir.
+ */
+function mismoConjuntoDeDirecciones(una: readonly string[], otra: readonly string[]): boolean {
+    const normalizar = (direcciones: readonly string[]): string[] =>
+        [...new Set(direcciones.map((direccion) => direccion.trim().toLowerCase()))].sort();
+
+    const a = normalizar(una);
+    const b = normalizar(otra);
+    return a.length === b.length && a.every((direccion, indice) => direccion === b[indice]);
 }
 
 /** Lee el cuerpo entero hasta el tope; al pasarlo, corta y marca `truncated`. */
