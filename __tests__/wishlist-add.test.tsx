@@ -140,7 +140,7 @@ describe('pantalla del enlace del deseo', () => {
     it('lo que la extracción no leyó queda como campo vacío en el borrador, no ausente', async () => {
         requestProductDraftMock.mockResolvedValue({
             status: 'ok',
-            draft: { title: null, priceText: null, imageUrl: null },
+            draft: { title: null, priceText: null, imageUrl: null, currency: null },
         });
 
         render(<WishlistAddPage />);

@@ -41,6 +41,8 @@ describe('cliente de extracción', () => {
                 // misma que usa la tarjeta: una sola lectura de precio en toda la app.
                 priceText: '89,99',
                 imageUrl: 'https://m.media-amazon.com/images/I/71x.jpg',
+                // La moneda viene dentro de `price`: es lo que T7 guarda y pinta el símbolo.
+                currency: 'EUR',
                 // `notes` no viene: las notas son del usuario y la página no las rellena.
             },
         });
@@ -65,7 +67,7 @@ describe('cliente de extracción', () => {
 
         expect(result).toEqual({
             status: 'ok',
-            draft: { title: null, priceText: null, imageUrl: null },
+            draft: { title: null, priceText: null, imageUrl: null, currency: null },
         });
     });
 
@@ -114,5 +116,46 @@ describe('cliente de extracción', () => {
             reason: 'no-url',
         });
         expect(invoke).not.toHaveBeenCalled();
+    });
+});
+
+describe('cliente de extracción · la moneda', () => {
+    const conPrecio = (price: unknown) => vi.fn(async () => ({ ok: true, draft: { ...RESPUESTA_OK.draft, price } }));
+
+    it('no adivina la moneda cuando la página no la declara', async () => {
+        // Un `$` suelto es USD, ARS o MXN: la extracción lo marca `ambiguous` y deja la moneda en
+        // null, y el borrador no la inventa.
+        const result = await requestProductDraft(
+            URL_PRODUCTO,
+            conPrecio({ amount: 10, currency: null, ambiguous: true, raw: '$10', source: 'json-ld' })
+        );
+
+        expect(result).toEqual({
+            status: 'ok',
+            draft: {
+                title: 'Producto de prueba',
+                priceText: '10,00',
+                imageUrl: 'https://m.media-amazon.com/images/I/71x.jpg',
+                currency: null,
+            },
+        });
+    });
+
+    it('descarta una moneda que no tiene forma de ISO 4217', async () => {
+        const result = await requestProductDraft(
+            URL_PRODUCTO,
+            conPrecio({ amount: 10, currency: 'euros', ambiguous: false, raw: '10 euros', source: 'text' })
+        );
+
+        expect(result).toMatchObject({ status: 'ok', draft: { currency: null } });
+    });
+
+    it('normaliza la moneda que llega en minúsculas', async () => {
+        const result = await requestProductDraft(
+            URL_PRODUCTO,
+            conPrecio({ amount: 10, currency: 'usd', ambiguous: false, raw: 'US$ 10', source: 'json-ld' })
+        );
+
+        expect(result).toMatchObject({ status: 'ok', draft: { currency: 'USD' } });
     });
 });
