@@ -28,9 +28,9 @@ export const updates: AppUpdate[] = [
         changes: [
             '🔗 Comparte un producto desde el móvil: al compartir un enlace desde el navegador o desde una app de compras, el deseo se abre con el título, la foto, el precio y la moneda ya leídos de la página',
             '💶 El precio guarda su moneda: cada deseo recuerda en qué moneda está (EUR, USD…) y se muestra con el símbolo que corresponde, elegible en el formulario',
-            '🎂 Cumpleaños y onomástica: carga tus fechas en el perfil y la app te avisará, con la antelación que elijas para cada grupo',
+            '🎂 Cumpleaños y onomástica: carga tus fechas en el perfil y la app te avisa, con la antelación que elijas para cada grupo',
             '🔔 Avisos a tu medida: cada grupo tiene sus propias preferencias de notificaciones',
-            '🎁 Reservas privadas: cuando alguien reserva un deseo recibirás el aviso, y el deseo reservado dejará de figurar como disponible',
+            '🎁 Reservas privadas: cuando alguien reserva un deseo te llega el aviso, y el deseo reservado deja de figurar como disponible',
             '🔐 Recupera tu contraseña y cierra sesión desde el perfil',
             '📲 Instala la app: Muro de Deseos se instala en el móvil como una app y ya no arranca en negro',
             '🔗 Enlaces en tus deseos: campo opcional y enlaces en los que se puede hacer clic',

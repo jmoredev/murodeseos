@@ -57,3 +57,23 @@
   `\r`, así que `/\/\/.*$/` **no borra** un comentario al final de una línea CRLF. El guardián acusaba
   comentarios como copy en todas las líneas con `//` al final. Arreglo: normalizar CRLF antes de
   analizar y usar `[^\n]` en el patrón.
+
+- **L4 (2026-10-21) — la revisión nativa encontró que el guardián era decorativo, y un cambio de
+  significado que yo metí sin pedirlo.** Linaje `review-852aa4e90dc757bc` (tier medium, lentes
+  `readability` y `reliability`). El refutador dictó `correction_required` con **dos CRITICAL, los dos
+  correctos**:
+  1. **`R3-001` — `\b` no existe después de una letra acentuada.** En JavaScript `\b` es ASCII:
+     `/\bcompartí\b/` da **`false`** sobre «🔗 Compartí un producto desde el móvil», porque `í` y el
+     espacio son los dos «no palabra» para el motor. Con eso, **casi toda la lista nunca matcheaba** y
+     reintroducir el voseo histórico habría dejado el test en verde. Faltaba además `instalá`.
+     Arreglo: lookarounds Unicode (`(?<!\p{L})…(?!\p{L})` con flags `iu`), formas añadidas
+     (`instalá`, `avisá`, `mandá`), y un **meta‑test** que exige que el guardián detecte las frases que
+     ya se colaron una vez, más otro que comprueba que **no** marca `compartía`, `instalación` ni
+     `plataforma`. Demostrado con las dos expresiones sobre el mismo texto: `false` la vieja, `true` la
+     nueva.
+  2. **`R3-002` — cambié el tiempo verbal sin que nadie lo pidiera.** «la app te avisa» pasó a «te
+     avisará», «te llega el aviso» a «recibirás el aviso». El pedido era quitar el voseo, no prometer a
+     futuro: restaurado el presente.
+  **La ruta de corrección del proveedor rechazó su propio binding por cuarta vez** (tercer linaje
+  distinto), así que la corrección se aplicó y verificó fuera de esa ruta: **701 tests + 1 todo**,
+  `tsc` y `eslint` en 0. Queda como deuda declarada, igual que en las fichas anteriores.
