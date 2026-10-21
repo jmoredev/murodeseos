@@ -32,7 +32,7 @@ describe('scrapeWithFirecrawl', () => {
             fetchImpl: fetchFalso,
         });
 
-        expect(resultado).toEqual({ ok: true, html: '<html>renderizado</html>' });
+        expect(resultado).toEqual({ ok: true, html: '<html>renderizado</html>', finalUrl: null });
         // Mismo motivo que en las pruebas del presupuesto: la asignación vive en un callback.
         const pedido = capturado as unknown as {
             url: string;

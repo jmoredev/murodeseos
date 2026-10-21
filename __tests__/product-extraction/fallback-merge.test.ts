@@ -44,13 +44,29 @@ describe('mergeFallbackDraft', () => {
         expect(mergeFallbackDraft(null, CON_PRECIO)).toEqual(CON_PRECIO);
     });
 
-    it('llena lo que faltaba sin tocar lo que el camino propio ya había leído', () => {
+    it('toma del respaldo lo que trae y del directo lo que el respaldo no trae', () => {
         const fusionado = mergeFallbackDraft(CON_TITULO, CON_PRECIO);
 
-        expect(fusionado.title?.value).toBe('Consola');
+        // El respaldo leyó la página renderizada: su título es el bueno.
+        expect(fusionado.title?.value).toBe('Consola PS5');
+        // La tienda la declaraba solo el camino propio, así que se conserva.
         expect(fusionado.siteName?.value).toBe('Tienda X');
         expect(fusionado.price?.amount).toBe(79.99);
         expect(fusionado.imageUrl?.value).toBe('https://shop.example/foto.jpg');
+    });
+
+    it('no deja pasar el título de una página de bloqueo si el respaldo trae el real', () => {
+        // Es el caso medido en el e2e del 2026-10-21: sin esto, el deseo quedaba titulado
+        // «Just a moment...» con el precio y la imagen correctos.
+        const challenge = draft({
+            title: { value: 'Just a moment...', source: 'heuristic' },
+            notes: [NOTA_PRECIO, NOTA_IMAGEN],
+        });
+
+        const fusionado = mergeFallbackDraft(challenge, CON_PRECIO);
+
+        expect(fusionado.title?.value).toBe('Consola PS5');
+        expect(fusionado.title?.source).toBe('json-ld');
     });
 
     it('no deja notas que el respaldo ya resolvió', () => {

@@ -40,7 +40,18 @@ export type FirecrawlFailure =
     | 'fallback-unavailable'
     | 'fallback-empty';
 
-export type FirecrawlResult = { ok: true; html: string } | { ok: false; reason: FirecrawlFailure };
+export type FirecrawlResult =
+    | {
+          ok: true;
+          html: string;
+          /**
+           * URL del documento que el proveedor realmente leyó (`metadata.url`), o `null` si no la
+           * publica o no es http(s). Es la base para resolver las URLs relativas del HTML: con una
+           * redirección de por medio, usar la URL pedida produce enlaces e imágenes rotos.
+           */
+          finalUrl: string | null;
+      }
+    | { ok: false; reason: FirecrawlFailure };
 
 /**
  * Fallos que un scraper externo **sí** puede resolver: el sitio puso un muro. Los demás —un nombre
@@ -123,7 +134,24 @@ export function readFirecrawlResult(status: number, body: unknown): FirecrawlRes
         return { ok: false, reason: 'fallback-empty' };
     }
 
-    return { ok: true, html };
+    return { ok: true, html, finalUrl: urlDelDocumento(datos?.metadata) };
+}
+
+/**
+ * La URL que el proveedor declara haber leído. `metadata.url` es la del documento final; si falta o
+ * no es http(s) —un `ftp:`, un número, basura— se devuelve `null` y el llamador usa la suya.
+ */
+function urlDelDocumento(metadata: unknown): string | null {
+    const registro = asRecord(metadata);
+    const candidata = registro?.url ?? registro?.sourceURL;
+    if (typeof candidata !== 'string') return null;
+
+    try {
+        const url = new URL(candidata.trim());
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+    } catch {
+        return null;
+    }
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -142,11 +170,13 @@ export function fallbackNote(reason: FirecrawlFailure): string {
 /**
  * Fusiona el borrador del camino propio con el del respaldo **campo por campo**, sin perder nada.
  *
- * Es la regla que el refutador de `review-9546ed1ed63e9f92` levantó como BLOCKER cuando faltaba:
- * reemplazar el borrador directo por el del respaldo podía dejar al usuario con menos datos —y
- * cachear esa pérdida—, porque una página leída a medias (título, descripción, tienda) que dispara
- * el respaldo por no tener precio ni imagen podía volver peor. Acá el directo **siempre** gana donde
- * tiene algo; el respaldo solo rellena huecos.
+ * La regla no es «gana el primero que trae algo»: **gana el respaldo donde declara un valor**, y el
+ * directo cubre los huecos. El respaldo leyó la página renderizada, así que cuando los dos traen un
+ * título el suyo es el bueno; cuando no trae nada de un campo, el valor del directo se conserva.
+ *
+ * Esa segunda mitad es la que exige el refutador de `review-9546ed1ed63e9f92`: reemplazar el
+ * borrador directo **entero** dejaba al usuario con menos datos y cacheaba la pérdida. Acá nada se
+ * pierde, porque cada campo vacío del respaldo se toma del directo.
  *
  * Las notas se recalculan con lo mismo: una nota que decía «no se encontró el precio» deja de ser
  * cierta si el respaldo lo trajo, y una nota vieja no se guarda como si fuera historia.
@@ -154,13 +184,18 @@ export function fallbackNote(reason: FirecrawlFailure): string {
 export function mergeFallbackDraft(direct: ProductDraft | null, fallback: ProductDraft): ProductDraft {
     if (direct === null) return fallback;
 
+    // **El respaldo gana donde trae algo**, no el directo: el respaldo leyó la página ya
+    // renderizada, así que es el testigo mejor informado. Medido en el e2e del 2026-10-21: con el
+    // orden inverso, una página de challenge dejaba su `<title>` («Just a moment...») en el deseo
+    // final mientras el respaldo aportaba precio e imagen. El directo sigue cubriendo los huecos,
+    // así que no se pierde nada.
     const fusionado: ProductDraft = {
         url: direct.url,
-        title: direct.title ?? fallback.title,
-        price: direct.price ?? fallback.price,
-        imageUrl: direct.imageUrl ?? fallback.imageUrl,
-        siteName: direct.siteName ?? fallback.siteName,
-        description: direct.description ?? fallback.description,
+        title: fallback.title ?? direct.title,
+        price: fallback.price ?? direct.price,
+        imageUrl: fallback.imageUrl ?? direct.imageUrl,
+        siteName: fallback.siteName ?? direct.siteName,
+        description: fallback.description ?? direct.description,
         notes: direct.notes,
     };
 

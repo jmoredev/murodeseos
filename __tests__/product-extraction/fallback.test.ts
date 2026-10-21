@@ -95,11 +95,41 @@ describe('readFirecrawlResult · qué se hace con la respuesta', () => {
         expect(readFirecrawlResult(200, { success: true, data: { rawHtml: '<html>ok</html>' } })).toEqual({
             ok: true,
             html: '<html>ok</html>',
+            finalUrl: null,
         });
         expect(readFirecrawlResult(200, { success: true, data: { html: '<html>ok</html>' } })).toEqual({
             ok: true,
             html: '<html>ok</html>',
+            finalUrl: null,
         });
+    });
+
+    it('devuelve la URL que el proveedor realmente leyó, para resolver las relativas', () => {
+        // Sin esto, una página que redirige resolvía `img/x.jpg` contra la URL vieja y la imagen
+        // salía rota y cacheada. Lo levantó el refutador del linaje `review-bc53b8330438d198`.
+        const conUrl = readFirecrawlResult(200, {
+            success: true,
+            data: {
+                rawHtml: '<html>ok</html>',
+                metadata: { url: 'https://shop.example/es/p/123', sourceURL: 'https://shop.example/p/123' },
+            },
+        });
+
+        expect(conUrl).toEqual({ ok: true, html: '<html>ok</html>', finalUrl: 'https://shop.example/es/p/123' });
+    });
+
+    it('descarta una URL del proveedor que no sirve como base', () => {
+        for (const metadata of [{}, { url: 'no-es-una-url' }, { url: 'ftp://shop.example/x' }, { url: 42 }]) {
+            const resultado = readFirecrawlResult(200, {
+                success: true,
+                data: { rawHtml: '<html>ok</html>', metadata },
+            });
+            expect(resultado, JSON.stringify(metadata)).toEqual({
+                ok: true,
+                html: '<html>ok</html>',
+                finalUrl: null,
+            });
+        }
     });
 
     it('nombra cada negativa del proveedor por separado', () => {

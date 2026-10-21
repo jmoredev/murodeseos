@@ -166,7 +166,9 @@ async function intentarRespaldo(params: {
     conf: Configuracion;
     disparo: FallbackTrigger;
     ahoraMs: number;
-}): Promise<{ usado: true; html: string } | { usado: false; nota: string | null }> {
+}): Promise<
+    { usado: true; html: string; finalUrl: string | null } | { usado: false; nota: string | null }
+> {
     const { url, userId, conf, ahoraMs } = params;
 
     if (conf.fallbackLimite <= 0 || conf.firecrawlKey === '') return { usado: false, nota: null };
@@ -189,7 +191,7 @@ async function intentarRespaldo(params: {
     const scrape = await scrapeWithFirecrawl({ url, apiKey: conf.firecrawlKey });
     if (!scrape.ok) return { usado: false, nota: fallbackNote(scrape.reason) };
 
-    return { usado: true, html: scrape.html };
+    return { usado: true, html: scrape.html, finalUrl: scrape.finalUrl };
 }
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -313,17 +315,17 @@ Deno.serve(async (request: Request): Promise<Response> => {
             // Se corre **nuestro** extractor sobre el DOM ya renderizado (mismo baremo, un crédito) y
             // se **fusiona** con lo que el camino propio ya había leído: el respaldo rellena huecos,
             // nunca reemplaza. Ver `mergeFallbackDraft` y S8 de la ficha.
-            const draft = mergeFallbackDraft(
-                draftDirecto,
-                extractProduct({ html: respaldo.html, url: guarda.url })
-            );
+            // La base para las URLs relativas es la que el proveedor leyó de verdad: una página que
+            // redirige resolvía `img/x.jpg` contra la URL pedida y la imagen salía rota.
+            const base = respaldo.finalUrl ?? guarda.url;
+            const draft = mergeFallbackDraft(draftDirecto, extractProduct({ html: respaldo.html, url: base }));
             if (clave && cacheActiva) {
                 await guardarEnCache({
                     supabaseUrl: conf.supabaseUrl,
                     serviceRoleKey: conf.serviceRoleKey,
                     cacheKey: clave,
                     draft,
-                    finalUrl: guarda.url,
+                    finalUrl: base,
                     ttlSegundos: conf.ttlSegundos,
                     ahoraMs: Date.now(),
                 });

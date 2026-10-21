@@ -138,3 +138,19 @@
   llega igual por el otro disparador —una página sin precio ni imagen es `empty-draft`—, así que el
   respaldo sigue saltando donde debe. Cuando #71 entre, el disparador por motivo empieza a nombrar el
   caso en vez de inferirlo.
+
+- **L8 (2026-10-21) — el e2e del runtime encontró un segundo defecto, y era la mitad que faltaba del primero.**
+  Con el arreglo de L7 andando, la llamada real devolvió el peor resultado posible a la vista:
+  **`via:firecrawl`, precio 79.99 EUR, imagen correcta y `title: "Just a moment..."`**. La fusión de
+  `R3-FALLBACK-DRAFT-LOSS` decía «gana el directo donde tiene algo», y el directo *tenía* el título del
+  challenge: en esta rama un 403 no falla el transporte —eso lo agrega `fix/muro-anti-bot`, todavía sin
+  fusionar—, así que `safeFetch` devuelve `ok:true` con la página del muro y el extractor le saca el
+  `<title>`.
+  **La regla correcta es la inversa:** el respaldo leyó la página **renderizada**, así que gana donde
+  declara un valor; el directo cubre los huecos. Nada se pierde —cada campo vacío del respaldo se toma
+  del directo— y desaparece la basura.
+  **Medido después del cambio**, misma petición con caché purgada: `ok:true`, `via:firecrawl`,
+  **`title: "GRAND THEFT AUTO VI"` (`json-ld`)**, 79.99 EUR, imagen, cero notas.
+  Coste de verificación: **3 créditos** (uno por corrida real) y **tres intentos**, dos de ellos perdidos
+  por el contenedor del runtime (`marked for removal`, después inexistente: hubo que volver a
+  `supabase start`). No fue el código: `serve` no recrea el contenedor del edge runtime solo.
