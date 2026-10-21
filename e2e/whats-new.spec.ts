@@ -32,7 +32,13 @@ test.describe('Novedades (What\'s New Modal)', () => {
         const modal = page.getByRole('dialog');
         await expect(modal).toBeVisible();
 
-        await page.getByRole('button', { name: '¡Entendido!' }).click();
+        // El botón tiene que estar **a la vista**, no solo existir: con ocho novedades la tarjeta
+        // era más alta que una pantalla de 720 px, el pie quedaba debajo del viewport y el modal
+        // no se podía cerrar con el dedo (lo destapó el gate de E2E el 2026-10-21).
+        const botonCerrar = page.getByRole('button', { name: '¡Entendido!' });
+        await expect(botonCerrar).toBeInViewport();
+
+        await botonCerrar.click();
         await expect(modal).not.toBeVisible();
 
         // Verificar localStorage: se guarda el `id`, no una versión

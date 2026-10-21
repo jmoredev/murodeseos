@@ -92,3 +92,25 @@
   **Dos subagentes fallaron** (`gentle-ai-explore` y `gentle-ai-worker`, ambos «assistant reported an
   error») y el trabajo se hizo inline: se declara como hueco de proceso, no se reintentó.
   **Lo que sigue sin verificar:** el e2e de Playwright actualizado — lo corre el gate de CI en el PR.
+
+- **L6 (2026-10-21) — el gate de E2E encontró lo que yo no vi: con ocho novedades el modal no se
+  podía cerrar.** El PR #72 salió con `E2E gate / Chromium suite` en **rojo**, y el test que falló
+  es justamente el que yo había escrito: `debería cerrarse y guardar el id` agotó los 30 s de
+  `click` tres veces. **La captura del artefacto lo explicó sin interpretación**: la tarjeta crecía
+  con el contenido y superaba los 720 px del viewport; el overlay es `fixed inset-0` **sin
+  scroll**, así que el pie con «¡Entendido!» quedaba por debajo del borde inferior. Modal visible,
+  botón inalcanzable.
+  **No lo introdujo el cambio de gate: lo destapó el contenido.** Con las cuatro viñetas del 1.4.0
+  entraba; con ocho, no. Y es peor de lo que dice un test rojo: en un teléfono **no hay tecla
+  Escape**, así que el modal era una trampa para un dedo.
+  Arreglo en `components/WhatsNewModal.tsx`: `max-h-full` + `flex flex-col` en la tarjeta,
+  `shrink-0` en cabecera y pie, `min-h-0 overflow-y-auto` en el cuerpo — cabecera y botón siempre a
+  la vista, la lista scrollea.
+  **Y la prueba que faltaba:** el spec ahora exige `toBeInViewport()` sobre el botón antes de
+  hacer clic, así la regla queda nombrada («cerrar tiene que estar a la vista») en vez de depender
+  de que un `click` reviente por timeout. Verificado **localmente** con el stack levantado:
+  `playwright test e2e/whats-new.spec.ts --project=chromium` → **5 passed (1,3 m)** incluido el
+  setup de auth, más 9 tests unitarios, `tsc` y `eslint` en 0.
+  **Lección de método:** la vez anterior declaré que el e2e «lo corre CI» y eso me costó un rojo.
+  Un stack local tarda cuatro minutos en levantarse; confiar en el gate cuesta nueve y una
+  corrección. La próxima vez que toque un e2e, se levanta el stack.
