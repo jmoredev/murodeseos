@@ -34,18 +34,24 @@ const PANTALLAS: { nombre: string; preparar: (page: import('@playwright/test').P
         },
     },
     {
-        nombre: 'formulario-deseo',
+        nombre: 'alta-deseo',
         preparar: async (page) => {
-            const nuevo = page.getByText('Nuevo deseo', { exact: false }).first();
-            if (await nuevo.isVisible().catch(() => false)) await nuevo.click();
-            await page.waitForTimeout(400);
+            // En escritorio el acceso es un «+» con `aria-label`, no un texto: buscar el texto dejaba
+            // esta pantalla sin abrir y el informe atribuía a «formulario» lo que medía en la lista.
+            await page.getByLabel('Nuevo deseo').first().click();
+            // La firma de que llegamos: el título de la pantalla de alta, que es texto visible.
+            await page
+                .getByText('Nuevo deseo', { exact: false })
+                .first()
+                .waitFor({ state: 'visible', timeout: 15000 });
         },
     },
     {
         nombre: 'grupos',
         preparar: async (page) => {
             const tab = page.getByRole('tab', { name: /grupos/i }).first();
-            if (await tab.isVisible().catch(() => false)) await tab.click();
+            await tab.waitFor({ state: 'visible', timeout: 10000 });
+            await tab.click();
             await page.waitForTimeout(400);
         },
     },
@@ -53,15 +59,18 @@ const PANTALLAS: { nombre: string; preparar: (page: import('@playwright/test').P
         nombre: 'perfil',
         preparar: async (page) => {
             const tab = page.getByRole('tab', { name: /perfil/i }).first();
-            if (await tab.isVisible().catch(() => false)) await tab.click();
+            await tab.waitFor({ state: 'visible', timeout: 10000 });
+            await tab.click();
             await page.waitForTimeout(400);
         },
     },
 ];
 
 /** Se ejecuta en el navegador: devuelve la lista de hallazgos de la página actual. */
-function auditarEnPagina(): Hallazgo[] {
+function auditarEnPagina(): { muestra: Hallazgo[]; conteos: Record<string, number> } {
     const hallazgos: { tipo: string; detalle: string }[] = [];
+    // La **cuenta** es completa y la **lista** es una muestra: recortar la cuenta haría que el
+    // informe mintiera, que es peor que no tener informe. Lo levantó la revisión nativa.
     const MAX_POR_TIPO = 8;
     const contar: Record<string, number> = {};
     const anotar = (tipo: string, detalle: string) => {
@@ -216,25 +225,33 @@ function auditarEnPagina(): Hallazgo[] {
         }
     }
 
-    return hallazgos;
+    return { muestra: hallazgos, conteos: contar };
 }
 
 test.describe('auditoría de interfaz', () => {
     test('mide contraste, tamaño, recortes y anidamiento en las pantallas principales', async ({ page }, info) => {
         const informe: Record<string, Hallazgo[]> = {};
+        const conteos: Record<string, Record<string, number>> = {};
 
         for (const pantalla of PANTALLAS) {
             await page.goto('/');
             await expect(page.getByText(/Muro de deseos/i).first()).toBeVisible({ timeout: 20000 });
             await pantalla.preparar(page);
 
-            const hallazgos = (await page.evaluate(auditarEnPagina)) as Hallazgo[];
-            informe[pantalla.nombre] = hallazgos;
+            const resultado = (await page.evaluate(auditarEnPagina)) as {
+                muestra: Hallazgo[];
+                conteos: Record<string, number>;
+            };
+            informe[pantalla.nombre] = resultado.muestra;
+            conteos[pantalla.nombre] = resultado.conteos;
         }
 
-        const total = Object.values(informe).reduce((suma, lista) => suma + lista.length, 0);
         const porTipo = (tipo: string) =>
-            Object.values(informe).reduce((suma, lista) => suma + lista.filter((h) => h.tipo === tipo).length, 0);
+            Object.values(conteos).reduce((suma, c) => suma + (c[tipo] ?? 0), 0);
+        const total = Object.values(conteos).reduce(
+            (suma, c) => suma + Object.values(c).reduce((a, b) => a + b, 0),
+            0
+        );
 
         const resumen = [
             '# Auditoría de interfaz',
@@ -268,9 +285,11 @@ test.describe('auditoría de interfaz', () => {
         // **Una sola regla es puerta**: los objetivos táctiles. Las demás se informan y se deciden
         // mirándolas —un contraste no medible por gradiente no es un defecto—, pero un control de
         // 36 px en una app que se usa con el pulgar sí, y por eso no puede volver.
-        const tactiles = Object.entries(informe).flatMap(([pantalla, lista]) =>
-            lista.filter((h) => h.tipo === 'objetivo-tactil').map((h) => `${pantalla} · ${h.detalle}`)
-        );
+        // La puerta usa los **conteos**, no la muestra: si no, más de ocho objetivos táctiles en una
+        // pantalla pasarían desapercibidos.
+        const tactiles = Object.entries(conteos)
+            .filter(([, c]) => (c['objetivo-tactil'] ?? 0) > 0)
+            .map(([pantalla, c]) => `${pantalla}: ${c['objetivo-tactil']} por debajo de 44 px`);
 
         expect(tactiles, `Objetivos táctiles por debajo de 44 px: ${tactiles.join(' | ')}`).toEqual([]);
 

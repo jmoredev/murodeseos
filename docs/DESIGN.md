@@ -97,7 +97,7 @@ El resto del documento es la **dirección** del sistema. Esta sección es lo **m
 node_modules/.bin/playwright test e2e/audit-ui.spec.ts --project=chromium
 ```
 
-Escribe `test-results/audit-ui.md` y no falla por lo que encuentra: mide. Recorre deseos, formulario, grupos y perfil con el usuario E2E ya autenticado.
+Escribe `test-results/audit-ui.md` y no falla por lo que encuentra: mide. Recorre deseos, alta de deseo, grupos y perfil con el usuario E2E ya autenticado.
 
 ### Resultado de la primera pasada
 
