@@ -1,6 +1,6 @@
 # Compartir un producto desde el móvil y crear el deseo solo
 
-**Abierta:** 2026-10-18 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** en curso — **T1 a T6 y T9 cerrados**, con las **revisiones nativas** hechas por tramo (T1-T5 aprobadas, T2 y T5 tras corregir lo que el refutador encontró), **T5 medido contra el runtime real**, **T6 y T9 con la puerta del e2e del repo en verde** (L21, L23) y **la revisión de la rama entera cortada por presupuesto** (L22: la entrega necesita commits encadenados más pequeños). Lo siguiente es **T7** (`currency`), el único requisito de producto que queda; **la fase nativa se descartó** (L33). Lo que falta y no se puede cerrar desde acá: **probarlo en un teléfono con la PWA instalada**, que además exige desplegar primero
+**Abierta:** 2026-10-18 · **Cerrada:** 2026-10-20 · **Rama:** `feat/compartir-producto` (desde `main`, `3f4e40c`) · **Estado:** **cerrada y publicada** — T1 a T7 y T9 implementados y mergeados; **T8 descartado** (L33). Cuatro tramos con **revisión nativa aprobada y autoridad quemada** (T5, T6, B1 y B2), entregados como **diez PRs encadenados** (L32), con **642 tests** y `tsc` y `eslint` limpios. Publicado en **`v2026.10.20-3`**: PWA en `https://jmoredev.github.io/murodeseos/`, Edge Function `extract-product` desplegada (exige JWT) y la columna `currency` aplicada en la base. **Aceptado como hueco y no verificado**: el comportamiento de la guarda SSRF *dentro del runtime desplegado* (L35) y la prueba en un teléfono real, que depende del propietario.
 
 ## Objetivo
 
@@ -655,6 +655,8 @@ servidor ya devolvía dentro de `price`), el formulario (selector, escritura só
 normalizada) y los sitios que pintan —donde la tarjeta **dejó de agregar «€» a mano**, que era lo que
 pintaba en euros un precio en dólares—. El campo de precio sigue mostrando un número pelado a propósito: es
 numérico y un símbolo ahí rompería `parsePriceInput`.
+
+**L35 (2026-10-20) — cierre: los controles negativos contra producción se cierran sin ejecutarlos**, por decisión del propietario. Lo que **sí** está verificado sobre la guarda: en tests (`net-ssrf-bypass.test.ts`), en el runtime local (L28: `no-existe.invalid` → `dns-failed` y `http://127.0.0.1/x` → `blocked-ip-loopback`) y que la función desplegada **responde y exige JWT** (`401 UNAUTHORIZED_NO_AUTH_HEADER` sin token). Lo que queda **aceptado como hueco**: que la guarda se comporte igual **dentro de la Edge Function desplegada**; no se midió porque eso exige un JWT de usuario del proyecto remoto. Se anota como deuda visible, no se disimula, y no bloquea el cierre.
 
 ## Verificación
 
