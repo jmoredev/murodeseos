@@ -21,17 +21,25 @@ export type ExtractionConfig = {
     ventanaSegundos: number;
     /** Vida del borrador en la caché. */
     ttlSegundos: number;
+    /** Rescates con Firecrawl permitidos por usuario y ventana de 30 días. 0 lo apaga. */
+    fallbackLimite: number;
 };
 
 export const LIMITE_POR_DEFECTO = 30;
 export const VENTANA_POR_DEFECTO = 3600;
 export const TTL_POR_DEFECTO = 3600;
+/**
+ * Rescates con Firecrawl por usuario y mes. Con 1.000 créditos al mes y ~12 usuarios, 20 deja 240 de
+ * techo real y 760 de margen (D2 de `odd/tasks/respaldo-firecrawl.md`).
+ */
+export const FALLBACK_LIMITE_POR_DEFECTO = 20;
 
 /** Nombres de las variables, en un solo sitio para que no se desalineen con la documentación. */
 export const NOMBRES_DE_ENTORNO = {
     limite: 'PRODUCT_EXTRACTION_QUOTA_LIMIT',
     ventana: 'PRODUCT_EXTRACTION_QUOTA_WINDOW_SECONDS',
     ttl: 'PRODUCT_EXTRACTION_CACHE_TTL_SECONDS',
+    fallbackLimite: 'PRODUCT_FALLBACK_LIMIT',
 } as const;
 
 /** El texto como entero, o `null` si la variable no está o no es un número. */
@@ -71,7 +79,18 @@ export function readExtractionConfig(getEnv: GetEnv): ExtractionConfig {
         limite: leerLimite(getEnv),
         ventanaSegundos: leerVentana(getEnv),
         ttlSegundos: leerTtl(getEnv),
+        fallbackLimite: leerFallbackLimite(getEnv),
     };
+}
+
+/**
+ * Rescates por usuario y mes. Misma regla que el límite de extracción: **un 0 explícito apaga el
+ * respaldo**, un negativo se lee como 0 y solo un texto que no es número cae al valor por defecto.
+ */
+function leerFallbackLimite(getEnv: GetEnv): number {
+    const valor = comoEntero(getEnv(NOMBRES_DE_ENTORNO.fallbackLimite));
+    if (valor === null) return FALLBACK_LIMITE_POR_DEFECTO;
+    return valor < 0 ? 0 : valor;
 }
 
 /**
