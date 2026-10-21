@@ -178,7 +178,11 @@ describe('testigos negativos: no tiran y no inventan un precio', () => {
         });
     });
 
-    it('Decathlon responde con el challenge de Cloudflare y solo deja su título', () => {
+    it('Decathlon responde con el challenge de Cloudflare: el extractor solo ve su título', () => {
+        // Estos tres casos (Decathlon, Fnac, PcComponentes) documentan qué hay **dentro** de una
+        // página de bloqueo, no lo que la app hace con ella: `detectBlock` rechaza estos cuerpos en
+        // la capa de red y nunca llegan al parser (ver `block-detect.test.ts`). El extractor se
+        // queda sin criterio a propósito; el criterio es del transporte.
         expect(draftDe('decathlon-es')).toEqual({
             url: fixtureUrl(entrada('decathlon-es')),
             title: { value: 'Just a moment...', source: 'heuristic' },
@@ -190,7 +194,7 @@ describe('testigos negativos: no tiran y no inventan un precio', () => {
         });
     });
 
-    it('Fnac responde 403 y solo deja su título', () => {
+    it('Fnac responde con el muro de DataDome: el extractor solo ve su título', () => {
         expect(draftDe('fnac-es')).toEqual({
             url: fixtureUrl(entrada('fnac-es')),
             title: { value: 'fnac.es', source: 'heuristic' },
@@ -202,7 +206,7 @@ describe('testigos negativos: no tiran y no inventan un precio', () => {
         });
     });
 
-    it('PcComponentes responde 403 a Node/undici y solo deja el challenge', () => {
+    it('PcComponentes responde 403 con el challenge de Cloudflare: el extractor solo ve «Just a moment...»', () => {
         expect(draftDe('pccomponentes-es')).toEqual({
             url: fixtureUrl(entrada('pccomponentes-es')),
             title: { value: 'Just a moment...', source: 'heuristic' },

@@ -14,6 +14,11 @@
  * - **Un tope de bytes** que trunca en vez de fallar: una página de 5 MB sigue sirviendo para
  *   leer el precio, y el truncado se declara en `truncated`.
  * - **Solo los headers canónicos** de `headers.ts`; el llamador no puede inyectar cabeceras.
+ * - **Un muro anti-bot no es una página.** Un challenge (header `cf-mitigated`, o la firma de
+ *   Cloudflare/DataDome que mide `detect-block.ts`), un `403`/`429` y cualquier status `>= 400`
+ *   se devuelven como fallo —`blocked-by-site` o `http-error`— y no como cuerpo. Un 403 **trae**
+ *   cuerpo, y ese cuerpo es el challenge: dejarlo pasar hacía que el extractor lo convirtiera en
+ *   un deseo titulado «Just a moment...» (medido el 2026-10-21 en PcComponentes).
  *
  * Lo que **no** cubre, y es deliberado: el SSRF basado en **DNS**. Sin un `resolveHost`, un
  * nombre público que resuelve a una dirección privada no se detecta, porque resolver es E/S
@@ -30,13 +35,16 @@
  * pedir, y eso sigue nombrando el fallo con un motivo propio.
  */
 
+import { detectBlock, type BlockReason } from './detect-block.ts';
 import { buildBrowserHeaders } from './headers.ts';
 import { pinnedFetch } from './pinned-http.ts';
 import { blockedIpReason, guardUrl, isIpLiteral, type GuardReason } from './url-guard.ts';
 
-/** Motivos de fallo de `safeFetch`. Incluye los de `guardUrl` y los propios de la red. */
+/** Motivos de fallo de `safeFetch`. Incluye los de `guardUrl`, los del detector de bloqueo y los
+ * propios de la red. */
 export type SafeFetchReason =
     | GuardReason
+    | BlockReason
     | 'dns-failed'
     | 'dns-changed'
     | 'redirect-without-location'
@@ -286,6 +294,15 @@ export async function safeFetch(rawUrl: unknown, options: SafeFetchOptions = {})
             } catch {
                 return fallo(timedOut ? 'timeout' : 'body-read-failed', finalUrl, response.status);
             }
+
+            // La página se lee entera antes de decidir: el header del challenge no siempre viene
+            // (el mismo Cloudflare lo omite en algunas variantes) y la firma está en el cuerpo.
+            const veredicto = detectBlock({
+                status: response.status,
+                mitigated: response.headers.get('cf-mitigated'),
+                body: leido.text,
+            });
+            if (veredicto.blocked) return fallo(veredicto.reason, finalUrl, response.status);
 
             return {
                 ok: true,
