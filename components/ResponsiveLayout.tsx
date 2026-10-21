@@ -80,7 +80,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                               accessibilityState: { selected: activeTab === 'wishlist' },
                                           })}
                                     accessibilityLabel="Mis deseos"
-                                    className={`px-4 py-2 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                                    className={`px-4 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                 >
                                     <TabLabel active={activeTab === 'wishlist'}>Mis deseos</TabLabel>
                                 </Pressable>
@@ -93,13 +93,13 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                               accessibilityState: { selected: activeTab === 'groups' },
                                           })}
                                     accessibilityLabel="Mis grupos"
-                                    className={`px-4 py-2 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                                    className={`px-4 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                 >
                                     <TabLabel active={activeTab === 'groups'}>Mis grupos</TabLabel>
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('profile')}
-                                    className={`px-4 py-2 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                                    className={`px-4 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                     {...(Platform.OS === 'web'
                                         ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'profile' } as const)
                                         : {
@@ -118,7 +118,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             {isDesktop ? (
                                 <Pressable
                                     onPress={onSignOut}
-                                    className="ml-4 px-4 py-2 rounded-full"
+                                    className="ml-4 px-4 py-2 min-h-[44px] min-w-[44px] justify-center rounded-full"
                                     accessibilityRole="button"
                                     accessibilityLabel="Salir"
                                 >
@@ -171,7 +171,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mis deseos"
                             accessibilityState={{ selected: activeTab === 'wishlist' }}
-                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'wishlist' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 {/* El icono hereda el color de la etiqueta activa/inactiva
@@ -195,7 +195,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mis grupos"
                             accessibilityState={{ selected: activeTab === 'groups' }}
-                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'groups' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <AppIcon
@@ -216,7 +216,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             accessibilityRole="button"
                             accessibilityLabel="Mi perfil"
                             accessibilityState={{ selected: activeTab === 'profile' }}
-                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
+                            className={`flex-1 min-w-0 items-center justify-center px-3 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                         >
                             <View className="items-center justify-center" importantForAccessibility="no-hide-descendants">
                                 <AppIcon
