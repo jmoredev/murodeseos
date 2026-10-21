@@ -50,9 +50,19 @@ import { readJwtSub } from '../_shared/product-extraction/auth/jwt.ts';
 import { normalizeCacheKey } from '../_shared/product-extraction/cache/normalize-url.ts';
 import { guardarEnCache, leerDeCache } from '../_shared/product-extraction/cache/postgrest.ts';
 import { isCacheEnabled, readExtractionConfig } from '../_shared/product-extraction/config/env.ts';
+import {
+    FALLBACK_WINDOW_SECONDS,
+    fallbackNote,
+    mergeFallbackDraft,
+    needsFallback,
+    type FallbackTrigger,
+} from '../_shared/product-extraction/fallback/decision.ts';
+import { consumirRespaldo } from '../_shared/product-extraction/fallback/postgrest.ts';
+import { scrapeWithFirecrawl } from '../_shared/product-extraction/fallback/scrape.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
+import { guardUrl } from '../_shared/product-extraction/net/url-guard.ts';
 import { decideQuota } from '../_shared/product-extraction/quota/decision.ts';
 import { consumirCuota } from '../_shared/product-extraction/quota/postgrest.ts';
 
@@ -120,6 +130,8 @@ type Configuracion = {
     limite: number;
     ventanaSegundos: number;
     ttlSegundos: number;
+    fallbackLimite: number;
+    firecrawlKey: string;
     supabaseUrl: string;
     serviceRoleKey: string;
 };
@@ -129,15 +141,61 @@ type Configuracion = {
  * inyecta `Deno.env.get`. Ver el porqué de cada valor por defecto en ese módulo.
  */
 function configuracion(): Configuracion {
-    const { limite, ventanaSegundos, ttlSegundos } = readExtractionConfig((nombre) => Deno.env.get(nombre));
+    const { limite, ventanaSegundos, ttlSegundos, fallbackLimite } = readExtractionConfig((nombre) =>
+        Deno.env.get(nombre)
+    );
 
     return {
         limite,
         ventanaSegundos,
         ttlSegundos,
+        fallbackLimite,
+        firecrawlKey: Deno.env.get('FIRECRAWL_API_KEY') ?? '',
         supabaseUrl: (Deno.env.get('SUPABASE_URL') ?? '').replace(/\/+$/, ''),
         serviceRoleKey: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     };
+}
+
+/**
+ * Intenta el rescate con Firecrawl. Devuelve el HTML renderizado o una nota con el motivo por el
+ * que no se pudo, para que el usuario sepa por qué le falta el precio.
+ *
+ * Reglas: **sin presupuesto legible no se gasta** (el SQL decide, y un `null` se lee como «no»),
+ * sin clave ni límite el respaldo está apagado, y cualquier fallo del proveedor devuelve nota en
+ * vez de tumbar el borrador que ya existe.
+ */
+async function intentarRespaldo(params: {
+    url: string;
+    userId: string;
+    conf: Configuracion;
+    disparo: FallbackTrigger;
+    ahoraMs: number;
+}): Promise<
+    { usado: true; html: string; finalUrl: string | null } | { usado: false; nota: string | null }
+> {
+    const { url, userId, conf, ahoraMs } = params;
+
+    if (conf.fallbackLimite <= 0 || conf.firecrawlKey === '') return { usado: false, nota: null };
+
+    const presupuesto = await consumirRespaldo({
+        supabaseUrl: conf.supabaseUrl,
+        serviceRoleKey: conf.serviceRoleKey,
+        userId,
+        limite: conf.fallbackLimite,
+        ventanaSegundos: FALLBACK_WINDOW_SECONDS,
+        ahoraMs,
+    });
+    if (!presupuesto) {
+        return { usado: false, nota: 'No se pudo consultar el presupuesto del respaldo, así que no se usó.' };
+    }
+    if (!presupuesto.allowed) {
+        return { usado: false, nota: 'El respaldo automático llegó a su límite de este mes.' };
+    }
+
+    const scrape = await scrapeWithFirecrawl({ url, apiKey: conf.firecrawlKey });
+    if (!scrape.ok) return { usado: false, nota: fallbackNote(scrape.reason) };
+
+    return { usado: true, html: scrape.html, finalUrl: scrape.finalUrl };
 }
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -237,12 +295,63 @@ Deno.serve(async (request: Request): Promise<Response> => {
     }
 
     try {
+        // S7 de `odd/tasks/respaldo-firecrawl.md`: si la guarda rechaza la URL, no se pide y tampoco
+        // se manda a un tercero. Es la misma función pura que usa `safeFetch`, así que el motivo es
+        // exactamente el mismo.
+        const guarda = guardUrl(url);
+        if (!guarda.ok) return respuesta({ ok: false, reason: guarda.reason }, 200, request);
+
         const resultado = await safeFetch(url, { resolveHost });
-        if (!resultado.ok) {
-            return respuesta({ ok: false, reason: resultado.reason }, 200, request);
+        const draftDirecto = resultado.ok
+            ? extractProduct({ html: resultado.body, url: resultado.finalUrl })
+            : null;
+
+        // El respaldo salta solo cuando el camino propio no alcanzó (D1(b)).
+        const disparo = needsFallback({
+            failureReason: resultado.ok ? null : resultado.reason,
+            draft: draftDirecto,
+        });
+        const respaldo = disparo
+            ? await intentarRespaldo({ url: guarda.url, userId, conf, disparo, ahoraMs: Date.now() })
+            : { usado: false as const, nota: null };
+
+        if (respaldo.usado) {
+            // Se corre **nuestro** extractor sobre el DOM ya renderizado (mismo baremo, un crédito) y
+            // se **fusiona** con lo que el camino propio ya había leído: el respaldo rellena huecos,
+            // nunca reemplaza. Ver `mergeFallbackDraft` y S8 de la ficha.
+            // La base para las URLs relativas es la que el proveedor leyó de verdad: una página que
+            // redirige resolvía `img/x.jpg` contra la URL pedida y la imagen salía rota.
+            const base = respaldo.finalUrl ?? guarda.url;
+            const draft = mergeFallbackDraft(draftDirecto, extractProduct({ html: respaldo.html, url: base }));
+            if (clave && cacheActiva) {
+                await guardarEnCache({
+                    supabaseUrl: conf.supabaseUrl,
+                    serviceRoleKey: conf.serviceRoleKey,
+                    cacheKey: clave,
+                    draft,
+                    finalUrl: base,
+                    ttlSegundos: conf.ttlSegundos,
+                    ahoraMs: Date.now(),
+                });
+            }
+            return respuesta({ ok: true, draft, via: 'firecrawl' }, 200, request);
         }
 
-        const draft = extractProduct({ html: resultado.body, url: resultado.finalUrl });
+        if (!resultado.ok) {
+            // La forma del fallo se conserva: `fallback` aparece solo cuando hay algo que contar.
+            return respuesta(
+                respaldo.nota
+                    ? { ok: false, reason: resultado.reason, fallback: respaldo.nota }
+                    : { ok: false, reason: resultado.reason },
+                200,
+                request
+            );
+        }
+
+        const draft = respaldo.nota
+            ? { ...draftDirecto!, notes: [...draftDirecto!.notes, respaldo.nota] }
+            : draftDirecto!;
+
         if (clave && cacheActiva) {
             await guardarEnCache({
                 supabaseUrl: conf.supabaseUrl,
