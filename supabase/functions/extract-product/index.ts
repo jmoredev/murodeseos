@@ -204,7 +204,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     }
 
     if (request.method !== 'POST') {
-        return respuesta({ error: 'Método no permitido: usá POST.' }, 405, request);
+        return respuesta({ error: 'Método no permitido: usa POST.' }, 405, request);
     }
 
     let cuerpo: unknown;

@@ -88,6 +88,14 @@ El detalle de por qué la identidad es el `id` y no la versión está en `odd/ta
 
 ## 🛠️ Desarrollo
 
+### Idioma de la interfaz
+
+La app habla **español de España**, no español latinoamericano. Se tutea («Comparte», «carga», «elige»), sin voseo, y el léxico es el de España («móvil», no «celular»; «dinero», no «plata»). Los formatos usan `Intl` con `es-ES` —decimal con coma y símbolo detrás: `79,99 €`— y el documento declara `lang="es-ES"`.
+
+Esto aplica a **lo que ve el usuario**: copy de `app/`, `components/` y `lib/`, mensajes de error que la app puede mostrar y los textos de «Novedades». No aplica a comentarios de código, fichas de `odd/`, documentación ni tests.
+
+El guardián es `__tests__/idioma-es-espana.test.ts`: falla si aparece una forma rioplatense en la copy. No es ceremonia — la regla se coló una vez (las primeras viñetas de «Novedades») porque la copy la escribe quien tutea en rioplatense por defecto.
+
 ### Ejecutar la aplicación
 Para iniciar el servidor de desarrollo (Next.js/Expo Web):
 ```bash
