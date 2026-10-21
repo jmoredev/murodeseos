@@ -223,12 +223,12 @@ export const GroupCard = memo(function GroupCard({
                                     className="font-sans-bold text-xl text-on-background bg-surface-container-highest rounded-md px-2 py-1 flex-1 min-w-0 ring-2 ring-primary/20"
                                     autoFocus
                                 />
-                                <Pressable onPress={stopAnd(saveGroupName)} accessibilityRole="button" accessibilityLabel="Guardar alias del grupo" className="p-2 ml-2 bg-green-50 rounded-lg shrink-0">
+                                <Pressable onPress={stopAnd(saveGroupName)} accessibilityRole="button" accessibilityLabel="Guardar alias del grupo" className="p-2 min-w-[44px] min-h-[44px] items-center justify-center ml-2 bg-green-50 rounded-lg shrink-0">
                                     {/* El check de 16px (por defecto de RN) que había; la caja
                                         p-2 y el centrado no cambian. */}
                                     <AppIcon name="check" size={16} className="text-green-600" />
                                 </Pressable>
-                                <Pressable onPress={stopAnd(cancelEditingGroupName)} accessibilityRole="button" accessibilityLabel="Cancelar edición del alias del grupo" className="p-2 ml-1 bg-red-50 rounded-lg shrink-0">
+                                <Pressable onPress={stopAnd(cancelEditingGroupName)} accessibilityRole="button" accessibilityLabel="Cancelar edición del alias del grupo" className="p-2 min-w-[44px] min-h-[44px] items-center justify-center ml-1 bg-red-50 rounded-lg shrink-0">
                                     <AppIcon name="x" size={16} className="text-red-600" />
                                 </Pressable>
                             </View>
@@ -281,7 +281,7 @@ export const GroupCard = memo(function GroupCard({
                         onPress={stopAnd(handleShareClick)}
                         accessibilityRole="button"
                         accessibilityLabel="Compartir grupo"
-                        className="p-3 rounded-full bg-surface-container-low items-center justify-center mr-2"
+                        className="p-3 min-w-[44px] min-h-[44px] rounded-full bg-surface-container-low items-center justify-center mr-2"
                     >
                         {/* text-lg = 18: el tamaño del glifo de compartir anterior. */}
                         <AppIcon name="arrow-up-right" size={18} className="text-on-surface" />
@@ -293,7 +293,7 @@ export const GroupCard = memo(function GroupCard({
                                 onPress={stopAnd(handleMenuClick)}
                                 accessibilityRole="button"
                                 accessibilityLabel="Opciones de grupo"
-                                className="p-3 rounded-full bg-surface-container-low items-center justify-center"
+                                className="p-3 min-w-[44px] min-h-[44px] rounded-full bg-surface-container-low items-center justify-center"
                             >
                                 {/* text-lg = 18: el tamaño del glifo de menú anterior. */}
                                 <AppIcon name="more-vertical" size={18} className="text-on-surface" />

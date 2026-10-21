@@ -39,6 +39,8 @@ We pair two sans-serifs to balance personality with extreme legibility.
 * **Display & Headlines (Plus Jakarta Sans):** Chosen for its modern, slightly wide stance. It feels friendly yet authoritative. Use `display-lg` (3.5rem) for hero moments with negative letter-spacing (-0.02em) to create a tight, editorial impact.
 * **Body & Titles (Be Vietnam Pro):** A highly functional typeface that remains legible at small scales. Its neutral tone allows the "Wish" content to be the star without visual noise.
 
+**Escala en uso:** `text-xs` está reservado para etiquetas cortas en mayúsculas, chips e insignias; nunca como cuerpo de lectura. En React Native el peso va **en el nombre de la familia** (`font-sans-semibold`, `font-sans-bold`), no en una clase de peso: el runtime no sintetiza pesos.
+
 **Hierarchy Note:** Always lead with high contrast. A `display-md` headline should be followed by a `body-md` description with significant breathing room (using `spacing-6`) to ensure the layout feels "designed" rather than "populated."
 
 ---
@@ -85,3 +87,33 @@ Traditional drop shadows are often messy. This system uses **Ambient Light Physi
 * **Don't** use 1px dividers to separate list items. Use a `0.35rem` (spacing-1) height gap or a subtle background tint change.
 * **Don't** use pure black (#000000) for text. Always use `on-background` (#4c212b) to keep the "warm pastel" vibe intact.
 * **Don't** cram content. If a screen feels full, increase the `spacing` tokens. Luxury is defined by the space you don't use.
+---
+
+## 7. Cómo se comprueba (medido en el navegador, 2026-10-21)
+
+El resto del documento es la **dirección** del sistema. Esta sección es lo **medido** sobre el navegador real, para no confundir intención con resultado. La herramienta es `e2e/audit-ui.spec.ts` y se corre con:
+
+```bash
+node_modules/.bin/playwright test e2e/audit-ui.spec.ts --project=chromium
+```
+
+Escribe `test-results/audit-ui.md` y no falla por lo que encuentra: mide. Recorre deseos, alta de deseo, grupos y perfil con el usuario E2E ya autenticado.
+
+### Resultado de la primera pasada
+
+| Comprobación | Hallazgos | Lectura |
+| --- | --- | --- |
+| Texto por debajo de 12 px | **0** | `text-xs` se usa para etiquetas, no para cuerpo |
+| Desborde horizontal | **0** | nada obliga a desplazarse de lado |
+| Contenido recortado (ambos ejes) | **0** | no hay texto comido por un contenedor |
+| Imágenes rotas | **0** | |
+| Contraste WCAG medido | **0** | ver la nota de abajo |
+| Contraste **no medible** | **4** | texto blanco sobre el gradiente de las CTA |
+| **Objetivos táctiles < 44 px** | **0** tras el arreglo | antes eran **23**: pestañas a 36 px y botones de icono de 40×40. Ahora es la única regla que **hace fallar** la auditoría, para que no vuelva |
+| Superficies anidadas | **1** | un bloque `surface-container-low` dentro de la tarjeta del formulario |
+
+**Nota sobre el contraste:** los botones primarios usan el gradiente `primary → primary-container`, y en web un gradiente es `background-image`, no `background-color`. Una auditoría que solo mira el color de fondo atraviesa el botón y encuentra el blanco de la tarjeta detrás: eso produjo tres falsos positivos de «1.00:1, blanco sobre blanco» en la primera pasada. Por eso el informe los declara **no medibles** en vez de inventar un número. Si alguna vez hace falta medirlos, hay que evaluar el gradiente como superficie propia.
+
+### Lo que esta auditoría no mide
+
+Nada de lo que depende de juicio: si la jerarquía convence, si el copy ayuda a decidir, si la pantalla se siente pesada. Eso es revisión de diseño, no detector, y no se automatiza con reglas.
