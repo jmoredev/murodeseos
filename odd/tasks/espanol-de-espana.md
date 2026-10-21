@@ -77,3 +77,18 @@
   **La ruta de corrección del proveedor rechazó su propio binding por cuarta vez** (tercer linaje
   distinto), así que la corrección se aplicó y verificó fuera de esa ruta: **701 tests + 1 todo**,
   `tsc` y `eslint` en 0. Queda como deuda declarada, igual que en las fichas anteriores.
+
+- **L5 (2026-10-21) — tercera revisión, tercer hallazgo correcto: el meta‑test tapaba un hueco de la lista.**
+  Linaje `review-efad3b4458452da6` (mismas dos lentes). El refutador señaló `R3-001`: el meta‑test de las
+  frases históricas exigía **al menos una** marca, y «Recuperá tu contraseña y cerrá sesión» pasaba gracias
+  a `cerrá`. O sea que **`recuperá` faltaba en la lista y el test no lo veía**: una regresión que
+  escribiera solo «Recuperá tu contraseña» habría quedado en verde.
+  Arreglo, y es estructural en vez de un parche: la lista creció a las formas de voseo del dominio
+  (recuperá, completá, anotá, apuntá, invitá, creá, cambiá, actualizá, eliminá, copiá, pegá, subí, bajá,
+  adjuntá, marcá, enviá, reenviá, respondé, decidí, pedí, repetí, seguí) y hay **dos meta‑tests nuevos**:
+  uno exige que **cada** forma de la lista se detecte dentro de una frase —no una cualquiera— y otro que
+  la lista **cubra** las formas conocidas, comparándolas como conjunto. Así, añadir una forma sin patrón
+  o dejar una fuera de la lista falla por sí solo.
+  **Verificación:** 7 tests del guardián, **701 tests + 1 todo**, `tsc` y `eslint` en 0. La ruta de
+  corrección del proveedor volvió a rechazar su propio binding (quinta vez), así que esta corrección
+  también queda sin recibo formal; el linaje se abandona.

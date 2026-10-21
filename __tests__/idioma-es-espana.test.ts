@@ -74,6 +74,28 @@ const MARCAS: { forma: string; nota: string }[] = [
     { forma: 'contame', nota: 'voseo: cuéntame' },
     { forma: 'avisame', nota: 'voseo: avísame' },
     { forma: 'mostrame', nota: 'voseo: muéstrame' },
+    { forma: 'recuperá', nota: 'voseo: recupera' },
+    { forma: 'completá', nota: 'voseo: completa' },
+    { forma: 'anotá', nota: 'voseo: anota' },
+    { forma: 'apuntá', nota: 'voseo: apunta' },
+    { forma: 'invitá', nota: 'voseo: invita' },
+    { forma: 'creá', nota: 'voseo: crea' },
+    { forma: 'cambiá', nota: 'voseo: cambia' },
+    { forma: 'actualizá', nota: 'voseo: actualiza' },
+    { forma: 'eliminá', nota: 'voseo: elimina' },
+    { forma: 'copiá', nota: 'voseo: copia' },
+    { forma: 'pegá', nota: 'voseo: pega' },
+    { forma: 'subí', nota: 'voseo: sube' },
+    { forma: 'bajá', nota: 'voseo: baja' },
+    { forma: 'adjuntá', nota: 'voseo: adjunta' },
+    { forma: 'marcá', nota: 'voseo: marca' },
+    { forma: 'enviá', nota: 'voseo: envía' },
+    { forma: 'reenviá', nota: 'voseo: reenvía' },
+    { forma: 'respondé', nota: 'voseo: responde' },
+    { forma: 'decidí', nota: 'voseo: decide' },
+    { forma: 'pedí', nota: 'voseo: pide' },
+    { forma: 'repetí', nota: 'voseo: repite' },
+    { forma: 'seguí', nota: 'voseo: sigue' },
     { forma: 'sos', nota: 'voseo: eres' },
     { forma: 'acá', nota: 'léxico: aquí' },
     { forma: 'allá', nota: 'léxico: allí' },
@@ -139,6 +161,29 @@ function sinComentarios(fuente: string): string {
 }
 
 describe('idioma de la interfaz: español de España', () => {
+    it('cada forma de la lista se detecta dentro de una frase', () => {
+        // Sin esto, una forma con el patrón mal escrito queda en la lista y nunca matchea: es el
+        // falso sentido de seguridad que ya pasó con `` y los acentos.
+        for (const { forma } of MARCAS) {
+            expect(marcasEn(`Por favor ${forma} esto ahora`), forma).not.toEqual([]);
+        }
+    });
+
+    it('la lista cubre las formas de voseo conocidas, no solo las que aparecen en una frase', () => {
+        // El meta-test de las frases históricas exigía «al menos una marca», así que «Recuperá… cerrá»
+        // pasaba por `cerrá` y `recuperá` podía faltar sin que nadie lo notara. Acá se comprueba la
+        // cobertura de la lista misma, forma por forma.
+        const conocidas = [
+            'recuperá', 'compartí', 'cargá', 'elegí', 'cerrá', 'instalá', 'usá', 'tenés', 'podés',
+            'querés', 'sabés', 'hacé', 'decime', 'fijate', 'probá', 'acordate', 'completá', 'anotá',
+            'invitá', 'creá', 'cambiá', 'actualizá', 'eliminá', 'copiá', 'pegá', 'subí', 'bajá',
+            'enviá', 'respondé', 'seguí', 'avisá', 'mandá', 'esperá', 'recordá',
+        ];
+        const enLaLista = new Set(MARCAS.map(({ forma }) => forma));
+
+        expect(conocidas.filter((forma) => !enLaLista.has(forma))).toEqual([]);
+    });
+
     it('el guardián detecta las formas reales que ya se colaron una vez', () => {
         // Sin esto, el guardián puede quedar decorativo y nadie se entera: fue exactamente lo que
         // pasó con `\b` y las formas acentuadas.
