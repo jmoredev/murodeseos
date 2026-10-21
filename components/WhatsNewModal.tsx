@@ -1,25 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { getLatestUpdate } from '@/lib/updates';
-import packageJson from '@/package.json';
+import { LAST_SEEN_UPDATE_ID_KEY, getLatestUpdate, shouldAnnounceUpdate } from '@/lib/updates';
 
 export default function WhatsNewModal() {
     const latestUpdate = getLatestUpdate();
-    const currentVersion = packageJson.version;
     const titleRef = useRef<HTMLHeadingElement>(null);
     const previouslyFocused = useRef<HTMLElement | null>(null);
     const [dismissed, setDismissed] = useState(false);
 
     // Leer localStorage no puede ocurrir en el render del servidor, así que el snapshot
-    // del servidor dice «no anunciar» y el cliente lo decide al hidratar.
+    // del servidor dice «no anunciar» y el cliente lo decide al hidratar. La condición vive en
+    // `lib/updates.ts` y se prueba sola: acá sólo se le pasa lo que el dispositivo recuerda.
     const shouldAnnounce = useSyncExternalStore(
         () => () => {},
-        () => {
-            const lastSeenVersion = localStorage.getItem('lastSeenVersion');
-
-            return latestUpdate.version === currentVersion && lastSeenVersion !== currentVersion;
-        },
+        () => shouldAnnounceUpdate(latestUpdate, localStorage.getItem(LAST_SEEN_UPDATE_ID_KEY)),
         () => false,
     );
 
@@ -27,8 +22,10 @@ export default function WhatsNewModal() {
 
     const handleClose = useCallback(() => {
         setDismissed(true);
-        localStorage.setItem('lastSeenVersion', currentVersion);
-    }, [currentVersion]);
+        // Se guarda el `id` de la entrada, no una versión: es lo que hace que la próxima
+        // publicación vuelva a anunciarse aunque el número de la app no cambie.
+        if (latestUpdate) localStorage.setItem(LAST_SEEN_UPDATE_ID_KEY, latestUpdate.id);
+    }, [latestUpdate]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -59,7 +56,7 @@ export default function WhatsNewModal() {
         previouslyFocused.current?.focus?.();
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !latestUpdate) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-200">
@@ -75,7 +72,7 @@ export default function WhatsNewModal() {
                             <span className="text-xl">✨</span>
                         </span>
                         <span className="text-xs font-sans-medium text-on-primary/80 bg-on-primary/10 px-2 py-1 rounded-full">
-                            v{latestUpdate.version}
+                            v{latestUpdate.release}
                         </span>
                     </div>
                     <h2

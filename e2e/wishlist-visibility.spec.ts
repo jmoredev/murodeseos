@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { E2E_CONFIG } from './config';
-import packageJson from '../package.json';
+import { LAST_SEEN_UPDATE_ID_KEY, getLatestUpdate } from '../lib/updates'
 import { supabaseAdmin } from './supabase-admin';
 import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 
@@ -38,12 +38,14 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
 
         // 2. Logout del usuario E2E y Login como Juan Pérez
         await page.context().clearCookies();
-        await page.evaluate((version) => {
+        const latestUpdate = getLatestUpdate();
+        await page.evaluate(({ key, id }) => {
             localStorage.clear();
             sessionStorage.clear();
-            // Evitar que aparezca el modal de novedades usando la versión actual
-            localStorage.setItem('lastSeenVersion', version);
-        }, packageJson.version);
+            // Evitar que aparezca el modal de novedades: se marca la entrada actual como vista.
+            // Se guarda el `id` de la entrada, no la versión de la app.
+            if (id) localStorage.setItem(key, id);
+        }, { key: LAST_SEEN_UPDATE_ID_KEY, id: latestUpdate?.id ?? null });
 
         await page.goto('/login');
         const emailInput = page.getByTestId('email-input');

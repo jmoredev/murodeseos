@@ -72,6 +72,14 @@ git log --oneline -- supabase/migrations/
 
 Si la hubo, aplica el orden operativo de la sección de la migración de reservas: el código que tolera las dos formas va antes que la migración que las cambia. Y nunca muevas una etiqueta ya publicada: publica una nueva, porque moverla reescribe lo que el registro dice que se publicó.
 
+### Novedades
+
+La app anuncia lo nuevo con un modal («Novedades») al abrir, **una vez por dispositivo y por entrada**. La entrada se identifica por su **`id`**, no por la versión del producto: `package.json` y `app.json` no se sincronizan con esto, y tampoco la etiqueta de publicación.
+
+**Paso antes de etiquetar:** si el cambio se ve para el usuario, agrega una entrada **arriba** en `lib/updates.ts` (`lib/updates.ts:1`) con un `id` nuevo, su `release` visible y las viñetas redactadas para el usuario. Si no se ve, no lleva entrada. El modal lo muestra en el siguiente arranque; cerrarlo guarda ese `id` en `localStorage` (`lastSeenUpdateId`) y no vuelve a aparecer hasta la próxima entrada.
+
+El detalle de por qué la identidad es el `id` y no la versión está en `odd/tasks/novedades-por-release.md`: comparar contra `package.json` fue lo que dejó el modal congelado en `1.4.0` durante cinco meses. `__tests__/updates.test.ts` fija la regla.
+
 ### Cómo comprobar qué valores usó el build de deploy
 1. Pon en `.env.production` un valor distintivo (por ejemplo una URL de Supabase que solo exista en producción).
 2. Ejecuta `npm run build:deploy` (o `bun run build:deploy`).
