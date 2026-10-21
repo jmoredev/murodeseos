@@ -34,6 +34,30 @@ const PANTALLAS: { nombre: string; preparar: (page: import('@playwright/test').P
         },
     },
     {
+        nombre: 'grupos',
+        preparar: async (page) => {
+            // Las pestañas de este layout son `accessibilityRole="button"`, no `role="tab"`: buscar
+            // por rol no encontraba nada y el informe auditaba la pantalla anterior. Se busca por la
+            // etiqueta accesible, que existe igual en la barra de escritorio y en la flotante móvil.
+            const tab = page.getByLabel('Mis grupos', { exact: true }).first();
+            await tab.waitFor({ state: 'visible', timeout: 15000 });
+            await tab.click();
+            await page.waitForTimeout(400);
+        },
+    },
+    {
+        nombre: 'perfil',
+        preparar: async (page) => {
+            // Las pestañas de este layout son `accessibilityRole="button"`, no `role="tab"`: buscar
+            // por rol no encontraba nada y el informe auditaba la pantalla anterior. Se busca por la
+            // etiqueta accesible, que existe igual en la barra de escritorio y en la flotante móvil.
+            const tab = page.getByLabel('Mi perfil', { exact: true }).first();
+            await tab.waitFor({ state: 'visible', timeout: 15000 });
+            await tab.click();
+            await page.waitForTimeout(400);
+        },
+    },
+    {
         nombre: 'alta-deseo',
         preparar: async (page) => {
             // En escritorio el acceso es un «+» con `aria-label`, no un texto: buscar el texto dejaba
@@ -44,24 +68,6 @@ const PANTALLAS: { nombre: string; preparar: (page: import('@playwright/test').P
                 .getByText('Nuevo deseo', { exact: false })
                 .first()
                 .waitFor({ state: 'visible', timeout: 15000 });
-        },
-    },
-    {
-        nombre: 'grupos',
-        preparar: async (page) => {
-            const tab = page.getByRole('tab', { name: /grupos/i }).first();
-            await tab.waitFor({ state: 'visible', timeout: 10000 });
-            await tab.click();
-            await page.waitForTimeout(400);
-        },
-    },
-    {
-        nombre: 'perfil',
-        preparar: async (page) => {
-            const tab = page.getByRole('tab', { name: /perfil/i }).first();
-            await tab.waitFor({ state: 'visible', timeout: 10000 });
-            await tab.click();
-            await page.waitForTimeout(400);
         },
     },
 ];
@@ -236,6 +242,16 @@ test.describe('auditoría de interfaz', () => {
         for (const pantalla of PANTALLAS) {
             await page.goto('/');
             await expect(page.getByText(/Muro de deseos/i).first()).toBeVisible({ timeout: 20000 });
+
+            // La pantalla de alta deja un borrador pendiente: al volver, el formulario se abre solo y
+            // en móvil tapa la barra de pestañas, así que la siguiente pantalla no encontraría la
+            // pestaña. Se cierra antes de preparar nada.
+            const cerrar = page.getByLabel('Cerrar formulario').first();
+            if (await cerrar.isVisible().catch(() => false)) {
+                await cerrar.click();
+                await page.waitForTimeout(300);
+            }
+
             await pantalla.preparar(page);
 
             const resultado = (await page.evaluate(auditarEnPagina)) as {
