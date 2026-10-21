@@ -1,25 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { getLatestUpdate } from '@/lib/updates';
-import packageJson from '@/package.json';
+import { LAST_SEEN_UPDATE_ID_KEY, getLatestUpdate, shouldAnnounceUpdate } from '@/lib/updates';
 
 export default function WhatsNewModal() {
     const latestUpdate = getLatestUpdate();
-    const currentVersion = packageJson.version;
     const titleRef = useRef<HTMLHeadingElement>(null);
     const previouslyFocused = useRef<HTMLElement | null>(null);
     const [dismissed, setDismissed] = useState(false);
 
     // Leer localStorage no puede ocurrir en el render del servidor, así que el snapshot
-    // del servidor dice «no anunciar» y el cliente lo decide al hidratar.
+    // del servidor dice «no anunciar» y el cliente lo decide al hidratar. La condición vive en
+    // `lib/updates.ts` y se prueba sola: acá sólo se le pasa lo que el dispositivo recuerda.
     const shouldAnnounce = useSyncExternalStore(
         () => () => {},
-        () => {
-            const lastSeenVersion = localStorage.getItem('lastSeenVersion');
-
-            return latestUpdate.version === currentVersion && lastSeenVersion !== currentVersion;
-        },
+        () => shouldAnnounceUpdate(latestUpdate, localStorage.getItem(LAST_SEEN_UPDATE_ID_KEY)),
         () => false,
     );
 
@@ -27,8 +22,10 @@ export default function WhatsNewModal() {
 
     const handleClose = useCallback(() => {
         setDismissed(true);
-        localStorage.setItem('lastSeenVersion', currentVersion);
-    }, [currentVersion]);
+        // Se guarda el `id` de la entrada, no una versión: es lo que hace que la próxima
+        // publicación vuelva a anunciarse aunque el número de la app no cambie.
+        if (latestUpdate) localStorage.setItem(LAST_SEEN_UPDATE_ID_KEY, latestUpdate.id);
+    }, [latestUpdate]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -59,23 +56,28 @@ export default function WhatsNewModal() {
         previouslyFocused.current?.focus?.();
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !latestUpdate) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="w-full max-w-md bg-surface-container-lowest rounded-3xl shadow-ambient-lg overflow-hidden animate-in zoom-in-95 duration-200 ring-1 ring-outline-variant/10"
+                className="w-full max-w-md max-h-full flex flex-col bg-surface-container-lowest rounded-3xl shadow-ambient-lg overflow-hidden animate-in zoom-in-95 duration-200 ring-1 ring-outline-variant/10"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"
             >
-                <div className="bg-gradient-to-br from-primary to-primary-container p-6">
+                {/* La cabecera y el pie quedan fijos y **solo** la lista hace scroll: con ocho
+                    novedades la tarjeta es más alta que una pantalla de 720 px, y sin esto el
+                    botón para cerrar caía fuera del viewport (medido en CI el 2026-10-21, con
+                    captura: el `click` de Playwright agotaba sus 30 s). En un móvil no hay
+                    Escape que lo salve: el modal era una trampa. */}
+                <div className="shrink-0 bg-gradient-to-br from-primary to-primary-container p-6">
                     <div className="flex items-center justify-between mb-2">
                         <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-on-primary/15 text-on-primary" aria-hidden>
                             <span className="text-xl">✨</span>
                         </span>
                         <span className="text-xs font-sans-medium text-on-primary/80 bg-on-primary/10 px-2 py-1 rounded-full">
-                            v{latestUpdate.version}
+                            v{latestUpdate.release}
                         </span>
                     </div>
                     <h2
@@ -91,7 +93,7 @@ export default function WhatsNewModal() {
                     </p>
                 </div>
 
-                <div className="p-6 bg-surface-container-lowest">
+                <div className="min-h-0 overflow-y-auto p-6 bg-surface-container-lowest">
                     <div className="space-y-4">
                         <h3 className="text-sm font-sans-semibold text-on-surface/70 uppercase tracking-wider">
                             Cambios realizados
@@ -107,7 +109,7 @@ export default function WhatsNewModal() {
                     </div>
                 </div>
 
-                <div className="p-4 bg-surface-container-low flex justify-end">
+                <div className="shrink-0 p-4 bg-surface-container-low flex justify-end">
                     <button
                         onClick={handleClose}
                         className="px-6 py-2.5 bg-primary text-on-primary font-sans-bold rounded-full hover:opacity-90 active:scale-95 transition-all text-sm shadow-ambient"

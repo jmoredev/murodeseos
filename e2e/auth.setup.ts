@@ -1,7 +1,7 @@
 import { test as setup, expect } from '@playwright/test'
 // IMPORTANTE: Ajusta esta ruta a donde tengas definido tu E2E_CONFIG
 import { E2E_CONFIG } from './config'
-import packageJson from '../package.json'
+import { LAST_SEEN_UPDATE_ID_KEY, getLatestUpdate } from '../lib/updates'
 
 const authFile = 'playwright/.auth/user.json'
 
@@ -23,10 +23,11 @@ setup('autenticar usuario', async ({ page }) => {
     // Verificar que estamos dentro de la app (en móvil el texto del logout no es estable)
     await expect(page.getByText(/Muro de deseos/i).first()).toBeVisible()
 
-    // 4. Guardar el estado (incluyendo lastSeenVersion para evitar el modal)
-    await page.evaluate((version) => {
-        localStorage.setItem('lastSeenVersion', version);
-    }, packageJson.version);
+    // 4. Guardar el estado (incluyendo la entrada de novedades vista, para evitar el modal)
+    const latestUpdate = getLatestUpdate()
+    await page.evaluate(({ key, id }) => {
+        if (id) localStorage.setItem(key, id)
+    }, { key: LAST_SEEN_UPDATE_ID_KEY, id: latestUpdate?.id ?? null });
 
     await page.context().storageState({ path: authFile })
     console.log('✅ Autenticación completada y estado guardado.')
