@@ -21,30 +21,51 @@ const CON_IMAGEN = { price: null, imageUrl: { value: 'https://shop.example/foto.
 const VACIO = { price: null, imageUrl: null };
 
 describe('needsFallback · cuándo salta', () => {
-    it('salta cuando el transporte falló, con o sin borrador', () => {
-        expect(needsFallback({ transportOk: false })).toBe('transport-failed');
-        expect(needsFallback({ transportOk: false, draft: CON_PRECIO })).toBe('transport-failed');
+    it('salta cuando el transporte topó con un muro', () => {
+        for (const failureReason of ['blocked-by-site', 'http-error'] as const) {
+            expect(needsFallback({ failureReason })).toBe('transport-failed');
+        }
+    });
+
+    it('NO gasta un crédito cuando el fallo no es un muro', () => {
+        // Un dominio que no resuelve o un timeout no los arregla ningún proveedor: mandarlos
+        // costaba un crédito por nada. Lo levantó el refutador del linaje `review-aaff4fb6c121fca1`.
+        const noGastables = [
+            'dns-failed',
+            'fetch-failed',
+            'timeout',
+            'too-many-redirects',
+            'body-read-failed',
+            'redirect-without-location',
+        ] as const;
+
+        for (const failureReason of noGastables) {
+            expect(needsFallback({ failureReason }), failureReason).toBeNull();
+        }
+    });
+
+    it('no gasta cuando la guarda SSRF rechazó la URL', () => {
+        const rechazos = [
+            'invalid-url',
+            'blocked-ip-loopback',
+            'blocked-ip-private',
+            'scheme-not-allowed',
+            'credentials-not-allowed',
+        ] as const;
+
+        for (const failureReason of rechazos) {
+            expect(needsFallback({ failureReason }), failureReason).toBeNull();
+        }
     });
 
     it('salta cuando la página llegó pero no dio ni precio ni imagen', () => {
-        // Cáscara SPA (Zara): 200 con 2 KB y nada que leer. Es el caso que D1(b) agrega.
-        expect(needsFallback({ transportOk: true, draft: VACIO })).toBe('empty-draft');
-        expect(needsFallback({ transportOk: true, draft: null })).toBe('empty-draft');
+        expect(needsFallback({ failureReason: null, draft: VACIO })).toBe('empty-draft');
+        expect(needsFallback({ failureReason: null, draft: null })).toBe('empty-draft');
     });
 
-    it('no salta si hay precio, aunque falte la imagen', () => {
-        expect(needsFallback({ transportOk: true, draft: CON_PRECIO })).toBeNull();
-    });
-
-    it('no salta si hay imagen, aunque falte el precio', () => {
-        expect(needsFallback({ transportOk: true, draft: CON_IMAGEN })).toBeNull();
-    });
-
-    it('no gasta un crédito por un campo suelto ausente', () => {
-        // Descripción o tienda ausentes no justifican el respaldo: por eso la regla pide las dos
-        // señales caras (precio e imagen) a la vez.
-        const conPrecioSinNada = { price: { amount: 1 }, imageUrl: null };
-        expect(needsFallback({ transportOk: true, draft: conPrecioSinNada })).toBeNull();
+    it('no salta si hay precio o imagen: no se gasta por un campo suelto ausente', () => {
+        expect(needsFallback({ failureReason: null, draft: CON_PRECIO })).toBeNull();
+        expect(needsFallback({ failureReason: null, draft: CON_IMAGEN })).toBeNull();
     });
 });
 

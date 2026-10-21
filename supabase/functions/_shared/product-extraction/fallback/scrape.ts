@@ -10,6 +10,7 @@
  * un `POST` con JSON que `pinnedFetch` no implementa. La guarda SSRF se aplica antes, del lado de la
  * URL del usuario (S7 de la ficha).
  */
+import { guardUrl } from '../net/url-guard.ts';
 import {
     FALLBACK_TIMEOUT_MS,
     buildFirecrawlPayload,
@@ -59,6 +60,11 @@ export async function scrapeWithFirecrawl({
 }): Promise<FirecrawlResult> {
     if (!apiKey) return { ok: false, reason: 'fallback-unauthorized' };
 
+    // La guarda SSRF se aplica acá **también**, no solo en el endpoint: este módulo no delega su
+    // propia seguridad en el llamador, así que una URL privada no sale nunca hacia un tercero.
+    const guarda = guardUrl(url);
+    if (!guarda.ok) return { ok: false, reason: 'fallback-unsafe-url' };
+
     let respuesta: ScrapeResponseLike;
     try {
         respuesta = await fetchImpl(FIRECRAWL_SCRAPE_URL, {
@@ -68,7 +74,7 @@ export async function scrapeWithFirecrawl({
                 'content-type': 'application/json',
                 accept: 'application/json',
             },
-            body: JSON.stringify(buildFirecrawlPayload(url, timeoutMs)),
+            body: JSON.stringify(buildFirecrawlPayload(guarda.url, timeoutMs)),
             signal: senalDeTimeout(timeoutMs),
         });
     } catch {

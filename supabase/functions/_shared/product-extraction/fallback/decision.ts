@@ -33,6 +33,7 @@ export type FallbackTrigger = 'transport-failed' | 'empty-draft';
 
 /** Motivos de fallo del respaldo. Se suman a los de `safeFetch` en la respuesta del endpoint. */
 export type FirecrawlFailure =
+    | 'fallback-unsafe-url'
     | 'fallback-unauthorized'
     | 'fallback-credits-exhausted'
     | 'fallback-rate-limited'
@@ -42,19 +43,43 @@ export type FirecrawlFailure =
 export type FirecrawlResult = { ok: true; html: string } | { ok: false; reason: FirecrawlFailure };
 
 /**
- * ¿Hay que gastar un crédito? Decisión del propietario (D1(b)): cuando el transporte falló, o
- * cuando la página llegó pero no dio **ni precio ni imagen**.
+ * Fallos que un scraper externo **sí** puede resolver: el sitio puso un muro. Los demás —un nombre
+ * que no resuelve, un timeout, una redirección rota— no los arregla nadie pagando, y cada intento
+ * cuesta un crédito.
+ *
+ * Esto faltaba: la primera versión gastaba ante **cualquier** fallo de transporte, así que un enlace
+ * con el dominio mal escrito quemaba un crédito para nada. Lo levantó el refutador del linaje
+ * `review-aaff4fb6c121fca1`.
+ *
+ * Se comparan como texto y no contra la unión `SafeFetchReason` a propósito: `blocked-by-site` y
+ * `http-error` los introduce la rama `fix/muro-anti-bot`, que todavía no está fusionada, y este
+ * módulo no puede cerrarse contra un tipo que aún no existe acá. Mientras esa rama no entre, un muro
+ * llega igual por el otro disparador —una página sin precio ni imagen es `empty-draft`—, así que el
+ * respaldo sigue saltando donde debe.
+ */
+const FALLOS_QUE_JUSTIFICAN_GASTO: readonly string[] = ['blocked-by-site', 'http-error'];
+
+/** Lo que se sabe después del camino propio: cómo falló, o qué dejó cuando no falló. */
+export type FallbackEvidence = {
+    /** Motivo del fallo de transporte, o `null` si la página llegó. */
+    failureReason: string | null;
+    draft?: { price: unknown; imageUrl: unknown } | null;
+};
+
+/**
+ * ¿Hay que gastar un crédito? Decisión del propietario (D1(b)): cuando el transporte topó con un
+ * **muro**, o cuando la página llegó pero no dio **ni precio ni imagen**.
  *
  * Un solo campo ausente no alcanza: la descripción o el nombre de la tienda faltan en muchas
  * páginas que sí traen lo que el usuario vino a buscar, y cada intento cuesta.
  */
-export function needsFallback(input: {
-    transportOk: boolean;
-    draft?: { price: unknown; imageUrl: unknown } | null;
-}): FallbackTrigger | null {
-    if (!input.transportOk) return 'transport-failed';
+export function needsFallback(evidence: FallbackEvidence): FallbackTrigger | null {
+    const { failureReason, draft = null } = evidence;
 
-    const draft = input.draft ?? null;
+    if (failureReason !== null) {
+        return FALLOS_QUE_JUSTIFICAN_GASTO.includes(failureReason) ? 'transport-failed' : null;
+    }
+
     if (draft === null) return 'empty-draft';
     if (draft.price == null && draft.imageUrl == null) return 'empty-draft';
 

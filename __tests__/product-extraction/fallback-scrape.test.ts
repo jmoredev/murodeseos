@@ -49,6 +49,26 @@ describe('scrapeWithFirecrawl', () => {
         });
     });
 
+    it('no manda al proveedor una URL que la guarda rechaza, aunque el llamador se olvide', async () => {
+        // El endpoint guarda primero, pero el módulo no delega su propia seguridad: una URL privada
+        // nunca sale hacia un tercero. Lo levantó el refutador del linaje `review-aaff4fb6c121fca1`.
+        let llamado = false;
+        const fetchFalso: ScrapeFetch = async () => {
+            llamado = true;
+            return respuesta(200, { success: true, data: { rawHtml: '<html>x</html>' } });
+        };
+
+        for (const url of [
+            'http://127.0.0.1/x',
+            'http://169.254.169.254/latest/meta-data/',
+            'file:///etc/passwd',
+        ]) {
+            const resultado = await scrapeWithFirecrawl({ url, apiKey: 'k', fetchImpl: fetchFalso });
+            expect(resultado, url).toEqual({ ok: false, reason: 'fallback-unsafe-url' });
+        }
+        expect(llamado).toBe(false);
+    });
+
     it('no llama al proveedor sin clave: es un fallo nombrado, no un viaje inútil', async () => {
         let llamado = false;
         const fetchFalso: ScrapeFetch = async () => {

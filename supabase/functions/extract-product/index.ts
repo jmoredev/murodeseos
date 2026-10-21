@@ -301,7 +301,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
             : null;
 
         // El respaldo salta solo cuando el camino propio no alcanzó (D1(b)).
-        const disparo = needsFallback({ transportOk: resultado.ok, draft: draftDirecto });
+        const disparo = needsFallback({
+            failureReason: resultado.ok ? null : resultado.reason,
+            draft: draftDirecto,
+        });
         const respaldo = disparo
             ? await intentarRespaldo({ url: guarda.url, userId, conf, disparo, ahoraMs: Date.now() })
             : { usado: false as const, nota: null };

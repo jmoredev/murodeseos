@@ -117,3 +117,24 @@
   veces** el binding que el propio STATUS acababa de emitir (`collectBinding is missing or stale`, con
   `expected-revision` y `request-hash` idénticos). No se iteró más: es el mismo defecto que la ficha
   `compartir-producto.md` documentó en L31 y que costó seis rechazos allí.
+
+- **L7 (2026-10-21) — el hueco que quedaba abierto, cerrado: solo se gasta ante un muro.** El refutador
+  del linaje `review-aaff4fb6c121fca1` dejó un hallazgo grave corroborado sobre `needsFallback`
+  (`decision.ts:52`) y el envío al proveedor (`scrape.ts:71`). El texto del hallazgo no se puede leer
+  —el store solo guarda ids y ubicaciones— así que se arregló lo que esas ubicaciones sostienen, que es
+  verificable por sí solo:
+  1. **`needsFallback` gastaba ante cualquier fallo de transporte.** Un dominio que no resuelve o un
+     timeout no los arregla ningún scraper: era un crédito por nada. Ahora hay una lista blanca
+     (`blocked-by-site`, `http-error`) y el resto —`dns-failed`, `fetch-failed`, `timeout`,
+     `too-many-redirects`, `body-read-failed`— **no gasta**. Un rechazo de la guarda SSRF tampoco.
+  2. **`scrape.ts` no se defendía**: mandaba al tercero la URL que le pasaran, confiando en que el
+     endpoint ya la había validado. Ahora aplica `guardUrl` y devuelve `fallback-unsafe-url` sin pedir
+     nada. Un módulo no delega su propia seguridad en quien lo llama.
+  **Rojo observado:** 5 tests en rojo (`expected 'transport-failed' to be null`). Después: **672 tests
+  + 1 todo**, `tsc` y `eslint` en 0.
+  **Dependencia de orden, y es real:** `blocked-by-site` y `http-error` los introduce la rama
+  `fix/muro-anti-bot` (PR #71), **todavía sin fusionar**. Por eso la lista blanca compara contra texto
+  y no contra la unión `SafeFetchReason`, que en esta rama no los tiene. Mientras #71 no entre, un muro
+  llega igual por el otro disparador —una página sin precio ni imagen es `empty-draft`—, así que el
+  respaldo sigue saltando donde debe. Cuando #71 entre, el disparador por motivo empieza a nombrar el
+  caso en vez de inferirlo.
