@@ -325,17 +325,20 @@ describe('safeFetch · caso feliz', () => {
         });
     });
 
-    it('devuelve ok con el cuerpo aunque la página responda 403 (el challenge sigue sirviendo)', async () => {
+    it('no devuelve el cuerpo de un 403 con challenge: el bloqueo no llega al parser', async () => {
+        // Antes esto devolvía `ok: true` con el cuerpo del challenge y el extractor lo convertía en
+        // un deseo titulado «Just a moment...». Medido el 2026-10-21 contra PcComponentes.
         const fetchFalso: FetchLike = async () =>
             respuesta({ status: 403, body: '<title>Just a moment...</title>' });
 
         const resultado = await safeFetch('https://shop.example/producto', { fetchImpl: fetchFalso });
 
-        expect(resultado.ok).toBe(true);
-        if (resultado.ok) {
-            expect(resultado.status).toBe(403);
-            expect(resultado.body).toContain('Just a moment');
-        }
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'blocked-by-site',
+            finalUrl: 'https://shop.example/producto',
+            status: 403,
+        });
     });
 });
 

@@ -19,7 +19,11 @@
  *   transitorio y cachearlo impediría reintentar durante el TTL.
  * - **Siempre `200` para una petición válida**, con un cuerpo discriminado: `{ ok: true, draft }`
  *   cuando se pudo pedir la página y `{ ok: false, reason }` cuando el transporte la bloqueó o
- *   falló. Un deseo sin datos es mejor que un fallo al compartir (S2).
+ *   falló. Un deseo sin datos es mejor que un fallo al compartir (S2). Los `reason` que puede
+ *   devolver el transporte son los de `safe-fetch.ts`: `blocked-by-site` (un muro anti-bot: header
+ *   `cf-mitigated`, firma de Cloudflare/DataDome, `403` o `429`), `http-error` (cualquier otro
+ *   `>= 400`, o sea una página rota y no un muro), `dns-failed`, `timeout`, `fetch-failed` y los
+ *   `blocked-ip-*` de la guarda SSRF. Un muro **no** se cachea, porque no es un borrador.
  * - Un error inesperado tampoco tumba la petición: `{ ok: false, reason: 'unexpected' }`.
  *
  * Variables de entorno (todas con valor por defecto, para poder medirlas sin tocar el código):
