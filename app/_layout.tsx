@@ -26,7 +26,8 @@ function ensureWebHead() {
 
     // `app/+html.tsx` ya aporta `lang="es"` y el viewport en el HTML estático; este
     // ajuste en runtime queda como red de seguridad para `expo start --web` y SSR.
-    document.documentElement.lang = 'es';
+    // `es-ES` y no `es`: el idioma de la interfaz es español de España (ver `docs/DEVELOPMENT.md`).
+    document.documentElement.lang = 'es-ES';
 
     const ensureMeta = (name: string, content: string) => {
         let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
