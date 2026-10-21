@@ -94,3 +94,26 @@
   **Lo que este run NO prueba:** que la guarda SSRF y el respaldo convivan en el runtime desplegado
   (acá corrió local), ni el caso de presupuesto agotado ni el de proveedor sin créditos, que están
   cubiertos por tests con dobles pero no por una llamada real. El stack local quedó levantado.
+
+- **L6 (2026-10-21) — la revisión nativa encontró un BLOCKER real, y era mío.** Linaje
+  `review-9546ed1ed63e9f92` (tier **medium**, lentes `review-risk`, `review-resilience`,
+  `review-reliability`). Las tres lentes corrieron y el proveedor pidió **refutador**; el refutador dictó
+  `correction_required` con cinco hallazgos, de los cuales **tres son defectos de verdad**:
+  1. **`R3-FALLBACK-DRAFT-LOSS` / `R4-FALLBACK-DRAFT-LOSS` (BLOCKER, inferencial)** — el camino de
+     respaldo **reemplazaba** el borrador directo en vez de fusionarlo. Una página que el camino propio
+     leyó a medias (título, descripción, tienda, sin precio ni imagen) podía salir **peor** después del
+     respaldo, y esa pérdida quedaba **cacheada**. Es exactamente lo que S8 prohíbe. Arreglo:
+     `mergeFallbackDraft` en `fallback/decision.ts`, campo por campo, el directo gana donde tiene algo y
+     el respaldo solo rellena; las notas de un campo que dejó de faltar se descartan.
+  2. **`R3-DIRECT-VIA-SHAPE` / `R4-RESPONSE-SHAPE` (CRITICAL, determinista)** — agregué `via: 'direct'`
+     a **todas** las respuestas exitosas existentes, y `fallback` a **todos** los fallos. Cambiar la
+     forma de una respuesta que nadie pidió tocar es una regresión de contrato. Arreglo: `via` queda
+     **solo** en el camino nuevo (`firecrawl`), y `fallback` solo aparece cuando hay algo que contar.
+  3. **`R3-ERROR-FALLBACK-SHAPE` (CRITICAL)** — el mismo problema que el anterior, visto por la otra
+     lente. Se arregla con el mismo cambio.
+  **Rojo observado antes del arreglo:** 3 de 5 tests de `fallback-merge.test.ts`. Después: **671 tests
+  + 1 todo**, `tsc` y `eslint` en 0.
+  **El proveedor no me dejó cerrar la corrección por su ruta:** `capture-correction-plan` rechazó **dos
+  veces** el binding que el propio STATUS acababa de emitir (`collectBinding is missing or stale`, con
+  `expected-revision` y `request-hash` idénticos). No se iteró más: es el mismo defecto que la ficha
+  `compartir-producto.md` documentó en L31 y que costó seis rechazos allí.

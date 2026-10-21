@@ -49,6 +49,7 @@ import { isCacheEnabled, readExtractionConfig } from '../_shared/product-extract
 import {
     FALLBACK_WINDOW_SECONDS,
     fallbackNote,
+    mergeFallbackDraft,
     needsFallback,
     type FallbackTrigger,
 } from '../_shared/product-extraction/fallback/decision.ts';
@@ -306,8 +307,13 @@ Deno.serve(async (request: Request): Promise<Response> => {
             : { usado: false as const, nota: null };
 
         if (respaldo.usado) {
-            // Se corre **nuestro** extractor sobre el DOM ya renderizado: mismo baremo, un crédito.
-            const draft = extractProduct({ html: respaldo.html, url: guarda.url });
+            // Se corre **nuestro** extractor sobre el DOM ya renderizado (mismo baremo, un crédito) y
+            // se **fusiona** con lo que el camino propio ya había leído: el respaldo rellena huecos,
+            // nunca reemplaza. Ver `mergeFallbackDraft` y S8 de la ficha.
+            const draft = mergeFallbackDraft(
+                draftDirecto,
+                extractProduct({ html: respaldo.html, url: guarda.url })
+            );
             if (clave && cacheActiva) {
                 await guardarEnCache({
                     supabaseUrl: conf.supabaseUrl,
@@ -323,8 +329,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
 
         if (!resultado.ok) {
+            // La forma del fallo se conserva: `fallback` aparece solo cuando hay algo que contar.
             return respuesta(
-                { ok: false, reason: resultado.reason, fallback: respaldo.nota },
+                respaldo.nota
+                    ? { ok: false, reason: resultado.reason, fallback: respaldo.nota }
+                    : { ok: false, reason: resultado.reason },
                 200,
                 request
             );
@@ -345,7 +354,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
                 ahoraMs: Date.now(),
             });
         }
-        return respuesta({ ok: true, draft, via: 'direct' }, 200, request);
+        return respuesta({ ok: true, draft }, 200, request);
     } catch {
         return respuesta({ ok: false, reason: 'unexpected' }, 200, request);
     }

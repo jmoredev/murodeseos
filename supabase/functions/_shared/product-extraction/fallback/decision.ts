@@ -1,3 +1,5 @@
+import type { ProductDraft } from '../types.ts';
+
 /**
  * El respaldo con Firecrawl: **cuándo** se gasta un crédito, **qué** se le pide y **qué** se hace
  * con lo que vuelve. Puro, sin red y sin `Deno`, para que las dos decisiones caras se puedan probar.
@@ -110,4 +112,43 @@ function asRecord(value: unknown): Record<string, unknown> | null {
  */
 export function fallbackNote(reason: FirecrawlFailure): string {
     return `El respaldo automático tampoco pudo leer la página (${reason}).`;
+}
+
+/**
+ * Fusiona el borrador del camino propio con el del respaldo **campo por campo**, sin perder nada.
+ *
+ * Es la regla que el refutador de `review-9546ed1ed63e9f92` levantó como BLOCKER cuando faltaba:
+ * reemplazar el borrador directo por el del respaldo podía dejar al usuario con menos datos —y
+ * cachear esa pérdida—, porque una página leída a medias (título, descripción, tienda) que dispara
+ * el respaldo por no tener precio ni imagen podía volver peor. Acá el directo **siempre** gana donde
+ * tiene algo; el respaldo solo rellena huecos.
+ *
+ * Las notas se recalculan con lo mismo: una nota que decía «no se encontró el precio» deja de ser
+ * cierta si el respaldo lo trajo, y una nota vieja no se guarda como si fuera historia.
+ */
+export function mergeFallbackDraft(direct: ProductDraft | null, fallback: ProductDraft): ProductDraft {
+    if (direct === null) return fallback;
+
+    const fusionado: ProductDraft = {
+        url: direct.url,
+        title: direct.title ?? fallback.title,
+        price: direct.price ?? fallback.price,
+        imageUrl: direct.imageUrl ?? fallback.imageUrl,
+        siteName: direct.siteName ?? fallback.siteName,
+        description: direct.description ?? fallback.description,
+        notes: direct.notes,
+    };
+
+    fusionado.notes = notasQueSiguenSiendoCiertas(direct.notes, fusionado);
+    return fusionado;
+}
+
+/** Descarta las notas de un campo que ya tiene valor. El texto lo escribió `extract/index.ts`. */
+function notasQueSiguenSiendoCiertas(notas: readonly string[], draft: ProductDraft): string[] {
+    return notas.filter((nota) => {
+        const texto = nota.toLowerCase();
+        if (draft.price !== null && texto.includes('precio')) return false;
+        if (draft.imageUrl !== null && texto.includes('imagen')) return false;
+        return true;
+    });
 }
