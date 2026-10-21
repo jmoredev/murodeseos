@@ -36,12 +36,12 @@
 
 | # | Tarea | Specs | Commit |
 | --- | --- | --- | --- |
-| T1 | Inventario de lo publicado desde `1.4.0` y redacción de la entrada pendiente | S4, S6 | — |
-| T2 | `lib/updates.ts`: `id` por entrada, `release` como etiqueta visible, predicado puro `shouldAnnounceUpdate` y `getLatestUpdate` que no mienta con el array vacío | S2 | — |
-| T3 | `components/WhatsNewModal.tsx`: gatear por `id`, guardar `id`, chip con la `release` de la entrada | S2 | — |
-| T4 | Tests: unitarios del predicado y actualización de los tres e2e que hoy dependen de `lastSeenVersion` | S2, S3 | — |
-| T5 | Regla de publicación en `docs/DEVELOPMENT.md` | S5 | — |
-| T6 | Verificación: suite, `tsc`, `eslint`; e2e actualizado pero **no ejecutado** acá (el stack local está apagado) | S1 | — |
+| T1 | Inventario de lo publicado desde `1.4.0` y redacción de la entrada pendiente | S4, S6 | `d0fedff` |
+| T2 | `lib/updates.ts`: `id` por entrada, `release` como etiqueta visible, predicado puro `shouldAnnounceUpdate` y `getLatestUpdate` que no mienta con el array vacío | S2 | `d0fedff` |
+| T3 | `components/WhatsNewModal.tsx`: gatear por `id`, guardar `id`, chip con la `release` de la entrada | S2 | `d0fedff` |
+| T4 | Tests: unitarios del predicado y del cableado, y actualización de los tres e2e que hoy dependen de `lastSeenVersion` | S2, S3 | `d0fedff` |
+| T5 | Regla de publicación en `docs/DEVELOPMENT.md` | S5 | `d0fedff` |
+| T6 | Verificación: suite, `tsc`, `eslint`; e2e actualizado pero **no ejecutado** acá (el stack local está apagado) | S1 | `d0fedff` |
 
 ## Log
 
@@ -76,3 +76,19 @@
   precio numérico con validación (`1f0b74c`, `05fa730`, 10-07/13); compartir un producto desde el móvil con
   extracción (`560a216`, `4fd6be4`, `c6ede3b`, 10-18/20) y precio con su moneda (`62a24c4`, `405ab2d`, 10-20).
   **No** se anuncian: correcciones internas, `a11y`/diseño que ya cubría el 1.4.0, ni el trabajo de e2e/CI.
+
+- **L5 (2026-10-21) — implementado y verificado.** `d0fedff` en `feat/novedades-por-release` (desde
+  `origin/main` = `09bf839`), nueve archivos, 349 líneas de las cuales ~150 son tests y ficha. **RED
+  observado antes de implementar**: 6 fallos en `__tests__/updates.test.ts` (el predicado no existía y
+  `getLatestUpdate()` no tenía `id`); después **63 archivos / 651 pasan + 1 todo**, `tsc` y `eslint
+  --max-warnings 0` en 0 sobre esta rama.
+  El test del **cableado** (`__tests__/whats-new-modal.test.tsx`) no estaba en el plan y se agregó por
+  una razón medida: el e2e es la única prueba que tocaba el modal en un navegador y **no se puede
+  correr acá** (el stack local de Supabase está apagado), así que sin él la regla quedaba probada pero
+  el uso de la regla no. Cuesta 3 casos y 78 líneas.
+  **Un detalle del entorno, para el próximo:** en este repo `localStorage` **no existe** en vitest
+  (Node define un global deshabilitado sin `--localstorage-file` y `vitest.setup.ts` solo mockea
+  `sessionStorage`); el test lo define en su propio ámbito en vez de tocar el setup.
+  **Dos subagentes fallaron** (`gentle-ai-explore` y `gentle-ai-worker`, ambos «assistant reported an
+  error») y el trabajo se hizo inline: se declara como hueco de proceso, no se reintentó.
+  **Lo que sigue sin verificar:** el e2e de Playwright actualizado — lo corre el gate de CI en el PR.
