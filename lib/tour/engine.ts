@@ -18,14 +18,17 @@ export type TourStep = {
     /** Ruta en la que vive la parada, si no es la actual. */
     route?: string;
     /** Páginas del cuadro de diálogo. Al menos una. */
-    pages: string[];
+    pages: readonly string[];
 };
 
 export type TourStatus = 'active' | 'completed' | 'skipped';
 
 export type TourState = {
-    /** El catálogo de paradas. Se comparte por referencia: es de sólo lectura. */
-    steps: TourStep[];
+    /**
+     * El catálogo de paradas. Es de sólo lectura y el tipo lo exige: se comparte por referencia entre
+     * todos los estados, así que una escritura accidental aquí la vería el recorrido entero.
+     */
+    steps: readonly TourStep[];
     status: TourStatus;
     stepIndex: number;
     pageIndex: number;
@@ -51,7 +54,7 @@ export type TourCurrent = {
  * Un paso sin páginas no es entrada del usuario sino un catálogo mal escrito, así que falla aquí y
  * el mensaje nombra el paso: quien lo lea arregla el catálogo sin abrir el depurador.
  */
-export function createTourState(steps: TourStep[]): TourState {
+export function createTourState(steps: readonly TourStep[]): TourState {
     const sinPaginas = steps.find((step) => step.pages.length === 0);
 
     if (sinPaginas) {

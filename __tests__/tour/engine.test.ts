@@ -191,8 +191,8 @@ describe('inmutabilidad', () => {
         const esperado = { ...inicial };
 
         const avanzado = next(inicial);
-        previous(posicion(1, 0));
-        skip(inicial);
+        const retrocedido = previous(posicion(1, 0));
+        const saltado = skip(inicial);
         current(inicial);
 
         // Objeto nuevo cuando hay cambio, para que React pueda usarlo como estado sin más.
@@ -200,5 +200,13 @@ describe('inmutabilidad', () => {
         expect(avanzado.pageIndex).toBe(1);
         expect(inicial).toEqual(esperado);
         expect(PASOS[0].pages).toHaveLength(3);
+
+        // Y la otra mitad de la promesa: quién cambia algo devuelve un estado nuevo, no el mismo
+        // objeto retocado. Antes estas llamadas se descartaban y el test parecía cubrirlas.
+        // Retroceder desde la primera página del paso 1 aterriza en la **última** del paso 0.
+        expect(retrocedido.pageIndex).toBe(PASOS[0].pages.length - 1);
+        expect(retrocedido.stepIndex).toBe(0);
+        expect(saltado).not.toBe(inicial);
+        expect(saltado.status).toBe('skipped');
     });
 });
