@@ -74,7 +74,7 @@ contenía requisitos, entran como `S8…` y reabren sólo las tareas afectadas.
 | ID | Specs | Qué | Ruta | Commit |
 | --- | --- | --- | --- | --- |
 | T1 | D2, D3 | Migración `tour_completed_at` + backfill de los perfiles existentes | migración SQL | sí |
-| T2 | S1, S2, S5 | Motor del tour: máquina de pasos pura (orden, siguiente/anterior, saltar, páginas, reduce motion) | `lib/tour/` | sí |
+| T2 | S1, S2 | Motor del tour: máquina de pasos pura (orden, siguiente/anterior, saltar, páginas) | `lib/tour/` | sí |
 | T3 | S2, S5, S7 | Registro de objetivos (`useTourTarget`) y overlay con hueco y anillo animados | `components/tour/` | sí |
 | T4 | S4 | Datos de demostración inyectables en las listas, sólo durante el tour | `components/` | sí |
 | T5 | S3, D4 | Paradas por pantalla, incluida la navegación entre rutas | `components/tour/` | sí |
@@ -114,3 +114,9 @@ grupo».
 L4 — Riesgo de integración registrado: el usuario nuevo estrenaría el tour y el modal de
 Novedades (`components/WhatsNewModal.tsx`) el mismo día. Se decide en T6: el tour va primero y
 el modal de novedades espera a que el tour termine o se salte.
+
+L5 — T2 implementada y revisada: el motor es puro y el **movimiento se queda entero en T7**. La fila de
+T2 prometía «reduce motion» dentro del motor; se corrigió la tabla en vez de ensuciar el módulo con
+una decisión de presentación. Revisión `review-0cd04313b2f5b848` (lentes riesgo y legibilidad):
+aprobada, autoridad quemada, una sugerencia no bloqueante sobre este documento (R2-001) que queda
+como trabajo posterior.
