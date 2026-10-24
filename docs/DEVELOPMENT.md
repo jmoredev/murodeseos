@@ -185,7 +185,7 @@ Código del grupo en chip con `ellipsizeMode="middle"`; contador de participante
 En `compilerOptions.types` se usa **`vitest/globals`** en lugar de `jest`, alineado con Vitest.
 
 ### Avisos de cumpleaños y onomástico (`lib/reminder-utils.ts`)
-- **El nombre sigue siendo el único dato obligatorio:** `profiles.birth_date` y `profiles.name_day` (`supabase/migrations/20260930160000_birthday_name_day_reminders.sql`) son **opcionales** y se recogen en `app/profile/setup/index.tsx` y se editan en `components/ProfileTab.tsx` (ambos con `components/ui/DateField.tsx`). La app redirige a `/profile/setup` solo cuando el `display_name` está vacío; una fecha ausente nunca bloquea la sesión.
+- **El nombre sigue siendo el único dato obligatorio:** `profiles.birth_date` y `profiles.name_day` (`supabase/migrations/20260930160000_birthday_name_day_reminders.sql`) son **opcionales** y se recogen en `app/profile/setup/index.tsx`, que hace el **alta en dos pasos**: primero la identidad (nombre, avatar, fechas) y después tallas y estilo (`shirt_size`, `pants_size`, `shoe_size`, `favorite_brands`, `favorite_color`), los mismos campos que edita `components/ProfileTab.tsx` (ambos con `components/ui/DateField.tsx`). El paso 2 nunca bloquea la entrada: «Empezar a usar Muro de Deseos» y «Completar más tarde» guardan lo mismo en un único `upsert`, y quien lo deja a medias lo termina desde «Mi perfil». La app redirige a `/profile/setup` solo cuando el `display_name` está vacío; una fecha ausente nunca bloquea la sesión.
 - **Los avisos se generan al abrir las notificaciones, no en segundo plano:** no hay cron, ni push, ni correo. Al montar el menú (`components/NotificationMenu.tsx`) se llama a `ensureBirthdayReminders()` (`lib/reminder-utils.ts`) justo antes del primer `fetch`, y esa llamada invoca `public.generate_birthday_reminders()` (idempotente), que inserta una fila por (destinatario, homenajeado, grupo, tipo) y año del evento. Como el RPC corre **con tu sesión**, el aviso aparece en tu siguiente visita a la app; si el primer `fetch` aún no lo ve, la suscripción realtime del propio menú lo trae.
 - **La antelación es por miembro y grupo:** `group_reminder_settings.lead_days` (defecto **15**, válida **1–365**) se configura en el modal de notificaciones del grupo (`components/GroupNotificationSettingsModal.tsx`, campo “Antelación de los avisos (días)”). Es la antelación con la que **ese usuario** recibe los avisos de cumpleaños y onomástico **en ese grupo**: cambiarla no afecta a los demás miembros ni a otros grupos.
 - **Iconos 🎂 / 🕯️, pero el avatar gana:** `components/NotificationItem.tsx` muestra el cumpleaños con 🎂 y el onomástico con 🕯️, pero si el homenajeado tiene avatar se muestra **la imagen en lugar del icono** (decisión deliberada, no un fallo). El nombre accesible de la tarjeta es su resumen ("Miguel cumple años pronto en …"), sin edad ni año: no ates pruebas ni código al carácter del emoji.
@@ -218,6 +218,16 @@ Por qué así:
 - **Firefox queda fuera de CI** deliberadamente por coste: exigiría una descarga de navegador nueva en el runner (`playwright install firefox`), alargando el job, y Chromium ya cubre el motor Blink. Se puede correr localmente con `pnpm exec playwright test --project=firefox`.
 
 Si CI falla, se suben como artefactos `playwright-report-chromium` / `playwright-report-mobile-chrome` / `playwright-report-mobile-safari` con `playwright-report/` (reporte HTML) y `test-results/` (capturas y trazas de fallo).
+
+### Alta de usuario nuevo (prueba manual)
+
+El alta solo se ve una vez: la puerta del login (`app/(auth)/login/index.tsx`) manda a
+`/profile/setup` únicamente mientras `profiles.display_name` esté vacío, y guardar el
+perfil cierra esa puerta para siempre. Para repetir el recorrido completo — login, alta,
+primer grupo, primer deseo — `pnpm run user:new` deja `nuevo@test.com` / `NuevoTest123!`
+recién creado, con el correo confirmado y sin nombre; volver a ejecutarlo devuelve el
+usuario a ese mismo punto borrando sus datos anteriores. Detalle en
+`scripts/README.md`.
 
 ## ♿ Checklist de Accesibilidad (antes de publicar)
 
