@@ -22,6 +22,15 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        id: '2026-10-24-alta-completa',
+        release: '2026.10.24',
+        date: '2026-10-24',
+        changes: [
+            '👕 El alta tiene dos pasos: primero quién eres y después tus tallas y estilo, para que te acierten el regalo. Si lo prefieres, lo completas más tarde desde «Mi perfil»',
+            '🛒 Los enlaces de Amazon vuelven a traer el precio aunque la tienda ponga su muro',
+        ],
+    },
+    {
         id: '2026-10-21-novedades',
         release: '2026.10.21',
         date: '2026-10-21',
