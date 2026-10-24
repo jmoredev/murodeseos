@@ -42,6 +42,19 @@
             "failure": null
         },
         {
+            "id": "amazon-interstitial",
+            "shop": "Amazon (interstitial «continue shopping», testigo negativo)",
+            "url": "https://www.amazon.com/dp/B0D1XD1ZV3",
+            "finalUrl": "https://www.amazon.com/dp/B0D1XD1ZV3",
+            "capturedAt": "2026-10-24T14:38:50.154Z",
+            "status": 200,
+            "ok": true,
+            "bytes": 3781,
+            "sha256": "1f091008eb10d7b7ae35d8168887e9210ca12b88bfafdab186661de7679e02ec",
+            "charset": "text/html",
+            "failure": null
+        },
+        {
             "id": "elcorteingles-es",
             "shop": "El Corte Inglés",
             "url": "https://www.elcorteingles.es/electronica/",

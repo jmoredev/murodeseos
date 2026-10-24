@@ -17,13 +17,19 @@
  *   página y, si el transporte fue exitoso (`ok: true`, aunque el borrador venga parcial con sus
  *   `notes`), se guarda en la caché. Un fallo de transporte (`ok: false`) **no** se cachea: es
  *   transitorio y cachearlo impediría reintentar durante el TTL.
+ * - **Segundo intento directo para Amazon**: cuando el camino propio topa con un muro o con una
+ *   página sin precio ni imagen y la URL es una ficha de Amazon con ASIN, se pide **una vez** la
+ *   ficha móvil (`/gp/aw/d/<ASIN>`) por el mismo `safeFetch` y se fusiona. No consume cuota ni
+ *   créditos de Firecrawl, y si la móvil trae la página el respaldo ya no tiene nada que rescatar.
+ *   La decisión y la construcción de la URL viven en `_shared/.../mobile/decision.ts`.
  * - **Siempre `200` para una petición válida**, con un cuerpo discriminado: `{ ok: true, draft }`
  *   cuando se pudo pedir la página y `{ ok: false, reason }` cuando el transporte la bloqueó o
  *   falló. Un deseo sin datos es mejor que un fallo al compartir (S2). Los `reason` que puede
  *   devolver el transporte son los de `safe-fetch.ts`: `blocked-by-site` (un muro anti-bot: header
- *   `cf-mitigated`, firma de Cloudflare/DataDome, `403` o `429`), `http-error` (cualquier otro
- *   `>= 400`, o sea una página rota y no un muro), `dns-failed`, `timeout`, `fetch-failed` y los
- *   `blocked-ip-*` de la guarda SSRF. Un muro **no** se cachea, porque no es un borrador.
+ *   `cf-mitigated`, firma de Cloudflare/DataDome/interstitial de Amazon, `403` o `429`),
+ *   `http-error` (cualquier otro `>= 400`, o sea una página rota y no un muro), `dns-failed`,
+ *   `timeout`, `fetch-failed` y los `blocked-ip-*` de la guarda SSRF. Un muro **no** se cachea,
+ *   porque no es un borrador.
  * - Un error inesperado tampoco tumba la petición: `{ ok: false, reason: 'unexpected' }`.
  *
  * Variables de entorno (todas con valor por defecto, para poder medirlas sin tocar el código):
@@ -60,6 +66,7 @@ import {
 import { consumirRespaldo } from '../_shared/product-extraction/fallback/postgrest.ts';
 import { scrapeWithFirecrawl } from '../_shared/product-extraction/fallback/scrape.ts';
 import { extractProduct } from '../_shared/product-extraction/extract/index.ts';
+import { intentarFichaMovil } from '../_shared/product-extraction/mobile/attempt.ts';
 import { createResolveHost } from '../_shared/product-extraction/net/resolve-host.ts';
 import { safeFetch } from '../_shared/product-extraction/net/safe-fetch.ts';
 import { guardUrl } from '../_shared/product-extraction/net/url-guard.ts';
@@ -306,10 +313,26 @@ Deno.serve(async (request: Request): Promise<Response> => {
             ? extractProduct({ html: resultado.body, url: resultado.finalUrl })
             : null;
 
-        // El respaldo salta solo cuando el camino propio no alcanzó (D1(b)).
-        const disparo = needsFallback({
+        // **Segundo intento directo, solo para Amazon y como mucho una vez.** El interstitial que
+        // detecta `detect-block.ts` llega con status 200 y sin ningún header, así que el camino
+        // propio se queda sin ficha; la móvil (`/gp/aw/d/<ASIN>`) sí es una página (medido el
+        // 2026-10-24: 89,99 € en `amazon.es`). No gasta créditos: es `safeFetch` otra vez, con la
+        // misma guarda. Sin ASIN en la ruta, o con un precio ya leído, no se pide nada.
+        const fichaMovil = await intentarFichaMovil({
+            url: guarda.url,
             failureReason: resultado.ok ? null : resultado.reason,
             draft: draftDirecto,
+        });
+        // El borrador móvil entra como respaldo: gana donde trae algo y el directo cubre los huecos.
+        const borradorDirecto = fichaMovil ? mergeFallbackDraft(draftDirecto, fichaMovil.draft) : draftDirecto;
+        const urlLeida = resultado.ok ? resultado.finalUrl : (fichaMovil?.finalUrl ?? null);
+
+        // El respaldo salta solo cuando el camino propio no alcanzó (D1(b)). Si la ficha móvil dio
+        // una página, lo que se juzga es esa página: pagar un crédito por lo que la móvil ya contó
+        // sería pagar dos veces por el mismo dato.
+        const disparo = needsFallback({
+            failureReason: resultado.ok || fichaMovil ? null : resultado.reason,
+            draft: borradorDirecto,
         });
         const respaldo = disparo
             ? await intentarRespaldo({ url: guarda.url, userId, conf, disparo, ahoraMs: Date.now() })
@@ -322,7 +345,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
             // La base para las URLs relativas es la que el proveedor leyó de verdad: una página que
             // redirige resolvía `img/x.jpg` contra la URL pedida y la imagen salía rota.
             const base = respaldo.finalUrl ?? guarda.url;
-            const draft = mergeFallbackDraft(draftDirecto, extractProduct({ html: respaldo.html, url: base }));
+            const draft = mergeFallbackDraft(borradorDirecto, extractProduct({ html: respaldo.html, url: base }));
             if (clave && cacheActiva) {
                 await guardarEnCache({
                     supabaseUrl: conf.supabaseUrl,
@@ -337,7 +360,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
             return respuesta({ ok: true, draft, via: 'firecrawl' }, 200, request);
         }
 
-        if (!resultado.ok) {
+        if (!resultado.ok && !fichaMovil) {
             // La forma del fallo se conserva: `fallback` aparece solo cuando hay algo que contar.
             return respuesta(
                 respaldo.nota
@@ -349,8 +372,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
         }
 
         const draft = respaldo.nota
-            ? { ...draftDirecto!, notes: [...draftDirecto!.notes, respaldo.nota] }
-            : draftDirecto!;
+            ? { ...borradorDirecto!, notes: [...borradorDirecto!.notes, respaldo.nota] }
+            : borradorDirecto!;
 
         if (clave && cacheActiva) {
             await guardarEnCache({
@@ -358,7 +381,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
                 serviceRoleKey: conf.serviceRoleKey,
                 cacheKey: clave,
                 draft,
-                finalUrl: resultado.finalUrl,
+                finalUrl: urlLeida ?? guarda.url,
                 ttlSegundos: conf.ttlSegundos,
                 ahoraMs: Date.now(),
             });
