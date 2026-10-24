@@ -23,6 +23,7 @@ desarrollo local y nunca contra el proyecto de producción.
 | --- | --- |
 | `seed-complete-database.ts` | Reinicia y puebla la base de datos de prueba: usuarios, perfiles, grupos, membresías y listas de deseos. |
 | `setup-e2e-user.ts` | Borra y recrea el usuario de pruebas E2E con su perfil completo. |
+| `new-user.ts` | Deja un usuario en estado de recién registrado (sin nombre en el perfil) para recorrer el alta completa desde el login. |
 | `postbuild.cjs` | Paso posterior al export web: genera `404.html`, `.nojekyll`, copia los activos de la PWA e inyecta los enlaces del manifiesto, favicon e `apple-touch-icon` con base path absoluto en el HTML. El idioma vive en `app/+html.tsx`. |
 | `capture-product-fixtures.ts` | Captura páginas de producto reales a `test/fixtures/product-pages/` (`<id>.html.gz` + `manifest.json`) para los tests de extracción de producto. Es la única excepción al «no uses estos scripts contra producción»: no toca Supabase, solo descarga HTML público, con una petición por semilla, pausa y sin reintentos. Detalle en `test/fixtures/product-pages/README.md`. |
 
@@ -31,6 +32,9 @@ desarrollo local y nunca contra el proyecto de producción.
 ```bash
 # Poblar la base de datos de prueba
 npm run seed
+
+# Dejar el usuario de pruebas en estado de recién registrado
+pnpm run user:new
 
 # Preparar todo lo necesario para las pruebas E2E (arranca Supabase local y puebla)
 npm run test:e2e:prepare
@@ -41,6 +45,23 @@ npm run build:deploy
 
 Los scripts de TypeScript se ejecutan con `tsx`, que ya es una dependencia de
 desarrollo. No necesitas instalarlo por separado.
+
+### Usuario recién registrado
+
+La puerta del login (`app/(auth)/login/index.tsx`) manda a `/profile/setup` solo cuando
+`profiles.display_name` está vacío, y ese estado se pierde en cuanto guardas el perfil.
+Este script lo reconstruye: borra el usuario y sus datos (deseos, grupos que creó,
+membresías, alias, avisos, cuotas e imágenes de Storage) y lo vuelve a crear con el
+correo ya confirmado y sin nombre.
+
+```bash
+pnpm run user:new
+pnpm run user:new -- --email otro@test.com --password OtraClave123!
+```
+
+Solo toca ese usuario: el resto de la base queda como está. Se niega a correr contra un
+Supabase que no sea local salvo que le pases `--allow-remote`, porque usa la clave de
+servicio y borra filas.
 
 ### Fixtures de páginas de producto
 
@@ -65,6 +86,7 @@ lista y la convención de los fixtures están en `scripts/lib/fixture-capture.ts
 | ana@test.com | Test123! | Ana López |
 | carlos@test.com | Test123! | Carlos Ruiz |
 | e2e-test@test.com | E2ETest123! | E2E Test User |
+| nuevo@test.com | NuevoTest123! | *(sin nombre: lo crea `new-user.ts`, sin perfil guardado)* |
 
 ## Aviso
 

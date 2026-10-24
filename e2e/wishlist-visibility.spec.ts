@@ -103,16 +103,12 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         // Manejar posible redirección a /profile/setup (común en primer login o pérdida de estado)
         if (page.url().includes('/profile/setup')) {
             console.log('⚠️ Redirigido a setup, completando perfil básico...');
-            // Paso 1: Nombre y Avatar
-            await page.fill('#displayName', E2E_CONFIG.secondaryUser.displayName);
-            await page.click('button:has-text("Continuar")');
+            // Paso 1: identidad (el nombre es el único dato obligatorio).
+            await page.getByTestId('setup-name-input').fill(E2E_CONFIG.secondaryUser.displayName);
+            await page.getByTestId('setup-continue-button').click();
 
-            // Paso 2: Estilo (opcional) - Esperar a que aparezca el botón de saltar
-            const skipStyleBtn = page.locator('button', { hasText: 'Saltar por ahora' });
-            await skipStyleBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
-            if (await skipStyleBtn.isVisible()) {
-                await skipStyleBtn.click();
-            }
+            // Paso 2: tallas y estilo, opcional. «Completar más tarde» guarda con lo que haya.
+            await page.getByTestId('setup-skip-button').click();
 
             await page.waitForURL('/', { timeout: 15000 });
         }
