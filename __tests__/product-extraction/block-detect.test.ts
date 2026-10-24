@@ -63,6 +63,16 @@ function respuesta(opciones: {
 
 const CLOUDFLARE = loadFixtureHtml('pccomponentes-es');
 const DATADOME = loadFixtureHtml('fnac-es');
+/** Interstitial de Amazon: 200, ~3,7 KB, `<title>Amazon.com</title>`, sin `cf-mitigated`. */
+const INTERSTITIAL_AMAZON = loadFixtureHtml('amazon-interstitial');
+/** La ficha real de Amazon, para probar que la firma no se come una página buena. */
+const PRODUCTO_AMAZON = loadFixtureHtml('amazon-es');
+
+/**
+ * Fixtures capturados con **200** que no son una página: Amazon contesta el interstitial con un
+ * status de éxito, así que el filtro por status no los ve y hay que nombrarlos.
+ */
+const DOSCIENTOS_QUE_NO_SON_PAGINA = ['amazon-interstitial'];
 
 describe('detectBlock · firma del challenge', () => {
     it('marca bloqueo cuando Cloudflare declara cf-mitigated', () => {
@@ -89,6 +99,20 @@ describe('detectBlock · firma del challenge', () => {
 
     it('no marca una página de producto que solo dice «esperá un momento» sin firma de challenge', () => {
         const veredicto = detectBlock({ status: 200, body: PRODUCTO_NORMAL });
+
+        expect(veredicto).toEqual({ blocked: false });
+    });
+
+    it('marca bloqueo con el interstitial real de Amazon, servido con 200 y sin cf-mitigated', () => {
+        // Medido el 2026-10-24: Amazon contesta la ficha con un interstitial de ~3,7 KB que pide
+        // «click the button below to continue shopping» y postea a `errors_page/validateCaptcha`.
+        const veredicto = detectBlock({ status: 200, mitigated: null, body: INTERSTITIAL_AMAZON });
+
+        expect(veredicto).toEqual({ blocked: true, reason: 'blocked-by-site' });
+    });
+
+    it('no marca la ficha real de Amazon (amazon-es), que llega con el mismo 200 y sin header', () => {
+        const veredicto = detectBlock({ status: 200, body: PRODUCTO_AMAZON });
 
         expect(veredicto).toEqual({ blocked: false });
     });
@@ -168,6 +192,19 @@ describe('safeFetch · el challenge no llega al parser', () => {
         });
     });
 
+    it('devuelve fallo blocked-by-site con el interstitial real de Amazon y ningún header de aviso', async () => {
+        const fetchFalso: FetchLike = async () => respuesta({ status: 200, body: INTERSTITIAL_AMAZON });
+
+        const resultado = await safeFetch('https://www.amazon.com/dp/B0D1XD1ZV3', { fetchImpl: fetchFalso });
+
+        expect(resultado).toEqual({
+            ok: false,
+            reason: 'blocked-by-site',
+            finalUrl: 'https://www.amazon.com/dp/B0D1XD1ZV3',
+            status: 200,
+        });
+    });
+
     it('sigue devolviendo el cuerpo de una página de producto normal', async () => {
         const fetchFalso: FetchLike = async () => respuesta({ status: 200, body: PRODUCTO_NORMAL });
 
@@ -200,7 +237,11 @@ describe('safeFetch · los fixtures reales siguen el status con el que se captur
     const fixtures = loadManifest().fixtures;
 
     it('deja pasar enteros los fixtures capturados con 200', async () => {
-        const buenos = fixtures.filter((fixture) => fixture.status === 200);
+        // Los 200 que no son una página se prueban aparte, en el bloque de abajo: acá se afirma que
+        // el cambio no se comió ninguna página buena.
+        const buenos = fixtures.filter(
+            (fixture) => fixture.status === 200 && !DOSCIENTOS_QUE_NO_SON_PAGINA.includes(fixture.id)
+        );
         expect(buenos.map((fixture) => fixture.id)).toContain('mediamarkt-es');
 
         for (const entrada of buenos) {
@@ -211,6 +252,22 @@ describe('safeFetch · los fixtures reales siguen el status con el que se captur
 
             expect(resultado.ok, `${entrada.id}: ${JSON.stringify(resultado)}`).toBe(true);
             if (resultado.ok) expect(resultado.body).toBe(html);
+        }
+    });
+
+    it('rechaza los 200 que no son una página, como el interstitial de Amazon', async () => {
+        for (const id of DOSCIENTOS_QUE_NO_SON_PAGINA) {
+            const entrada = fixtures.find((fixture) => fixture.id === id);
+            expect(entrada, `${id} tiene que estar en el manifiesto`).toBeDefined();
+            expect(entrada?.status).toBe(200);
+
+            const html = loadFixtureHtml(id);
+            const fetchFalso: FetchLike = async () => respuesta({ status: 200, body: html });
+
+            const resultado = await safeFetch(fixtureUrl(entrada!), { fetchImpl: fetchFalso });
+
+            expect(resultado.ok, id).toBe(false);
+            if (!resultado.ok) expect(resultado.reason, id).toBe('blocked-by-site');
         }
     });
 

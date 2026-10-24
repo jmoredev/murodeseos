@@ -13,9 +13,16 @@
  * al parser.
  *
  * Las firmas de abajo **no son adivinadas**: salen de los fixtures reales del repo —
- * `pccomponentes-es` y `decathlon-es` para Cloudflare, `fnac-es` para DataDome— y cada una se
- * exige con **dos** marcas para no marcar como bloqueo una página legítima que mencione la frase
- * en un texto cualquiera.
+ * `pccomponentes-es` y `decathlon-es` para Cloudflare, `fnac-es` para DataDome y
+ * `amazon-interstitial` para Amazon— y cada una se exige con **dos** marcas para no marcar como
+ * bloqueo una página legítima que mencione la frase en un texto cualquiera.
+ *
+ * El caso de Amazon es el que faltaba, medido el 2026-10-24: contesta la ficha de producto con
+ * `200`, **~3,7 KB**, `<title>Amazon.com</title>` sin precio, sin imagen, un `<h4>` con «Click the
+ * button below to continue shopping» y un formulario que postea a `/errors_page/validateCaptcha`,
+ * y `cf-mitigated: null`. O sea: el mismo desenlace que un challenge —un deseo titulado «Amazon.com»
+ * sin precio— solo que sin ningún header que lo delate, así que la firma del cuerpo es la única
+ * evidencia disponible.
  *
  * Lo que **no** cubre, a propósito: un muro que sirva la página del challenge con **status 200 y
  * sin ninguna de estas firmas**. Sin señal, esto no adivina; el desenlace sería el de antes.
@@ -53,6 +60,11 @@ const FIRMAS_DE_CHALLENGE: readonly ((cuerpo: string) => boolean)[] = [
     (cuerpo) =>
         cuerpo.includes('captcha-delivery.com') &&
         (cuerpo.includes('var dd=') || cuerpo.includes('please enable js')),
+    // Amazon: el interstitial de «continue shopping» con su formulario de captcha. La frase sola no
+    // alcanza (una ficha puede citarla) y el `action` solo tampoco: juntos son el muro entero.
+    (cuerpo) =>
+        cuerpo.includes('click the button below to continue shopping') &&
+        cuerpo.includes('errors_page/validatecaptcha'),
 ];
 
 /**

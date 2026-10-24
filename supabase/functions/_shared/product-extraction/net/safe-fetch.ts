@@ -15,10 +15,12 @@
  *   leer el precio, y el truncado se declara en `truncated`.
  * - **Solo los headers canónicos** de `headers.ts`; el llamador no puede inyectar cabeceras.
  * - **Un muro anti-bot no es una página.** Un challenge (header `cf-mitigated`, o la firma de
- *   Cloudflare/DataDome que mide `detect-block.ts`), un `403`/`429` y cualquier status `>= 400`
- *   se devuelven como fallo —`blocked-by-site` o `http-error`— y no como cuerpo. Un 403 **trae**
- *   cuerpo, y ese cuerpo es el challenge: dejarlo pasar hacía que el extractor lo convirtiera en
- *   un deseo titulado «Just a moment...» (medido el 2026-10-21 en PcComponentes).
+ *   Cloudflare/DataDome/interstitial de Amazon que mide `detect-block.ts`), un `403`/`429` y
+ *   cualquier status `>= 400` se devuelven como fallo —`blocked-by-site` o `http-error`— y no como
+ *   cuerpo. Un 403 **trae** cuerpo, y ese cuerpo es el challenge: dejarlo pasar hacía que el
+ *   extractor lo convirtiera en un deseo titulado «Just a moment...» (medido el 2026-10-21 en
+ *   PcComponentes). El interstitial de Amazon es el mismo caso con `200` y sin ningún header
+ *   (medido el 2026-10-24): un deseo titulado «Amazon.com» sin precio ni imagen.
  *
  * Lo que **no** cubre, y es deliberado: el SSRF basado en **DNS**. Sin un `resolveHost`, un
  * nombre público que resuelve a una dirección privada no se detecta, porque resolver es E/S
