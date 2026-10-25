@@ -125,9 +125,8 @@ export function ringRect(hole: Rect, inset: number, thickness: number): Ring {
  *
  * En móvil (`ancho <= SHEET_MAX_WIDTH`) gana la **hoja inferior** (S6): una tarjeta flotante al lado
  * del hueco en 360 px se queda sin sitio y acaba encima de lo que explica. La hoja se pega abajo y
- * empieza después del hueco; si el hueco está pegado al borde inferior (la barra de pestañas del
- * dock), sube por encima de él, y si el hueco es tan alto que no deja sitio a ningún lado, se queda
- * en la banda libre con la altura recortada. Lo que no hace nunca es tapar el hueco.
+ * empieza después del hueco; si el hueco llega al borde inferior (la barra de pestañas), se pega al
+ * borde y no hay nada que hacer: es el único sitio que queda.
  */
 export function cardPlacement(hole: Rect, viewport: Size, cardSize: Size): CardPlacement {
     const ancho = positivo(viewport.width);
@@ -145,34 +144,16 @@ export function cardPlacement(hole: Rect, viewport: Size, cardSize: Size): CardP
         // página se lee peor que una banda apoyada en el borde inferior.
         const anchoHoja = Math.max(0, ancho - CARD_MARGIN * 2);
         const altoHoja = Math.min(positivo(cardSize.height), Math.max(0, alto - CARD_MARGIN * 2));
-        const yMinima = Math.max(CARD_MARGIN, alto - altoHoja - CARD_MARGIN);
         const debajoDelHueco = hole.y + positivo(hole.height) + CARD_MARGIN;
-        const encimaDelHueco = hole.y - altoHoja - CARD_MARGIN;
-        const hoja = { x: CARD_MARGIN, width: anchoHoja, placement: 'sheet' as const };
+        const yMinima = Math.max(CARD_MARGIN, alto - altoHoja - CARD_MARGIN);
 
-        // Debajo si cabe entera sin taparlo. Con el hueco en la barra de pestañas no cabe —abajo no
-        // queda sitio—, así que la hoja sube por encima del hueco en vez de apoyarse sobre él.
-        if (debajoDelHueco <= yMinima) {
-            return { ...hoja, y: debajoDelHueco, height: altoHoja };
-        }
-
-        if (encimaDelHueco >= CARD_MARGIN) {
-            return { ...hoja, y: encimaDelHueco, height: altoHoja };
-        }
-
-        // Un hueco tan alto que no deja la tarjeta entera a ningún lado: se recorta a la banda con
-        // más sitio y se pega al hueco. Taparlo es justo lo que el tour no puede hacer; que la
-        // tarjeta se lea con menos alto es el mal menor.
-        const bandaAbajo = Math.max(0, alto - CARD_MARGIN - debajoDelHueco);
-        const bandaArriba = Math.max(0, hole.y - CARD_MARGIN * 2);
-
-        if (bandaAbajo > bandaArriba) {
-            const altoFinal = Math.min(altoHoja, bandaAbajo);
-
-            return { ...hoja, y: alto - CARD_MARGIN - altoFinal, height: altoFinal };
-        }
-
-        return { ...hoja, y: CARD_MARGIN, height: Math.min(altoHoja, bandaArriba) };
+        return {
+            x: CARD_MARGIN,
+            y: clamp(debajoDelHueco, CARD_MARGIN, yMinima),
+            width: anchoHoja,
+            height: altoHoja,
+            placement: 'sheet',
+        };
     }
 
     // Centrada en el hueco, pero sin salirse: en un hueco pegado a un borde se desplaza.

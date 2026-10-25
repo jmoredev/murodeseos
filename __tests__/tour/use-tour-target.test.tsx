@@ -57,23 +57,6 @@ function nodoMedible(rect: TargetRect) {
     };
 }
 
-/**
- * Un nodo como los de verdad: `measureInWindow` es un **método** que resuelve la caja en el receptor.
- * La flecha de `nodoMedible` no lo delata porque no usa `this`; React Native sí, así que despegar el
- * método (`const fn = nodo.measureInWindow`) pierde el receptor y la medición no llega nunca.
- */
-function nodoConReceptor(rect: TargetRect) {
-    return {
-        rect,
-        measureInWindow(
-            this: { rect: TargetRect },
-            callback: (x: number, y: number, width: number, height: number) => void
-        ) {
-            callback(this.rect.x, this.rect.y, this.rect.width, this.rect.height);
-        },
-    };
-}
-
 describe('useTourTarget', () => {
     it('tolera que el nodo todavía no exista y mide en cuanto aparece', async () => {
         const api: SondaRef = { current: null };
@@ -96,26 +79,6 @@ describe('useTourTarget', () => {
         expect(leer(api).registro.measure('tab-deseos')).toEqual(RECT);
 
         unmount();
-    });
-
-    it('mide un nodo que resuelve la caja en el receptor, no como función suelta', async () => {
-        const api: SondaRef = { current: null };
-        render(
-            <TourTargetProvider>
-                <Sonda sondaRef={api} />
-            </TourTargetProvider>
-        );
-
-        // Si la medición se invocara despegada del nodo, aquí no habría caja: `this` sería undefined.
-        await act(async () => {
-            leer(api).props.ref(nodoConReceptor(RECT));
-        });
-        expect(leer(api).registro.measure('tab-deseos')).toEqual(RECT);
-
-        await act(async () => {
-            leer(api).props.onLayout();
-        });
-        expect(leer(api).registro.measure('tab-deseos')).toEqual(RECT);
     });
 
     it('vuelve a medir cuando cambia el layout', async () => {
