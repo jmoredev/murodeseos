@@ -17,6 +17,9 @@ import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/Tou
  * `reanimated` se sustituye por una implementación mínima: en jsdom no hay hilo de animación y lo
  * que importa aquí es el orden del recorrido, no los fotogramas.
  */
+// El corredor lee el pathname de expo-router: en las pruebas no hay navegador, se fija.
+vi.mock('expo-router', () => ({ usePathname: () => '/' }));
+
 vi.mock('react-native-reanimated', async () => {
     const React = await import('react');
     const { View } = await import('react-native');

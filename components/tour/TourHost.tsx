@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { markTourCompleted, readTourCompletedAt, shouldStartTour, TOUR_FLAG_DB } from '@/lib/tour/flag';
 import type { TourDestination } from '@/lib/tour/navigation';
@@ -41,6 +41,9 @@ const ESTILOS = StyleSheet.create({
     /** El contenedor de la página: ocupa lo mismo que ocupaba la página sin envolverla. */
     pagina: { flex: 1 },
 });
+
+/** La portada, con o sin pestaña pedida: `/`, `/?tab=groups`… */
+const PORTADA = /^\/?(?:\?tab=(wishlist|groups|profile))?$/;
 
 type TourHostContextValue = {
     active: boolean;
@@ -88,7 +91,6 @@ export type TourHostProps = {
 
 export function TourHost({ children }: TourHostProps) {
     const router = useRouter();
-    const pathname = usePathname();
 
     const [pendiente, setPendiente] = useState(false);
     const [requestedTab, setRequestedTab] = useState<Tab | null>(null);
@@ -214,6 +216,29 @@ export function TourHost({ children }: TourHostProps) {
                 return;
             }
 
+            /**
+             * Volver a la portada es **retroceder**, no abrir otra.
+             *
+             * Las paradas de sub-ruta se alcanzan con un `push` desde la portada, que sigue montada
+             * debajo. Empujar `/?tab=…` encima monta una segunda copia del muro —y luego una
+             * tercera— con sus listas, sus peticiones y su modal de novedades: el usuario no lo ve,
+             * pero el botón Atrás y el DOM cargan con copias que nadie mira. `back()` devuelve a la
+             * portada que ya estaba, con su estado, y la pestaña pedida se aplica por contexto.
+             */
+            const portada = PORTADA.exec(destino.route);
+
+            if (portada) {
+                const pedida = portada[1] as Tab | undefined;
+
+                if (pedida) setRequestedTab(pedida);
+
+                if (router.canGoBack()) {
+                    router.back();
+
+                    return;
+                }
+            }
+
             // `expo-router` tipa las rutas como literales; aquí la ruta viene del guion, así que se
             // empuja con el mismo molde que el resto de la app.
             router.push(destino.route as Parameters<typeof router.push>[0]);
@@ -271,7 +296,6 @@ export function TourHost({ children }: TourHostProps) {
                 <TourRunner
                     steps={TOUR_STEPS}
                     tab={currentTab ?? 'wishlist'}
-                    pathname={pathname}
                     onNavigate={alNavegar}
                     onFinish={alTerminar}
                     reduceMotion={reduceMotion}
