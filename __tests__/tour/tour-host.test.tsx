@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TourHost, useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
 import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/TourTargetProvider';
 import { TOUR_STEPS } from '@/lib/tour/steps';
 import type { Tab } from '@/lib/tabs';
 import type { TargetRect } from '@/lib/tour/targets';
+import { withTiming } from 'react-native-reanimated';
 
 /**
  * El arranque del tour (S1, D2, D3): quién lo abre, quién lo cierra y quién espera.
@@ -115,7 +116,37 @@ const PRIMERA_PAGINA =
 
 const RECT: TargetRect = { x: 8, y: 24, width: 200, height: 48 };
 
+/**
+ * La caja que devuelve cada objetivo. Por defecto la misma para todas las paradas; el test de
+ * movimiento reducido necesita cajas distintas para que haya algo que mover entre paradas.
+ */
+let cajaDeObjetivo: (id: string) => TargetRect = () => RECT;
+
+/**
+ * La preferencia de movimiento del sistema, tal como la contestaría `matchMedia`. Se instala en
+ * `beforeEach` porque el `TourHost` la pregunta al montar y los tests no deben depender del jsdom.
+ */
+let movimientoReducido = false;
+
+const descriptorMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
+
+function instalarMedios() {
+    (window as unknown as { matchMedia: unknown }).matchMedia = vi.fn((consulta: string) => ({
+        matches: movimientoReducido,
+        media: consulta,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => true,
+    }));
+}
+
 beforeEach(() => {
+    movimientoReducido = false;
+    cajaDeObjetivo = () => RECT;
+    instalarMedios();
     dobles.estado.sesion = { user: { id: 'user-1' } };
     dobles.estado.fila = { data: { tour_completed_at: null }, error: null };
     dobles.estado.consultasDeMarca = 0;
@@ -124,6 +155,15 @@ beforeEach(() => {
     dobles.estado.oyentes.length = 0;
     dobles.estado.ruta.pathname = '/';
     dobles.router.push.mockClear();
+    vi.mocked(withTiming).mockClear();
+});
+
+afterEach(() => {
+    if (descriptorMatchMedia) {
+        Object.defineProperty(window, 'matchMedia', descriptorMatchMedia);
+    } else {
+        delete (window as { matchMedia?: unknown }).matchMedia;
+    }
 });
 
 /**
@@ -136,7 +176,7 @@ function Objetivos() {
     useEffect(() => {
         const ids = TOUR_STEPS.map((paso) => paso.targetId);
 
-        for (const id of ids) registro.register(id, () => RECT);
+        for (const id of ids) registro.register(id, () => cajaDeObjetivo(id));
 
         return () => {
             for (const id of ids) registro.unregister(id);
@@ -300,6 +340,80 @@ describe('TourHost: cómo termina', () => {
         expect(sonda()).toBe('apagado|ninguna');
         // Terminar o saltar no vuelve a leer la marca: ya se sabe y la escritura es la respuesta.
         expect(dobles.estado.consultasDeMarca).toBe(1);
+    });
+});
+
+describe('TourHost: accesibilidad mientras el tour está abierto', () => {
+    it('con el tour abierto la página de detrás queda oculta e inerte, y vuelve al cerrar', async () => {
+        render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        const pagina = screen.getByTestId('tour-page');
+
+        // `aria-hidden` no basta: los botones de detrás seguirían recibiendo Tab y Enter. `inert`
+        // es lo que de verdad los saca del alcance del teclado.
+        expect(pagina).toHaveAttribute('aria-hidden', 'true');
+        expect(pagina).toHaveAttribute('inert');
+
+        fireEvent.click(screen.getByLabelText('Saltar el tour'));
+
+        await waitFor(() => expect(screen.queryByText(PRIMERA_PAGINA)).toBeNull());
+
+        // Al cerrar, la página vuelve a estar disponible: sin esto el usuario se queda con una
+        // app que no responde al teclado después del tour.
+        expect(pagina).not.toHaveAttribute('aria-hidden');
+        expect(pagina).not.toHaveAttribute('inert');
+    });
+
+    it('sin tour la página no se oculta ni se vuelve inerte', async () => {
+        dobles.estado.fila = { data: { tour_completed_at: FECHA }, error: null };
+
+        render(<Pintar />);
+
+        await waitFor(() => expect(dobles.estado.consultasDeMarca).toBe(1));
+        await act(async () => {});
+
+        const pagina = screen.getByTestId('tour-page');
+
+        expect(pagina).not.toHaveAttribute('aria-hidden');
+        expect(pagina).not.toHaveAttribute('inert');
+    });
+});
+
+describe('TourHost: movimiento reducido', () => {
+    /** Cada parada con su propia caja: sin movimiento distinto no hay transición que medir. */
+    const cajasDistintas = (id: string) => {
+        const indice = TOUR_STEPS.findIndex((paso) => paso.targetId === id);
+
+        return { ...RECT, y: 24 + indice * 12 };
+    };
+
+    it('con la preferencia activada no anima ningún cambio de parada', async () => {
+        movimientoReducido = true;
+        cajaDeObjetivo = cajasDistintas;
+
+        render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        // Dos páginas de bienvenida: la segunda pulsación entra en la parada siguiente, con otra
+        // caja, que es el cambio que se animaría.
+        await avanzar(2);
+
+        expect(withTiming).not.toHaveBeenCalled();
+    });
+
+    it('con la preferencia desactivada sí anima el cambio de parada', async () => {
+        cajaDeObjetivo = cajasDistintas;
+
+        render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        await avanzar(2);
+
+        expect(withTiming).toHaveBeenCalled();
     });
 });
 

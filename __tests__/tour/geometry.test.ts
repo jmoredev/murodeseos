@@ -212,6 +212,19 @@ describe('cardPlacement: la tarjeta no tapa lo que explica', () => {
         expect(tarjeta.height).toBeGreaterThan(0);
     });
 
+    it('en móvil, una tarjeta más alta que la estimación sigue sin tapar el hueco de la barra de pestañas', () => {
+        // El caso que motivó medir en vez de estimar: la tarjeta de verdad mide 420 px, no 190, y
+        // la colocación tiene que hacerse con esa altura o el crecimiento acaba encima del hueco.
+        const movil: Size = { width: 360, height: 740 };
+        const hole: Rect = { x: 20, y: 650, width: 320, height: 56 };
+        const tarjeta = cardPlacement(hole, movil, { width: 328, height: 420 });
+
+        expect(tarjeta.placement).toBe('sheet');
+        expect(tarjeta.height).toBe(420);
+        expect(tarjeta.y + tarjeta.height).toBeLessThanOrEqual(hole.y);
+        expect(tarjeta.y).toBeGreaterThanOrEqual(CARD_MARGIN);
+    });
+
     it('el ancho del umbral pertenece a móvil: 768 es hoja y 769 no', () => {
         const hole: Rect = { x: 100, y: 100, width: 120, height: 40 };
 

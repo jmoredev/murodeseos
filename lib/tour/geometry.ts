@@ -37,6 +37,18 @@ export const CARD_MARGIN = 16;
  */
 export const SHEET_MAX_WIDTH = 768;
 
+/**
+ * Lo que se estima que ocupa la tarjeta **antes** de poder medirla.
+ *
+ * La colocación se decide antes de pintar la tarjeta —no puede medirse a sí misma antes de
+ * existir—, así que se usa una estimación generosa con el texto más largo del guion. En cuanto el
+ * overlay recibe el `onLayout` de la tarjeta, `useTamanoTarjeta` devuelve la medida real y la
+ * colocación se recalcula con ella: si la estimación se quedaba corta, la tarjeta ya no crece
+ * encima del hueco.
+ * Se exporta para que el test pueda fijar el tamaño con el que se coloca la primera vez.
+ */
+export const TARJETA_ESTIMADA: Size = { width: 320, height: 190 };
+
 /** Las cuatro piezas de velo. Juntas cubren el viewport menos el hueco. */
 export type ScrimPieces = {
     top: Rect;

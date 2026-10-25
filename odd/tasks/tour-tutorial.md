@@ -93,6 +93,7 @@ Commits por tarea (evidencia):
 | T1–T4, corrección de la revisión | `b4cb709` (con `9b166e7` + `4dfcac4`, ver L6) |
 | T5 | pendiente de anotar al commitear |
 | T6 | ver L8 |
+| T7 | ver L9 |
 
 ## Log
 
@@ -189,3 +190,17 @@ Decisión de arranque que no estaba escrita: el tour empieza cuando la **portada
 en cuanto la marca dice que sí. Quien acaba de registrarse está en `/profile/setup`; arrancar ahí
 haría que la primera parada —una pestaña de la portada— pidiera volver a `/` y sacara al usuario de
 la mitad del alta. El caso está fijado por un test.
+
+L9 — T7 implementada (S5, S6, S7), cuatro cosas y ninguna más:
+
+- **Movimiento reducido de verdad** (`lib/tour/use-reduced-motion.ts`): `matchMedia` en web con
+  suscripción, `AccessibilityInfo` en nativo. Hasta ahora `TourOverlay` ya sabía saltarse las
+  transiciones, pero nadie le pasaba el dato.
+- **El hueco de teclado que dejó T4**: el velo se come los toques, no el Tab+Enter. Con el tour
+  abierto la página de detrás queda `aria-hidden` e `inert`, el foco entra en la tarjeta al abrir y
+  en cada página, Tab se queda dentro y al cerrar vuelve a donde estaba.
+- **La tarjeta se mide** (`useTamanoTarjeta`) en vez de confiar en la estimación: se coloca con
+  320×190 hasta el primer `onLayout`, y una sola corrección por paso evita oscilar. El texto que no
+  cabe se lee desplazando, sin crecer por encima del hueco.
+- **Mobile-first sin rediseño**: la hoja sigue ocupando el ancho útil y los anclajes de escritorio
+  no cambian.
