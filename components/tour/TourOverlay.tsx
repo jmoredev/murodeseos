@@ -16,6 +16,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { TourCurrent } from '@/lib/tour/engine';
 import {
+    CARD_BORDER,
+    CARD_PADDING,
     RING_INSET,
     RING_THICKNESS,
     cardPlacement,
@@ -71,13 +73,57 @@ function comoElementoDom(nodo: unknown): HTMLElement | null {
     return typeof elemento.focus === 'function' ? elemento : null;
 }
 
+/**
+ * Los colores del overlay, con el nombre del token de `tailwind.config.cjs` que reproducen.
+ *
+ * Van en `style` y **no** en `className`, y no es una preferencia: el `Animated.View` de
+ * `reanimated` no pasa por el `cssInterop` de NativeWind, así que se queda con
+ * `class="css-view-g5y9jx"` y descarta las clases de Tailwind sin avisar. Mientras estuvieron en
+ * clases, el velo no oscureció nada (`rgba(0, 0, 0, 0)`), la tarjeta no tuvo fondo —ni relleno, ni
+ * esquinas— y el anillo salió negro en vez del tono de marca (odd/tasks/tour-ajustes-visuales.md,
+ * L2). Los nodos que no son animados (`View`, `Text`, `Pressable`) siguen con clases: ésas sí
+ * llegan.
+ */
+const TONO_VELO = 'rgba(76, 33, 43, 0.75)'; // `on-surface` al 75 %
+const TONO_TARJETA = '#fff4f4'; // `surface`
+const TONO_ANILLO = '#ff7574'; // `primary-container`
+const TONO_SOMBRA = '#4c212b'; // `on-surface`
+
 const ESTILOS = StyleSheet.create({
     elemento: { position: 'absolute' },
     /**
-     * Antes de la primera medida la altura tiene que ser la del contenido. Si se fijara la
-     * estimación, `onLayout` mediría la estimación y la corrección no serviría de nada.
+     * Antes de la primera medida la tarjeta toma su altura natural, que es la del contenido: es el
+     * mismo alto que luego le da la colocación, así que no hay salto entre el primer fotograma y la
+     * medida. Fijar aquí la estimación haría que la tarjeta naciera con un alto que no es el suyo.
      */
     alturaNatural: { height: 'auto' },
+    /** El velo: todo lo que no es el objetivo, oscurecido para que el objetivo destaque solo (S1). */
+    velo: { backgroundColor: TONO_VELO },
+    /** El borde del hueco, en el tono claro de la marca: el único que se lee encima del velo. */
+    anillo: { borderColor: TONO_ANILLO },
+    /**
+     * La tarjeta: fondo opaco, relleno y esquinas. Sin fondo propio, el texto se mezclaba con lo
+     * que hubiera debajo (S2). Los valores son los del token que se usaba en clases: `rounded-2xl`
+     * (16 px), `p-4` (16 px, `CARD_PADDING`) y `shadow-ambient-lg`.
+     */
+    tarjeta: {
+        backgroundColor: TONO_TARJETA,
+        borderRadius: 16,
+        // El mismo relleno con el que `cardHeightForContent` calcula el alto de la tarjeta: si
+        // cambiara aquí y no allí, el texto volvería a no caber (S3).
+        padding: CARD_PADDING,
+        // Las esquinas redondeadas sólo recortan si el nodo las recorta a él.
+        overflow: 'hidden',
+        // Un filo tenue separa la tarjeta del contenido de detrás cuando el velo se aclara. Cuenta
+        // para el alto: `cardHeightForContent` lo suma en los dos lados.
+        borderWidth: CARD_BORDER,
+        borderColor: 'rgba(76, 33, 43, 0.10)',
+        shadowColor: TONO_SOMBRA,
+        shadowOpacity: 0.18,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 12 },
+        elevation: 8,
+    },
 });
 
 /**
@@ -161,22 +207,30 @@ export function TourOverlay({
     /** Sin DOM no hay foco que mover ni teclado que atrapar (nativo, servidor). */
     const hayDom = Platform.OS === 'web' && typeof document !== 'undefined';
 
+    // Se leen aquí para que las dependencias de los efectos de foco digan qué cambia de verdad.
+    const pasoActual = parada?.step.id ?? null;
+    const paginaActual = parada?.pageIndex ?? 0;
+
+    /**
+     * La identidad de lo que se mide: **la página**, no la parada. Cada página tiene su texto y, por
+     * tanto, su alto; con la parada como clave, la segunda página heredaba el alto de la primera y su
+     * texto había que leerlo desplazando (D3, S3).
+     */
+    const claveDePagina = pasoActual === null ? null : `${pasoActual}#${paginaActual}`;
+
     // La tarjeta se coloca con lo que mide, no con lo que se supone que medirá (S6, S7). La medida
     // se pide siempre, también cuando no hay parada: el orden de los enganches no puede depender
     // de si el hueco ya llegó.
     const {
         size: tamanoTarjeta,
         onLayout: alMedirTarjeta,
+        onContentSizeChange: alCambiarElContenido,
         measured: tarjetaMedida,
-    } = useTamanoTarjeta(parada?.step.id ?? null);
+    } = useTamanoTarjeta(claveDePagina);
 
     const anillo = ringRect(hueco ?? VACIO, RING_INSET, RING_THICKNESS);
     const trozos = scrimPieces(anillo, ventana);
     const tarjeta = cardPlacement(anillo, ventana, tamanoTarjeta);
-
-    // Se leen aquí para que las dependencias de los efectos de foco digan qué cambia de verdad.
-    const pasoActual = parada?.step.id ?? null;
-    const paginaActual = parada?.pageIndex ?? 0;
 
     const animar = visible && !reduceMotion;
 
@@ -334,23 +388,19 @@ export function TourOverlay({
 
             <Animated.View
                 testID="tour-scrim-top"
-                style={[ESTILOS.elemento, veloArriba]}
-                className="bg-on-surface/70"
+                style={[ESTILOS.elemento, ESTILOS.velo, veloArriba]}
             />
             <Animated.View
                 testID="tour-scrim-bottom"
-                style={[ESTILOS.elemento, veloAbajo]}
-                className="bg-on-surface/70"
+                style={[ESTILOS.elemento, ESTILOS.velo, veloAbajo]}
             />
             <Animated.View
                 testID="tour-scrim-left"
-                style={[ESTILOS.elemento, veloIzquierda]}
-                className="bg-on-surface/70"
+                style={[ESTILOS.elemento, ESTILOS.velo, veloIzquierda]}
             />
             <Animated.View
                 testID="tour-scrim-right"
-                style={[ESTILOS.elemento, veloDerecha]}
-                className="bg-on-surface/70"
+                style={[ESTILOS.elemento, ESTILOS.velo, veloDerecha]}
             />
 
             {/* El anillo es el borde del rectángulo: el interior queda transparente y deja ver el
@@ -361,10 +411,10 @@ export function TourOverlay({
                 pointerEvents="none"
                 style={[
                     ESTILOS.elemento,
+                    ESTILOS.anillo,
                     estiloAnillo,
                     { borderWidth: anillo.thickness, borderRadius: anillo.radius },
                 ]}
-                className="border-primary-container"
             />
 
             <Animated.View
@@ -374,20 +424,25 @@ export function TourOverlay({
                 onLayout={alMedirTarjeta}
                 style={[
                     ESTILOS.elemento,
+                    ESTILOS.tarjeta,
                     estiloTarjeta,
-                    // Antes de la primera medida la altura es la del contenido: si se fijara la
-                    // estimación, `onLayout` mediría la estimación y no habría nada que corregir.
+                    // Antes de la primera medida la altura es la del contenido: es el alto que
+                    // todavía no ha llegado por `onContentSizeChange`.
                     !tarjetaMedida && ESTILOS.alturaNatural,
                 ]}
-                className="rounded-2xl bg-surface p-4 shadow-ambient-lg"
                 role="dialog"
                 aria-modal={true}
                 accessibilityViewIsModal
                 {...diagnostico}
             >
-                {/* La tarjeta tiene el alto que decidió la colocación; el texto que no quepa se
-                    lee desplazando, sin crecer encima del hueco (S6). */}
-                <ScrollView testID="tour-card-content">
+                {/* El alto de la tarjeta sale del alto natural de este contenido y no al revés
+                    (D4): por eso se mide aquí, donde el `ScrollView` lo da independiente del alto
+                    de la tarjeta. Sólo se desplaza si la colocación tuvo que recortarla porque no
+                    cabía en el viewport. */}
+                <ScrollView
+                    testID="tour-card-content"
+                    onContentSizeChange={alCambiarElContenido}
+                >
                     <View className="flex-row items-center justify-between gap-2">
                         <Text className="text-xs font-sans-semibold uppercase tracking-widest text-primary">
                             {parada.stepLabel}
