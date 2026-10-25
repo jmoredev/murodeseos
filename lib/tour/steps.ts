@@ -11,14 +11,32 @@
  *
  * Sobre el detalle de grupo: con datos de demostración no se puede abrir (decisión D1 — no se
  * escribe ninguna fila, así que el grupo de ejemplo no existe en la base de datos y
- * `/groups/[id]` mostraría una pantalla vacía). Se explica con una página dentro de la parada de la
+ * `/groups/[id]` mostraría una pantalla vacía). Se explica con páginas dentro de la parada de la
  * lista en vez de navegar a una pantalla que no tiene nada que enseñar.
+ *
+ * **Cada página tiene que caber sin desplazar** (S3): la tarjeta del tour no es una ventana de
+ * lectura, es un cartel. El presupuesto de abajo está calculado para el ancho útil de un móvil de
+ * 360 px y lo vigila `__tests__/tour/steps.test.ts`; el reparto real en píxeles lo vigila la prueba
+ * de extremo a extremo, que recorre las páginas y mide si sobra alto. Cuando una explicación no
+ * cabe, se parte en otra página: el motor ya sabe recorrerlas.
  *
  * El texto es lo que lee el usuario: español de España, frases cortas, y ninguna promesa que los
  * datos de demostración no puedan cumplir.
  */
 
 import type { TourStep } from './engine';
+
+/**
+ * Lo máximo que puede ocupar una página del guion, en caracteres (S3).
+ *
+ * Es un presupuesto de redacción, no una regla de negocio: 120 caracteres caben en cuatro líneas de
+ * la tarjeta en un móvil de 360 px. Pasarse no rompe la app —la tarjeta se adapta a la página— pero
+ * convierte el cartel en un párrafo, que es justo lo que el usuario pidió evitar.
+ */
+export const MAX_CARACTERES_PAGINA = 120;
+
+/** Y un tope de páginas por parada: un paso con seis páginas es otro párrafo, más largo. */
+export const MAX_PAGINAS_POR_PARADA = 3;
 
 export const TOUR_STEPS: readonly TourStep[] = [
     {
@@ -68,8 +86,9 @@ export const TOUR_STEPS: readonly TourStep[] = [
         targetId: 'grupos-lista',
         tab: 'groups',
         pages: [
-            'Este es el grupo de bienvenida del tour, con personas de ejemplo. No existe en tu cuenta, así que no hay nada que limpiar cuando termine.',
-            'Al abrir un grupo verías quiénes son sus miembros y las reservas de cada deseo, para no regalar dos veces lo mismo. El tour no puede enseñarlo: para abrir un grupo de verdad hace falta que exista, y estos datos de ejemplo viven sólo en esta pantalla.',
+            'Este es el grupo de bienvenida del tour, con personas de ejemplo: no está en tu cuenta y no hay nada que limpiar.',
+            'Al abrir un grupo verías sus miembros y las reservas de cada deseo, para no regalar dos veces lo mismo.',
+            'El tour no puede enseñártelo: para abrir un grupo de verdad hace falta que exista, y éste vive sólo en esta pantalla.',
         ],
     },
     {
