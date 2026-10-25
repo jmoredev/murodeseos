@@ -1,6 +1,6 @@
 # Los siete informativos de la revisión del trabajo posterior
 
-**Abierta:** 2026-10-13 · **Rama:** `chore/informativos-trabajo-posterior` (desde `main`, `3f4e40c`) · **Estado:** en curso
+**Abierta:** 2026-10-13 · **Rama:** `chore/informativos-trabajo-posterior` (desde `main`, `3f4e40c`) · **Estado:** cerrada — el recorte por el sufijo público (`.co.uk`) en `lib/wish-link-utils.ts`, la prueba del nombre accesible y el ayudante por AST de `__tests__/WishlistCard.test.tsx` están en `main`, fusionados con la PR #54 (`6135027`, 2026-10-20)
 
 **Qué es esto.** Los **siete hallazgos informativos** que dejó la revisión del corte del trabajo posterior (linaje `review-de990285ab7f8605`), que el proveedor declaró «trabajo posterior, nunca motivo para re-revisar ese candidato». **Cinco son correcciones** y dos se resuelven con la misma prueba.
 
@@ -42,3 +42,5 @@
 
 - **L6 (2026-10-13) — el refutador encontró un CRITICAL en mi propia regla, y yo lo había escrito como si fuera un trade-off:** `R3-MULTIPART-TLD`. Mi comentario decía, entre paréntesis, que «con un TLD de varias partes la cola se queda en las dos últimas etiquetas y el principio conserva el nombre reconocible», y lo presenté como limitación asumible. **No era una limitación: era el defecto.** Con `.co.uk` la etiqueta conservaba `co.uk` y perdía `example.co.uk`, es decir el destino que la propia `S1` promete conservar. Corregido con una tabla corta de etiquetas de sufijo público, y probado con `.co.uk` **y** con `.es` para que no cambie lo que ya funcionaba.
   **Lección**: documentar una consecuencia como «trade-off aceptable» no la convierte en aceptable. Si el resultado rompe lo que la spec promete, es un defecto, y el comentario solo lo disfraza — y encima lo vuelve más difícil de ver, porque el siguiente lector lo da por decidido.
+
+L7 — Cerrada el 2026-10-25: PR #54 (`6135027`, 2026-10-20); la tabla de sufijos públicos, la prueba de accesibilidad y el ayudante por AST en `main`.

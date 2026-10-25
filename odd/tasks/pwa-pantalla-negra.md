@@ -1,6 +1,6 @@
 # Pantalla negra permanente tras un despliegue (`fix/pwa-pantalla-negra`)
 
-**Abierta:** 2026-10-08 · **Rama:** `fix/pwa-pantalla-negra` (desde `main`, `6057b6a`) · **Estado:** en curso — diagnóstico cerrado, arreglo pendiente
+**Abierta:** 2026-10-08 · **Rama:** `fix/pwa-pantalla-negra` (desde `main`, `6057b6a`) · **Estado:** cerrada — el arreglo del service worker (`VERSION` v5, `'./'` fuera de `CORE_ASSETS`, `offlinePage()` y `Response.error()`), con sus tests, entró en `main` con la PR #42 (`7144c58`, 2026-10-09), se publicó en `v2026.10.09` y la revisión nativa quedó aprobada (`review-5d3c3b0d78a46507`)
 
 ## Objetivo
 
@@ -161,3 +161,5 @@ Acotado del candidato: `inspect` ofreció `base-ref=6057b6a` + `committedOnly`, 
 - **`91c2dae`** — `fix(pwa): paint the brand surface while fonts load, never nothing` (P3).
 - **`2a4b1ad`** — `docs(odd): record the black screen verification and what it does not prove`.
 - **`30046a4`** — `fix(pwa): a 404 navigation is the app, not an offline page` (corrección de F1, con test que la caza).
+
+L1 — Cerrada el 2026-10-25: PR #42 (`7144c58`, 2026-10-09) publicada en `v2026.10.09`, con `__tests__/sw.test.ts` en `main` y la revisión nativa aprobada (`review-5d3c3b0d78a46507`).

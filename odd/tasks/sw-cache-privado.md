@@ -1,6 +1,6 @@
 # Cache privado del service worker (fix/sw-cache-privado)
 
-**Abierta:** 2026-09-29 · **Rama:** `fix/sw-cache-privado` (desde `main`) · **Estado:** implementada, verificada y revisada (aprobada). Pendiente de entrega (push/PR decisión del usuario)
+**Abierta:** 2026-09-29 · **Rama:** `fix/sw-cache-privado` (desde `main`) · **Estado:** cerrada — la guarda de origen del service worker (`public/sw.js`) y el cierre de sesión único (`lib/sign-out.ts`) están en `main` con la PR #31 (`bb7fc7c`, 2026-09-30) y revisión nativa aprobada (`review-ba12c43611e5418f`)
 
 ## Objetivo
 
@@ -78,3 +78,5 @@ derivadas de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-
   dejan **sin revisar** (edición pasiva trivial). El bucle
   revisión→registro→revisión se cierra aquí; el código de la unidad está revisado
   y aprobado.
+
+L1 — Cerrada el 2026-10-25: PR #31 (`bb7fc7c`, 2026-09-30); las cuatro tareas hechas y la revisión nativa aprobada (`review-ba12c43611e5418f`).

@@ -1,6 +1,6 @@
 # El gesto de atrás saca de la app (`fix/atras-navegacion`)
 
-**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** cerrado — implementado, verificado, **revisión nativa aprobada** y autoridad quemada; pendiente el PR
+**Abierta:** 2026-10-09 · **Rama:** `fix/atras-navegacion` (desde `main`, `af691c2`) · **Estado:** cerrada — el gesto de atrás cierra lo abierto (`lib/use-back-to-close.ts`) y el `ErrorBoundary` exportado evita el vacío; la PR #46 (`a15e924`, 2026-10-09) está en `main` y publicada en `v2026.10.09-3`, con la revisión nueva aprobada tras corregir los dos CRITICAL
 
 ## Objetivo
 
@@ -121,3 +121,5 @@ Linaje **`review-74ff5ecfc5b7fb00`**: riesgo medio, 1 lente (`review-reliability
 - **`20c3e1c`** — `fix(pwa): never leave a blank void, and prove the back gesture in CI` (B1+B2+E2E).
 - **`ee430d9`** — `fix(pwa): coordinate the modal layer, and restore the entry when a close cannot happen` (corrección de los dos CRITICAL de la lente).
 - **`f3c3842`** — `fix(pwa): remove the internal history back, so the race cannot exist` (corrección del CRITICAL del refutador).
+
+L1 — Cerrada el 2026-10-25: PR #46 (`a15e924`, 2026-10-09) en `main` y en `v2026.10.09-3`; A1, A2, B1 y B2 hechas y la revisión nueva aprobada.

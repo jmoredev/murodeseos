@@ -1,6 +1,6 @@
 # Trabajo posterior de las tres revisiones
 
-**Abierta:** 2026-10-13 · **Rama:** `chore/trabajo-posterior` (desde `main`, `41563fe`) · **Estado:** en curso
+**Abierta:** 2026-10-13 · **Rama:** `chore/trabajo-posterior` (desde `main`, `41563fe`) · **Estado:** cerrada — T1, T2, T4, T5 y T6 hechas (T3 descartada por medición) y fusionadas en `main` con la PR #53 (`3f4e40c`, 2026-10-13); `e2e/card-heights.spec.ts` y `lib/wish-link-utils.ts` están en `main`
 
 **Qué es esto.** Las tres revisiones nativas del día (el precio, el corte de interfaz y el de alturas) dejaron **quince hallazgos informativos** que el proveedor declaró explícitamente «trabajo posterior, nunca motivo para re-revisar ese candidato». Aquí se abordan, más la **deuda de prueba** que señaló la revisión del corte de app (editar un deseo y el cero en el modal, que solo tenían unitarios).
 
@@ -53,3 +53,5 @@ Las dos guardan `1.01`. PostgREST envía el número en su **representación deci
 - **L5 (2026-10-13) — y el trade-off de la rejilla, que sí conviene dejar escrito (`R3-002`):** `auto-rows-fr` hace que **todas** las filas midan lo que la tarjeta más alta de la lista, así que en una lista larga con una tarjeta muy alta el resto paga ese alto. Es el precio inevitable de la uniformidad que se pidió, y va escrito en el código para que nadie lo descubra con sorpresa.
 
 - **L6 (2026-10-13) — una tarea se cae por medición antes de escribirla:** el hallazgo `R1-decimal-precision` afirmaba que mandar el precio como número de JS redondeaba mal. Se comprobó con las dos formas contra el stack local (`'1.005'` como cadena y `1.005` como número) y **las dos guardan `1.01`**: PostgREST manda el número en su representación decimal más corta, que es la que se tecleó. Así que el cambio propuesto **no arreglaba nada** y sí tocaba el camino del dinero y el contrato del payload. **Descartado**, con la medición aquí. Es la tercera vez hoy que medir mata una premisa que parecía razonable.
+
+L7 — Cerrada el 2026-10-25: PR #53 (`3f4e40c`, 2026-10-13); T1–T6 en `main` (`e2e/card-heights.spec.ts`, `lib/wish-link-utils.ts`) y T3 descartada por medición.

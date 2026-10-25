@@ -3,7 +3,7 @@
 **Feature:** `notificaciones-por-grupo`
 **Rama por abrir:** `feat/notificaciones-por-grupo`
 **Abierta:** 2026-09-29
-**Estado:** en curso
+**Estado:** cerrada — las diez tareas están hechas y fusionadas en `main` con la PR #30 (`3ed9393`, 2026-09-29): migraciones de preferencias y atribución, capa cliente, modal, E2E y adaptación móvil
 
 ## Objetivo
 
@@ -191,3 +191,5 @@ Limitación conocida y aceptada: `wish_added` se sigue creando en el cliente, qu
 puede leer las preferencias de otros, así que su atribución de grupo no consulta la
 preferencia. Corregirlo exige moverlo a un trigger de la base; queda como trabajo
 aparte.
+
+L1 — Cerrada el 2026-10-25: PR #30 (`3ed9393`, 2026-09-29); las diez tareas hechas, con las tres migraciones y el E2E de preferencias en `main`.

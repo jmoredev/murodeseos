@@ -1,6 +1,6 @@
 # E2E móvil verde: PR #33 (`fix/pwa-instalacion`)
 
-**Abierta:** 2026-09-30 · **Rama:** `fix/pwa-instalacion` · **Estado:** abierta — corregido y revisado (pendiente push y validación en CI)
+**Abierta:** 2026-09-30 · **Rama:** `fix/pwa-instalacion` · **Estado:** cerrada — los localizadores móviles (`3c53c02`) y el paso «Seed and run E2E (Mobile Chrome only)» de `.github/workflows/e2e.yml` están en `main`; la PR #33 se fusionó el 2026-10-01 (`33b6bdf`) con ese paso dentro del job requerido `E2E gate / Chromium suite`
 
 ## Objetivo
 
@@ -37,3 +37,5 @@ las etiquetas `Por Nombre` / `Por Precio` / `Por Prioridad` **solo existen en es
 
 - `3c53c02` `test(e2e): make the Mobile Chrome project pass (mobile-safe locators)` (2 ficheros, +9/−4).
 - `docs(odd)` con este registro.
+
+L1 — Cerrada el 2026-10-25: PR #33 (`33b6bdf`, 2026-10-01); `3c53c02` y el paso de Mobile Chrome en `.github/workflows/e2e.yml` están en `main`.

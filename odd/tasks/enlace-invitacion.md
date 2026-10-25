@@ -1,6 +1,6 @@
 # Enlace de invitación a grupo sin base path (fix/enlace-invitacion)
 
-**Abierta:** 2026-09-29 · **Rama:** `fix/enlace-invitacion` (desde `main`) · **Estado:** implementada, verificada y revisada (aprobada). Pendiente de entrega (push/PR decisión del usuario)
+**Abierta:** 2026-09-29 · **Rama:** `fix/enlace-invitacion` (desde `main`) · **Estado:** cerrada — los enlaces usan `getSiteBaseUrl()` y conservan `/murodeseos`; la PR #32 (`f2cb94d`, 2026-09-30) está en `main`, con revisión nativa aprobada (`review-ea7b292a1e21e649`)
 
 ## Objetivo
 
@@ -62,3 +62,5 @@ unidades de la auditoría PWA/móvil (memoria: «Auditoría PWA/móvil», 2026-0
 
 - `453fefd` — fix(share): keep the group invite link base path on GitHub Pages (unidad completa).
 - (commit documental de este registro, sin revisar por disposición explícita del usuario).
+
+L1 — Cerrada el 2026-10-25: PR #32 (`f2cb94d`, 2026-09-30); las cuatro tareas hechas y la revisión nativa aprobada (`review-ea7b292a1e21e649`).
