@@ -106,7 +106,11 @@ async function setupE2EUser() {
                 shirt_size: 'L',
                 pants_size: '42',
                 favorite_color: 'Gris',
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                // El usuario de la suite ya existe: ya vio el tour. Sin la marca, la app lo trata
+                // como recién registrado y el tour se abre sobre la portada compartida por todos
+                // los specs (el velo se come los clics de lo que venga después).
+                tour_completed_at: new Date().toISOString()
             })
 
         if (profileError) throw new Error(`Error insertando perfil de ${userConfig.email}: ${profileError.message}`)

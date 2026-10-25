@@ -128,6 +128,11 @@ async function createUsers() {
                 favorite_brands: (user as any).favoriteBrands,
                 favorite_color: (user as any).favoriteColor,
                 updated_at: new Date().toISOString(),
+                // Estos usuarios son cuentas que ya existían: el tour de primer inicio no es para
+                // ellos. Sin esta marca el perfil nace con `tour_completed_at` a NULL, la app los
+                // trata como recién registrados y el tour se abre encima de la suite de extremo a
+                // extremo compartida (bloquea los clics del resto de los specs).
+                tour_completed_at: new Date().toISOString(),
             })
             .eq('id', userId)
 

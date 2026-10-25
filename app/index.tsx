@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -10,6 +10,8 @@ import { WishListTab } from '@/components/WishListTab';
 import { ProfileTab } from '@/components/ProfileTab';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import WhatsNewModal from '@/components/WhatsNewModal';
+import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
+import { DEMO_GROUPS, DEMO_WISHES } from '@/lib/tour/demo-data';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 // Shared budget for the auth session check and the profile-name gate: both
@@ -42,7 +44,12 @@ export default function LandingPage() {
     });
 
     const activeTab = tabState.param === paramTab ? tabState.tab : paramTab ?? tabState.tab;
-    const setActiveTab = (tab: Tab) => setTabState({ tab, param: paramTab });
+    // Estable: el efecto que atiende la pestaña que pide el tour lo lleva en sus dependencias, y una
+    // función nueva en cada render lo volvería a lanzar en cada render.
+    const setActiveTab = useCallback(
+        (tab: Tab) => setTabState({ tab, param: paramTab }),
+        [paramTab]
+    );
 
     useEffect(() => {
         const checkUser = async () => {
@@ -126,6 +133,31 @@ export default function LandingPage() {
         };
     }, [sessionUserId, router]);
 
+    // Mientras dura el tour (S1, D1, L4) la portada cambia de papel: las listas enseñan datos de
+    // demostración, la pestaña que pide el recorrido se cambia en un efecto —nunca durante el
+    // render— y el modal de novedades espera a que el tour termine o se salte, para que una cuenta
+    // nueva no estrene las dos cosas el mismo día.
+    const tourActive = useTourActive();
+    const tourRequestedTab = useTourRequestedTab();
+
+    // La portada informa de la pestaña que está enseñando: el corredor no puede adivinarla, porque
+    // en la portada las pestañas son estado y no cambian el pathname.
+    useTourTabReporter(activeTab);
+
+    useEffect(() => {
+        // La guarda no es cosmética: sin ella, cada render volvería a pedir la misma pestaña y
+        // reavivaría el estado que acaba de cambiar.
+        if (!tourRequestedTab || tourRequestedTab === activeTab) return;
+
+        // El cambio se aplica en un límite asíncrono explícito, como el resto de la app: la regla
+        // `react-hooks/set-state-in-effect` rechaza el `setState` síncrono en el cuerpo del efecto
+        // porque dispara renders en cascada, y aquí el estado que se toca es el de la portada, no
+        // el de este efecto.
+        const aplicarPestana = async () => setActiveTab(tourRequestedTab);
+
+        void aplicarPestana();
+    }, [tourRequestedTab, activeTab, setActiveTab]);
+
     // While the name gate has not completed for the current user, keep showing
     // the loading branch: the signed-in landing must not flash before a possible
     // redirect to /profile/setup.
@@ -149,11 +181,23 @@ export default function LandingPage() {
                     setActiveTab={setActiveTab}
                     onSignOut={signOut}
                 >
-                    {activeTab === 'wishlist' && <WishListTab userId={user.id} />}
-                    {activeTab === 'groups' && <GroupsTab userId={user.id} />}
+                    {activeTab === 'wishlist' && (
+                        <WishListTab
+                            userId={user.id}
+                            demoData={tourActive ? { wishes: DEMO_WISHES } : undefined}
+                        />
+                    )}
+                    {activeTab === 'groups' && (
+                        <GroupsTab
+                            userId={user.id}
+                            demoData={tourActive ? { groups: DEMO_GROUPS } : undefined}
+                        />
+                    )}
                     {activeTab === 'profile' && <ProfileTab userId={user.id} />}
                 </ResponsiveLayout>
-                <WhatsNewModal />
+                {/* Log L4: el tour va primero; el modal de novedades espera a que termine o se
+                    salte, en vez de estrenarse encima el mismo día. */}
+                {!tourActive && <WhatsNewModal />}
             </>
         );
     }

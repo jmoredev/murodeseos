@@ -92,6 +92,7 @@ Commits por tarea (evidencia):
 | T4 | `0a41c49` |
 | T1–T4, corrección de la revisión | `b4cb709` (con `9b166e7` + `4dfcac4`, ver L6) |
 | T5 | pendiente de anotar al commitear |
+| T6 | ver L8 |
 
 ## Log
 
@@ -173,3 +174,18 @@ fallar en silencio.
 El árbol queda por encima del corte de revisión de ~400 líneas por unidad (la rama entera supera
 las 3.000). La estrategia de entrega —cadena de PRs o una sola revisión— es decisión del usuario y
 se plantea al publicar, no ahora; lo que no se hace es añadir commits grandes sin decirlo.
+
+L8 — T6 implementada: el tour arranca solo para una cuenta nueva y se marca al terminar o saltar.
+`lib/tour/flag.ts` lee `profiles.tour_completed_at` con un plazo de 12 s y tres estados —fecha (ya
+visto), `null` (cuenta nueva, D3) y `undefined` (no se pudo saber, que **no** arranca y no se
+reintenta)—; marcar es best-effort: si falla, la cuenta lo volverá a ver, y nada más.
+`components/tour/TourHost.tsx` es el único que decide **a quién**: monta el corredor fuera del
+`Stack` para que sobreviva a las sub-rutas, ejecuta los destinos (pestaña = estado de la portada,
+ruta = `router.push`) y no relee la marca después de terminar. En `app/index.tsx` los datos de
+demostración se inyectan sólo mientras el tour está activo, la pestaña pedida se aplica en un efecto
+y **el modal de novedades espera** (Log L4).
+
+Decisión de arranque que no estaba escrita: el tour empieza cuando la **portada está montada**, no
+en cuanto la marca dice que sí. Quien acaba de registrarse está en `/profile/setup`; arrancar ahí
+haría que la primera parada —una pestaña de la portada— pidiera volver a `/` y sacara al usuario de
+la mitad del alta. El caso está fijado por un test.
