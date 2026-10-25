@@ -279,6 +279,21 @@ async function avanzar(veces: number) {
     }
 }
 
+/**
+ * Páginas que hay que avanzar desde el principio para **entrar** en la parada `id`.
+ *
+ * Se cuenta con el guion de verdad y no con un número escrito a mano: cuando una parada gana o
+ * pierde una página, un número fijo deja de apuntar a la parada que el test dice estar probando, y
+ * el fallo aparece lejos de la causa.
+ */
+function paginasHasta(id: string): number {
+    const indice = TOUR_STEPS.findIndex((paso) => paso.id === id);
+
+    if (indice < 0) throw new Error(`El guion no tiene la parada «${id}»`);
+
+    return TOUR_STEPS.slice(0, indice).reduce((total, paso) => total + paso.pages.length, 0);
+}
+
 describe('TourHost: quién ve el tour', () => {
     it('con la marca vacía arranca y pinta la primera parada', async () => {
         render(<Pintar />);
@@ -463,9 +478,9 @@ describe('TourHost: la navegación del recorrido', () => {
 
         expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
 
-        // Dos páginas de bienvenida, lista, botón de añadir y dos páginas del formulario: la sexta
-        // pulsación entra en la parada de grupos, que vive en otra pestaña.
-        await avanzar(6);
+        // Las páginas de todas las paradas anteriores: la primera pulsación que entra en la parada
+        // de grupos, que vive en otra pestaña.
+        await avanzar(paginasHasta('grupos'));
 
         expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
         expect(sonda()).toBe('activo|groups');
@@ -477,13 +492,13 @@ describe('TourHost: la navegación del recorrido', () => {
         expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
 
         // La parada del formulario sí es un `push` de verdad: es otra pantalla.
-        await avanzar(5);
+        await avanzar(paginasHasta('nuevo-deseo') + 1);
         expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
 
         // Ya estamos en la sub-ruta. La portada sigue montada debajo, con su estado.
         dobles.estado.ruta.pathname = '/wishlist/add';
         rerender(<Pintar />);
-        await avanzar(2);
+        await avanzar(paginasHasta('grupos') - (paginasHasta('nuevo-deseo') + 1));
 
         // La parada de grupos vive en la portada: se vuelve, no se empuja otra portada encima.
         expect(dobles.router.back).toHaveBeenCalledTimes(1);
@@ -510,14 +525,14 @@ describe('TourHost: la navegación del recorrido', () => {
 
         expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
 
-        await avanzar(5);
+        await avanzar(paginasHasta('nuevo-deseo') + 1);
         expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
 
         // Ya en la sub-ruta que abrió el tour, pero sin historial que deshacer.
         dobles.estado.ruta.pathname = '/wishlist/add';
         dobles.estado.puedeVolver = false;
         rerender(<Pintar />);
-        await avanzar(1);
+        await avanzar(paginasHasta('grupos') - (paginasHasta('nuevo-deseo') + 1));
 
         expect(dobles.router.back).not.toHaveBeenCalled();
         expect(dobles.router.push).toHaveBeenLastCalledWith('/?tab=groups');

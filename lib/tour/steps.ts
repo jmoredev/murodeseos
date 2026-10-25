@@ -36,7 +36,7 @@ import type { TourStep } from './engine';
 export const MAX_CARACTERES_PAGINA = 120;
 
 /** Y un tope de páginas por parada: un paso con seis páginas es otro párrafo, más largo. */
-export const MAX_PAGINAS_POR_PARADA = 3;
+export const MAX_PAGINAS_POR_PARADA = 4;
 
 export const TOUR_STEPS: readonly TourStep[] = [
     {
@@ -62,6 +62,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
         tab: 'wishlist',
         pages: [
             'Con este botón añades un deseo: pegas el enlace del producto y la app intenta rellenarlo por ti.',
+            'Al pulsarlo se abre la pantalla de añadir deseo, que es la siguiente parada.',
         ],
     },
     {
@@ -69,7 +70,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
         targetId: 'nuevo-deseo-form',
         route: '/wishlist/add',
         pages: [
-            'Pega aquí el enlace de la tienda. Si la página se puede leer, llegas al formulario con los datos ya puestos.',
+            'Desde el botón de añadir has llegado aquí. Pega el enlace de la tienda y la app intenta rellenar los datos por ti.',
             'Si no hay enlace, o la página no se puede leer, el deseo se escribe a mano y el enlace no se pierde.',
         ],
     },
@@ -87,8 +88,18 @@ export const TOUR_STEPS: readonly TourStep[] = [
         tab: 'groups',
         pages: [
             'Este es el grupo de bienvenida del tour, con personas de ejemplo: no está en tu cuenta y no hay nada que limpiar.',
-            'Al abrir un grupo verías sus miembros y las reservas de cada deseo, para no regalar dos veces lo mismo.',
-            'El tour no puede enseñártelo: para abrir un grupo de verdad hace falta que exista, y éste vive sólo en esta pantalla.',
+            'Al abrir un grupo ves los deseos de todos sus miembros: así sabes qué quiere otra persona sin preguntárselo.',
+            'También verías las reservas de cada deseo, para no regalar dos veces lo mismo.',
+            'El tour no puede abrirlo: para entrar en un grupo de verdad hace falta que exista, y éste vive sólo aquí.',
+        ],
+    },
+    {
+        id: 'crear-o-unirse',
+        targetId: 'grupos-unirse',
+        tab: 'groups',
+        pages: [
+            'Con este botón te unes a un grupo con un código de invitación.',
+            'Y con el de al lado, «Crear grupo», abres uno nuevo y compartes su código para que entren los demás.',
         ],
     },
     {
@@ -96,7 +107,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
         targetId: 'unirse-form',
         route: '/groups/join',
         pages: [
-            'Con un código de invitación entras en el grupo de otra persona, sin que nadie tenga que buscarte.',
+            'Aquí pegas esa invitación. Con el código de otra persona entras en su grupo, sin que nadie tenga que buscarte.',
         ],
     },
     {
