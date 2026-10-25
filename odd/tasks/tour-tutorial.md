@@ -66,8 +66,9 @@ detalle de grupo, perfil y notificaciones.
 
 ## Pendiente de conciliar
 
-El mensaje original traía un bloque pegado de 2080 caracteres que no llegó con contenido. Si
-contenía requisitos, entran como `S8…` y reabren sólo las tareas afectadas.
+**Cerrado.** El mensaje original traía un bloque pegado de 2080 caracteres que nunca llegó con
+contenido, y el usuario confirmó que se cierra sin requisitos: no hay `S8`, no se reabre ninguna
+tarea y el alcance queda en S1–S7.
 
 ## Tasks
 
@@ -81,7 +82,6 @@ contenía requisitos, entran como `S8…` y reabren sólo las tareas afectadas.
 | T6 | S1, D2, D3 | Arranque tras el alta, lectura del flag y marcado al terminar o saltar | `app/`, `lib/tour/` | sí |
 | T7 | S6, S7 | Mobile-first y accesibilidad: hoja inferior en móvil, anclaje en escritorio, foco, reduce motion | `components/tour/` | sí |
 | T8 | S1, S4 | E2E con el usuario recién creado: recorre, salta y no deja datos detrás | `e2e/` | sí |
-
 Commits por tarea (evidencia):
 
 | Tarea | Commit |
@@ -91,9 +91,10 @@ Commits por tarea (evidencia):
 | T3 | `9b3d97b` |
 | T4 | `0a41c49` |
 | T1–T4, corrección de la revisión | `b4cb709` (con `9b166e7` + `4dfcac4`, ver L6) |
-| T5 | pendiente de anotar al commitear |
-| T6 | ver L8 |
-| T7 | ver L9 |
+| T5 | `5dc7b26` |
+| T6 | `bcdce81` |
+| T7 | `d75a90e` |
+| T8 | `f489774` (E2E) + `cd1d1a7`, `97d1043` (arreglos del primer e2e) + `90e0ee8` (corrección R3-001) |
 
 ## Log
 
@@ -204,3 +205,51 @@ L9 — T7 implementada (S5, S6, S7), cuatro cosas y ninguna más:
   cabe se lee desplazando, sin crecer por encima del hueco.
 - **Mobile-first sin rediseño**: la hoja sigue ocupando el ancho útil y los anclajes de escritorio
   no cambian.
+
+L10 — T8 no se puede ejecutar en este entorno: la suite de extremo a extremo necesita Supabase local
+(`pnpm run test:e2e:prepare` levanta Docker) y el demonio de Docker no está corriendo en la máquina
+(`docker info` → no connect). Se deja **pendiente**, no hecha: el recorrido de punta a punta con el
+usuario recién creado —recorrer, saltar, y que no quede ni un deseo ni un grupo detrás— es justo la
+comprobación de S1 y S4 que T8 tiene que dar, y escribirla sin poder verla verde no es prueba.
+
+Lo que sí queda verificado sin navegador ni base de datos: 879 tests de la suite (los 856 previos
+intactos, 23 nuevos de T7), `tsc` y `eslint` limpios, y las cuatro capas del tour probadas por
+separado (motor puro, geometría pura, corredor con dobles, host con sesión y marca dobladas).
+
+Riesgo que T8 debería cubrir y que ningún test de jsdom tapa: el orden real de tabulación del
+navegador, la preferencia de movimiento del sistema operativo, y sobre todo que la página de detrás
+con `inert` no rompa el reparto de altura del `Stack` en web (el envoltorio `tour-page` con `flex: 1`
+se probó en jsdom, no en un navegador). Hasta que T8 corra, eso es una comprobación abierta.
+
+L11 — T8 ejecutada con Docker arriba: `e2e/tour.spec.ts`, tres pruebas en los cinco proyectos de
+Playwright, incluida la que faltaba de verdad: un usuario recién creado recorre el guion, otro lo
+salta con «Saltar» y con Escape, y después no queda ni una fila de `wishlist_items` ni de
+`group_members` en esas cuentas. También fija los dos riesgos que L10 dejó abiertos: el hueco no
+queda tapado por la tarjeta (cajas reales) y el envoltorio `tour-page` sigue midiendo el alto de la
+ventana con `inert` y `aria-hidden`.
+
+La primera corrida real encontró tres cosas que ningún test de jsdom veía, y las tres se
+arreglaron antes de dar T8 por buena:
+
+- **La suite entera se cayó por el tour.** Los scripts de siembra insertaban perfiles sin
+  `tour_completed_at`, así que todas las cuentas de la suite parecían nuevas, el tour se abría sobre
+  el `storageState` compartido y el velo se comía los clics (whats-new 2/5 y wishlist 6/6 en rojo
+  por motivos que no tenían nada que ver con esos specs). Los dos scripts marcan la cuenta como
+  «ya vio el tour». Commit `cd1d1a7`.
+- **Volver de una sub-ruta era empujar otra portada.** Al terminar el guion había tres muros
+  montados, con sus listas, sus peticiones y dos modales de Novedades en el DOM. Ahora volver a la
+  portada es retroceder. Commit `97d1043`.
+- **`usePathname()` en `TourHost` rompía la app.** `TourHost` envuelve al `Stack`, así que suscribir
+  el pathname ahí re-renderizaba el navegador en cada navegación y **remontaba la pantalla
+  enfocada**: el formulario de deseo se cerraba solo justo después de abrirse. La suscripción vive
+  ahora en el corredor, que es hermano del `Stack`. Commit `97d1043`.
+
+Verificado: suite unidad **881 passed + 1 todo**, `tsc` y `eslint` limpios, y `playwright --project=chromium`
+**66 passed** (todos los specs, no sólo el del tour).
+
+L12 — Cierre del pendiente de L1: el bloque de 2080 caracteres que nunca llegó **no traía
+requisitos**. El alcance queda en S1–S7, sin `S8` y sin reabrir tareas. La entrega se hace como
+**cadena de cinco PRs apilados** sobre `main`, un tramo por PR: el 1 con T1–T4 y su corrección (ya
+revisado y aprobado), el 2 con T5, el 3 con T6, el 4 con T7 y el 5 con T8, el e2e y la corrección
+R3-001. Es el mismo corte que pide el presupuesto de lentes del proveedor, y cada PR se revisa con
+su diff delante en vez de con tres ciclos de lentes sobre worktrees.

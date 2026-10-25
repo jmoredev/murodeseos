@@ -17,6 +17,21 @@ import type { Tab } from '@/lib/tabs';
 import { TourOverlay } from './TourOverlay';
 import { useTourTargetRegistry } from './TourTargetProvider';
 
+/** La portada, con o sin pestaña pedida: `/`, `/?tab=groups`… */
+const PORTADA = /^\/?(?:\?tab=(wishlist|groups|profile))?$/;
+
+/**
+ * ¿Esta ruta es la portada? Es lo que separa «volver» de «abrir otra pantalla»: la portada ya está
+ * montada debajo de una sub-ruta, así que llegar a ella puede ser deshacer un `push`.
+ *
+ * Vive aquí y no en `lib/tour/navigation.ts` a propósito: `stepDestination` dice dónde vive la
+ * parada (puro, sin historial), pero «volver es un `back`» no es un destino, es un permiso —«el
+ * `push` que hay debajo lo hice yo»— y de eso sólo se acuerda el corredor.
+ */
+function esPortada(ruta: string): boolean {
+    return PORTADA.test(ruta);
+}
+
 /**
  * El corredor del tour: dueño del estado y de la navegación entre paradas (S3).
  *
@@ -39,7 +54,11 @@ export type TourRunnerProps = {
      * él mismo. Existe por las pruebas, que montan el corredor sin navegador.
      */
     pathname?: string;
-    onNavigate: (destination: TourDestination) => void;
+    /**
+     * Ejecuta el destino. `volver` sólo llega a `true` cuando ir a la portada es deshacer el `push`
+     * que abrió esta sub-ruta, y lo afirma el corredor porque recuerda haberlo hecho él.
+     */
+    onNavigate: (destination: TourDestination, volver?: boolean) => void;
     /** Se avisa **una** vez, cuando el recorrido termina o se salta. */
     onFinish: (status: TourStatus) => void;
     /** S5: sin movimiento, para quien lo pide por accesibilidad. */
@@ -83,6 +102,17 @@ export function TourRunner({
      */
     const paradaAtendida = useRef<string | null>(null);
 
+    /**
+     * La última ruta que empujó el tour, y sólo esa.
+     *
+     * Volver a la portada deshaciendo el `push` vale si la sub-ruta de debajo la abrió este tour.
+     * Si el usuario llegó ahí por su cuenta —un enlace directo, un botón de la app—, debajo no está
+     * la portada que el tour dejó y retroceder lo sacaría a donde el tour no ha estado. Este `ref`
+     * recuerda el `push` propio y se borra al consumirlo: una vuelta por cada empujón, y nunca una
+     * vuelta que el tour no creó.
+     */
+    const rutaEmpujada = useRef<string | null>(null);
+
     useEffect(() => {
         if (!paso || paradaAtendida.current === paso.id) return;
 
@@ -92,7 +122,31 @@ export function TourRunner({
 
         // `null` es «ya estamos»: no se navega a donde uno está, que montaría otra copia de la
         // pantalla que se está midiendo.
-        if (destino) onNavigate(destino);
+        if (!destino) return;
+
+        if (destino.kind !== 'route') {
+            onNavigate(destino);
+
+            return;
+        }
+
+        if (!esPortada(destino.route)) {
+            // Otra pantalla: es un `push` del tour y se recuerda para poder deshacerlo.
+            rutaEmpujada.current = destino.route;
+            onNavigate(destino);
+
+            return;
+        }
+
+        // La portada: si abrimos nosotros la sub-ruta en la que estamos, la vuelta es un `back`.
+        if (rutaEmpujada.current === pathname) {
+            rutaEmpujada.current = null;
+            onNavigate(destino, true);
+
+            return;
+        }
+
+        onNavigate(destino);
     }, [paso, tab, pathname, onNavigate]);
 
     /**
