@@ -10,6 +10,7 @@ import { getSiteBaseUrl } from '@/lib/site-url'
 import { useToast } from '@/components/Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { AppIcon } from '@/components/ui/AppIcon'
+import { useTourTarget } from '@/components/tour/TourTargetProvider'
 
 /**
  * «Compartir» de un grupo de demostración: no hace nada, a propósito.
@@ -33,6 +34,10 @@ export interface GroupsTabProps {
 
 export function GroupsTab({ userId, demoData }: GroupsTabProps) {
     const demoGroups = demoData?.groups;
+    // Objetivos del tour (S3, S7): la lista y el enlace de unirse con código. Como en la lista de
+    // deseos, se registran siempre y son inertes cuando no hay tour montado.
+    const objetivoLista = useTourTarget('grupos-lista');
+    const objetivoUnirse = useTourTarget('grupos-unirse');
     const router = useRouter();
     // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
     // número de columnas de la rejilla de grupos más abajo (2 columnas en
@@ -361,7 +366,7 @@ export function GroupsTab({ userId, demoData }: GroupsTabProps) {
                 </View>
                 <View className="flex-row gap-3">
                     <Link href={"/groups/join" as any} asChild>
-                        <Pressable accessibilityRole="button" accessibilityLabel="Unirse a un grupo" className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
+                        <Pressable {...objetivoUnirse} accessibilityRole="button" accessibilityLabel="Unirse a un grupo" className="w-12 h-12 rounded-2xl bg-surface-container-high items-center justify-center shadow-ambient">
                             {/* 20px: el tamaño del glifo de persona anterior. */}
                             <AppIcon name="user" size={20} className="text-on-surface/70" />
                         </Pressable>
@@ -379,7 +384,7 @@ export function GroupsTab({ userId, demoData }: GroupsTabProps) {
             </View>
 
             {/* Group List Grid */}
-            <View className="w-full">
+            <View className="w-full" {...objetivoLista}>
                 {demoGroups ? (
                     /* Datos de demostración del tour (S4, D1). Se pintan con la tarjeta de siempre y
                        no se tocan: sin administración no hay menú de renombrar/eliminar, sin los

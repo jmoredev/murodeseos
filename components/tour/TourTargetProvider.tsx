@@ -26,8 +26,15 @@ import { createTargetRegistry, type TargetRegistry, type TargetRect } from '@/li
  *
  * El nodo puede no existir todavía (montaje diferido, pestaña que aún no se ha abierto) y puede
  * desaparecer antes de que llegue su medida; el registro tolera las dos cosas y aquí simplemente se
- * le pasa el `null`. Sin `TourTargetProvider` se lanza un error claro: un tour mudo para siempre es
- * mucho más caro de diagnosticar que un mensaje que dice qué falta.
+ * le pasa el `null`.
+ *
+ * **Sin `TourTargetProvider` los enganches de objetivo son inertes** (`ref` que no hace nada,
+ * `onLayout` que no hace nada, medida `null`). El motivo es que este enganche ya no vive sólo dentro
+ * del tour: en T5 se esparce en las pestañas, en los botones de añadir y en los formularios, que son
+ * pantallas normales. Si sin proveedor reventara, cada prueba de pantalla —y cada montaje aislado
+ * de un componente— necesitaría un `TourTargetProvider` que no tiene nada que ver con lo que está
+ * probando. La tienda (`useTourTargetRegistry`) sí sigue exigiendo el proveedor: quien pregunta por
+ * ella es el motor del tour, y ahí un fallo silencioso dejaría el recorrido mudo para siempre.
  */
 
 const TourTargetContext = createContext<TargetRegistry | null>(null);
@@ -42,6 +49,12 @@ type TourTargetNode = {
 export type TourTargetProps = {
     ref: (node: TourTargetNode | null) => void;
     onLayout: () => void;
+};
+
+/** Las props de un objetivo cuando no hay tour: se pueden esparcir y no hacen nada. */
+const PROPS_INERTES: TourTargetProps = {
+    ref: () => {},
+    onLayout: () => {},
 };
 
 export function TourTargetProvider({ children }: { children: React.ReactNode }) {
@@ -63,20 +76,29 @@ export function useTourTargetRegistry(): TargetRegistry {
 
 /** La caja actual del objetivo, o `null` mientras no haya una medida fiable. */
 export function useTourTargetRect(id: string): TargetRect | null {
-    const registro = useTourTargetRegistry();
+    const registro = useContext(TourTargetContext);
 
     const subscribe = useCallback(
-        (listener: () => void) => registro.subscribe(listener),
+        (listener: () => void) => {
+            // Sin proveedor no hay nada a lo que suscribirse, pero el enganche tiene que poder
+            // llamarse: la pantalla se pinta igual, simplemente sin hueco.
+            if (!registro) return () => {};
+
+            return registro.subscribe(listener);
+        },
         [registro]
     );
-    const getSnapshot = useCallback(() => registro.measure(id), [registro, id]);
+    const getSnapshot = useCallback(
+        () => (registro ? registro.measure(id) : null),
+        [registro, id]
+    );
 
     // En el servidor no hay ventana que medir: la captura es `null` y el overlay no se pinta.
     return useSyncExternalStore(subscribe, getSnapshot, () => null);
 }
 
 export function useTourTarget(id: string): TourTargetProps {
-    const registro = useTourTargetRegistry();
+    const registro = useContext(TourTargetContext);
     const nodo = useRef<TourTargetNode | null>(null);
 
     const medir = useCallback((): Promise<TargetRect | null> => {
@@ -103,6 +125,8 @@ export function useTourTarget(id: string): TourTargetProps {
     }, []);
 
     useEffect(() => {
+        if (!registro) return;
+
         registro.register(id, medir);
         // El nodo pudo montarse antes que este efecto: se pide la primera medida sin esperar al
         // primer `onLayout`.
@@ -120,15 +144,20 @@ export function useTourTarget(id: string): TourTargetProps {
 
             // El nodo puede aparecer después del efecto (montaje diferido, cambio de pestaña):
             // en cuanto llega, se mide.
-            if (node) void registro.refresh(id);
+            if (node && registro) void registro.refresh(id);
         },
         [registro, id]
     );
 
     const onLayout = useCallback(() => {
         // Rotación, cambio de pestaña, teclado: la caja cambió y el hueco tiene que seguirla.
-        void registro.refresh(id);
+        if (registro) void registro.refresh(id);
     }, [registro, id]);
 
-    return useMemo(() => ({ ref, onLayout }), [ref, onLayout]);
+    // Sin proveedor no se devuelven los callbacks de arriba sino dos vacíos: el mismo objeto en
+    // cada render, para que esparcirlos en una pantalla no provoque renders en cascada.
+    return useMemo(
+        () => (registro ? { ref, onLayout } : PROPS_INERTES),
+        [registro, ref, onLayout]
+    );
 }

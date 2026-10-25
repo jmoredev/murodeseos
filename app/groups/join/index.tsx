@@ -5,9 +5,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { joinGroup } from '@/lib/group-utils';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 export default function JoinGroupPage() {
     const router = useRouter();
+    // Objetivo de la parada que explica el código de invitación (S3, S7): la tarjeta que contiene el
+    // campo y el botón de unirse.
+    const objetivoFormulario = useTourTarget('unirse-form');
     const { code: initialCode } = useLocalSearchParams();
     const [code, setCode] = useState((initialCode as string) || '');
     const [loading, setLoading] = useState(false);
@@ -61,7 +65,7 @@ export default function JoinGroupPage() {
                     </Text>
                 </View>
 
-                <View className="space-y-6">
+                <View className="space-y-6" {...objetivoFormulario}>
                     <View>
                         <Text className="text-sm font-sans-semibold text-on-background mb-2">Código del grupo</Text>
                         <TextInput

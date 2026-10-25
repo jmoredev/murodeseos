@@ -6,6 +6,7 @@ import { extractableLink } from '@/lib/link-extraction';
 import { requestProductDraft } from '@/lib/extract-product-client';
 import { savePendingDraft } from '@/lib/share-draft';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 /**
  * La pantalla que hay **antes** del formulario cuando el deseo se crea desde el «+».
@@ -34,6 +35,9 @@ type Fallo = { message: string; link: string };
 
 export default function WishlistAddPage() {
     const router = useRouter();
+    // Objetivo de la parada que explica esta pantalla (S3, S7). El bloque que se resalta es el
+    // formulario entero: el enlace, los botones y el aviso de lo que ha pasado.
+    const objetivoFormulario = useTourTarget('nuevo-deseo-form');
     const [value, setValue] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [failure, setFailure] = useState<Fallo | null>(null);
@@ -118,7 +122,7 @@ export default function WishlistAddPage() {
                 className="flex-1"
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
-                    <View className="w-full max-w-sm mx-auto">
+                    <View className="w-full max-w-sm mx-auto" {...objetivoFormulario}>
                         <Text className="text-3xl font-display text-on-background text-center tracking-tight">
                             Nuevo deseo
                         </Text>
