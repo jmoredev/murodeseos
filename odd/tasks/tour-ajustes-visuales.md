@@ -8,8 +8,10 @@ presentación; ni el motor ni la política de arranque cambian.
 medida en Chromium: el velo calcula `rgba(76, 33, 43, 0.75)`, la tarjeta es opaca con relleno y
 esquinas, y las doce páginas dan `sobra = 0`. Los commits de la rama, **903 pruebas + 1 todo**, `tsc` y
 `eslint` limpios y las **5 pruebas de navegador** del tour en verde. La **entrega** —PR y merge— es
-decisión del propietario. La revisión nativa de este candidato la declinó el proveedor
-(`declined_this_candidate`, sin linaje creado), así que no hay autoridad abierta.
+decisión del propietario. La revisión nativa del primer candidato la declinó el proveedor
+(`declined_this_candidate`, sin linaje creado); la del candidato final, `review-1a61ee82a87476df`,
+quedó **aprobada** el 2026-10-26 (lentes legibilidad y confiabilidad, 27 archivos) y su autoridad está
+quemada.
 
 ## Specs
 
@@ -157,3 +159,10 @@ estaba registrado como objetivo y sin usar; la parada de la lista de grupos gana
 que abrir un grupo enseña los deseos de todos sus miembros (S5); y el paso del botón de añadir dice
 que al pulsarlo se abre la pantalla siguiente, que es lo que faltaba para entender el salto (S6). Son
 diez paradas y el tope de páginas por parada sube a cuatro.
+
+L5 — Revisión nativa del candidato final (`a05bc7c..0d510b3`, 27 archivos, 1105 líneas): lentes de
+legibilidad y confiabilidad, **aprobada**, autoridad quemada (`gentle-ai.review-acknowledged/v1`). Un
+único hallazgo, y de los que no bloquean: `R2-001` (WARNING) sobre `e2e/tour.spec.ts:491-524`, con
+disposición informativa — el proveedor dice expresamente que no reabre la revisión y que es trabajo
+posterior. Queda anotado aquí para no perderlo. Antes, el primer candidato (`…640982b9`) quedó
+**declinado** por el proveedor sin crear linaje.
