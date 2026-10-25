@@ -13,6 +13,7 @@ import {
 import { getGithubPagesBasePath } from '@/lib/site-url';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { TourTargetProvider } from '@/components/tour/TourTargetProvider';
+import { TourHost } from '@/components/tour/TourHost';
 import './global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -133,22 +134,27 @@ export default function RootLayout() {
         <SafeAreaProvider>
             {/* Un solo registro de objetivos para toda la app (S7): las pantallas dan de alta lo
                 suyo con `useTourTarget` y el overlay mide desde el mismo sitio. Sin esto, cada
-                pantalla tendría su propio registro y el tour no vería nada. El corredor del tour
-                no se monta aquí todavía (es T6): aquí sólo se deja el registro en su sitio. */}
+                pantalla tendría su propio registro y el tour no vería nada.
+
+                El tour (T6) va **fuera** del `Stack` y una sola vez: así sobrevive a los cambios de
+                ruta —dos paradas viven en sub-rutas— y la portada puede preguntarle si está en
+                marcha antes de enseñar los datos de demostración. */}
             <TourTargetProvider>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                        contentStyle: { backgroundColor: SURFACE_BG },
-                    }}
-                >
-                    <Stack.Screen
-                        name="index"
-                        options={{
-                            gestureEnabled: false,
+                <TourHost>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                            contentStyle: { backgroundColor: SURFACE_BG },
                         }}
-                    />
-                </Stack>
+                    >
+                        <Stack.Screen
+                            name="index"
+                            options={{
+                                gestureEnabled: false,
+                            }}
+                        />
+                    </Stack>
+                </TourHost>
             </TourTargetProvider>
         </SafeAreaProvider>
     );
