@@ -83,14 +83,22 @@ export function useTourTarget(id: string): TourTargetProps {
         const actual = nodo.current;
         const medirEnVentana = actual?.measureInWindow;
 
-        if (!medirEnVentana) return Promise.resolve(null);
+        if (!actual || !medirEnVentana) return Promise.resolve(null);
 
         // `measureInWindow` responde por callback en nativo; en web lo hace al momento. La promesa
-        // unifica las dos formas para el registro.
+        // unifica las dos formas para el registro. Se invoca **sobre el nodo** (`.call(actual)`): en
+        // React Native la medición la resuelve el receptor, así que una referencia despegada
+        // (`const fn = nodo.measureInWindow; fn(...)`) pierde `this` y no mide nada.
         return new Promise((resolve) => {
-            medirEnVentana((x, y, width, height) => {
-                resolve({ x, y, width, height });
-            });
+            try {
+                medirEnVentana.call(actual, (x, y, width, height) => {
+                    resolve({ x, y, width, height });
+                });
+            } catch {
+                // Un nodo desmontado durante la medición puede lanzar de forma síncrona. El tour no
+                // se pinta sin medida, pero una promesa rechazada sin dueño sí tumba la app.
+                resolve(null);
+            }
         });
     }, []);
 
