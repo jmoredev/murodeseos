@@ -74,6 +74,26 @@ function nodoConReceptor(rect: TargetRect) {
     };
 }
 
+/**
+ * Un objetivo, como lo monta una pantalla normal. No pide la tienda: sólo las props a esparcir.
+ */
+function SondaDeObjetivo({ sondaRef }: { sondaRef: { current: TourTargetProps | null } }) {
+    const objetivo = useTourTarget('tab-deseos');
+
+    useEffect(() => {
+        sondaRef.current = objetivo;
+    }, [sondaRef, objetivo]);
+
+    return null;
+}
+
+/** Sólo la tienda: es la que sigue exigiendo el proveedor. */
+function SondaDeRegistro() {
+    useTourTargetRegistry();
+
+    return null;
+}
+
 describe('useTourTarget', () => {
     it('tolera que el nodo todavía no exista y mide en cuanto aparece', async () => {
         const api: SondaRef = { current: null };
@@ -183,12 +203,31 @@ describe('useTourTarget', () => {
         expect(propsDeView).toEqual({});
     });
 
-    it('sin TourTargetProvider avisa en vez de fallar en silencio', () => {
-        // Un tour sin registro no se pinta nunca; el error dice qué falta en vez de dejar el
-        // overlay mudo para siempre.
+    it('sin TourTargetProvider las props son inertes: cada pantalla se puede montar sola', () => {
+        // Antes esto lanzaba, y con razón: sólo el tour montaba objetivos. Ahora el enganche vive
+        // también en las pantallas normales (pestañas, botón de añadir, formularios), y todas las
+        // pruebas de pantalla las montan sin el tour: si sin proveedor reventara, cada una
+        // necesitaría un `TourTargetProvider` que no tiene nada que ver con lo que prueba. Sin
+        // registro que dar de alta, las props no hacen nada y la pantalla se pinta igual.
+        const sonda: { current: TourTargetProps | null } = { current: null };
+
+        render(<SondaDeObjetivo sondaRef={sonda} />);
+
+        const props = sonda.current;
+        if (!props) throw new Error('La sonda no se ha montado');
+
+        expect(() => {
+            props.ref(null);
+            props.onLayout();
+        }).not.toThrow();
+    });
+
+    it('useTourTargetRegistry sigue exigiendo el proveedor', () => {
+        // La tienda no se puede inventar: quien pregunta por ella es el motor del tour, y ahí un
+        // fallo silencioso sí dejaría el recorrido mudo para siempre.
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-        expect(() => render(<Sonda sondaRef={{ current: null }} />)).toThrow(/TourTargetProvider/);
+        expect(() => render(<SondaDeRegistro />)).toThrow(/TourTargetProvider/);
 
         error.mockRestore();
     });

@@ -10,12 +10,22 @@
  * que poder resaltarse sin números escritos a mano.
  */
 
+import type { Tab } from '@/lib/tabs';
+
 export type TourStep = {
     /** Identidad estable: sirve para depurar y para no repetir paradas. */
     id: string;
     /** Objetivo registrado en pantalla (`useTourTarget`), no coordenadas. */
     targetId: string;
-    /** Ruta en la que vive la parada, si no es la actual. */
+    /**
+     * Pestaña de la pantalla principal en la que vive la parada.
+     *
+     * Es distinto de `route`, y por eso son dos campos: las pestañas de la portada no son rutas del
+     * navegador, son estado (`setActiveTab`). Pedir `/` para ir de «Deseos» a «Grupos» recargaría la
+     * pantalla y volvería a montar la lista que se está midiendo.
+     */
+    tab?: Tab;
+    /** Ruta de expo-router en la que vive la parada, si no es la pantalla principal. */
     route?: string;
     /** Páginas del cuadro de diálogo. Al menos una. */
     pages: readonly string[];

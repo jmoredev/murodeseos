@@ -18,6 +18,7 @@ import { WishlistCard, GiftItem, Priority } from './WishlistCard'
 import { AppIcon, type AppIconName } from '@/components/ui/AppIcon'
 import { notifyWishAdded } from '@/lib/notification-utils'
 import { ConfirmModal } from './ConfirmModal'
+import { useTourTarget } from '@/components/tour/TourTargetProvider'
 import { useToast } from './Toast'
 import { comparePriceValues, filterPriceInputText, formatPrice, parsePriceInput, toCurrencyCode, toPriceNumber } from '@/lib/format-price'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -85,6 +86,11 @@ export interface WishListTabProps {
 
 export function WishListTab({ userId, demoData }: WishListTabProps) {
     const demoWishes = demoData?.wishes;
+    // Objetivos del tour (S3, S7): la lista y el botón de añadir. Se registran siempre —también
+    // cuando el tour no está activo— porque el registro es inerte sin proveedor: cuesta dos props y
+    // evita que el tour dependa de que la pantalla se monte dos veces.
+    const objetivoLista = useTourTarget('deseos-lista');
+    const objetivoAgregar = useTourTarget('deseos-agregar');
     const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -529,17 +535,22 @@ export function WishListTab({ userId, demoData }: WishListTabProps) {
                     <Text className="text-3xl font-display text-on-background tracking-tight">Deseos</Text>
                     <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">¿Qué te gustaría recibir?</Text>
                 </View>
-                <PrimaryButton
-                    // El «+» no abre el formulario: va a la pantalla del enlace, que decide si
-                    // hay enlace (y lo lee) o si el deseo se escribe a mano.
-                    onPress={() => router.push('/wishlist/add' as any)}
-                    accessibilityLabel="Nuevo deseo"
-                    variant="icon"
-                    className="w-12 h-12 rounded-2xl"
-                    textClassName="text-on-primary font-sans-bold text-2xl leading-none"
-                >
-                    +
-                </PrimaryButton>
+                {/* `PrimaryButton` no reenvía `ref`, así que el objetivo se registra en un `View`
+                    envolvente: mide exactamente la misma caja (el botón es `w-12 h-12`) y no cambia
+                    ninguna clase. */}
+                <View {...objetivoAgregar}>
+                    <PrimaryButton
+                        // El «+» no abre el formulario: va a la pantalla del enlace, que decide si
+                        // hay enlace (y lo lee) o si el deseo se escribe a mano.
+                        onPress={() => router.push('/wishlist/add' as any)}
+                        accessibilityLabel="Nuevo deseo"
+                        variant="icon"
+                        className="w-12 h-12 rounded-2xl"
+                        textClassName="text-on-primary font-sans-bold text-2xl leading-none"
+                    >
+                        +
+                    </PrimaryButton>
+                </View>
             </View>
 
             {items.length > 0 ? (
@@ -586,7 +597,7 @@ export function WishListTab({ userId, demoData }: WishListTabProps) {
                 </View>
             ) : null}
 
-            <View className="w-full">
+            <View className="w-full" {...objetivoLista}>
                 {demoWishes ? (
                     /* Datos de demostración del tour (S4, D1). Se pintan con la tarjeta de siempre y
                        no se tocan: sin `onClick` la tarjeta no abre el formulario, y sin ser

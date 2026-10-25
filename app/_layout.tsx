@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/be-vietnam-pro';
 import { getGithubPagesBasePath } from '@/lib/site-url';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { TourTargetProvider } from '@/components/tour/TourTargetProvider';
 import './global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -130,19 +131,25 @@ export default function RootLayout() {
 
     return (
         <SafeAreaProvider>
-            <Stack
-                screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: SURFACE_BG },
-                }}
-            >
-                <Stack.Screen
-                    name="index"
-                    options={{
-                        gestureEnabled: false,
+            {/* Un solo registro de objetivos para toda la app (S7): las pantallas dan de alta lo
+                suyo con `useTourTarget` y el overlay mide desde el mismo sitio. Sin esto, cada
+                pantalla tendría su propio registro y el tour no vería nada. El corredor del tour
+                no se monta aquí todavía (es T6): aquí sólo se deja el registro en su sitio. */}
+            <TourTargetProvider>
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: SURFACE_BG },
                     }}
-                />
-            </Stack>
+                >
+                    <Stack.Screen
+                        name="index"
+                        options={{
+                            gestureEnabled: false,
+                        }}
+                    />
+                </Stack>
+            </TourTargetProvider>
         </SafeAreaProvider>
     );
 }
