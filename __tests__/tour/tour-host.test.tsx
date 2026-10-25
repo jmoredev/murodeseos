@@ -38,6 +38,7 @@ const dobles = vi.hoisted(() => {
         escrituras: [] as Record<string, unknown>[],
         oyentes: [] as ((evento: string, sesion: Sesion) => void)[],
         ruta: { pathname: '/' },
+        puedeVolver: true,
     };
 
     const supabase = {
@@ -80,7 +81,16 @@ const dobles = vi.hoisted(() => {
         }),
     };
 
-    const router = { push: vi.fn(), replace: vi.fn(), back: vi.fn(), setParams: vi.fn() };
+    const router = {
+        push: vi.fn(),
+        replace: vi.fn(),
+        // Retroceder de verdad devuelve a la portada: el pathname lo Dice el router, no el test.
+        back: vi.fn(() => {
+            estado.ruta.pathname = '/';
+        }),
+        setParams: vi.fn(),
+        canGoBack: () => estado.puedeVolver,
+    };
 
     return { estado, supabase, router };
 });
@@ -124,6 +134,8 @@ beforeEach(() => {
     dobles.estado.oyentes.length = 0;
     dobles.estado.ruta.pathname = '/';
     dobles.router.push.mockClear();
+    dobles.router.back.mockClear();
+    dobles.estado.puedeVolver = true;
 });
 
 /**
@@ -315,6 +327,41 @@ describe('TourHost: la navegación del recorrido', () => {
 
         expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
         expect(sonda()).toBe('activo|groups');
+    });
+
+    it('para volver a la portada desde una sub-ruta retrocede: no monta otra copia del muro', async () => {
+        const { rerender } = render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        // La parada del formulario sí es un `push` de verdad: es otra pantalla.
+        await avanzar(5);
+        expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
+
+        // Ya estamos en la sub-ruta. La portada sigue montada debajo, con su estado.
+        dobles.estado.ruta.pathname = '/wishlist/add';
+        rerender(<Pintar />);
+        await avanzar(2);
+
+        // La parada de grupos vive en la portada: se vuelve, no se empuja otra portada encima.
+        expect(dobles.router.back).toHaveBeenCalledTimes(1);
+        expect(dobles.router.push).toHaveBeenCalledTimes(1);
+        expect(sonda()).toBe('activo|groups');
+    });
+
+    it('si no hay nada debajo, ir a la portada empuja en vez de quedarse sin salida', async () => {
+        // Enlace directo a la sub-ruta: no hay portada debajo que recuperar.
+        dobles.estado.ruta.pathname = '/wishlist/add';
+        dobles.estado.puedeVolver = false;
+
+        const { rerender } = render(<Pintar />);
+        await act(async () => {});
+
+        // La primera parada pide la portada; sin historial, se empuja.
+        rerender(<Pintar />);
+
+        expect(dobles.router.back).not.toHaveBeenCalled();
+        expect(dobles.router.push).toHaveBeenCalledWith('/');
     });
 
     it('la pestaña que la portada dice que enseña decide a dónde hay que ir', async () => {
