@@ -6,7 +6,7 @@ presentación; ni el motor ni la política de arranque cambian.
 
 **Cerrada:** 2026-10-26 · **Rama:** `fix/tour-legibilidad` · **Estado:** cerrada la implementación,
 medida en Chromium: el velo calcula `rgba(76, 33, 43, 0.75)`, la tarjeta es opaca con relleno y
-esquinas, y las doce páginas dan `sobra = 0`. Cuatro commits, **903 pruebas + 1 todo**, `tsc` y
+esquinas, y las doce páginas dan `sobra = 0`. Los commits de la rama, **903 pruebas + 1 todo**, `tsc` y
 `eslint` limpios y las **5 pruebas de navegador** del tour en verde. La **entrega** —PR y merge— es
 decisión del propietario. La revisión nativa de este candidato la declinó el proveedor
 (`declined_this_candidate`, sin linaje creado), así que no hay autoridad abierta.
@@ -33,6 +33,22 @@ sólo si mejora el trabajo:
 
 > «Si crees que puedes hacerlo mejor con ayuda de alguna librería de tutoriales como Reac Joyride,
 > driver.js etc evalua lo que aporta y si facilita y mejora el trabajo podemos introducirla»
+
+S5 — Que se explique cómo se ven los deseos de otra persona, ya que el tour no entra en un grupo:
+
+> «En el tour no se entra a un grupo por lo que no se puede ver como acceder a los deseos de otra
+> persona, eso debe de explicarse.»
+
+S6 — Que se note que se ha pulsado el botón de añadir, para que el salto a la pantalla siguiente no
+sea un cambio inexplicado:
+
+> «Por otro lado, del paso 3 al 4 queda extraño porque no se sabe que se ha hecho clic en el botón de
+> nuevo, podría especificarse.»
+
+S7 — Que se explique cómo se llega a unirse a un grupo, con su botón, y cómo se crea uno:
+
+> «No se sabe como se ha llegado al paso 7. Habría que describir como se puede crear un grupo o unise
+> a un grupo haciando uso del botón correspondiente.»
 
 ## Decisiones
 
@@ -78,6 +94,7 @@ móvil y el anillo sigue viéndose por encima.
 | T3 | S3, D3 | La medida de la tarjeta se reinicia con cada página del guion | `lib/tour/use-card-size.ts` | sí |
 | T4 | S3 | Páginas partidas y acortadas, con presupuesto de longitud vigilado por prueba | `lib/tour/steps.ts` | sí |
 | T5 | S1, S2, S3 | Guardia de extremo a extremo: velo oscuro, tarjeta opaca y ninguna página desplazable | `e2e/tour.spec.ts` | sí |
+| T7 | S5, S6, S7 | Más páginas en el guion: ver los deseos de los demás, nombrar el clic del botón de añadir y una parada nueva en el botón de unirse | `lib/tour/steps.ts` | `74443d9` |
 | T6 | S3, D4 | La tarjeta mide su alto por el contenido y, si el hueco no deja banda, la hoja se apoya abajo | `lib/tour/geometry.ts`, `lib/tour/use-card-size.ts`, `components/tour/TourOverlay.tsx` | sí |
 
 Commits por tarea (evidencia):
@@ -133,3 +150,10 @@ identificó: mi propia tubería se comió el detalle (`tail -6`) y la pasada sig
 verde, igual que la del worker. Queda como flake sin nombre hasta que vuelva a aparecer. (2) T1-T3 y
 T6 comparten commit: el color del overlay y el tamaño de la tarjeta viven en la misma definición de
 estilos, así que separarlos pedía un estado intermedio artificial del fichero.
+
+L4 — Segunda tanda, pedida por el propietario al usar el tour: el guion no explica lo que no puede
+enseñar. Entra la parada `crear-o-unirse` sobre el botón «Unirse a un grupo» (S7), que hasta ahora
+estaba registrado como objetivo y sin usar; la parada de la lista de grupos gana la página que cuenta
+que abrir un grupo enseña los deseos de todos sus miembros (S5); y el paso del botón de añadir dice
+que al pulsarlo se abre la pantalla siguiente, que es lo que faltaba para entender el salto (S6). Son
+diez paradas y el tope de páginas por parada sube a cuatro.
