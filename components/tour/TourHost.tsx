@@ -37,13 +37,13 @@ import { TourRunner } from './TourRunner';
  */
 const SESION_MAX_MS = 12_000;
 
+/** La pestaña pedida en la portada (`/?tab=groups`), si la ruta la lleva. */
+const PESTANA_EN_RUTA = /[?&]tab=(wishlist|groups|profile)/;
+
 const ESTILOS = StyleSheet.create({
     /** El contenedor de la página: ocupa lo mismo que ocupaba la página sin envolverla. */
     pagina: { flex: 1 },
 });
-
-/** La portada, con o sin pestaña pedida: `/`, `/?tab=groups`… */
-const PORTADA = /^\/?(?:\?tab=(wishlist|groups|profile))?$/;
 
 type TourHostContextValue = {
     active: boolean;
@@ -207,7 +207,7 @@ export function TourHost({ children }: TourHostProps) {
      * (pedirla, que la portada la cambie en su efecto); ruta = pantalla de expo-router.
      */
     const alNavegar = useCallback(
-        (destino: TourDestination) => {
+        (destino: TourDestination, volver = false) => {
             if (!destino) return;
 
             if (destino.kind === 'tab') {
@@ -217,20 +217,17 @@ export function TourHost({ children }: TourHostProps) {
             }
 
             /**
-             * Volver a la portada es **retroceder**, no abrir otra.
+             * Volver a la portada deshaciendo el `push` que abrió la sub-ruta.
              *
-             * Las paradas de sub-ruta se alcanzan con un `push` desde la portada, que sigue montada
-             * debajo. Empujar `/?tab=…` encima monta una segunda copia del muro —y luego una
-             * tercera— con sus listas, sus peticiones y su modal de novedades: el usuario no lo ve,
-             * pero el botón Atrás y el DOM cargan con copias que nadie mira. `back()` devuelve a la
-             * portada que ya estaba, con su estado, y la pestaña pedida se aplica por contexto.
+             * `volver` sólo llega cuando el corredor recuerda que el `push` fue suyo, así que debajo
+             * está la portada que él dejó, con su estado, y `back()` la recupera en vez de montar
+             * una segunda copia del muro. Sin historial propio (enlace directo) se empuja la
+             * portada, que es la única salida.
              */
-            const portada = PORTADA.exec(destino.route);
+            if (volver) {
+                const pedida = PESTANA_EN_RUTA.exec(destino.route)?.[1];
 
-            if (portada) {
-                const pedida = portada[1] as Tab | undefined;
-
-                if (pedida) setRequestedTab(pedida);
+                if (pedida) setRequestedTab(pedida as Tab);
 
                 if (router.canGoBack()) {
                     router.back();

@@ -52,6 +52,34 @@ const PASOS: readonly TourStep[] = [
     },
 ];
 
+/** Una medida estable entre repintados: es lo que el `ref` del registro espera. */
+const MEDIDAS: Readonly<Record<string, TargetRect | null>> = { objetivo: RECT };
+
+/**
+ * Sub-ruta y luego paradas de la portada: el camino de vuelta, dos veces. La primera vuelta la
+ * crea el tour (él abrió la sub-ruta); la segunda no, porque la vuelta ya se gastó.
+ */
+const PASOS_DE_VUELTA: readonly TourStep[] = [
+    {
+        id: 'formulario',
+        targetId: 'objetivo',
+        route: '/wishlist/add',
+        pages: ['Añade un deseo'],
+    },
+    {
+        id: 'grupos',
+        targetId: 'objetivo',
+        tab: 'groups',
+        pages: ['Tus grupos'],
+    },
+    {
+        id: 'lista-grupos',
+        targetId: 'objetivo',
+        tab: 'groups',
+        pages: ['La lista de grupos'],
+    },
+];
+
 /** La segunda parada apunta a un objetivo que todavía no se ha medido. */
 const PASOS_CON_HUECO: readonly TourStep[] = [
     { id: 'bienvenida', targetId: 'presente', tab: 'wishlist', pages: ['Bienvenido al tour'] },
@@ -205,6 +233,97 @@ describe('TourRunner: navegación entre paradas', () => {
         );
 
         expect(medidasDeLaAusente()).toBe(1);
+    });
+});
+
+describe('TourRunner: volver a la portada', () => {
+    it('pide volver atrás cuando fue el tour quien empujó la ruta en la que está', async () => {
+        const onNavigate = vi.fn();
+        const { rerender } = render(
+            <Arnes
+                pasos={PASOS_DE_VUELTA}
+                tab="wishlist"
+                pathname="/"
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+
+        expect(await screen.findByText('Añade un deseo')).toBeInTheDocument();
+        // El tour abre la sub-ruta: el push es suyo y lo recuerda.
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/wishlist/add' });
+
+        rerender(
+            <Arnes
+                pasos={PASOS_DE_VUELTA}
+                tab="wishlist"
+                pathname="/wishlist/add"
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+
+        // Debajo de esta sub-ruta está la portada que dejó el propio tour: se deshace el push, con
+        // la pestaña de la parada en la ruta, en vez de empujar una segunda copia del muro. El
+        // segundo argumento es el permiso de volver, y sólo lo da quien empujó esta ruta.
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/?tab=groups' }, true);
+    });
+
+    it('desde un enlace directo que el tour no empujó pide la portada, nunca retroceder', async () => {
+        const onNavigate = vi.fn();
+        render(
+            <Arnes
+                pasos={PASOS_DE_VUELTA}
+                tab="wishlist"
+                pathname="/wishlist/add"
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+
+        // El usuario ya estaba en la sub-ruta: el tour no ha empujado nada.
+        expect(await screen.findByText('Añade un deseo')).toBeInTheDocument();
+        expect(onNavigate).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+
+        // Debajo de esta pantalla no hay una portada que el tour haya abierto: se empuja la parada,
+        // y se pide sin el permiso de volver (un solo argumento: nadie autorizó el `back`).
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/?tab=groups' });
+        expect(onNavigate.mock.lastCall).toHaveLength(1);
+    });
+
+    it('da una vuelta por cada empujón: la vuelta gastada no se repite', async () => {
+        const onNavigate = vi.fn();
+        const { rerender } = render(
+            <Arnes
+                pasos={PASOS_DE_VUELTA}
+                tab="wishlist"
+                pathname="/"
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+
+        expect(await screen.findByText('Añade un deseo')).toBeInTheDocument();
+
+        rerender(
+            <Arnes
+                pasos={PASOS_DE_VUELTA}
+                tab="wishlist"
+                pathname="/wishlist/add"
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/?tab=groups' }, true);
+
+        // La vuelta ya se consumió: la siguiente parada de la portada pide su ruta, no otra vuelta.
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/?tab=groups' });
+        expect(onNavigate.mock.lastCall).toHaveLength(1);
     });
 });
 

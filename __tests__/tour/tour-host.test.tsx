@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TourHost, useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
 import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/TourTargetProvider';
 import { TOUR_STEPS } from '@/lib/tour/steps';
+import type { TourStep } from '@/lib/tour/engine';
 import type { Tab } from '@/lib/tabs';
 import type { TargetRect } from '@/lib/tour/targets';
 import { withTiming } from 'react-native-reanimated';
@@ -96,6 +97,32 @@ const dobles = vi.hoisted(() => {
     return { estado, supabase, router };
 });
 
+/**
+ * El guion real, pero sustituible.
+ *
+ * Hay una rama del host que el guion de la app no alcanza: volver a la portada sin pedir pestaña
+ * necesita una parada con `route: '/'`, y el guion real no la tiene (todas sus paradas de la
+ * portada son de pestaña). Con el guion de verdad por defecto, el resto de las pruebas sigue
+ * midiendo lo mismo.
+ */
+const guion = vi.hoisted(() => ({
+    real: [] as readonly TourStep[],
+    vigente: [] as readonly TourStep[],
+}));
+
+vi.mock('@/lib/tour/steps', async () => {
+    const modulo = await vi.importActual<typeof import('@/lib/tour/steps')>('@/lib/tour/steps');
+
+    guion.real = modulo.TOUR_STEPS;
+    guion.vigente = modulo.TOUR_STEPS;
+
+    return {
+        get TOUR_STEPS() {
+            return guion.vigente;
+        },
+    };
+});
+
 vi.mock('@/lib/supabase', () => ({ supabase: dobles.supabase }));
 
 vi.mock('expo-router', () => ({
@@ -167,6 +194,7 @@ beforeEach(() => {
     dobles.router.push.mockClear();
     dobles.router.back.mockClear();
     dobles.estado.puedeVolver = true;
+    guion.vigente = guion.real;
     vi.mocked(withTiming).mockClear();
 });
 
@@ -461,6 +489,71 @@ describe('TourHost: la navegación del recorrido', () => {
         expect(dobles.router.back).toHaveBeenCalledTimes(1);
         expect(dobles.router.push).toHaveBeenCalledTimes(1);
         expect(sonda()).toBe('activo|groups');
+    });
+
+    it('desde un enlace directo a una sub-ruta empuja la portada aunque el navegador tenga historial', async () => {
+        // Hay historial de verdad, pero no lo creó el tour: esta pantalla la abrió el usuario (o el
+        // enlace directo), así que retroceder lo sacaría a donde el tour no ha estado.
+        dobles.estado.ruta.pathname = '/wishlist/add';
+        dobles.estado.puedeVolver = true;
+
+        render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        expect(dobles.router.back).not.toHaveBeenCalled();
+        expect(dobles.router.push).toHaveBeenCalledWith('/');
+    });
+
+    it('sin historial, volver a la portada empuja la pestaña pedida en vez de quedarse sin salida', async () => {
+        const { rerender } = render(<Pintar />);
+
+        expect(await screen.findByText(PRIMERA_PAGINA)).toBeInTheDocument();
+
+        await avanzar(5);
+        expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
+
+        // Ya en la sub-ruta que abrió el tour, pero sin historial que deshacer.
+        dobles.estado.ruta.pathname = '/wishlist/add';
+        dobles.estado.puedeVolver = false;
+        rerender(<Pintar />);
+        await avanzar(1);
+
+        expect(dobles.router.back).not.toHaveBeenCalled();
+        expect(dobles.router.push).toHaveBeenLastCalledWith('/?tab=groups');
+        expect(sonda()).toBe('activo|groups');
+    });
+
+    it('sin historial y sin pestaña pedida, volver a la portada empuja la ruta corta', async () => {
+        // Una parada que vive en la portada sin pedir pestaña (`route: '/'`): la vuelta no tiene
+        // pestaña que aplicar y la salida es `/`, no `/?tab=`.
+        guion.vigente = [
+            {
+                id: 'formulario',
+                targetId: 'deseos-form',
+                route: '/wishlist/add',
+                pages: ['El formulario del deseo'],
+            },
+            {
+                id: 'muro',
+                targetId: 'muro-de-deseos',
+                route: '/',
+                pages: ['Tu muro de deseos'],
+            },
+        ];
+        dobles.estado.puedeVolver = false;
+
+        const { rerender } = render(<Pintar />);
+
+        expect(await screen.findByText('El formulario del deseo')).toBeInTheDocument();
+        expect(dobles.router.push).toHaveBeenCalledWith('/wishlist/add');
+
+        dobles.estado.ruta.pathname = '/wishlist/add';
+        rerender(<Pintar />);
+        await avanzar(1);
+
+        expect(dobles.router.back).not.toHaveBeenCalled();
+        expect(dobles.router.push).toHaveBeenLastCalledWith('/');
     });
 
     it('si no hay nada debajo, ir a la portada empuja en vez de quedarse sin salida', async () => {
