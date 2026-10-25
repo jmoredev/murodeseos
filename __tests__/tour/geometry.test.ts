@@ -188,6 +188,30 @@ describe('cardPlacement: la tarjeta no tapa lo que explica', () => {
         expect(tarjeta.y + tarjeta.height).toBeLessThanOrEqual(movil.height - CARD_MARGIN);
     });
 
+    it('en móvil, con el hueco en la barra de pestañas, la hoja va encima y no lo tapa', () => {
+        // El caso real de S6: la barra inferior del dock. Pegada abajo no cabe nada debajo de ella.
+        const movil: Size = { width: 360, height: 740 };
+        const hole: Rect = { x: 20, y: 650, width: 320, height: 56 };
+        const tarjeta = cardPlacement(hole, movil, TARJETA);
+
+        expect(tarjeta.placement).toBe('sheet');
+        // Sube por encima del hueco en vez de apoyarse en el borde inferior encima de él.
+        expect(tarjeta.y + tarjeta.height).toBeLessThanOrEqual(hole.y);
+        expect(tarjeta.y).toBeGreaterThanOrEqual(CARD_MARGIN);
+    });
+
+    it('en móvil, si el hueco no deja sitio a ningún lado, la hoja se recorta y no lo tapa', () => {
+        const movil: Size = { width: 360, height: 740 };
+        const hole: Rect = { x: 0, y: 200, width: 360, height: 400 };
+        const tarjeta = cardPlacement(hole, movil, TARJETA);
+
+        expect(tarjeta.placement).toBe('sheet');
+        // La banda de arriba es la que más sitio tiene: ahí se recorta y no invade el hueco.
+        expect(tarjeta.y + tarjeta.height).toBeLessThanOrEqual(hole.y);
+        expect(tarjeta.height).toBeLessThan(TARJETA.height);
+        expect(tarjeta.height).toBeGreaterThan(0);
+    });
+
     it('el ancho del umbral pertenece a móvil: 768 es hoja y 769 no', () => {
         const hole: Rect = { x: 100, y: 100, width: 120, height: 40 };
 
