@@ -4,6 +4,13 @@ Arreglos sobre el tour de primer inicio ya publicado (`odd/tasks/tour-tutorial.m
 oscurece, la tarjeta no tiene fondo y las páginas largas obligan a desplazar. Tres defectos de
 presentación; ni el motor ni la política de arranque cambian.
 
+**Cerrada:** 2026-10-26 · **Rama:** `fix/tour-legibilidad` · **Estado:** cerrada la implementación,
+medida en Chromium: el velo calcula `rgba(76, 33, 43, 0.75)`, la tarjeta es opaca con relleno y
+esquinas, y las doce páginas dan `sobra = 0`. Cuatro commits, **903 pruebas + 1 todo**, `tsc` y
+`eslint` limpios y las **5 pruebas de navegador** del tour en verde. La **entrega** —PR y merge— es
+decisión del propietario. La revisión nativa de este candidato la declinó el proveedor
+(`declined_this_candidate`, sin linaje creado), así que no hay autoridad abierta.
+
 ## Specs
 
 S1 — Oscurecer todo lo que no es el objetivo, para que el foco se lea solo:
