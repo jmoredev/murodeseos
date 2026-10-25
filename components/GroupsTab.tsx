@@ -11,11 +11,28 @@ import { useToast } from '@/components/Toast'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { AppIcon } from '@/components/ui/AppIcon'
 
+/**
+ * «Compartir» de un grupo de demostración: no hace nada, a propósito.
+ *
+ * La tarjeta exige el manejador para pintarse, pero el código de invitación de un grupo que no
+ * existe en la base de datos no sirve para nada, así que el botón está y no reparte nada. Una
+ * función de verdad y no `undefined` porque el tipo de la tarjeta lo pide, y porque si algún día se
+ * pudiera pulsar, el peor caso es que no pase nada.
+ */
+function ignorarPulso() {}
+
 export interface GroupsTabProps {
     userId: string;
+    /**
+     * Grupos de demostración del tour (S4, D1). Con esto puesto la lista pinta estos grupos y **no**
+     * consulta ni escribe: ni Supabase, ni renombrar, ni eliminar, ni apodos. Lo decide la lista, no
+     * el tour: quien la usa sólo pasa los datos.
+     */
+    demoData?: { groups: readonly Group[] };
 }
 
-export function GroupsTab({ userId }: GroupsTabProps) {
+export function GroupsTab({ userId, demoData }: GroupsTabProps) {
+    const demoGroups = demoData?.groups;
     const router = useRouter();
     // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
     // número de columnas de la rejilla de grupos más abajo (2 columnas en
@@ -27,7 +44,8 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     // Para qué usuario están cargados los datos. El estado de carga se deriva de ahí, así que
     // al cambiar de usuario vuelve a encenderse solo, sin fijarlo desde el efecto.
     const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null)
-    const loading = loadedForUserId !== userId
+    // Con datos de demostración no hay consulta a la que esperar: la lista ya está completa.
+    const loading = !demoGroups && loadedForUserId !== userId
     const [shareModalOpen, setShareModalOpen] = useState(false);
     const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
     const [renameModalOpen, setRenameModalOpen] = useState(false);
@@ -158,12 +176,16 @@ export function GroupsTab({ userId }: GroupsTabProps) {
     }
 
     useEffect(() => {
+        // Con datos de demostración no se pregunta nada: la lista ya tiene lo que va a pintar, y
+        // pedir los reales encima sería mezclar los grupos del tour con los de la cuenta.
+        if (demoGroups) return;
+
         // La carga arranca en un límite asíncrono explícito: no fija estado de forma
         // síncrona, y así el análisis estático puede comprobarlo.
         void (async () => {
             await fetchUserGroups(userId)
         })()
-    }, [userId])
+    }, [userId, demoGroups])
 
     const handleShare = (groupId: string) => {
         setSelectedGroupId(groupId);
@@ -358,7 +380,24 @@ export function GroupsTab({ userId }: GroupsTabProps) {
 
             {/* Group List Grid */}
             <View className="w-full">
-                {groups.length > 0 ? (
+                {demoGroups ? (
+                    /* Datos de demostración del tour (S4, D1). Se pintan con la tarjeta de siempre y
+                       no se tocan: sin administración no hay menú de renombrar/eliminar, sin los
+                       manejadores de apodo no hay lápices, y compartir no reparte nada. Lo que la
+                       tarjeta sí sabe hacer por dentro (abrir el detalle, abrir la lista de un
+                       miembro) lo cierra `pointerEvents`. */
+                    <View
+                        testID="tour-demo-groups"
+                        style={{ pointerEvents: 'none' }}
+                        className="flex-row flex-wrap -m-3 items-stretch"
+                    >
+                        {demoGroups.map(group => (
+                            <View key={group.id} className={`${isDesktop ? 'w-1/2' : 'w-full'} p-3 flex`}>
+                                <GroupCard group={group} isAdmin={false} onShare={ignorarPulso} />
+                            </View>
+                        ))}
+                    </View>
+                ) : groups.length > 0 ? (
                     <View className="flex-row flex-wrap -m-3 items-stretch">
                         {groups.map(group => (
                             <View key={group.id} className={`${isDesktop ? 'w-1/2' : 'w-full'} p-3 flex`}>

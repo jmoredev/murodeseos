@@ -75,9 +75,16 @@ function ImageAction({ label, icon, onPress, disabled, accessibilityLabel }: {
 
 export interface WishListTabProps {
     userId: string;
+    /**
+     * Deseos de demostración del tour (S4, D1). Con esto puesto la lista pinta estos deseos y **no**
+     * consulta ni escribe: ni Supabase, ni reservas, ni el formulario de edición. Lo decide la lista,
+     * no el tour: quien la usa sólo pasa los datos.
+     */
+    demoData?: { wishes: readonly GiftItem[] };
 }
 
-export function WishListTab({ userId }: WishListTabProps) {
+export function WishListTab({ userId, demoData }: WishListTabProps) {
+    const demoWishes = demoData?.wishes;
     const [items, setItems] = useState<GiftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -129,6 +136,10 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     // Cargar items desde Supabase
     useEffect(() => {
+        // Con datos de demostración no se pregunta nada: la lista ya tiene lo que va a pintar, y
+        // pedir los reales encima sería mezclar los deseos del tour con los de la cuenta.
+        if (demoWishes) return;
+
         const fetchItems = async () => {
             if (!userId) return;
 
@@ -181,7 +192,7 @@ export function WishListTab({ userId }: WishListTabProps) {
         };
 
         fetchItems();
-    }, [userId]);
+    }, [userId, demoWishes]);
 
     // Estado inicial de un deseo nuevo. Vive aparte de `openForm` porque un compartir abre el
     // formulario con el borrador ya puesto: el formulario arranca en un sitio, no en dos.
@@ -500,8 +511,9 @@ export function WishListTab({ userId }: WishListTabProps) {
 
     // «Cargando deseos…» es un estado de la **lista**. Con un compartir recién abierto el
     // usuario está mirando el formulario, y taparlo con el cargando lo dejaría sin ver lo que
-    // acaba de compartir; fuera de ese caso la puerta no cambia.
-    if (loading && !isFormOpen) {
+    // acaba de compartir; fuera de ese caso la puerta no cambia. Con datos de demostración tampoco
+    // hay cargando: no hay ninguna consulta a la que esperar.
+    if (loading && !isFormOpen && !demoWishes) {
         return (
             <View className="flex-1 items-center justify-center p-20">
                 <ActivityIndicator size="large" color="#aa2c32" />
@@ -575,7 +587,22 @@ export function WishListTab({ userId }: WishListTabProps) {
             ) : null}
 
             <View className="w-full">
-                {sortedItems.length > 0 ? (
+                {demoWishes ? (
+                    /* Datos de demostración del tour (S4, D1). Se pintan con la tarjeta de siempre y
+                       no se tocan: sin `onClick` la tarjeta no abre el formulario, y sin ser
+                       propietario no renderiza «Ya lo tengo» ni «Reservar», que son los dos únicos
+                       controles que escribirían. `pointerEvents` cierra lo que la tarjeta sí trae
+                       por dentro (el toque para abrir el detalle). */
+                    <View
+                        testID="tour-demo-wishes"
+                        style={{ pointerEvents: 'none' }}
+                        className={`grid auto-rows-fr gap-4 ${isDesktop ? 'grid-cols-3' : 'grid-cols-2'}`}
+                    >
+                        {demoWishes.map(item => (
+                            <WishlistCard key={item.id} item={item} isOwner={false} />
+                        ))}
+                    </View>
+                ) : sortedItems.length > 0 ? (
                     <View className={`grid auto-rows-fr gap-4 ${isDesktop ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         {/* Rejilla con **filas iguales** (`auto-rows-fr`: `grid-auto-rows`
                             `1fr`): todas las filas miden lo que la tarjeta más alta, así que las
