@@ -66,8 +66,9 @@ detalle de grupo, perfil y notificaciones.
 
 ## Pendiente de conciliar
 
-El mensaje original traía un bloque pegado de 2080 caracteres que no llegó con contenido. Si
-contenía requisitos, entran como `S8…` y reabren sólo las tareas afectadas.
+**Cerrado.** El mensaje original traía un bloque pegado de 2080 caracteres que nunca llegó con
+contenido, y el usuario confirmó que se cierra sin requisitos: no hay `S8`, no se reabre ninguna
+tarea y el alcance queda en S1–S7.
 
 ## Tasks
 
@@ -93,6 +94,7 @@ Commits por tarea (evidencia):
 | T5 | `5dc7b26` |
 | T6 | `bcdce81` |
 | T7 | `d75a90e` |
+| T8 | `f489774` (E2E) + `cd1d1a7`, `97d1043` (arreglos del primer e2e) + `90e0ee8` (corrección R3-001) |
 
 ## Log
 
@@ -244,3 +246,10 @@ arreglaron antes de dar T8 por buena:
 
 Verificado: suite unidad **881 passed + 1 todo**, `tsc` y `eslint` limpios, y `playwright --project=chromium`
 **66 passed** (todos los specs, no sólo el del tour).
+
+L12 — Cierre del pendiente de L1: el bloque de 2080 caracteres que nunca llegó **no traía
+requisitos**. El alcance queda en S1–S7, sin `S8` y sin reabrir tareas. La entrega se hace como
+**cadena de cinco PRs apilados** sobre `main`, un tramo por PR: el 1 con T1–T4 y su corrección (ya
+revisado y aprobado), el 2 con T5, el 3 con T6, el 4 con T7 y el 5 con T8, el e2e y la corrección
+R3-001. Es el mismo corte que pide el presupuesto de lentes del proveedor, y cada PR se revisa con
+su diff delante en vez de con tres ciclos de lentes sobre worktrees.
