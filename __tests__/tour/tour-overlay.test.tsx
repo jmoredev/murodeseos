@@ -6,10 +6,13 @@ import { TourOverlay } from '@/components/tour/TourOverlay';
 import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/TourTargetProvider';
 import type { TargetRect } from '@/lib/tour/targets';
 import {
+    CARD_BORDER,
     CARD_MARGIN,
+    CARD_PADDING,
     RING_INSET,
     RING_THICKNESS,
     TARJETA_ESTIMADA,
+    cardHeightForContent,
     ringRect,
     type Rect,
 } from '@/lib/tour/geometry';
@@ -89,14 +92,33 @@ afterAll(() => {
  */
 type NodoConLayout = HTMLElement & { __reactLayoutHandler?: (evento: unknown) => void };
 
-function medirTarjeta(alto: number, ancho = 320) {
-    const manejador = (screen.getByTestId('tour-card') as NodoConLayout).__reactLayoutHandler;
+/**
+ * Emula el `onContentSizeChange` del `ScrollView`. react-native-web lo implementa con el `onLayout`
+ * de su contenedor interno, así que se llama a ese manejador: es el alto natural del texto, que no
+ * depende del alto de la tarjeta (D4).
+ */
+function medirContenido(altoDeContenido: number, anchoDeContenido = 288) {
+    const contenedor = screen.getByTestId('tour-card-content')
+        .firstElementChild as NodoConLayout | null;
+    const manejador = contenedor?.__reactLayoutHandler;
 
-    if (!manejador) throw new Error('la tarjeta no está observando su layout');
+    if (!manejador) throw new Error('el contenido de la tarjeta no está observando su layout');
 
     act(() => {
-        manejador({ nativeEvent: { layout: { x: 0, y: 0, width: ancho, height: alto } } });
+        manejador({
+            nativeEvent: {
+                layout: { x: 0, y: 0, width: anchoDeContenido, height: altoDeContenido },
+            },
+        });
     });
+}
+
+/**
+ * El alto de contenido que hace que la tarjeta acabe midiendo `altoDeTarjeta`: la inversa de
+ * `cardHeightForContent`, que descuenta el relleno y el filo de arriba y de abajo.
+ */
+function contenidoPara(altoDeTarjeta: number): number {
+    return altoDeTarjeta - (CARD_PADDING + CARD_BORDER) * 2;
 }
 
 /** La colocación que el overlay decidió, leída de los atributos de diagnóstico de la tarjeta. */
@@ -119,6 +141,21 @@ function seSolapan(a: Rect, b: Rect): boolean {
         a.y < b.y + b.height &&
         a.y + a.height > b.y
     );
+}
+
+/**
+ * El alfa del fondo calculado de un nodo (0 transparente, 1 opaco).
+ *
+ * react-native-web convierte las propiedades de `style` en clases propias, así que el color se lee
+ * del estilo calculado, igual que `overflowY` en el caso de la zona desplazable.
+ */
+function alfaDelFondo(nodo: HTMLElement): number {
+    const partes = /rgba?\(([^)]+)\)/.exec(window.getComputedStyle(nodo).backgroundColor)?.[1];
+    const numeros = partes?.split(',').map(Number) ?? [];
+
+    if (numeros.length >= 4) return numeros[3];
+
+    return numeros.length === 3 ? 1 : 0;
 }
 
 function parada(stepIndex: number, pageIndex: number): TourCurrent {
@@ -295,6 +332,51 @@ describe('TourOverlay: el hueco, el anillo y la tarjeta', () => {
         expect(screen.getByTestId('tour-ring')).toBeInTheDocument();
     });
 
+    it('el velo oscurece todo lo que no es el objetivo (S1)', async () => {
+        render(<Arnes actual={parada(0, 0)} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        for (const lado of ['top', 'bottom', 'left', 'right']) {
+            const velo = screen.getByTestId(`tour-scrim-${lado}`);
+
+            // El color no puede depender de una clase: el `Animated.View` de `reanimated` la
+            // descarta al pintar, y así fue como el velo quedó transparente (L2).
+            expect(velo.getAttribute('class') ?? '', `el velo ${lado} usa clases`).not.toContain(
+                'bg-'
+            );
+            expect(
+                alfaDelFondo(velo),
+                `el velo ${lado} no oscurece nada`
+            ).toBeGreaterThanOrEqual(0.5);
+        }
+    });
+
+    it('la tarjeta tiene fondo propio, para que el texto no se mezcle con lo de debajo (S2)', async () => {
+        render(<Arnes actual={parada(0, 0)} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        const tarjeta = screen.getByTestId('tour-card');
+
+        expect(tarjeta.getAttribute('class') ?? '').not.toContain('bg-');
+        expect(alfaDelFondo(tarjeta), 'la tarjeta no tiene fondo').toBe(1);
+
+        // Y el texto no arranca pegado al borde: el relleno del token `p-4` tampoco llegaba.
+        expect(window.getComputedStyle(tarjeta).paddingLeft).toBe('16px');
+    });
+
+    it('el anillo se pinta con el tono de marca, no con el borde por defecto', async () => {
+        render(<Arnes actual={parada(0, 0)} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        const anillo = screen.getByTestId('tour-ring');
+
+        expect(anillo.getAttribute('class') ?? '').not.toContain('border-');
+        expect(window.getComputedStyle(anillo).borderTopColor).not.toBe('rgb(0, 0, 0)');
+    });
+
     it('en web, Escape salta el tour', async () => {
         const onSkip = vi.fn();
         render(<Arnes actual={parada(0, 0)} onSkip={onSkip} />);
@@ -441,9 +523,9 @@ describe('TourOverlay: la tarjeta se mide antes de colocarse', () => {
         await screen.findByText('Tus deseos viven en este muro');
 
         const anillo = ringRect(RECT_TABBAR, RING_INSET, RING_THICKNESS);
-        // La estimación colocaba una tarjeta de 190 px; la de verdad mide 420. Con la estimación
-        // el crecimiento hacia abajo acabaría encima del hueco.
-        medirTarjeta(420);
+        // La estimación colocaba una tarjeta de 190 px; su contenido necesita una de 420. Con la
+        // estimación el crecimiento hacia abajo acabaría encima del hueco.
+        medirContenido(contenidoPara(420));
 
         const caja = cajaDeLaTarjeta();
 
@@ -452,7 +534,28 @@ describe('TourOverlay: la tarjeta se mide antes de colocarse', () => {
         expect(caja.y + caja.height).toBeLessThanOrEqual(740 - CARD_MARGIN);
     });
 
-    it('una tarjeta altísima se recorta a la banda libre y no se sale de la pantalla', async () => {
+    it('el alto sale del contenido medido, no del alto que le impuso la colocación (D4)', async () => {
+        // El caso medido en Chromium: la lista de deseos resaltada deja una banda de 152 px, así que
+        // la tarjeta se pintaba con 152 px y su contenido —190 px— obligaba a desplazar 38 px.
+        fijarViewport(390, 844);
+
+        render(<Arnes actual={parada(0, 0)} rect={{ x: 24, y: 192, width: 342, height: 790 }} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        medirContenido(190);
+
+        const caja = cajaDeLaTarjeta();
+
+        // 190 de texto + el relleno y el filo de arriba y de abajo: el alto que hace falta para
+        // que no haya nada que desplazar. Con 152 sobraban 38 px de texto, y era un 152 que
+        // devolvía la propia colocación, no una medida del contenido.
+        expect(caja.height).toBe(cardHeightForContent(190));
+        expect(caja.height).toBe(190 + (CARD_PADDING + CARD_BORDER) * 2);
+        expect(caja.y + caja.height).toBe(844 - CARD_MARGIN);
+    });
+
+    it('si el hueco no deja sitio a ningún lado, la hoja se apoya abajo con el alto que necesita', async () => {
         fijarViewport(360, 740);
 
         render(<Arnes actual={parada(0, 0)} rect={RECT_TABBAR} />);
@@ -461,35 +564,53 @@ describe('TourOverlay: la tarjeta se mide antes de colocarse', () => {
 
         const anillo = ringRect(RECT_TABBAR, RING_INSET, RING_THICKNESS);
 
-        medirTarjeta(5000);
+        medirContenido(5000);
 
         const caja = cajaDeLaTarjeta();
 
-        expect(caja.height).toBeLessThan(5000);
-        expect(caja.height).toBeGreaterThan(0);
-        expect(seSolapan(caja, anillo)).toBe(false);
-        expect(caja.y).toBeGreaterThanOrEqual(CARD_MARGIN);
-        expect(caja.y + caja.height).toBeLessThanOrEqual(740 - CARD_MARGIN);
+        // Un contenido enorme no cabe en ninguna banda: la hoja se apoya en el borde inferior con
+        // todo el alto que deja el viewport, en vez de quedarse recortada a la banda de arriba. El
+        // texto sigue desplazándose —es el único caso que no tiene arreglo—, pero el alto ya no lo
+        // decide una banda que no existe (D4).
+        expect(caja.height).toBe(740 - CARD_MARGIN * 2);
+        expect(caja.y).toBe(CARD_MARGIN);
+        expect(caja.y + caja.height).toBe(740 - CARD_MARGIN);
+        // Y sí, pisa la parte baja del hueco: es el patrón normal de una hoja inferior en móvil.
+        expect(seSolapan(caja, anillo)).toBe(true);
     });
 
-    it('no oscila: sólo acepta una corrección por paso', async () => {
+    it('acepta el alto nuevo cuando el contenido cambia de verdad', async () => {
         fijarViewport(360, 740);
 
         render(<Arnes actual={parada(0, 0)} rect={RECT_TABBAR} />);
 
         await screen.findByText('Tus deseos viven en este muro');
 
-        medirTarjeta(420);
+        medirContenido(contenidoPara(420));
         expect(cajaDeLaTarjeta().height).toBe(420);
 
-        // La colocación ya recortó la tarjeta; volver a aceptar esa medida la haría encogerse,
-        // recolocarse y volver a medir: el bucle que este guardia evita.
-        medirTarjeta(120);
+        // El texto reflowó: el contenido mide otra cosa y la tarjeta la sigue. Aquí no hay bucle que
+        // cortar —el alto del contenido no depende del alto de la tarjeta—, así que la corrección se
+        // acepta en vez de quedarse con la primera medida (D4).
+        medirContenido(contenidoPara(260));
+        expect(cajaDeLaTarjeta().height).toBe(260);
+    });
+
+    it('un cambio de contenido de un píxel no recoloca: sería redondeo del navegador', async () => {
+        fijarViewport(360, 740);
+
+        render(<Arnes actual={parada(0, 0)} rect={RECT_TABBAR} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        medirContenido(contenidoPara(420));
+        expect(cajaDeLaTarjeta().height).toBe(420);
+
+        medirContenido(contenidoPara(420) + 1);
         expect(cajaDeLaTarjeta().height).toBe(420);
     });
 
-    it('en móvil la hoja ocupa el ancho útil entero', async () => {
-        fijarViewport(360, 740);
+    it('en móvil la hoja ocupa el ancho útil entero', async () => {        fijarViewport(360, 740);
 
         render(<Arnes actual={parada(0, 0)} rect={RECT} />);
 
@@ -508,7 +629,7 @@ describe('TourOverlay: la tarjeta se mide antes de colocarse', () => {
 
         await screen.findByText('Tus deseos viven en este muro');
 
-        medirTarjeta(5000);
+        medirContenido(5000);
 
         const contenido = screen.getByTestId('tour-card-content') as HTMLElement;
 
@@ -519,37 +640,96 @@ describe('TourOverlay: la tarjeta se mide antes de colocarse', () => {
     });
 });
 
+describe('TourOverlay: cada página se mide por su cuenta', () => {
+    it('al pasar a otra página de la misma parada se vuelve a medir (D3)', async () => {
+        fijarViewport(360, 740);
+
+        const { rerender } = render(<Arnes actual={parada(0, 0)} rect={RECT} />);
+
+        await screen.findByText('Tus deseos viven en este muro');
+
+        medirContenido(contenidoPara(420));
+        expect(cajaDeLaTarjeta().height).toBe(420);
+
+        // Misma parada, segunda página: el alto de la primera no dice nada del suyo. Antes se
+        // heredaba y el texto de la segunda había que leerlo desplazando (S3).
+        rerender(<Arnes actual={parada(0, 1)} rect={RECT} />);
+
+        await screen.findByText('Los de tus grupos también aparecen');
+        expect(cajaDeLaTarjeta().height).toBe(TARJETA_ESTIMADA.height);
+
+        medirContenido(contenidoPara(260));
+        expect(cajaDeLaTarjeta().height).toBe(260);
+    });
+});
+
 describe('useTamanoTarjeta: la medida de la tarjeta', () => {
-    const evento = (width: number, height: number) => ({
-        nativeEvent: { layout: { x: 0, y: 0, width, height } },
+    const layout = (width: number) => ({
+        nativeEvent: { layout: { x: 0, y: 0, width, height: TARJETA_ESTIMADA.height } },
     });
 
     it('antes de la primera medida usa la estimación exportada', () => {
-        const { result } = renderHook(() => useTamanoTarjeta('paso-1'));
+        const { result } = renderHook(() => useTamanoTarjeta('deseos#0'));
 
         expect(result.current.size).toBe(TARJETA_ESTIMADA);
         expect(result.current.measured).toBe(false);
     });
 
-    it('ignora las medidas de tamaño cero y acepta la primera medida real', () => {
-        const { result } = renderHook(() => useTamanoTarjeta('paso-1'));
+    it('el ancho sale del layout de la tarjeta y el alto del contenido', () => {
+        const { result } = renderHook(() => useTamanoTarjeta('deseos#0'));
 
-        act(() => result.current.onLayout(evento(0, 0)));
-        expect(result.current.size).toBe(TARJETA_ESTIMADA);
+        act(() => result.current.onLayout(layout(300)));
 
-        act(() => result.current.onLayout(evento(320, 420)));
+        // Sólo el ancho: el alto sigue siendo la estimación hasta que el contenido se mide, porque
+        // medirlo en la tarjeta devolvería el alto que le impuso la colocación.
+        expect(result.current.size).toEqual({ width: 300, height: TARJETA_ESTIMADA.height });
+        expect(result.current.measured).toBe(false);
 
-        expect(result.current.size).toEqual({ width: 320, height: 420 });
+        act(() => result.current.onContentSizeChange(300, 190));
+
+        expect(result.current.size).toEqual({ width: 300, height: cardHeightForContent(190) });
         expect(result.current.measured).toBe(true);
     });
 
-    it('sólo acepta una corrección por paso: no hay ida y vuelta de tamaños', () => {
-        const { result } = renderHook(() => useTamanoTarjeta('paso-1'));
+    it('ignora las medidas de tamaño cero y acepta la primera medida real', () => {
+        const { result } = renderHook(() => useTamanoTarjeta('deseos#0'));
 
-        act(() => result.current.onLayout(evento(320, 420)));
-        act(() => result.current.onLayout(evento(320, 120)));
+        act(() => result.current.onLayout(layout(0)));
+        act(() => result.current.onContentSizeChange(0, 0));
+        expect(result.current.size).toBe(TARJETA_ESTIMADA);
 
-        expect(result.current.size).toEqual({ width: 320, height: 420 });
+        act(() => result.current.onLayout(layout(320)));
+        act(() => result.current.onContentSizeChange(320, 214));
+
+        expect(result.current.size).toEqual({ width: 320, height: cardHeightForContent(214) });
+        expect(result.current.measured).toBe(true);
+    });
+
+    it('sólo acepta un ancho por página: no hay ida y vuelta de anchos', () => {
+        const { result } = renderHook(() => useTamanoTarjeta('deseos#0'));
+
+        act(() => result.current.onLayout(layout(320)));
+        act(() => result.current.onLayout(layout(300)));
+
+        // La colocación puede recortar el ancho que se le da; aceptar ese recorte y volver a colocar
+        // sería el bucle que este guardia evita.
+        expect(result.current.size.width).toBe(320);
+    });
+
+    it('acepta un alto nuevo cuando el contenido cambia de más de un píxel', () => {
+        const { result } = renderHook(() => useTamanoTarjeta('deseos#0'));
+
+        act(() => result.current.onContentSizeChange(320, 190));
+        expect(result.current.size.height).toBe(cardHeightForContent(190));
+
+        // Un píxel es redondeo del navegador: no se recoloca la tarjeta por él.
+        act(() => result.current.onContentSizeChange(320, 191));
+        expect(result.current.size.height).toBe(cardHeightForContent(190));
+
+        // Dos ya son un contenido distinto: aquí no hay bucle que cortar, porque el alto del texto
+        // no depende del alto de la tarjeta (D4).
+        act(() => result.current.onContentSizeChange(320, 192));
+        expect(result.current.size.height).toBe(cardHeightForContent(192));
     });
 
     it('al cambiar de paso vuelve a medir', () => {
@@ -557,13 +737,31 @@ describe('useTamanoTarjeta: la medida de la tarjeta', () => {
             initialProps: { paso: 'uno' },
         });
 
-        act(() => result.current.onLayout(evento(320, 200)));
-        expect(result.current.size).toEqual({ width: 320, height: 200 });
+        act(() => result.current.onLayout(layout(320)));
+        act(() => result.current.onContentSizeChange(320, 168));
+        expect(result.current.size).toEqual({ width: 320, height: cardHeightForContent(168) });
 
         rerender({ paso: 'dos' });
         expect(result.current.size).toBe(TARJETA_ESTIMADA);
 
-        act(() => result.current.onLayout(evento(320, 300)));
-        expect(result.current.size).toEqual({ width: 320, height: 300 });
+        act(() => result.current.onLayout(layout(300)));
+        act(() => result.current.onContentSizeChange(300, 268));
+        expect(result.current.size).toEqual({ width: 300, height: cardHeightForContent(268) });
+    });
+
+    it('una clave nueva del mismo paso (otra página) vuelve a medir', () => {
+        // La clave que usa el overlay es `parada#página`: cambiar de página es cambiar de clave.
+        const { result, rerender } = renderHook(({ clave }) => useTamanoTarjeta(clave), {
+            initialProps: { clave: 'deseos#0' },
+        });
+
+        act(() => result.current.onLayout(layout(320)));
+        act(() => result.current.onContentSizeChange(320, 168));
+        expect(result.current.size).toEqual({ width: 320, height: cardHeightForContent(168) });
+
+        rerender({ clave: 'deseos#1' });
+
+        expect(result.current.size).toBe(TARJETA_ESTIMADA);
+        expect(result.current.measured).toBe(false);
     });
 });

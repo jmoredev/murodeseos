@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+    CARD_BORDER,
     CARD_MARGIN,
+    CARD_PADDING,
     SHEET_MAX_WIDTH,
+    cardHeightForContent,
     cardPlacement,
     ringRect,
     scrimPieces,
@@ -27,6 +30,14 @@ function area(rect: Rect): number {
 /** Un punto pertenece a un rectángulo con los bordes superior/izquierdo dentro y el resto fuera. */
 function contiene(rect: Rect, px: number, py: number): boolean {
     return px >= rect.x && px < rect.x + rect.width && py >= rect.y && py < rect.y + rect.height;
+}
+
+/** ¿Se pisan los dos rectángulos algo más que el redondeo de un píxel? */
+function seSolapan(a: Rect, b: Rect): boolean {
+    const ancho = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+    const alto = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+
+    return ancho > 1 && alto > 1;
 }
 
 /** El hueco recortado al viewport, que es la única parte que el velo tiene que respetar. */
@@ -142,6 +153,32 @@ describe('ringRect: el anillo rodea el hueco', () => {
     });
 });
 
+describe('cardHeightForContent: la tarjeta mide lo que mide su contenido', () => {
+    it('suma el relleno y el filo de arriba y de abajo al contenido medido', () => {
+        // El caso real medido en Chromium: un contenido de 190 px en una tarjeta de 152 px (D4).
+        expect(cardHeightForContent(190)).toBe(190 + (CARD_PADDING + CARD_BORDER) * 2);
+        expect(cardHeightForContent(214)).toBe(214 + (CARD_PADDING + CARD_BORDER) * 2);
+    });
+
+    it('deja al contenido el alto que pide, sin comérselo con el relleno ni con el filo', () => {
+        // Es la cuenta que hace que `scrollHeight` y `clientHeight` coincidan en el navegador: del
+        // alto de la tarjeta se descuentan el relleno y el filo, y queda el contenido entero.
+        const altoDeLaTarjeta = cardHeightForContent(214);
+
+        expect(altoDeLaTarjeta - (CARD_PADDING + CARD_BORDER) * 2).toBe(214);
+    });
+
+    it('un contenido sin medir deja la tarjeta en su relleno, nunca en un alto negativo', () => {
+        expect(cardHeightForContent(0)).toBe((CARD_PADDING + CARD_BORDER) * 2);
+        expect(cardHeightForContent(-400)).toBe((CARD_PADDING + CARD_BORDER) * 2);
+        expect(cardHeightForContent(Number.NaN)).toBe((CARD_PADDING + CARD_BORDER) * 2);
+    });
+
+    it('crece con el contenido: una página más larga da una tarjeta más alta', () => {
+        expect(cardHeightForContent(214)).toBeGreaterThan(cardHeightForContent(190));
+    });
+});
+
 describe('cardPlacement: la tarjeta no tapa lo que explica', () => {
     it('si cabe debajo del hueco, va debajo y centrada en él', () => {
         const tarjeta = cardPlacement({ x: 400, y: 200, width: 200, height: 60 }, PANTALLA, TARJETA);
@@ -200,16 +237,44 @@ describe('cardPlacement: la tarjeta no tapa lo que explica', () => {
         expect(tarjeta.y).toBeGreaterThanOrEqual(CARD_MARGIN);
     });
 
-    it('en móvil, si el hueco no deja sitio a ningún lado, la hoja se recorta y no lo tapa', () => {
+    it('en móvil, si el hueco no deja sitio a ningún lado, la hoja se apoya abajo con su alto entero', () => {
         const movil: Size = { width: 360, height: 740 };
+        // Un hueco que no deja ni la tarjeta entera debajo (200+400+16 > 740-180-16) ni encima
+        // (200-180-16 < 16): el caso de una lista de deseos que ocupa media pantalla.
         const hole: Rect = { x: 0, y: 200, width: 360, height: 400 };
         const tarjeta = cardPlacement(hole, movil, TARJETA);
 
         expect(tarjeta.placement).toBe('sheet');
-        // La banda de arriba es la que más sitio tiene: ahí se recorta y no invade el hueco.
-        expect(tarjeta.y + tarjeta.height).toBeLessThanOrEqual(hole.y);
-        expect(tarjeta.height).toBeLessThan(TARJETA.height);
-        expect(tarjeta.height).toBeGreaterThan(0);
+        // Se apoya en el borde inferior con el alto que necesita, sin recortarlo: recortar el alto
+        // es lo que obligaba a desplazar el texto (S3), que es lo que el tour no puede permitir.
+        expect(tarjeta.height).toBe(TARJETA.height);
+        expect(tarjeta.y + tarjeta.height).toBe(movil.height - CARD_MARGIN);
+        // Y sí, pisa la parte baja del hueco: es el patrón normal de una hoja inferior.
+        expect(seSolapan(tarjeta, hole)).toBe(true);
+    });
+
+    it('en móvil, con un hueco más alto que la pantalla, la hoja se apoya abajo con el alto que necesita', () => {
+        // El caso medido en Chromium (odd/tasks/tour-ajustes-visuales.md, D4): la lista de deseos
+        // resaltada ocupa de 184 a 990 en una pantalla de 844, así que no queda banda a ningún lado.
+        const movil: Size = { width: 390, height: 844 };
+        const hole: Rect = { x: 16, y: 184, width: 358, height: 806 };
+        const tarjeta = cardPlacement(hole, movil, { width: 328, height: 222 });
+
+        expect(tarjeta.placement).toBe('sheet');
+        expect(tarjeta.height).toBe(222);
+        expect(tarjeta.y).toBe(movil.height - 222 - CARD_MARGIN);
+        expect(tarjeta.y + tarjeta.height).toBe(movil.height - CARD_MARGIN);
+    });
+
+    it('en móvil, una tarjeta más alta que el viewport se recorta al viewport menos los dos márgenes', () => {
+        const movil: Size = { width: 390, height: 844 };
+        const hole: Rect = { x: 16, y: 184, width: 358, height: 806 };
+        const tarjeta = cardPlacement(hole, movil, { width: 328, height: 5000 });
+
+        expect(tarjeta.placement).toBe('sheet');
+        expect(tarjeta.height).toBe(movil.height - CARD_MARGIN * 2);
+        expect(tarjeta.y).toBe(CARD_MARGIN);
+        expect(tarjeta.y + tarjeta.height).toBe(movil.height - CARD_MARGIN);
     });
 
     it('en móvil, una tarjeta más alta que la estimación sigue sin tapar el hueco de la barra de pestañas', () => {
