@@ -188,7 +188,9 @@ test.describe('Tour de primer inicio', () => {
             await expect(tarjeta).toBeVisible({ timeout: 30000 });
             await expect(tarjeta).toHaveAttribute('role', 'dialog');
             await expect(tarjeta).toHaveAttribute('aria-modal', 'true');
-            await expect(tarjeta.getByText('Paso 1 de 9')).toBeVisible();
+            await expect(
+                tarjeta.getByText(`Paso 1 de ${TOUR_STEPS.length}`),
+            ).toBeVisible();
             await expect(tarjeta.getByText('Página 1 de 2')).toBeVisible();
             await expect(tarjeta.getByText(TOUR_STEPS[0].pages[0])).toBeVisible();
             // Los tres controles del diálogo se anuncian por su nombre accesible (S1).
@@ -360,7 +362,9 @@ test.describe('Tour de primer inicio', () => {
 
             // S1: el tour se puede saltar desde la primera página, sin haberlo recorrido.
             await expect(tarjeta).toBeVisible({ timeout: 30000 });
-            await expect(tarjeta.getByText('Paso 1 de 9')).toBeVisible();
+            await expect(
+                tarjeta.getByText(`Paso 1 de ${TOUR_STEPS.length}`),
+            ).toBeVisible();
 
             await page.getByRole('button', { name: 'Saltar el tour' }).click();
 

@@ -115,6 +115,7 @@ describe('TOUR_STEPS: el guion', () => {
             '/wishlist/add',
             'groups',
             'groups',
+            'groups',
             '/groups/join',
             'profile',
             'profile',
