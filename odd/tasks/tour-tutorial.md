@@ -5,6 +5,11 @@ primera vez. Resaltar la zona, explicarla con un cuadro de diálogo de una o var
 poder saltarlo, y que las pantallas vacías —porque la cuenta es nueva— muestren datos de
 demostración.
 
+**Estado:** cerrada — publicada en `v2026.10.25` con la cadena de PRs #79–#85. L10 quedó resuelto:
+la suite de extremo a extremo del tour (`e2e/tour.spec.ts`) se escribió y hoy vuelve a correr en
+verde. Los arreglos de presentación posteriores —el velo que no oscurecía, la tarjeta sin fondo y las
+páginas que obligaban a desplazar— viven en `odd/tasks/tour-ajustes-visuales.md`.
+
 ## Specs
 
 S1 — Se debe de poder saltar.

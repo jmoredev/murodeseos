@@ -1,7 +1,7 @@
 # Consolidar el repositorio en una sola línea de trabajo
 
 **Feature:** `consolidacion`
-**Estado:** en curso — consolidación, endurecimiento y el trabajo posterior cerrados y desplegados; **S13** quedó cerrado, **S12 aceptado** y **S11 cerrado como limitación del plan** el 2026-09-28, así que de esa lista no queda nada abierto
+**Estado:** cerrada — las catorce tareas de la tabla están hechas y sus commits en `main` (`dc3b189`, `3ea161a`, `521087d`, `c680389`); las unidades que arrastraba (endurecimiento, higiene y contraseñas) quedaron cerradas el 2026-09-28 y de esa lista no queda nada abierto
 **Inicio:** 2026-09-24
 **Rama:** `feat/pwa-adaptation`
 
@@ -170,3 +170,5 @@ nuevo canal demuestre ser estable.
 
 `feat/pwa-adaptation` y `feature/ui-keepsake` ya están contenidas en `main` y
 pueden borrarse cuando se quiera.
+
+L1 — Cerrada el 2026-10-25: tareas 1–14 hechas con sus commits en `main` (`dc3b189`, `3ea161a`, `521087d`, `c680389`) y ninguna entrada abierta en la lista que arrastraba.

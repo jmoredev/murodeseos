@@ -2,7 +2,7 @@
 
 **Rama:** `chore/informativos-cerrados`
 **Abierta:** 2026-09-28
-**Estado:** en curso
+**Estado:** cerrada — las cinco tareas del acta están hechas y en `main` (PR #25, merge `78d4260`, 2026-09-28), con las seis listas de origen apuntando al veredicto
 
 ## Objetivo
 
@@ -83,3 +83,5 @@ defecto grave**: nueve ya estaban corregidos y el resto es criterio ya tomado y 
 Al terminar, la lista de informativos deja de ser una promesa y pasa a ser un registro:
 cada entrada tiene veredicto, y las tres que exigían trabajo tienen su prueba o su
 documentación.
+
+L1 — Cerrada el 2026-10-25: PR #25 (`78d4260`, 2026-09-28); las cinco tareas hechas y las seis listas de origen con su puntero al acta.

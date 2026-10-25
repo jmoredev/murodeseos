@@ -1,6 +1,6 @@
 # Tarjeta y formulario: las acciones tienen que verse como acciones
 
-**Abierta:** 2026-10-13 · **Rama:** `feat/ui-tarjeta-acciones` (desde `main`, `a864b58`) · **Estado:** decisiones de diseño tomadas con el propietario; código sin escribir
+**Abierta:** 2026-10-13 · **Rama:** `feat/ui-tarjeta-acciones` (desde `main`, `a864b58`) · **Estado:** cerrada — T1–T5 implementadas y verificadas (L4/L5): el chip de enlace usa `AppIcon` + dominio, el precio no se recorta y el control de imagen perdió el degradado; la PR #51 (`41563fe`, 2026-10-13) está en `main` con `components/WishLinkChip.tsx`, `lib/wish-link-utils.ts` y el E2E de `e2e/wishlist.spec.ts`
 
 **El diagnóstico que lo une todo**: los cuatro problemas comparten raíz — **cosas que son acciones parecen texto, y cosas secundarias parecen la acción principal**. Dos reglas gobiernan este corte: (1) **una sola forma de botón secundario** (`min-h-[44px] rounded-full bg-surface-container-high` + `ring-1 ring-outline-variant/15`), la que ya usa «Cancelar reserva»; (2) el degradado de `PrimaryButton` se reserva a **la única acción principal** de cada pantalla.
 
@@ -65,3 +65,5 @@ Las cuatro peticiones del propietario, **literales** (con sus erratas: son su te
     - **Trabajo posterior anotado**: la forma de botón secundario ya está escrita en tres sitios (el botón «Cancelar reserva», el «Ya lo tengo» de la tarjeta y el `ImageAction` del formulario). Extraer un `SecondaryButton` compartido es la siguiente limpieza natural, y se deja fuera de este corte para no ampliar la revisión.
 
 - **L5 (2026-10-13) — el mismo error de método, dos veces, y por eso queda escrito:** los dos fallos de esta tanda fueron **en mis pruebas, no en el código**: (1) afirmar clases que nativewind **compila** y por tanto no deja en el DOM; (2) medir el degradado en el `Pressable` exterior cuando `LinearGradient` lo pinta en un **hijo**, con lo que la prueba decía «sin degradado» de la propia acción principal. Los dos son el mismo error: **mirar donde yo suponía que estaba la evidencia en vez de donde está**. Y la consecuencia importa: una prueba que mide el elemento equivocado es **peor que no tenerla**, porque da por verificado lo que no ha mirado. Por eso las dos correcciones quedaron escritas dentro de los propios tests.
+
+L6 — Cerrada el 2026-10-25: PR #51 (`41563fe`, 2026-10-13); `components/WishLinkChip.tsx`, `lib/wish-link-utils.ts` y el E2E del precio en `e2e/wishlist.spec.ts`, en `main`.

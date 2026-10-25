@@ -4,6 +4,13 @@ Arreglos sobre el tour de primer inicio ya publicado (`odd/tasks/tour-tutorial.m
 oscurece, la tarjeta no tiene fondo y las páginas largas obligan a desplazar. Tres defectos de
 presentación; ni el motor ni la política de arranque cambian.
 
+**Cerrada:** 2026-10-26 · **Rama:** `fix/tour-legibilidad` · **Estado:** cerrada la implementación,
+medida en Chromium: el velo calcula `rgba(76, 33, 43, 0.75)`, la tarjeta es opaca con relleno y
+esquinas, y las doce páginas dan `sobra = 0`. Cuatro commits, **903 pruebas + 1 todo**, `tsc` y
+`eslint` limpios y las **5 pruebas de navegador** del tour en verde. La **entrega** —PR y merge— es
+decisión del propietario. La revisión nativa de este candidato la declinó el proveedor
+(`declined_this_candidate`, sin linaje creado), así que no hay autoridad abierta.
+
 ## Specs
 
 S1 — Oscurecer todo lo que no es el objetivo, para que el foco se lea solo:
@@ -77,10 +84,9 @@ Commits por tarea (evidencia):
 
 | Tarea | Commit |
 | --- | --- |
-| T2 | pendiente |
-| T3 | pendiente |
-| T4, T5 | pendiente |
-| T6 | pendiente |
+| T1, T2, T3, T6 | `85cadc8` |
+| T4 | `5b40515` |
+| T5 | `66e315e` |
 
 ## Log
 
@@ -113,3 +119,17 @@ estilos calculados y no el código:
   paso 6 página 2 con `scrollHeight` 228 y `clientHeight` 190 → 38 px de desplazamiento. El paso 3
   recorta 4 px por lo mismo.
 - El bug del `className` está contenido: es el único `Animated.View` de la app con `className`.
+
+L3 — Cierre. Los tres defectos arreglados y medidos en el navegador, no sólo en jsdom: el velo
+calcula `rgba(76, 33, 43, 0.75)`, la tarjeta `rgb(255, 244, 244)` con 16 px de relleno y 16 de radio,
+el anillo `rgb(255, 117, 116)`, y las doce páginas del recorrido dan `sobra = 0` con
+`scrollHeight − clientHeight` de `tour-card-content` (antes: 2 px en seis de ellas y hasta 38 px en la
+segunda página de `lista-deseos`). Verificado: `npx vitest run` **903 passed | 1 todo**,
+`npx tsc --noEmit` y `npx eslint --max-warnings 0 .` limpios, y
+`npx playwright test e2e/tour.spec.ts --project=chromium` **5 passed**.
+
+Dos avisos honestos. (1) En una de las pasadas de la suite completa falló **una** prueba y no se
+identificó: mi propia tubería se comió el detalle (`tail -6`) y la pasada siguiente salió entera en
+verde, igual que la del worker. Queda como flake sin nombre hasta que vuelva a aparecer. (2) T1-T3 y
+T6 comparten commit: el color del overlay y el tamaño de la tarjeta viven en la misma definición de
+estilos, así que separarlos pedía un estado intermedio artificial del fichero.

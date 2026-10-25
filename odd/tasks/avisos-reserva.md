@@ -3,7 +3,7 @@
 **Feature:** `avisos-reserva`
 **Rama:** `fix/avisos-reserva`
 **Abierta:** 2026-09-29
-**Estado:** en curso
+**Estado:** cerrada — el aviso `wish_reserved` lo emite ya el trigger `private.notify_wish_reserved` (`supabase/migrations/20260929120000_notify_wish_reserved.sql`), fusionado en `main` con la PR #29 (`d4199a5`, 2026-09-29) y con la revisión nativa aprobada
 
 ## Objetivo
 
@@ -131,3 +131,5 @@ insertar la reserva, respeta las exclusiones y no depende del cliente. El códig
 muerto que aparentaba implementarlo queda retirado. La migración se validó en la
 base local y desde cero, y la suite completa de chromium pasa. Quedan solo los dos
 hallazgos informativos de la revisión, para trabajo aparte.
+
+L1 — Cerrada el 2026-10-25: PR #29 (`d4199a5`, 2026-09-29); las cinco tareas hechas, la migración y el E2E del aviso en `main`, y la revisión nativa aprobada.

@@ -1,6 +1,6 @@
 # Las fuentes no se sirven en producción (`fix/despliegue-fuentes`)
 
-**Abierta:** 2026-10-09 · **Rama:** `fix/despliegue-fuentes` (desde `main`, `af691c2`) · **Estado:** hecho, verificado y aprobado por revisión nativa; pendiente fusionar y publicar
+**Abierta:** 2026-10-09 · **Rama:** `fix/despliegue-fuentes` (desde `main`, `af691c2`) · **Estado:** cerrada — `.nojekyll` llega al artefacto (`include-hidden-files: true` en `.github/workflows/deploy.yml`) y el paso «Verify the fonts are actually served» lo vigila; la PR #44 (`b53c6ef`) y su corrección PR #45 (`f8c7da4`) están en `main` desde el 2026-10-09 y se publicaron en `v2026.10.09-2`, con las fuentes verificadas en producción y la revisión nativa aprobada (`review-2d8e82e6c8010057`)
 
 ## Objetivo
 
@@ -110,3 +110,5 @@ Linaje **`review-2d8e82e6c8010057`**: **riesgo ALTO**, **4 lentes** (`review-ris
 
 - **`8d43518`** — `fix(deploy): keep .nojekyll in the artifact so the fonts are served` (F1+F2+F3).
 - **`b27235c`** — `fix(ci): the font check was broken three ways, and it was mine` (el script del paso, reescrito sin tuberías y con el activo local exigido).
+
+L1 — Cerrada el 2026-10-25: PR #44 (`b53c6ef`) y PR #45 (`f8c7da4`) en `main`, publicadas en `v2026.10.09-2`; `.nojekyll` y las fuentes responden 200 en producción y la revisión nativa aprobó la corrección.

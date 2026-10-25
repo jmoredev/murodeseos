@@ -1,6 +1,6 @@
 # Novedades en cada release
 
-**Abierta:** 2026-10-21 · **Rama:** `feat/novedades-por-release` (desde `main`) · **Estado:** en curso
+**Abierta:** 2026-10-21 · **Rama:** `feat/novedades-por-release` (desde `main`) · **Estado:** cerrada — cada entrada lleva su `id` y el modal gatea por él (`lib/updates.ts`, `components/WhatsNewModal.tsx`); T1–T6 en `d0fedff` y el arreglo del botón de cerrar en `96d287f`, fusionados con la PR #72 (`f8bd129`, 2026-10-21)
 **Decisión del propietario (2026-10-21):** D1(a) — cada entrada de novedades lleva su propio id y el modal gatea por ese id, sin tocar el workflow de entrega ni sincronizar `package.json`.
 
 ## Specs
@@ -114,3 +114,5 @@
   **Lección de método:** la vez anterior declaré que el e2e «lo corre CI» y eso me costó un rojo.
   Un stack local tarda cuatro minutos en levantarse; confiar en el gate cuesta nueve y una
   corrección. La próxima vez que toque un e2e, se levanta el stack.
+
+L7 — Cerrada el 2026-10-25: PR #72 (`f8bd129`, 2026-10-21); T1–T6 y el arreglo `96d287f` en `main`.

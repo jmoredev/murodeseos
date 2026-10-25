@@ -1,6 +1,6 @@
 # Respaldo con Firecrawl cuando el camino propio no alcanza
 
-**Abierta:** 2026-10-21 · **Rama:** `feat/respaldo-firecrawl` (desde `main`) · **Estado:** en curso
+**Abierta:** 2026-10-21 · **Rama:** `feat/respaldo-firecrawl` (desde `main`) · **Estado:** cerrada — el respaldo con Firecrawl, su decisión pura, el presupuesto de 20 por usuario al mes (`supabase/migrations/20261021120000_product_fallback_budget.sql`) y su cableado entraron en `main` con la PR #73 (`d24e7f8`, 2026-10-21)
 **Decisión del propietario (2026-10-21):** D1(b) salta también cuando el borrador no sirve · D2 freno de **20 por usuario al mes** · D3 acepta que la URL viaje a un tercero y el tier free lo mantiene gratuito.
 
 ## Specs
@@ -154,3 +154,5 @@
   Coste de verificación: **3 créditos** (uno por corrida real) y **tres intentos**, dos de ellos perdidos
   por el contenedor del runtime (`marked for removal`, después inexistente: hubo que volver a
   `supabase start`). No fue el código: `serve` no recrea el contenedor del edge runtime solo.
+
+L9 — Cerrada el 2026-10-25: PR #73 (`d24e7f8`, 2026-10-21); `fallback/decision.ts`, `config/env.ts` y la migración del presupuesto en `main`.

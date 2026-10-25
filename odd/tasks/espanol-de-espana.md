@@ -1,6 +1,6 @@
 # La interfaz en español de España
 
-**Abierta:** 2026-10-21 · **Rama:** `fix/idioma-es-espana` (desde `main`) · **Estado:** en curso
+**Abierta:** 2026-10-21 · **Rama:** `fix/idioma-es-espana` (desde `main`) · **Estado:** cerrada — la interfaz está en español de España (`lang="es-ES"` en `app/_layout.tsx`, copy sin voseo y guardián `__tests__/idioma-es-espana.test.ts`); la PR #74 (`d0a8ed9`, 2026-10-21) está en `main` con `f4cdc46`, `ff10e44` y `c132755`
 **Decisión del propietario (2026-10-21):** toda la copy de la app pasa a **español de España**, no español latinoamericano.
 
 ## Specs
@@ -92,3 +92,5 @@
   **Verificación:** 7 tests del guardián, **701 tests + 1 todo**, `tsc` y `eslint` en 0. La ruta de
   corrección del proveedor volvió a rechazar su propio binding (quinta vez), así que esta corrección
   también queda sin recibo formal; el linaje se abandona.
+
+L6 — Cerrada el 2026-10-25: PR #74 (`d0a8ed9`, 2026-10-21); T1–T5 hechas en `f4cdc46`, `ff10e44` y `c132755`, con el guardián en `main`.
