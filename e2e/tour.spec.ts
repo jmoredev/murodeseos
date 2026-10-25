@@ -454,3 +454,143 @@ test.describe('Tour de primer inicio', () => {
         }
     });
 });
+
+/**
+ * Lo que el usuario ve del overlay, leído del estilo **calculado**.
+ *
+ * Se lee el estilo calculado y no el código a propósito: el defecto que persigue esta prueba era
+ * invisible en el código, porque las clases de Tailwind estaban escritas y la hoja las tenía — el
+ * `Animated.View` de `reanimated` las descartaba al pintar (odd/tasks/tour-ajustes-visuales.md, L2).
+ */
+type ColoresDelTour = {
+    /** Opacidad del relleno de cada trozo del velo que ocupa sitio en pantalla. */
+    velos: { id: string; alpha: number }[];
+    /** Opacidad del fondo de la tarjeta: 1 es opaca. */
+    tarjetaAlpha: number;
+    /** Color del anillo que rodea el objetivo. */
+    anilloBorde: string;
+};
+
+async function coloresDelTour(page: Page): Promise<ColoresDelTour> {
+    return page.evaluate(() => {
+        /** El alfa de un `background-color`/`border-color` calculado (`rgba(...)` o `rgb(...)`). */
+        const alfa = (color: string): number => {
+            const partes = /rgba?\(([^)]+)\)/.exec(color)?.[1].split(',').map(Number) ?? [];
+
+            return partes.length >= 4 ? partes[3] : partes.length === 3 ? 1 : 0;
+        };
+
+        const trozos = ['top', 'bottom', 'left', 'right'];
+        const velos = trozos
+            .map((lado) => {
+                const nodo = document.querySelector(`[data-testid="tour-scrim-${lado}"]`);
+                if (!nodo) return null;
+
+                const caja = nodo.getBoundingClientRect();
+
+                return {
+                    id: lado,
+                    alpha: alfa(getComputedStyle(nodo).backgroundColor),
+                    // Un trozo sin alto o sin ancho no oscurece nada y no se le exige color.
+                    visible: caja.width > 1 && caja.height > 1,
+                };
+            })
+            .filter((velo): velo is { id: string; alpha: number; visible: boolean } => velo !== null)
+            .filter((velo) => velo.visible)
+            .map(({ id, alpha }) => ({ id, alpha }));
+
+        const tarjeta = document.querySelector('[data-testid="tour-card"]');
+        const anillo = document.querySelector('[data-testid="tour-ring"]');
+
+        return {
+            velos,
+            tarjetaAlpha: tarjeta ? alfa(getComputedStyle(tarjeta).backgroundColor) : 0,
+            anilloBorde: anillo ? getComputedStyle(anillo).borderTopColor : '',
+        };
+    });
+}
+
+/**
+ * El texto de la tarjeta cabe sin desplazar: `scrollHeight` es lo que mide el contenido y
+ * `clientHeight` lo que se ve. Un píxel de holgura absorbe el redondeo del navegador.
+ */
+async function sobraDeAlto(page: Page): Promise<number> {
+    return page.evaluate(() => {
+        const contenido = document.querySelector('[data-testid="tour-card-content"]');
+        if (!contenido) return 0;
+
+        return contenido.scrollHeight - contenido.clientHeight;
+    });
+}
+
+test.describe('Tour de primer inicio: se lee sin esfuerzo', () => {
+    // El velo, la tarjeta y el reparto de páginas se juzgan en el tamaño en que más aprieta: la
+    // pantalla de un móvil, que es donde el tour se usa de verdad (mobile-first, S6 del tour).
+    test.use({ viewport: { width: 390, height: 844 } });
+    test.setTimeout(180_000);
+
+    test('oscurece el resto, la tarjeta es opaca y ninguna página obliga a desplazar', async ({
+        page,
+    }) => {
+        const user = await crearUsuarioRecienRegistrado('legible');
+
+        try {
+            await altaHastaLaPortada(page, user);
+
+            const tarjeta = page.getByTestId('tour-card');
+            await expect(tarjeta).toBeVisible({ timeout: 30000 });
+
+            const totalPaginas = TOUR_STEPS.reduce((total, paso) => total + paso.pages.length, 0);
+
+            for (let pagina = 1; pagina <= totalPaginas; pagina += 1) {
+                await expect(tarjeta, `la tarjeta no llegó a la página ${pagina}`).toBeVisible({
+                    timeout: 30000,
+                });
+
+                // --- S1/S2: el velo oscurece y la tarjeta tiene fondo ------------------
+                await expect
+                    .poll(async () => (await coloresDelTour(page)).velos.length, {
+                        message: `la página ${pagina} no tiene velo`,
+                    })
+                    .toBeGreaterThan(0);
+
+                const colores = await coloresDelTour(page);
+
+                for (const velo of colores.velos) {
+                    expect(
+                        velo.alpha,
+                        `el velo ${velo.id} no oscurece nada (alfa ${velo.alpha}) en la página ${pagina}`,
+                    ).toBeGreaterThanOrEqual(0.5);
+                }
+
+                expect(
+                    colores.tarjetaAlpha,
+                    `la tarjeta no tiene fondo en la página ${pagina}`,
+                ).toBe(1);
+
+                // El anillo se veía negro porque el color de marca tampoco se aplicaba.
+                expect(
+                    colores.anilloBorde,
+                    `el anillo salió negro en la página ${pagina}`,
+                ).not.toBe('rgb(0, 0, 0)');
+
+                // --- S3: el texto cabe sin desplazar ----------------------------------
+                await expect
+                    .poll(async () => sobraDeAlto(page), {
+                        timeout: 5000,
+                        message: `la página ${pagina} del tour obliga a desplazar el texto`,
+                    })
+                    .toBeLessThanOrEqual(1);
+
+                if (pagina < totalPaginas) {
+                    await page.getByRole('button', { name: 'Siguiente página del tour' }).click();
+                }
+            }
+
+            await page.getByRole('button', { name: 'Terminar el tour' }).click();
+            await expect(tarjeta).toHaveCount(0);
+        } finally {
+            await borrarUsuario(user);
+        }
+    });
+});
