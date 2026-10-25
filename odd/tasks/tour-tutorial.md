@@ -218,3 +218,29 @@ Riesgo que T8 debería cubrir y que ningún test de jsdom tapa: el orden real de
 navegador, la preferencia de movimiento del sistema operativo, y sobre todo que la página de detrás
 con `inert` no rompa el reparto de altura del `Stack` en web (el envoltorio `tour-page` con `flex: 1`
 se probó en jsdom, no en un navegador). Hasta que T8 corra, eso es una comprobación abierta.
+
+L11 — T8 ejecutada con Docker arriba: `e2e/tour.spec.ts`, tres pruebas en los cinco proyectos de
+Playwright, incluida la que faltaba de verdad: un usuario recién creado recorre el guion, otro lo
+salta con «Saltar» y con Escape, y después no queda ni una fila de `wishlist_items` ni de
+`group_members` en esas cuentas. También fija los dos riesgos que L10 dejó abiertos: el hueco no
+queda tapado por la tarjeta (cajas reales) y el envoltorio `tour-page` sigue midiendo el alto de la
+ventana con `inert` y `aria-hidden`.
+
+La primera corrida real encontró tres cosas que ningún test de jsdom veía, y las tres se
+arreglaron antes de dar T8 por buena:
+
+- **La suite entera se cayó por el tour.** Los scripts de siembra insertaban perfiles sin
+  `tour_completed_at`, así que todas las cuentas de la suite parecían nuevas, el tour se abría sobre
+  el `storageState` compartido y el velo se comía los clics (whats-new 2/5 y wishlist 6/6 en rojo
+  por motivos que no tenían nada que ver con esos specs). Los dos scripts marcan la cuenta como
+  «ya vio el tour». Commit `cd1d1a7`.
+- **Volver de una sub-ruta era empujar otra portada.** Al terminar el guion había tres muros
+  montados, con sus listas, sus peticiones y dos modales de Novedades en el DOM. Ahora volver a la
+  portada es retroceder. Commit `97d1043`.
+- **`usePathname()` en `TourHost` rompía la app.** `TourHost` envuelve al `Stack`, así que suscribir
+  el pathname ahí re-renderizaba el navegador en cada navegación y **remontaba la pantalla
+  enfocada**: el formulario de deseo se cerraba solo justo después de abrirse. La suscripción vive
+  ahora en el corredor, que es hermano del `Stack`. Commit `97d1043`.
+
+Verificado: suite unidad **881 passed + 1 todo**, `tsc` y `eslint` limpios, y `playwright --project=chromium`
+**66 passed** (todos los specs, no sólo el del tour).
