@@ -22,6 +22,16 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        id: '2026-10-25-tour',
+        release: '2026.10.25',
+        date: '2026-10-25',
+        changes: [
+            '🧭 Estreno del tour de bienvenida: la primera vez que entras, la app te va llevando por sus pantallas con la zona explicada resaltada y un cuadro que puedes pasar página a página. Puedes saltarlo cuando quieras y no vuelve a aparecer',
+            '🎁 Mientras dura el tour verás un muro de deseos y un grupo de bienvenida de ejemplo, para que las pantallas no estén vacías: son solo para el recorrido y desaparecen al terminar, sin guardar nada en tu cuenta',
+            '♿ El tour se maneja con teclado, se anuncia en lectores de pantalla y respeta la preferencia de movimiento reducido',
+        ],
+    },
+    {
         id: '2026-10-24-alta-completa',
         release: '2026.10.24',
         date: '2026-10-24',
