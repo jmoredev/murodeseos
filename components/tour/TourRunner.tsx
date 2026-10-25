@@ -11,6 +11,7 @@ import {
     type TourStatus,
     type TourStep,
 } from '@/lib/tour/engine';
+import { usePathname } from 'expo-router';
 import { stepDestination, type TourDestination } from '@/lib/tour/navigation';
 import type { Tab } from '@/lib/tabs';
 import { TourOverlay } from './TourOverlay';
@@ -33,8 +34,11 @@ export type TourRunnerProps = {
     steps: readonly TourStep[];
     /** Pestaña activa ahora mismo, para decidir si hay que cambiar de pestaña. */
     tab: Tab;
-    /** Pathname actual de expo-router, para decidir si hay que cambiar de ruta. */
-    pathname: string;
+    /**
+     * Pathname para decidir si hay que cambiar de ruta. Normalmente no se pasa: el corredor lo lee
+     * él mismo. Existe por las pruebas, que montan el corredor sin navegador.
+     */
+    pathname?: string;
     onNavigate: (destination: TourDestination) => void;
     /** Se avisa **una** vez, cuando el recorrido termina o se salta. */
     onFinish: (status: TourStatus) => void;
@@ -45,12 +49,21 @@ export type TourRunnerProps = {
 export function TourRunner({
     steps,
     tab,
-    pathname,
+    pathname: pathnameDePrueba,
     onNavigate,
     onFinish,
     reduceMotion = false,
 }: TourRunnerProps) {
     const registro = useTourTargetRegistry();
+    /**
+     * El pathname se suscribe **aquí** y no en quien decide si hay tour (`TourHost`), y no es un
+     * detalle: `TourHost` vive por encima del `Stack` de expo-router, así que cualquier estado suyo
+     * que cambie re-renderiza el navegador entero. Con `usePathname` arriba, cada navegación
+     * re-montaba la pantalla enfocada y se comía lo que hubiera abierto (un formulario a medio
+     * rellenar). Aquí el corredor es hermano del `Stack`: su re-render no toca la pantalla de abajo.
+     */
+    const pathnameActual = usePathname();
+    const pathname = pathnameDePrueba ?? pathnameActual;
     const [estado, setEstado] = useState<TourState>(() => createTourState(steps));
 
     const parada = current(estado);
