@@ -176,7 +176,7 @@ test.describe('Tour de primer inicio', () => {
     // (30 s) no llega ni al arranque del servidor de desarrollo.
     test.setTimeout(180_000);
 
-    test('recorre las nueve paradas con datos de ejemplo y no deja nada detrás', async ({ page }) => {
+    test('recorre todas las paradas con datos de ejemplo y no deja nada detrás', async ({ page }) => {
         const user = await crearUsuarioRecienRegistrado('recorrido');
 
         try {

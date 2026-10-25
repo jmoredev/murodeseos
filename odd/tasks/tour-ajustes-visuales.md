@@ -52,6 +52,20 @@ S7 — Que se explique cómo se llega a unirse a un grupo, con su botón, y cóm
 > «No se sabe como se ha llegado al paso 7. Habría que describir como se puede crear un grupo o unise
 > a un grupo haciando uso del botón correspondiente.»
 
+S8 — La página del grupo no puede prometer lo que no se ve: dentro de un grupo se ven sus miembros,
+y los deseos se consultan pulsando en uno de ellos:
+
+> «En el paso 6 indicas: "Al abrir un grupo ves los deseos de todos sus miembros: así sabes qué
+> quiere otra persona sin preguntárselo." Eso no es cierto, dentro de un grupo ves a sus miembros y
+> al hacer clic sobre ellos puedes consultar sus deseos.»
+
+S9 — Cada botón se describe donde está marcado, y el de crear grupo tiene su propia parada después
+de la del formulario de unirse:
+
+> «El paso 7 no puede ser: "Y con el de al lado, «Crear grupo», abres uno nuevo y compartes su código
+> para que entren los demás". Marca el botón de añadir y describelo, no tiene sentido tener marcado
+> un botón y estar refiriéndonos al de al lado (e iría después del paso 8)»
+
 ## Decisiones
 
 D1 — **No se introduce ninguna librería de tours** (S4). Un `driver.js` o un `react-joyride`
@@ -166,3 +180,9 @@ legibilidad y confiabilidad, **aprobada**, autoridad quemada (`gentle-ai.review-
 disposición informativa — el proveedor dice expresamente que no reabre la revisión y que es trabajo
 posterior. Queda anotado aquí para no perderlo. Antes, el primer candidato (`…640982b9`) quedó
 **declinado** por el proveedor sin crear linaje.
+
+L6 — Tercera tanda (correcciones al usar el tour). El guion queda en once paradas: la del grupo dice
+la verdad sobre miembros y deseos (S8), la parada del botón de unirse describe **solo** ese botón, y
+el botón `+` de crear grupo tiene la suya, después del formulario de unirse (S9). `PrimaryButton` no
+reenvía propiedades al `Pressable` que pinta, así que el objetivo del tour se registra en un
+envoltorio, cuyo rectángulo es el mismo.
