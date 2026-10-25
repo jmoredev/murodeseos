@@ -88,18 +88,17 @@ export const TOUR_STEPS: readonly TourStep[] = [
         tab: 'groups',
         pages: [
             'Este es el grupo de bienvenida del tour, con personas de ejemplo: no está en tu cuenta y no hay nada que limpiar.',
-            'Al abrir un grupo ves los deseos de todos sus miembros: así sabes qué quiere otra persona sin preguntárselo.',
-            'También verías las reservas de cada deseo, para no regalar dos veces lo mismo.',
+            'Al abrir un grupo ves a sus miembros: al pulsar en uno de ellos consultas sus deseos.',
+            'Y en los deseos verás cuáles ya están reservados, para no regalar dos veces lo mismo.',
             'El tour no puede abrirlo: para entrar en un grupo de verdad hace falta que exista, y éste vive sólo aquí.',
         ],
     },
     {
-        id: 'crear-o-unirse',
+        id: 'unirse-boton',
         targetId: 'grupos-unirse',
         tab: 'groups',
         pages: [
-            'Con este botón te unes a un grupo con un código de invitación.',
-            'Y con el de al lado, «Crear grupo», abres uno nuevo y compartes su código para que entren los demás.',
+            'Con este botón te unes a un grupo cuando alguien te pasa su código de invitación.',
         ],
     },
     {
@@ -108,6 +107,14 @@ export const TOUR_STEPS: readonly TourStep[] = [
         route: '/groups/join',
         pages: [
             'Aquí pegas esa invitación. Con el código de otra persona entras en su grupo, sin que nadie tenga que buscarte.',
+        ],
+    },
+    {
+        id: 'crear-grupo',
+        targetId: 'grupos-crear',
+        tab: 'groups',
+        pages: [
+            'Y con este otro botón creas un grupo nuevo: tú quedas dentro y compartes su código para que entren los demás.',
         ],
     },
     {

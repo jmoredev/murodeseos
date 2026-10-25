@@ -117,6 +117,7 @@ describe('TOUR_STEPS: el guion', () => {
             'groups',
             'groups',
             '/groups/join',
+            'groups',
             'profile',
             'profile',
         ]);
@@ -153,6 +154,6 @@ describe('TOUR_STEPS: el guion', () => {
         const texto = (lista?.pages ?? []).join(' ').toLowerCase();
 
         expect(texto).toContain('miembros');
-        expect(texto).toContain('reservas');
+        expect(texto).toContain('reservados');
     });
 });

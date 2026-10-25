@@ -38,6 +38,7 @@ export function GroupsTab({ userId, demoData }: GroupsTabProps) {
     // deseos, se registran siempre y son inertes cuando no hay tour montado.
     const objetivoLista = useTourTarget('grupos-lista');
     const objetivoUnirse = useTourTarget('grupos-unirse');
+    const objetivoCrear = useTourTarget('grupos-crear');
     const router = useRouter();
     // Umbral único `> 768`: vive en `lib/use-is-desktop.ts` y decide también el
     // número de columnas de la rejilla de grupos más abajo (2 columnas en
@@ -371,15 +372,20 @@ export function GroupsTab({ userId, demoData }: GroupsTabProps) {
                             <AppIcon name="user" size={20} className="text-on-surface/70" />
                         </Pressable>
                     </Link>
-                    <PrimaryButton
-                        onPress={() => router.push('/groups/create' as any)}
-                        accessibilityLabel="Crear grupo"
-                        variant="icon"
-                        className="w-12 h-12 rounded-2xl"
-                        textClassName="text-on-primary font-sans-bold text-2xl leading-none"
-                    >
-                        +
-                    </PrimaryButton>
+                    {/* El botón de crear va envuelto para poder registrar su caja como objetivo del
+                        tour: `PrimaryButton` no reenvía propiedades al `Pressable` que pinta, y el
+                        rectángulo que mide el tour es el mismo con envoltorio. */}
+                    <View {...objetivoCrear}>
+                        <PrimaryButton
+                            onPress={() => router.push('/groups/create' as any)}
+                            accessibilityLabel="Crear grupo"
+                            variant="icon"
+                            className="w-12 h-12 rounded-2xl"
+                            textClassName="text-on-primary font-sans-bold text-2xl leading-none"
+                        >
+                            +
+                        </PrimaryButton>
+                    </View>
                 </View>
             </View>
 
