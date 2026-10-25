@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { TOUR_STEPS } from '@/lib/tour/steps';
+import { TOUR_STEPS, MAX_CARACTERES_PAGINA, MAX_PAGINAS_POR_PARADA } from '@/lib/tour/steps';
 import { TABS } from '@/lib/tabs';
 
 /**
@@ -119,6 +119,25 @@ describe('TOUR_STEPS: el guion', () => {
             'profile',
             'profile',
         ]);
+    });
+
+    it('ninguna página pasa del presupuesto: lo largo se reparte en más páginas (S3)', () => {
+        // La tarjeta del tour se adapta al texto, pero un cartel con un párrafo deja de ser un
+        // cartel. Este tope es de redacción; que no haya desplazamiento de verdad lo comprueba
+        // `e2e/tour.spec.ts`, que recorre las páginas y mide el alto sobrante.
+        for (const paso of TOUR_STEPS) {
+            expect(
+                paso.pages.length,
+                `La parada «${paso.id}» tiene ${paso.pages.length} páginas`
+            ).toBeLessThanOrEqual(MAX_PAGINAS_POR_PARADA);
+
+            for (const [indice, pagina] of paso.pages.entries()) {
+                expect(
+                    pagina.length,
+                    `La página ${indice + 1} de «${paso.id}» ocupa ${pagina.length} caracteres: «${pagina}»`
+                ).toBeLessThanOrEqual(MAX_CARACTERES_PAGINA);
+            }
+        }
     });
 
     it('el detalle de grupo se explica con palabras, sin navegar a él (D1)', () => {
