@@ -1,11 +1,13 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { markTourCompleted, readTourCompletedAt, shouldStartTour, TOUR_FLAG_DB } from '@/lib/tour/flag';
 import type { TourDestination } from '@/lib/tour/navigation';
 import { TOUR_STEPS } from '@/lib/tour/steps';
+import { useReducedMotion } from '@/lib/tour/use-reduced-motion';
 import type { Tab } from '@/lib/tabs';
 import { TourRunner } from './TourRunner';
 
@@ -35,8 +37,14 @@ import { TourRunner } from './TourRunner';
  */
 const SESION_MAX_MS = 12_000;
 
+const ESTILOS = StyleSheet.create({
+    /** El contenedor de la página: ocupa lo mismo que ocupaba la página sin envolverla. */
+    pagina: { flex: 1 },
+});
+
 /** La portada, con o sin pestaña pedida: `/`, `/?tab=groups`… */
 const PORTADA = /^\/?(?:\?tab=(wishlist|groups|profile))?$/;
+
 type TourHostContextValue = {
     active: boolean;
     requestedTab: Tab | null;
@@ -261,16 +269,36 @@ export function TourHost({ children }: TourHostProps) {
         [active, requestedTab, reportarPestana]
     );
 
+    // S5: quien pide menos movimiento en su sistema no ve transiciones. Se pregunta aquí, una vez
+    // por host, y se pasa al corredor.
+    const reduceMotion = useReducedMotion();
+
+    /**
+     * Con el tour abierto, la página de detrás no puede usarse **ni con el teclado**. El velo ya se
+     * come los toques (`pointerEvents`), pero `pointerEvents` no impide Tab+Enter. `aria-hidden` la
+     * esconde a los lectores de pantalla e `inert` la saca del orden de tabulación y de los clics
+     * de verdad. Es sólo web: en nativo no hay DOM que inertizar y `accessibilityViewIsModal` del
+     * diálogo ya hace ese trabajo.
+     */
+    const ocultarPagina = active && Platform.OS === 'web';
+    const propsDePagina = ocultarPagina
+        ? ({ 'aria-hidden': true, inert: true } as unknown as Record<string, unknown>)
+        : {};
+
     return (
         <TourHostContext.Provider value={contexto}>
-            {children}
-            {/* El movimiento reducido y la hoja móvil son T7: aquí no se pasa `reduceMotion`. */}
+            {/* La página va en un contenedor propio para poder ocultarla entera mientras el tour
+                está abierto. `flex: 1` conserva el reparto de altura que tenía antes de envolver. */}
+            <View testID="tour-page" style={ESTILOS.pagina} {...propsDePagina}>
+                {children}
+            </View>
             {active && (
                 <TourRunner
                     steps={TOUR_STEPS}
                     tab={currentTab ?? 'wishlist'}
                     onNavigate={alNavegar}
                     onFinish={alTerminar}
+                    reduceMotion={reduceMotion}
                 />
             )}
         </TourHostContext.Provider>

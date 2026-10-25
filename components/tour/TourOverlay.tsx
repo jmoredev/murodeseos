@@ -1,5 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
+} from 'react-native';
 import Animated, {
     cancelAnimation,
     useAnimatedStyle,
@@ -15,6 +23,7 @@ import {
     scrimPieces,
     type Rect,
 } from '@/lib/tour/geometry';
+import { useTamanoTarjeta } from '@/lib/tour/use-card-size';
 import { useTourTargetRect } from './TourTargetProvider';
 
 /**
@@ -33,18 +42,42 @@ import { useTourTargetRect } from './TourTargetProvider';
 /** Duración de la transición entre paradas (S5). */
 const DURACION_MS = 220;
 
-/**
- * Lo que se estima que ocupa la tarjeta. La colocación se decide **antes** de pintarla —la tarjeta
- * no puede medirse a sí misma antes de existir—, así que se usa una estimación generosa con el
- * texto más largo del guion. Si la estimación se queda corta, la tarjeta crece hacia abajo y sigue
- * sin tapar el hueco, porque el anclaje ya está decidido.
- */
-const TARJETA_ESTIMADA = { width: 320, height: 190 };
-
 const VACIO: Rect = { x: 0, y: 0, width: 0, height: 0 };
+
+/**
+ * Lo que puede recibir el foco dentro del diálogo. `[tabindex]:not([tabindex="-1"])` es la pieza
+ * importante: en web los `Pressable` de react-native-web son `div` con `tabindex="0"`, no
+ * `<button>`, y sin esa regla el ciclo de Tab se quedaría sin elementos.
+ */
+const SELECTOR_ENFOCABLE = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+/**
+ * El nodo de React Native convertido en elemento del DOM, si de verdad lo es. En nativo el `ref`
+ * apunta a un nodo de la vista que no sabe enfocar, y esta conversión devuelve `null` en vez de
+ * romper.
+ */
+function comoElementoDom(nodo: unknown): HTMLElement | null {
+    if (!nodo || typeof nodo !== 'object') return null;
+
+    const elemento = nodo as HTMLElement;
+
+    return typeof elemento.focus === 'function' ? elemento : null;
+}
 
 const ESTILOS = StyleSheet.create({
     elemento: { position: 'absolute' },
+    /**
+     * Antes de la primera medida la altura tiene que ser la del contenido. Si se fijara la
+     * estimación, `onLayout` mediría la estimación y la corrección no serviría de nada.
+     */
+    alturaNatural: { height: 'auto' },
 });
 
 /**
@@ -122,9 +155,28 @@ export function TourOverlay({
     const hueco = useTourTargetRect(parada?.step.targetId ?? '');
     const visible = parada !== null && hueco !== null;
 
+    const tarjetaRef = useRef<View | null>(null);
+    /** Quién tenía el foco antes de abrir el tour: ahí vuelve al terminar o saltar. */
+    const focoPrevio = useRef<HTMLElement | null>(null);
+    /** Sin DOM no hay foco que mover ni teclado que atrapar (nativo, servidor). */
+    const hayDom = Platform.OS === 'web' && typeof document !== 'undefined';
+
+    // La tarjeta se coloca con lo que mide, no con lo que se supone que medirá (S6, S7). La medida
+    // se pide siempre, también cuando no hay parada: el orden de los enganches no puede depender
+    // de si el hueco ya llegó.
+    const {
+        size: tamanoTarjeta,
+        onLayout: alMedirTarjeta,
+        measured: tarjetaMedida,
+    } = useTamanoTarjeta(parada?.step.id ?? null);
+
     const anillo = ringRect(hueco ?? VACIO, RING_INSET, RING_THICKNESS);
     const trozos = scrimPieces(anillo, ventana);
-    const tarjeta = cardPlacement(anillo, ventana, TARJETA_ESTIMADA);
+    const tarjeta = cardPlacement(anillo, ventana, tamanoTarjeta);
+
+    // Se leen aquí para que las dependencias de los efectos de foco digan qué cambia de verdad.
+    const pasoActual = parada?.step.id ?? null;
+    const paginaActual = parada?.pageIndex ?? 0;
 
     const animar = visible && !reduceMotion;
 
@@ -155,19 +207,91 @@ export function TourOverlay({
     }, [objetivoAusente, onTargetMissing]);
 
     useEffect(() => {
-        if (!visible || Platform.OS !== 'web' || typeof document === 'undefined') return;
+        if (!visible || !hayDom) return;
+
+        // Se apunta quién tenía el foco **antes** de que el efecto de abajo se lo lleve a la
+        // tarjeta. Al terminar o saltar, el overlay se desmonta y esto devuelve el foco: dejarlo
+        // en un nodo que desaparece deja la página sin teclado.
+        const activo = document.activeElement;
+        focoPrevio.current = activo instanceof HTMLElement ? activo : null;
+
+        return () => {
+            const anterior = focoPrevio.current;
+            focoPrevio.current = null;
+
+            if (!anterior || !document.contains(anterior)) return;
+
+            anterior.focus();
+        };
+    }, [visible, hayDom]);
+
+    /**
+     * El foco entra en la tarjeta en cada página. Si se quedara donde estaba, el siguiente Tab
+     * volvería a la página de detrás y el diálogo dejaría de ser modal para el teclado: el mismo
+     * agujero que abre `pointerEvents="none"` para el ratón.
+     */
+    useEffect(() => {
+        if (!visible || !hayDom) return;
+
+        comoElementoDom(tarjetaRef.current)?.focus();
+    }, [visible, hayDom, pasoActual, paginaActual]);
+
+    useEffect(() => {
+        if (!visible || !hayDom) return;
 
         const alPulsar = (evento: KeyboardEvent) => {
-            if (evento.key !== 'Escape') return;
+            if (evento.key === 'Escape') {
+                evento.preventDefault();
+                onSkip();
 
-            evento.preventDefault();
-            onSkip();
+                return;
+            }
+
+            if (evento.key !== 'Tab') return;
+
+            const tarjetaDom = comoElementoDom(tarjetaRef.current);
+
+            if (!tarjetaDom) return;
+
+            const enfocables = Array.from(
+                tarjetaDom.querySelectorAll<HTMLElement>(SELECTOR_ENFOCABLE)
+            );
+            const primero = enfocables[0];
+            const ultimo = enfocables[enfocables.length - 1];
+
+            // Un diálogo sin nada enfocable: el foco se queda en la propia tarjeta y no se escapa.
+            if (!primero || !ultimo) {
+                evento.preventDefault();
+                tarjetaDom.focus();
+
+                return;
+            }
+
+            const actual = document.activeElement;
+            const dentro = actual instanceof Node && tarjetaDom.contains(actual);
+
+            if (evento.shiftKey) {
+                // Hacia atrás desde el primero (o desde la tarjeta) se envuelve al último. Sin
+                // esto, Mayús+Tab saldría a la página de detrás.
+                if (!dentro || actual === primero || actual === tarjetaDom) {
+                    evento.preventDefault();
+                    ultimo.focus();
+                }
+
+                return;
+            }
+
+            // Hacia delante desde el último (o desde fuera) se envuelve al primero.
+            if (!dentro || actual === ultimo) {
+                evento.preventDefault();
+                primero.focus();
+            }
         };
 
         document.addEventListener('keydown', alPulsar);
 
         return () => document.removeEventListener('keydown', alPulsar);
-    }, [visible, onSkip]);
+    }, [visible, hayDom, onSkip]);
 
     if (!parada || !hueco) return null;
 
@@ -180,6 +304,23 @@ export function TourOverlay({
     const etiquetaAvanzar = esUltimaPagina
         ? 'Terminar el tour'
         : 'Siguiente página del tour';
+
+    // Diagnóstico de la colocación: los valores hacia los que va la animación. La tarjeta se mueve
+    // con un estilo animado que no es legible desde un test (y que reanimated aplica fuera de
+    // React), así que estas cifras son a la vez lo que se depura a mano y lo que se fija en las
+    // pruebas de S6. Sólo en web: en nativo `dataSet` no existe.
+    const diagnostico =
+        Platform.OS === 'web'
+            ? ({
+                  dataSet: {
+                      tourColocacion: tarjeta.placement,
+                      tourX: tarjeta.x,
+                      tourY: tarjeta.y,
+                      tourAncho: tarjeta.width,
+                      tourAlto: tarjeta.height,
+                  },
+              } as unknown as Record<string, unknown>)
+            : {};
 
     return (
         <View style={StyleSheet.absoluteFill} className="absolute inset-0 z-50">
@@ -227,71 +368,87 @@ export function TourOverlay({
             />
 
             <Animated.View
+                ref={tarjetaRef}
                 testID="tour-card"
-                style={[ESTILOS.elemento, estiloTarjeta]}
+                tabIndex={-1}
+                onLayout={alMedirTarjeta}
+                style={[
+                    ESTILOS.elemento,
+                    estiloTarjeta,
+                    // Antes de la primera medida la altura es la del contenido: si se fijara la
+                    // estimación, `onLayout` mediría la estimación y no habría nada que corregir.
+                    !tarjetaMedida && ESTILOS.alturaNatural,
+                ]}
                 className="rounded-2xl bg-surface p-4 shadow-ambient-lg"
                 role="dialog"
                 aria-modal={true}
                 accessibilityViewIsModal
+                {...diagnostico}
             >
-                <View className="flex-row items-center justify-between gap-2">
-                    <Text className="text-xs font-sans-semibold uppercase tracking-widest text-primary">
-                        {parada.stepLabel}
-                    </Text>
-                    <Text className="text-xs font-sans text-on-background/60">
-                        {parada.pageLabel}
-                    </Text>
-                </View>
-
-                {/* La región viva anuncia la página nueva; el texto cambia en el sitio, que es lo
-                    que un lector de pantalla necesita oír. */}
-                <Text
-                    className="mt-2 text-base font-sans text-on-background"
-                    accessibilityLiveRegion="polite"
-                    aria-live="polite"
-                >
-                    {parada.page}
-                </Text>
-
-                <View className="mt-4 flex-row items-center justify-between gap-2">
-                    {esPrimeraPagina ? (
-                        <View />
-                    ) : (
-                        <Pressable
-                            onPress={onPrevious}
-                            accessibilityRole="button"
-                            accessibilityLabel="Página anterior del tour"
-                            className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 active:opacity-70"
-                        >
-                            <Text className="text-sm font-sans-semibold text-primary">
-                                Anterior
-                            </Text>
-                        </Pressable>
-                    )}
-
-                    <View className="flex-row items-center gap-2">
-                        {/* Saltar está siempre, también en la última página (S1). */}
-                        <Pressable
-                            onPress={onSkip}
-                            accessibilityRole="button"
-                            accessibilityLabel="Saltar el tour"
-                            className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 active:opacity-70"
-                        >
-                            <Text className="text-sm font-sans-semibold text-primary">Saltar</Text>
-                        </Pressable>
-
-                        <Pressable
-                            onPress={onNext}
-                            accessibilityRole="button"
-                            accessibilityLabel={etiquetaAvanzar}
-                            className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary px-4 py-2 active:opacity-90"
-                        >
-                            <Text className="text-sm font-sans-bold text-on-primary">
-                                {textoAvanzar}
-                            </Text>
-                        </Pressable>
+                {/* La tarjeta tiene el alto que decidió la colocación; el texto que no quepa se
+                    lee desplazando, sin crecer encima del hueco (S6). */}
+                <ScrollView testID="tour-card-content">
+                    <View className="flex-row items-center justify-between gap-2">
+                        <Text className="text-xs font-sans-semibold uppercase tracking-widest text-primary">
+                            {parada.stepLabel}
+                        </Text>
+                        <Text className="text-xs font-sans text-on-background/60">
+                            {parada.pageLabel}
+                        </Text>
                     </View>
-                </View>
+
+                    {/* La región viva anuncia la página nueva; el texto cambia en el sitio, que es
+                        lo que un lector de pantalla necesita oír. */}
+                    <Text
+                        className="mt-2 text-base font-sans text-on-background"
+                        accessibilityLiveRegion="polite"
+                        aria-live="polite"
+                    >
+                        {parada.page}
+                    </Text>
+
+                    <View className="mt-4 flex-row items-center justify-between gap-2">
+                        {esPrimeraPagina ? (
+                            <View />
+                        ) : (
+                            <Pressable
+                                onPress={onPrevious}
+                                accessibilityRole="button"
+                                accessibilityLabel="Página anterior del tour"
+                                className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 active:opacity-70"
+                            >
+                                <Text className="text-sm font-sans-semibold text-primary">
+                                    Anterior
+                                </Text>
+                            </Pressable>
+                        )}
+
+                        <View className="flex-row items-center gap-2">
+                            {/* Saltar está siempre, también en la última página (S1). */}
+                            <Pressable
+                                onPress={onSkip}
+                                accessibilityRole="button"
+                                accessibilityLabel="Saltar el tour"
+                                className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 py-2 active:opacity-70"
+                            >
+                                <Text className="text-sm font-sans-semibold text-primary">
+                                    Saltar
+                                </Text>
+                            </Pressable>
+
+                            <Pressable
+                                onPress={onNext}
+                                accessibilityRole="button"
+                                accessibilityLabel={etiquetaAvanzar}
+                                className="min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary px-4 py-2 active:opacity-90"
+                            >
+                                <Text className="text-sm font-sans-bold text-on-primary">
+                                    {textoAvanzar}
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </ScrollView>
             </Animated.View>
         </View>
     );
