@@ -10,6 +10,9 @@ import { GroupNotificationSettingsModal } from '@/components/GroupNotificationSe
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { emojiInCircle } from '@/lib/circle-glyph-styles';
 import { AppIcon } from '@/components/ui/AppIcon';
+import { DEMO_GROUP, DEMO_GROUP_MEMBERS } from '@/lib/tour/demo-data';
+import { useTourActive } from '@/components/tour/TourHost';
+import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 function isHttpUrl(value: string | undefined | null): boolean {
     return !!value && /^https?:\/\//i.test(value);
@@ -30,11 +33,32 @@ export default function GroupDetailsPage() {
     // de Escape, y una función en línea la haría reejecutar en cada render.
     const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
     const isDesktop = useIsDesktop();
+    // Objetivo de la parada que enseña a los miembros del grupo (D5, S7): la rejilla entera, que es
+    // lo que se explica. Se registra siempre y es inerte cuando no hay tour montado.
+    const objetivoParticipantes = useTourTarget('grupo-participantes');
+    const tourActive = useTourActive();
+    /** El grupo de ejemplo del tour: no existe en la base de datos (D1). */
+    const esGrupoDelTour = groupId === DEMO_GROUP.id;
+    /** Con el tour en marcha se pinta el grupo de ejemplo; sin él, la pantalla se queda vacía. */
+    const mostrarDemo = tourActive && esGrupoDelTour;
+    // Lo que se pinta, sea de la base de datos o del tour. La rejilla y la cabecera leen de aquí.
+    const grupoMostrado = mostrarDemo
+        ? { id: DEMO_GROUP.id, name: DEMO_GROUP.name, icon: DEMO_GROUP.icon }
+        : group;
+    const miembrosMostrados = mostrarDemo ? DEMO_GROUP_MEMBERS : members;
 
     useEffect(() => {
         const loadGroupData = async () => {
             if (!groupId) {
                 setError("ID de grupo no válido");
+                setLoading(false);
+                return;
+            }
+
+            // El grupo del tour no existe en la base de datos (D1, D5): pedirlo sólo daría «no se
+            // encontró» y una pantalla de error, así que no se pide nada —ni el grupo, ni sus
+            // miembros, ni la sesión—. Sus datos viven en el cliente y se van con el tour.
+            if (esGrupoDelTour) {
                 setLoading(false);
                 return;
             }
@@ -95,7 +119,7 @@ export default function GroupDetailsPage() {
         };
 
         loadGroupData();
-    }, [groupId]);
+    }, [groupId, esGrupoDelTour]);
 
     const handleShare = async () => {
         if (!group) return;
@@ -145,7 +169,7 @@ export default function GroupDetailsPage() {
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
-                                {group?.name}
+                                {grupoMostrado?.name}
                             </Text>
                             <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Detalles del grupo
@@ -156,7 +180,7 @@ export default function GroupDetailsPage() {
                         <Pressable
                             onPress={() => setNotificationsOpen(true)}
                             accessibilityRole="button"
-                            accessibilityLabel={`Preferencias de notificaciones del grupo ${group?.name ?? ''}`}
+                            accessibilityLabel={`Preferencias de notificaciones del grupo ${grupoMostrado?.name ?? ''}`}
                             className="px-4 py-3.5 rounded-full border border-primary/30 items-center active:opacity-80"
                         >
                             <Text
@@ -180,12 +204,12 @@ export default function GroupDetailsPage() {
                 <View className="bg-surface-container-lowest rounded-3xl p-8 shadow-ambient mb-8 flex-row items-center min-w-0">
                     <View className="w-20 h-20 shrink-0 bg-surface-container-low rounded-3xl items-center justify-center shadow-inner mr-6">
                         <Text className="text-4xl" style={emojiInCircle(36)}>
-                            {group?.icon || '🎁'}
+                            {grupoMostrado?.icon || '🎁'}
                         </Text>
                     </View>
                     <View className="flex-1 min-w-0">
                         <Text className="text-2xl font-display text-on-background" numberOfLines={2}>
-                            {group?.name}
+                            {grupoMostrado?.name}
                         </Text>
                         <View className="mt-3 gap-2">
                             <View className="self-start max-w-full px-3 py-1 bg-surface-container-low rounded-full">
@@ -194,11 +218,11 @@ export default function GroupDetailsPage() {
                                     numberOfLines={1}
                                     ellipsizeMode="middle"
                                 >
-                                    Código: {group?.id}
+                                    Código: {grupoMostrado?.id}
                                 </Text>
                             </View>
                             <Text className="text-xs text-on-surface/70 font-sans-bold">
-                                {members.length} participantes
+                                {miembrosMostrados.length} participantes
                             </Text>
                         </View>
                     </View>
@@ -210,8 +234,8 @@ export default function GroupDetailsPage() {
                         Participantes
                     </Text>
 
-                    <View className="flex-row flex-wrap -m-2">
-                        {members.map((member) => (
+                    <View {...objetivoParticipantes} className="flex-row flex-wrap -m-2">
+                        {miembrosMostrados.map((member) => (
                             <View key={member.user_id} className={`${isDesktop ? 'w-1/3' : 'w-1/2'} p-2`}>
                                 <Pressable
                                     onPress={() => router.push({
@@ -267,7 +291,7 @@ export default function GroupDetailsPage() {
                 onClose={closeNotifications}
                 userId={user?.id ?? ''}
                 groupId={groupId}
-                groupName={group?.name ?? ''}
+                groupName={grupoMostrado?.name ?? ''}
             />
         </ResponsiveLayout>
     );

@@ -9,10 +9,11 @@
  * cuando es una pestaña de la portada (estado, no ruta) y `route` cuando es una pantalla de
  * expo-router. Un objetivo sin destino dejaría la parada esperando una medida que nunca llega.
  *
- * Sobre el detalle de grupo: con datos de demostración no se puede abrir (decisión D1 — no se
- * escribe ninguna fila, así que el grupo de ejemplo no existe en la base de datos y
- * `/groups/[id]` mostraría una pantalla vacía). Se explica con páginas dentro de la parada de la
- * lista en vez de navegar a una pantalla que no tiene nada que enseñar.
+ * Sobre el grupo de ejemplo: además de verlo en la lista, el recorrido **entra** en él y en la
+ * lista de una de sus personas (D5). Esas dos pantallas piden el grupo y la lista por id a la base de
+ * datos, así que con un id del tour no piden nada y pintan los datos de demostración (D1): así se
+ * enseña lo que de verdad hay dentro de un grupo —sus miembros, y sus deseos con el que ya está
+ * reservado—, en vez de contarlo con palabras.
  *
  * **Cada página tiene que caber sin desplazar** (S3): la tarjeta del tour no es una ventana de
  * lectura, es un cartel. El presupuesto de abajo está calculado para el ancho útil de un móvil de
@@ -90,7 +91,25 @@ export const TOUR_STEPS: readonly TourStep[] = [
             'Este es el grupo de bienvenida del tour, con personas de ejemplo: no está en tu cuenta y no hay nada que limpiar.',
             'Al abrir un grupo ves a sus miembros: al pulsar en uno de ellos consultas sus deseos.',
             'Y en los deseos verás cuáles ya están reservados, para no regalar dos veces lo mismo.',
-            'El tour no puede abrirlo: para entrar en un grupo de verdad hace falta que exista, y éste vive sólo aquí.',
+            'Como es de ejemplo, el tour puede abrirlo: es la siguiente parada.',
+        ],
+    },
+    {
+        id: 'detalle-grupo',
+        targetId: 'grupo-participantes',
+        route: '/groups/tour-group',
+        pages: [
+            'Ya estás dentro del grupo de bienvenida: estas tarjetas son sus personas.',
+            'Ni el grupo ni sus miembros existen en tu cuenta: viven en esta pantalla y se van con el tour.',
+        ],
+    },
+    {
+        id: 'deseos-miembro',
+        targetId: 'deseos-miembro',
+        route: '/wishlist/tour-member-1',
+        pages: [
+            'Al pulsar en una persona se abre su lista: así ves lo que quiere sin preguntárselo.',
+            'Fíjate en el deseo con el candado: ya está reservado, para que nadie lo regale dos veces.',
         ],
     },
     {

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TOUR_STEPS, MAX_CARACTERES_PAGINA, MAX_PAGINAS_POR_PARADA } from '@/lib/tour/steps';
+import { DEMO_GROUP } from '@/lib/tour/demo-data';
 import { TABS } from '@/lib/tabs';
 
 /**
@@ -28,11 +29,32 @@ const PANTALLAS_CON_OBJETIVOS = [
     'components/NotificationMenu.tsx',
     'app/wishlist/add/index.tsx',
     'app/groups/join/index.tsx',
+    'app/groups/[id]/index.tsx',
+    'app/wishlist/[id]/index.tsx',
 ];
 
-/** El fichero de página que expo-router necesita para servir una ruta. */
-function ficheroDeRuta(route: string): string {
-    return path.join(RAIZ, 'app', route.replace(/^\//, ''), 'index.tsx');
+/**
+ * Los ficheros de página con los que expo-router puede servir una ruta.
+ *
+ * Una ruta con un identificador concreto (`/groups/tour-group`) no tiene por qué existir como
+ * carpeta literal: la sirve el segmento dinámico que ya conoce la app (`app/groups/[id]/`). Se
+ * acepta cualquiera de las dos formas, segmento a segmento, para no exigir una carpeta por cada id
+ * de ejemplo ni dar por buena una ruta que no existe.
+ */
+function ficherosDeRuta(route: string): string[] {
+    const segmentos = route.replace(/^\//, '').split('/');
+    const candidatos = new Set<string>([path.join(RAIZ, 'app', ...segmentos, 'index.tsx')]);
+
+    for (const [indice] of segmentos.entries()) {
+        for (const forma of ['[id]', '[...id]']) {
+            const copia = [...segmentos];
+
+            copia[indice] = forma;
+            candidatos.add(path.join(RAIZ, 'app', ...copia, 'index.tsx'));
+        }
+    }
+
+    return [...candidatos];
 }
 
 function objetivosRegistrados(): Set<string> {
@@ -88,9 +110,12 @@ describe('TOUR_STEPS: el guion', () => {
         for (const paso of TOUR_STEPS) {
             if (paso.route === undefined) continue;
 
-            const fichero = ficheroDeRuta(paso.route);
+            const ficheros = ficherosDeRuta(paso.route);
 
-            expect(existsSync(fichero), `La parada «${paso.id}» apunta a ${paso.route}, que no existe (${fichero})`).toBe(true);
+            expect(
+                ficheros.some((fichero) => existsSync(fichero)),
+                `La parada «${paso.id}» apunta a ${paso.route}, que no existe (${ficheros.join(', ')})`
+            ).toBe(true);
         }
     });
 
@@ -115,6 +140,8 @@ describe('TOUR_STEPS: el guion', () => {
             '/wishlist/add',
             'groups',
             'groups',
+            `/groups/${DEMO_GROUP.id}`,
+            `/wishlist/${DEMO_GROUP.members[0].id}`,
             'groups',
             '/groups/join',
             'groups',
@@ -142,10 +169,27 @@ describe('TOUR_STEPS: el guion', () => {
         }
     });
 
-    it('el detalle de grupo se explica con palabras, sin navegar a él (D1)', () => {
-        // Abrir un grupo de verdad es imposible con los datos de demostración, así que la parada
-        // de la lista de grupos lleva una página que cuenta qué se vería dentro. Sin esa página el
-        // recorrido prometería una pantalla que no enseña.
+    it('el grupo y el miembro de ejemplo se abren de verdad (D5)', () => {
+        // El recorrido entra en el grupo de demostración y en la lista de una de sus personas para
+        // enseñar un deseo ya reservado (D5). Las dos rutas llevan los identificadores de los datos
+        // de ejemplo: si alguien los cambia en un sitio y no en el otro, el tour abriría una lista
+        // vacía o una pantalla que no existe.
+        const detalle = TOUR_STEPS.find((paso) => paso.id === 'detalle-grupo');
+
+        expect(detalle?.route).toBe(`/groups/${DEMO_GROUP.id}`);
+        expect(detalle?.targetId).toBe('grupo-participantes');
+        expect((detalle?.pages ?? []).join(' ').toLowerCase()).toContain('miembros');
+
+        const miembro = TOUR_STEPS.find((paso) => paso.id === 'deseos-miembro');
+
+        expect(miembro?.route).toBe(`/wishlist/${DEMO_GROUP.members[0].id}`);
+        expect(miembro?.targetId).toBe('deseos-miembro');
+        expect((miembro?.pages ?? []).join(' ').toLowerCase()).toContain('reservado');
+    });
+
+    it('la lista de grupos ya no dice que el tour no puede abrir el grupo (D5)', () => {
+        // La página antigua prometía lo contrario justo antes de entrar en él: era cierta con D1 y
+        // deja de serlo con D5. Sin esta comprobación, el guion se contradiría a sí mismo.
         const lista = TOUR_STEPS.find((paso) => paso.targetId === 'grupos-lista');
 
         expect(lista).toBeDefined();
@@ -153,6 +197,7 @@ describe('TOUR_STEPS: el guion', () => {
 
         const texto = (lista?.pages ?? []).join(' ').toLowerCase();
 
+        expect(texto).not.toContain('no puede abrirlo');
         expect(texto).toContain('miembros');
         expect(texto).toContain('reservados');
     });
