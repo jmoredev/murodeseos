@@ -1,9 +1,53 @@
+import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WishListTab } from '@/components/WishListTab';
 import { GroupsTab } from '@/components/GroupsTab';
-import { DEMO_GROUP, DEMO_GROUPS, DEMO_WISHES } from '@/lib/tour/demo-data';
+import GroupDetailsPage from '@/app/groups/[id]/index';
+import UserWishlistPage from '@/app/wishlist/[id]/index';
+import {
+    DEMO_GROUP,
+    DEMO_GROUP_MEMBERS,
+    DEMO_GROUPS,
+    DEMO_MEMBER,
+    DEMO_MEMBER_WISHES,
+    DEMO_WISHES,
+} from '@/lib/tour/demo-data';
 import { supabase } from '@/lib/supabase';
+
+/**
+ * Los parámetros de ruta y el `push` del navegador, mutables por prueba: las dos pantallas del tour
+ * leen el id de la URL (`/groups/tour-group`, `/wishlist/tour-member-1`) y hay que poder apuntar a
+ * una y a otra en el mismo fichero.
+ */
+const { params, routerPush } = vi.hoisted(() => ({
+    params: {} as Record<string, string>,
+    routerPush: vi.fn(),
+}));
+
+// El mock global de `vitest.setup.ts` devuelve parámetros vacíos; estas pruebas necesitan los del
+// tour, así que se sustituye entero y se conserva la forma que ya consumen las listas de la portada.
+vi.mock('expo-router', () => ({
+    Link: ({ children }: any) => children,
+    useRouter: () => ({ push: routerPush, replace: vi.fn(), back: vi.fn(), setParams: vi.fn() }),
+    useFocusEffect: (callback: any) => {
+        React.useEffect(callback, [callback]);
+    },
+    useSegments: () => [],
+    usePathname: () => '/',
+    useLocalSearchParams: () => params,
+    useGlobalSearchParams: () => params,
+}));
+
+// Las dos pantallas del grupo y del miembro sólo preguntan al tour si está en marcha (D5), y lo
+// preguntan al estado del tour, no al host: el host monta el velo y no hace falta aquí.
+vi.mock('@/components/tour/TourState', () => ({ useTourActive: () => true }));
+
+// El chrome (pestañas, campana, menú de notificaciones) no es lo que se mide aquí y consulta sus
+// propias tablas; con el tour abierto la página queda inerte, así que no aporta nada a la prueba.
+vi.mock('@/components/ResponsiveLayout', () => ({
+    ResponsiveLayout: ({ children }: any) => children,
+}));
 
 /**
  * Los datos de demostración del tour (S4, D1): con la propiedad puesta, las dos listas pintan sus
@@ -92,6 +136,87 @@ describe('Grupo de demostración', () => {
         fireEvent.click(screen.getByLabelText('Compartir grupo'));
 
         expect(screen.queryByText('Toca para copiar')).toBeNull();
+        expect(supabase.from).not.toHaveBeenCalled();
+    });
+});
+
+describe('Detalle del grupo de demostración', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        sessionStorage.clear();
+        params.id = DEMO_GROUP.id;
+        delete params.name;
+    });
+
+    it('pinta el grupo del tour con sus miembros y no pregunta a Supabase', () => {
+        render(<GroupDetailsPage />);
+
+        // El nombre sale dos veces: en la cabecera y en la tarjeta del grupo.
+        expect(screen.getAllByText(DEMO_GROUP.name).length).toBeGreaterThan(0);
+        for (const miembro of DEMO_GROUP_MEMBERS) {
+            expect(screen.getByText(miembro.profiles.display_name)).toBeInTheDocument();
+        }
+
+        // Ni el grupo ni sus miembros existen en la base de datos (D1): pedirlos daría una pantalla
+        // de error, así que no se pide nada, ni siquiera la sesión.
+        expect(screen.queryByText('No se pudo cargar el grupo')).toBeNull();
+        expect(supabase.from).not.toHaveBeenCalled();
+        expect(supabase.auth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('cada miembro lleva a su lista de deseos', () => {
+        render(<GroupDetailsPage />);
+
+        fireEvent.click(screen.getByText(DEMO_MEMBER.profiles.display_name));
+
+        expect(routerPush).toHaveBeenCalledWith({
+            pathname: '/wishlist/[id]',
+            params: {
+                id: DEMO_MEMBER.user_id,
+                name: DEMO_MEMBER.profiles.display_name,
+            },
+        });
+    });
+});
+
+describe('Lista del miembro de demostración', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        sessionStorage.clear();
+        params.id = DEMO_MEMBER.user_id;
+        delete params.name;
+    });
+
+    it('pinta los deseos de Marta, incluido el reservado, y no pregunta a Supabase', () => {
+        render(<UserWishlistPage />);
+
+        expect(screen.getByText(`Lista de ${DEMO_MEMBER.profiles.display_name}`)).toBeInTheDocument();
+        for (const deseo of DEMO_MEMBER_WISHES) {
+            expect(screen.getByText(deseo.title)).toBeInTheDocument();
+        }
+
+        // El estado de reserva llega a la tarjeta tal cual: el deseo reservado se anuncia y se tapa
+        // como el de una persona de verdad, para que nadie regale dos veces lo mismo.
+        const reservado = DEMO_MEMBER_WISHES.find((deseo) => deseo.reservationState === 'reserved_by_other');
+
+        expect(reservado).toBeDefined();
+        expect(screen.getByText('🔒 Reservado')).toBeInTheDocument();
+        expect(screen.getByLabelText(new RegExp(`^${reservado!.title}.*\\. Reservado\\.$`))).toBeInTheDocument();
+
+        expect(screen.queryByText('Lista vacía')).toBeNull();
+        expect(supabase.from).not.toHaveBeenCalled();
+        expect(supabase.auth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('no deja al alcance ningún control que escriba', () => {
+        render(<UserWishlistPage />);
+
+        // Reservar y cancelar escriben en la base de datos: en un miembro de ejemplo no existen.
+        expect(screen.queryByTestId('wish-reserve-button')).toBeNull();
+        expect(screen.queryByTestId('wish-cancel-reserve-button')).toBeNull();
+
+        fireEvent.click(screen.getByText(DEMO_MEMBER_WISHES[0].title));
+
         expect(supabase.from).not.toHaveBeenCalled();
     });
 });

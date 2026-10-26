@@ -182,10 +182,12 @@ function Objetivo({ rect }: { rect: TargetRect | null }) {
     }, [registro, rect]);
 
     useEffect(() => {
-        registro.register('objetivo', () => medida.current);
+        const medir = () => medida.current;
+
+        registro.register('objetivo', medir);
         void registro.refresh('objetivo');
 
-        return () => registro.unregister('objetivo');
+        return () => registro.unregister('objetivo', medir);
     }, [registro]);
 
     return null;

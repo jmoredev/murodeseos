@@ -66,15 +66,58 @@ describe('createTargetRegistry', () => {
     it('darse de baja olvida la medida y avisa', async () => {
         const registro = createTargetRegistry();
         const oyente = vi.fn();
+        const medir = () => RECT;
 
-        registro.register('tab-deseos', () => RECT);
+        registro.register('tab-deseos', medir);
         await registro.refresh('tab-deseos');
         registro.subscribe(oyente);
 
-        registro.unregister('tab-deseos');
+        registro.unregister('tab-deseos', medir);
 
         expect(registro.measure('tab-deseos')).toBeNull();
         expect(oyente).toHaveBeenCalledTimes(1);
+    });
+
+    it('dar de baja una pantalla no borra el alta de otra que sigue viva', async () => {
+        const registro = createTargetRegistry();
+        const otro: TargetRect = { x: 0, y: 500, width: 320, height: 56 };
+        const medirPortada = () => RECT;
+        const medirSubruta = () => otro;
+
+        // La portada da de alta la campana y, encima, otra pantalla que pinta el mismo chrome.
+        registro.register('notificaciones', medirPortada);
+        await registro.refresh('notificaciones');
+        registro.register('notificaciones', medirSubruta);
+        await registro.refresh('notificaciones');
+
+        // Manda la última que entró: es la pantalla que se está viendo.
+        expect(registro.measure('notificaciones')).toEqual(otro);
+
+        // Al volver, la sub-ruta se desmonta. Su baja no puede llevarse por delante a la portada.
+        registro.unregister('notificaciones', medirSubruta);
+
+        // La que queda vuelve a mandar, pero su caja es de cuando estaba debajo: se olvida hasta que
+        // se vuelva a medir, para no dibujar el hueco donde ya no está.
+        expect(registro.measure('notificaciones')).toBeNull();
+
+        await registro.refresh('notificaciones');
+
+        expect(registro.measure('notificaciones')).toEqual(RECT);
+    });
+
+    it('dar de baja una pantalla de debajo no toca la medida de la de encima', async () => {
+        const registro = createTargetRegistry();
+        const otro: TargetRect = { x: 0, y: 500, width: 320, height: 56 };
+        const medirPortada = () => RECT;
+        const medirSubruta = () => otro;
+
+        registro.register('notificaciones', medirPortada);
+        registro.register('notificaciones', medirSubruta);
+        await registro.refresh('notificaciones');
+
+        registro.unregister('notificaciones', medirPortada);
+
+        expect(registro.measure('notificaciones')).toEqual(otro);
     });
 
     it('avisa solo cuando la medida cambia, y reutiliza el mismo rectángulo', async () => {
@@ -122,16 +165,15 @@ describe('createTargetRegistry', () => {
         const registro = createTargetRegistry();
         let resolver: (rect: TargetRect) => void = () => {};
 
-        registro.register(
-            'tab-deseos',
-            () =>
-                new Promise<TargetRect>((resolve) => {
-                    resolver = resolve;
-                })
-        );
+        const medir = () =>
+            new Promise<TargetRect>((resolve) => {
+                resolver = resolve;
+            });
+
+        registro.register('tab-deseos', medir);
 
         const refresco = registro.refresh('tab-deseos');
-        registro.unregister('tab-deseos');
+        registro.unregister('tab-deseos', medir);
         resolver(RECT);
         await refresco;
 

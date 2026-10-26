@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TourHost, useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
+import { TourHost } from '@/components/tour/TourHost';
+import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourState';
 import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/TourTargetProvider';
 import { TOUR_STEPS } from '@/lib/tour/steps';
 import type { TourStep } from '@/lib/tour/engine';
@@ -215,11 +216,13 @@ function Objetivos() {
 
     useEffect(() => {
         const ids = TOUR_STEPS.map((paso) => paso.targetId);
+        // La baja es por alta, no por id: se guardan las funciones para retirar las mismas.
+        const altas = ids.map((id) => [id, () => cajaDeObjetivo(id)] as const);
 
-        for (const id of ids) registro.register(id, () => cajaDeObjetivo(id));
+        for (const [id, medir] of altas) registro.register(id, medir);
 
         return () => {
-            for (const id of ids) registro.unregister(id);
+            for (const [id, medir] of altas) registro.unregister(id, medir);
         };
     }, [registro]);
 

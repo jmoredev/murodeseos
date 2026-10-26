@@ -134,7 +134,8 @@ export function useTourTarget(id: string): TourTargetProps {
 
         return () => {
             nodo.current = null;
-            registro.unregister(id);
+            // La baja es la de **esta** pantalla: si otra reclama el mismo id, su alta sigue viva.
+            registro.unregister(id, medir);
         };
     }, [registro, id, medir]);
 

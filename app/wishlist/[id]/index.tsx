@@ -14,6 +14,9 @@ import { ProfileInfoSection } from '@/components/ProfileInfoSection';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { AppIcon } from '@/components/ui/AppIcon';
 import { useToast } from '@/components/Toast';
+import { demoMemberById, demoWishesForMember } from '@/lib/tour/demo-data';
+import { useTourActive } from '@/components/tour/TourState';
+import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 export default function UserWishlistPage() {
     const router = useRouter();
@@ -31,11 +34,37 @@ export default function UserWishlistPage() {
     const { showToast, ToastComponent } = useToast();
     const isDesktop = useIsDesktop();
     const isOwner = !!user?.id && user.id === targetUserId;
+    // Objetivo de la parada que enseña la lista de otra persona (D5, S7): la rejilla. Se registra
+    // siempre y es inerte cuando no hay tour montado.
+    const objetivoLista = useTourTarget('deseos-miembro');
+    const tourActive = useTourActive();
+    /** El miembro de ejemplo cuya lista se abre en el tour, si el id es uno de ellos (D5). */
+    const miembroDemo = demoMemberById(targetUserId);
+    /** Con el tour en marcha se pinta su lista; sin él, la pantalla se queda vacía. */
+    const mostrarDemo = tourActive && !!miembroDemo;
+    /** Lo que se pinta: los deseos del tour con su estado de reserva, o los de la base de datos. */
+    const deseosMostrados = mostrarDemo ? demoWishesForMember(targetUserId) ?? [] : items;
+    /** El perfil que lee la cabecera y el panel lateral, sea del tour o de la base de datos. */
+    const perfilMostrado = mostrarDemo && miembroDemo
+        ? { display_name: miembroDemo.profiles.display_name, avatar_url: miembroDemo.profiles.avatar_url }
+        : targetProfile;
 
     useEffect(() => {
         const loadWishlist = async () => {
             if (!targetUserId) {
                 setError("Usuario no encontrado.");
+                setLoading(false);
+                return;
+            }
+
+            // Un miembro del tour no existe en la base de datos (D1, D5): pedir su perfil o sus
+            // deseos sólo daría una lista vacía y un error de reserva, así que no se pide nada.
+            //
+            // Con el tour cerrado la ruta no es una demostración sino un id que no existe, y se
+            // comporta como siempre (lista vacía). El `error` se limpia por si se llegó aquí antes de
+            // que el tour arrancara y quedó el mensaje de la consulta.
+            if (mostrarDemo) {
+                setError(null);
                 setLoading(false);
                 return;
             }
@@ -99,7 +128,7 @@ export default function UserWishlistPage() {
         };
 
         loadWishlist();
-    }, [targetUserId]);
+    }, [targetUserId, mostrarDemo]);
 
     const handleReserve = async (item: GiftItem) => {
         if (!user?.id) {
@@ -138,6 +167,14 @@ export default function UserWishlistPage() {
             showToast(getWishActionErrorMessage(err, 'No se pudo cancelar la reserva'), 'error');
         }
     };
+
+    /**
+     * En la lista de un miembro del tour no hay acciones que ofrecer (D1, D5): reservar y cancelar
+     * escriben en la base de datos y estos deseos no existen allí. La tarjeta pinta el estado de
+     * reserva igual —incluido el «Reservado» del que ya lo tiene otra persona—, pero sin botones.
+     */
+    const reservar = mostrarDemo ? undefined : handleReserve;
+    const cancelarReserva = mostrarDemo ? undefined : handleCancelReserve;
 
     if (error) {
         return (
@@ -182,7 +219,7 @@ export default function UserWishlistPage() {
                         </Pressable>
                         <View className="flex-1">
                             <Text className="text-3xl font-display text-on-background tracking-tight" numberOfLines={1}>
-                                Lista de {targetProfile?.display_name || targetUserName || 'Usuario'}
+                                Lista de {perfilMostrado?.display_name || targetUserName || 'Usuario'}
                             </Text>
                             <Text className="text-on-surface/70 font-sans-bold uppercase text-xs tracking-widest mt-2">
                                 Wishlist pública
@@ -218,8 +255,8 @@ export default function UserWishlistPage() {
 
                 <View className={`flex-row ${isDesktop ? 'gap-10' : ''}`}>
                     {/* Main Content (Wishlist Grid) */}
-                    <View className={`flex-1`}>
-                        {items.length === 0 ? (
+                    <View className={`flex-1`} {...objetivoLista}>
+                        {deseosMostrados.length === 0 ? (
                             <View className="items-center justify-center py-20 opacity-80">
                                 <View className="w-24 h-24 bg-surface-container-low rounded-full items-center justify-center mb-6">
                                     <AppIcon name="gift" size={40} className="text-on-surface/70" />
@@ -232,14 +269,14 @@ export default function UserWishlistPage() {
                                 {/* Misma rejilla de filas iguales que en la lista propia: las
                                     tarjetas de **otro** miembro también tienen que medir lo
                                     mismo, con y sin descripción. */}
-                                {items.map((item) => (
+                                {deseosMostrados.map((item) => (
                                     <WishlistCard
                                         key={item.id}
                                         item={item}
                                         isOwner={isOwner}
                                         onClick={setSelectedItem}
-                                        onReserve={handleReserve}
-                                        onCancelReserve={handleCancelReserve}
+                                        onReserve={reservar}
+                                        onCancelReserve={cancelarReserva}
                                     />
                                 ))}
                             </View>
@@ -249,7 +286,7 @@ export default function UserWishlistPage() {
                     {/* Desktop Sidebar (Profile Info) */}
                     {isDesktop && (
                         <View className="w-80">
-                            <ProfileInfoSection profile={targetProfile} isDesktop={true} />
+                            <ProfileInfoSection profile={perfilMostrado} isDesktop={true} />
                         </View>
                     )}
                 </View>
@@ -260,8 +297,8 @@ export default function UserWishlistPage() {
                 item={selectedItem}
                 onClose={() => setSelectedItem(null)}
                 isOwner={isOwner}
-                onReserve={handleReserve}
-                onCancelReserve={handleCancelReserve}
+                onReserve={reservar}
+                onCancelReserve={cancelarReserva}
             />
 
             {/* Mobile Info Modal */}

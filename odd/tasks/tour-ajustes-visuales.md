@@ -13,6 +13,13 @@ decisión del propietario. La revisión nativa del primer candidato la declinó 
 quedó **aprobada** el 2026-10-26 (lentes legibilidad y confiabilidad, 27 archivos) y su autoridad está
 quemada.
 
+**Reabierta el 2026-10-26** por el tramo 6 (S10, D5), en la rama `feat/tour-grupo-simulado`: el
+recorrido entra de verdad en el grupo de ejemplo y en la lista de una de sus personas para enseñar
+un deseo ya reservado. El tramo está implementado y medido —913 pruebas + 1 todo, `tsc` y `eslint`
+limpios y las **5 pruebas de navegador** del tour en verde—; el detalle de los tres defectos que
+aparecieron al retomarlo está en L7. La **entrega** (PR y merge) sigue siendo decisión del
+propietario.
+
 ## Specs
 
 S1 — Oscurecer todo lo que no es el objetivo, para que el foco se lea solo:
@@ -66,6 +73,12 @@ de la del formulario de unirse:
 > para que entren los demás". Marca el botón de añadir y describelo, no tiene sentido tener marcado
 > un botón y estar refiriéndonos al de al lado (e iría después del paso 8)»
 
+S10 — Que el tour enseñe también el interior de un grupo y la lista de una de sus personas, con un
+deseo ya reservado, en vez de contarlo con palabras:
+
+> «¿No puede hacerse una simulación también dentro de un grupo y dentro de un miembro para ver como
+> sale un deseo reservado?»
+
 ## Decisiones
 
 D1 — **No se introduce ninguna librería de tours** (S4). Un `driver.js` o un `react-joyride`
@@ -101,6 +114,20 @@ hoja se recortaba a los 152 px libres. Ahora se apoya en el borde inferior con e
 la pantalla no puede dejar sitio, una hoja inferior maciza sobre una lista es el patrón normal del
 móvil y el anillo sigue viéndose por encima.
 
+D5 — **El grupo de ejemplo y la lista de una de sus personas se abren de verdad, con datos de
+demostración en el cliente y sin escribir una sola fila** (S10). D1 lo impedía por una razón
+concreta: `/groups/[id]` y `/wishlist/[id]` piden el grupo, sus miembros, el perfil y los deseos
+**por id** a la base de datos, y un id del tour no existe allí —la pantalla contestaría «no se
+encontró» y, en el peor caso, el tour enseñaría una pantalla de error—. D5 no cambia D1 (no se
+escribe nada), cambia quién responde: mientras el tour está en marcha, las dos pantallas reconocen
+los identificadores de `lib/tour/demo-data.ts` (`DEMO_GROUP.id`, `DEMO_GROUP_MEMBERS[].user_id`) y
+pintan lo de ese fichero **sin preguntar a Supabase** —ni el grupo, ni los miembros, ni la sesión, ni
+los deseos—. Sin tour montado no hay demostración: esas rutas se comportan como siempre y con un id
+inventado dan la pantalla que ya daban. Y lo que se pinta es lo que hay de verdad dentro de un
+grupo: los miembros en rejilla, la lista de una persona, y **un deseo ya reservado** con el estado
+de reserva que `WishlistCard` ya sabía pintar. En la lista del tour no hay «Reservar» ni «Cancelar»:
+esas acciones escriben en la base de datos y esos deseos no existen allí.
+
 ## Tasks
 
 | ID | Specs | Qué | Ruta | Commit |
@@ -112,6 +139,8 @@ móvil y el anillo sigue viéndose por encima.
 | T5 | S1, S2, S3 | Guardia de extremo a extremo: velo oscuro, tarjeta opaca y ninguna página desplazable | `e2e/tour.spec.ts` | sí |
 | T7 | S5, S6, S7 | Más páginas en el guion: ver los deseos de los demás, nombrar el clic del botón de añadir y una parada nueva en el botón de unirse | `lib/tour/steps.ts` | `74443d9` |
 | T6 | S3, D4 | La tarjeta mide su alto por el contenido y, si el hueco no deja banda, la hoja se apoya abajo | `lib/tour/geometry.ts`, `lib/tour/use-card-size.ts`, `components/tour/TourOverlay.tsx` | sí |
+| T8 | S10, D5 | El grupo de ejemplo y la lista de una de sus personas se abren en el tour, con un deseo ya reservado | `lib/tour/{demo-data,steps}.ts`, `app/groups/[id]/index.tsx`, `app/wishlist/[id]/index.tsx` | `c486bd2` |
+| T9 | D5 | Los objetivos `tab-*` son de la portada y el registro no borra el alta de otra pantalla | `components/ResponsiveLayout.tsx`, `app/index.tsx`, `lib/tour/targets.ts` | `e363a56` |
 
 Commits por tarea (evidencia):
 
@@ -186,3 +215,66 @@ la verdad sobre miembros y deseos (S8), la parada del botón de unirse describe 
 el botón `+` de crear grupo tiene la suya, después del formulario de unirse (S9). `PrimaryButton` no
 reenvía propiedades al `Pressable` que pinta, así que el objetivo del tour se registra en un
 envoltorio, cuyo rectángulo es el mismo.
+
+L7 — Tramo 6 (S10, D5), pedido del propietario al usar el tour, verbatim:
+
+> «¿No puede hacerse una simulación también dentro de un grupo y dentro de un miembro para ver como
+> sale un deseo reservado?»
+
+Lo implementado: `lib/tour/demo-data.ts` gana los miembros del grupo de ejemplo con la forma exacta
+que consume el detalle (`user_id`, `role`, `profiles.display_name`, `profiles.avatar_url`) y la lista
+de una de ellos con **un deseo ya reservado** (`reservationState: 'reserved_by_other'`, el campo que
+`WishlistCard` ya pinta); `lib/tour/steps.ts` gana dos paradas, `detalle-grupo` sobre
+`grupo-participantes` y `deseos-miembro` sobre `deseos-miembro`, y la parada de la lista de grupos
+deja de decir que el tour no puede abrir el grupo —era cierto con D1 y deja de serlo con D5—; las dos
+pantallas reconocen los ids del tour y no preguntan a Supabase.
+
+Al retomarlo aparecieron **dos defectos que el WIP tenía y que no se habían medido**:
+
+1. **El recorrido se quedaba dentro del grupo.** El corredor recordaba **una** ruta empujada, así que
+   con dos sub-rutas seguidas (grupo → miembro) la vuelta deshacía sólo la última y, como la parada
+   ya estaba marcada como atendida, el efecto no volvía a pedir el destino: la parada del botón de
+   unirse se quedaba señalando un objetivo que en el detalle del grupo no existe. Rojo primero en
+   `__tests__/tour/tour-runner.test.tsx` (`expected 1 to be 2`, con `/groups/tour-group` y
+   `/wishlist/tour-member-1` encadenadas); arreglo: pila de rutas empujadas en `TourRunner` y la
+   parada **no** se da por atendida mientras quede un `push` debajo. La prueba vieja («una vuelta por
+   cada empujón») sigue pasando.
+2. **`__tests__/wish-currency-shared.test.tsx` dejó de cargar** (`Cannot read properties of undefined
+   (reading 'get')` en `react-native-reanimated`). Medido: pasa en `main`, falla en la rama, y falla
+   **también en aislamiento**, así que no era orden de ficheros. Causa: las dos pantallas importaban
+   `useTourActive` de `TourHost`, y `TourHost` monta el corredor y el velo —`reanimated`—; cualquier
+   prueba que importe la pantalla arrastraba el tour entero. Arreglo: los enganches de estado del
+   tour (`useTourActive`, `useTourRequestedTab`, `useTourTabReporter`) viven en
+   `components/tour/TourState.tsx`, un módulo sin el velo, y `TourHost` lo alimenta. Es la misma
+   regla que ya seguía el registro de objetivos: sin proveedor los enganches son inertes.
+
+3. **El recorrido se paraba en la parada `perfil`: la tarjeta y el velo desaparecían.** Medido en
+   Chromium: `npx playwright test e2e/tour.spec.ts --project=chromium` daba **3 de 5** en la rama y
+   **5 de 5** en `main` (`dff8682`, 32 s), y las dos fallas caían en la misma parada —página 20 de
+   22—, con la pantalla de perfil perfectamente pintada y sin velo. Causa: el registro de objetivos
+   guardaba **una** entrada por id (`register` la reemplazaba, `unregister` la borraba) y **cada**
+   pantalla que pinta `ResponsiveLayout` reclamaba los mismos `tab-deseos|tab-grupos|tab-perfil`. Las
+   dos paradas nuevas apilan `/groups/tour-group` y `/wishlist/tour-member-1`, que pintan ese mismo
+   chrome: la de arriba reemplazaba el alta de la portada y, al volver con un `back`, su desmontaje
+   **borraba el id**. La portada no se vuelve a montar (queda oculta, no desmontada), así que no lo
+   rehacía: `useTourTargetRect('tab-perfil')` se quedaba en `null` y `TourOverlay` no pinta nada sin
+   medida. El mismo defecto se llevaba por delante la campana (`notificaciones`) una página después, y
+   era **latente para cualquiera**: abrir un grupo o la lista de otra persona durante el tour dejaba
+   esos objetivos muertos para el resto de la sesión. Arreglo en dos partes: los tres `tab-*` son de
+   la portada —`ResponsiveLayout` los recibe como prop opcional `objetivosPestanas` y sólo
+   `app/index.tsx` la rellena— y el registro pasa a guardar una **pila por id**, de modo que la baja
+   de una pantalla retira sólo su alta y, si la que se va era la que mandaba, la de abajo vuelve a
+   mandar y **se vuelve a medir** en vez de heredar una caja de cuando estaba tapada. Rojo primero:
+   `__tests__/tour/tab-targets-sobreviven-a-otra-pantalla.test.tsx` (2 fallas: «`tab-deseos` quedó sin
+   medida después de desmontar la otra pantalla», en las dos formas de pestaña) y dos reglas del
+   registro en `__tests__/tour/targets.test.ts` (`expected null to deeply equal {…}`).
+
+Verificación del tramo 6: `npx vitest run` **913 passed | 1 todo**, `npx tsc --noEmit` y
+`npx eslint --max-warnings 0 .` limpios, y `npx playwright test e2e/tour.spec.ts --project=chromium`
+**5 passed** — las mismas cinco que pasan en `main`.
+
+Entrega: una sola PR sobre `main` (el árbol son ~790 líneas añadidas y ~90 borradas). Si el
+presupuesto de las lentes del proveedor la rechaza por tamaño, el corte natural está entre
+`c486bd2` (grupo y miembro de ejemplo, pila de empujones y estado del tour) y `e363a56` (los
+objetivos de la portada y la pila del registro); el segundo arreglo es independiente del primero y
+podría ir antes, porque el defecto de los `tab-*` ya existía en `main`.
