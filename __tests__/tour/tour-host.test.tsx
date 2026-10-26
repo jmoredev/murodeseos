@@ -9,6 +9,8 @@ import type { TourStep } from '@/lib/tour/engine';
 import type { Tab } from '@/lib/tabs';
 import type { TargetRect } from '@/lib/tour/targets';
 import { withTiming } from 'react-native-reanimated';
+// Estática y no dinámica a propósito: ver la nota del caso «sin sesión» más abajo.
+import LandingPage from '@/app/index';
 
 /**
  * El arranque del tour (S1, D2, D3): quién lo abre, quién lo cierra y quién espera.
@@ -606,10 +608,16 @@ describe('TourHost: la navegación del recorrido', () => {
  * tienen que seguir exactamente igual —incluido que no se lea ninguna marca de tour—.
  */
 describe('TourHost: la portada de siempre sin tour', () => {
+    /**
+     * La portada se importa **arriba**, no aquí dentro.
+     *
+     * Con `await import('@/app/index')` el transformado del grafo de la portada ocurría dentro del
+     * caso y se lo comía el plazo por defecto de 5 s: medido en 2 746 ms en solitario y por encima
+     * del límite en dos corridas de la suite completa, siempre este caso y ninguno más. Estática,
+     * ese coste pasa a la fase de importación del fichero, que no tiene plazo por caso.
+     */
     it('sin sesión sigue enseñando la bienvenida y no pinta ni consulta nada del tour', async () => {
         dobles.estado.sesion = null;
-
-        const { default: LandingPage } = await import('@/app/index');
 
         render(
             <TourTargetProvider>
