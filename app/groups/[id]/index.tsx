@@ -11,7 +11,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { emojiInCircle } from '@/lib/circle-glyph-styles';
 import { AppIcon } from '@/components/ui/AppIcon';
 import { DEMO_GROUP, DEMO_GROUP_MEMBERS } from '@/lib/tour/demo-data';
-import { useTourActive } from '@/components/tour/TourHost';
+import { useTourActive } from '@/components/tour/TourState';
 import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 function isHttpUrl(value: string | undefined | null): boolean {
@@ -58,7 +58,13 @@ export default function GroupDetailsPage() {
             // El grupo del tour no existe en la base de datos (D1, D5): pedirlo sólo daría «no se
             // encontró» y una pantalla de error, así que no se pide nada —ni el grupo, ni sus
             // miembros, ni la sesión—. Sus datos viven en el cliente y se van con el tour.
-            if (esGrupoDelTour) {
+            //
+            // La condición es `mostrarDemo` y no el id a secas: con el tour cerrado, `/groups/tour-group`
+            // no es una pantalla de demostración, es un id que no existe, y esa ruta tiene que dar el
+            // error de siempre (el `error` se limpia por si se llegó aquí antes de que el tour
+            // arrancara y quedó el mensaje de la consulta).
+            if (mostrarDemo) {
+                setError(null);
                 setLoading(false);
                 return;
             }
@@ -119,7 +125,7 @@ export default function GroupDetailsPage() {
         };
 
         loadGroupData();
-    }, [groupId, esGrupoDelTour]);
+    }, [groupId, mostrarDemo]);
 
     const handleShare = async () => {
         if (!group) return;

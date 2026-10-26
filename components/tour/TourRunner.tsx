@@ -103,15 +103,19 @@ export function TourRunner({
     const paradaAtendida = useRef<string | null>(null);
 
     /**
-     * La última ruta que empujó el tour, y sólo esa.
+     * Las rutas que empujó el tour, de la primera a la última.
      *
      * Volver a la portada deshaciendo el `push` vale si la sub-ruta de debajo la abrió este tour.
      * Si el usuario llegó ahí por su cuenta —un enlace directo, un botón de la app—, debajo no está
-     * la portada que el tour dejó y retroceder lo sacaría a donde el tour no ha estado. Este `ref`
-     * recuerda el `push` propio y se borra al consumirlo: una vuelta por cada empujón, y nunca una
-     * vuelta que el tour no creó.
+     * la portada que el tour dejó y retroceder lo sacaría a donde el tour no ha estado.
+     *
+     * Es una **pila y no una sola ruta** porque el guion encadena sub-rutas (el grupo de ejemplo y,
+     * encima, la lista de una de sus personas, D5): con un solo recuerdo, la vuelta deshacía el
+     * último `push` y el recorrido se quedaba dentro del grupo, señalando un objetivo que allí no
+     * existe. Se desapila al consumirla: una vuelta por cada empujón, y nunca una vuelta que el tour
+     * no creó.
      */
-    const rutaEmpujada = useRef<string | null>(null);
+    const rutasEmpujadas = useRef<string[]>([]);
 
     useEffect(() => {
         if (!paso || paradaAtendida.current === paso.id) return;
@@ -132,15 +136,21 @@ export function TourRunner({
 
         if (!esPortada(destino.route)) {
             // Otra pantalla: es un `push` del tour y se recuerda para poder deshacerlo.
-            rutaEmpujada.current = destino.route;
+            rutasEmpujadas.current = [...rutasEmpujadas.current, destino.route];
             onNavigate(destino);
 
             return;
         }
 
         // La portada: si abrimos nosotros la sub-ruta en la que estamos, la vuelta es un `back`.
-        if (rutaEmpujada.current === pathname) {
-            rutaEmpujada.current = null;
+        const empujadas = rutasEmpujadas.current;
+
+        if (empujadas[empujadas.length - 1] === pathname) {
+            rutasEmpujadas.current = empujadas.slice(0, -1);
+            // La parada **no** está atendida: puede quedar otro `push` debajo (dos sub-rutas
+            // seguidas), y hasta llegar a la portada esta misma parada tiene que volver a pedir su
+            // destino. Con el `ref` sin limpiar, el efecto se plantaba en la primera vuelta.
+            paradaAtendida.current = null;
             onNavigate(destino, true);
 
             return;

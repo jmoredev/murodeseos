@@ -10,7 +10,7 @@ import { WishListTab } from '@/components/WishListTab';
 import { ProfileTab } from '@/components/ProfileTab';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import WhatsNewModal from '@/components/WhatsNewModal';
-import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
+import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourState';
 import { DEMO_GROUPS, DEMO_WISHES } from '@/lib/tour/demo-data';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 

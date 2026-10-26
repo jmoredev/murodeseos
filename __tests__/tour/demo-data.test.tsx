@@ -39,8 +39,9 @@ vi.mock('expo-router', () => ({
     useGlobalSearchParams: () => params,
 }));
 
-// Las dos pantallas del grupo y del miembro sólo preguntan al tour si está en marcha (D5).
-vi.mock('@/components/tour/TourHost', () => ({ useTourActive: () => true }));
+// Las dos pantallas del grupo y del miembro sólo preguntan al tour si está en marcha (D5), y lo
+// preguntan al estado del tour, no al host: el host monta el velo y no hace falta aquí.
+vi.mock('@/components/tour/TourState', () => ({ useTourActive: () => true }));
 
 // El chrome (pestañas, campana, menú de notificaciones) no es lo que se mide aquí y consulta sus
 // propias tablas; con el tour abierto la página queda inerte, así que no aporta nada a la prueba.

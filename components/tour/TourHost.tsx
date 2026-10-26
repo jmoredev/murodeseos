@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -9,6 +9,7 @@ import type { TourDestination } from '@/lib/tour/navigation';
 import { TOUR_STEPS } from '@/lib/tour/steps';
 import { useReducedMotion } from '@/lib/tour/use-reduced-motion';
 import type { Tab } from '@/lib/tabs';
+import { TourStateProvider } from './TourState';
 import { TourRunner } from './TourRunner';
 
 /**
@@ -22,7 +23,8 @@ import { TourRunner } from './TourRunner';
  *   (`/wishlist/add`, `/groups/join`), y un tour que se desmontara al navegar se quedaría a medias.
  * - La portada necesita saber si el tour está en marcha (para inyectar los datos de demostración y
  *   para que el modal de novedades espere, Log L4) y qué pestaña pide el recorrido. Eso se pregunta
- *   con los enganches de abajo, que son inertes sin este componente: las pantallas se pintan igual.
+ *   con los enganches de `TourState.tsx`, que este host alimenta y que son inertes sin él: las
+ *   pantallas se pintan igual, y no arrastran el velo (`reanimated`) por preguntar.
  *
  * La política de arranque es corta y deliberadamente aburrida: una cuenta nueva es la que tiene
  * `profiles.tour_completed_at` a `NULL` (D3). Si la marca no se puede leer —no hay fila, la consulta
@@ -44,46 +46,6 @@ const ESTILOS = StyleSheet.create({
     /** El contenedor de la página: ocupa lo mismo que ocupaba la página sin envolverla. */
     pagina: { flex: 1 },
 });
-
-type TourHostContextValue = {
-    active: boolean;
-    requestedTab: Tab | null;
-    /** La portada dice qué pestaña está enseñando. */
-    reportTab: (tab: Tab | null) => void;
-};
-
-const TourHostContext = createContext<TourHostContextValue | null>(null);
-
-/** ¿Está el tour en marcha? Sin `TourHost` por encima, no: la app se pinta como siempre. */
-export function useTourActive(): boolean {
-    return useContext(TourHostContext)?.active ?? false;
-}
-
-/** La pestaña que pide la parada actual, o `null` si no hay que cambiar de pestaña. */
-export function useTourRequestedTab(): Tab | null {
-    return useContext(TourHostContext)?.requestedTab ?? null;
-}
-
-/**
- * La portada informa de la pestaña que está enseñando.
- *
- * El corredor no puede adivinarla: en la portada las pestañas son **estado**, no rutas, así que el
- * pathname no cambia al cambiar de pestaña. Sin este aviso no sabría si la parada siguiente está
- * delante o hay que pedirla.
- *
- * No se limpia al desmontar a propósito: cuando una sub-ruta se abre encima de la portada, la
- * pestaña de debajo sigue siendo la pestaña de la app, y es la que hay que conservar para calcular el
- * destino de la parada siguiente.
- */
-export function useTourTabReporter(tab: Tab): void {
-    const reportar = useContext(TourHostContext)?.reportTab;
-
-    useEffect(() => {
-        if (!reportar) return;
-
-        reportar(tab);
-    }, [reportar, tab]);
-}
 
 export type TourHostProps = {
     children?: React.ReactNode;
@@ -283,7 +245,7 @@ export function TourHost({ children }: TourHostProps) {
         : {};
 
     return (
-        <TourHostContext.Provider value={contexto}>
+        <TourStateProvider value={contexto}>
             {/* La página va en un contenedor propio para poder ocultarla entera mientras el tour
                 está abierto. `flex: 1` conserva el reparto de altura que tenía antes de envolver. */}
             <View testID="tour-page" style={ESTILOS.pagina} {...propsDePagina}>
@@ -298,6 +260,6 @@ export function TourHost({ children }: TourHostProps) {
                     reduceMotion={reduceMotion}
                 />
             )}
-        </TourHostContext.Provider>
+        </TourStateProvider>
     );
 }

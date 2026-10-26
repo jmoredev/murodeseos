@@ -15,7 +15,7 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { AppIcon } from '@/components/ui/AppIcon';
 import { useToast } from '@/components/Toast';
 import { demoMemberById, demoWishesForMember } from '@/lib/tour/demo-data';
-import { useTourActive } from '@/components/tour/TourHost';
+import { useTourActive } from '@/components/tour/TourState';
 import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
 export default function UserWishlistPage() {
@@ -59,7 +59,12 @@ export default function UserWishlistPage() {
 
             // Un miembro del tour no existe en la base de datos (D1, D5): pedir su perfil o sus
             // deseos sólo daría una lista vacía y un error de reserva, así que no se pide nada.
-            if (miembroDemo) {
+            //
+            // Con el tour cerrado la ruta no es una demostración sino un id que no existe, y se
+            // comporta como siempre (lista vacía). El `error` se limpia por si se llegó aquí antes de
+            // que el tour arrancara y quedó el mensaje de la consulta.
+            if (mostrarDemo) {
+                setError(null);
                 setLoading(false);
                 return;
             }
@@ -123,7 +128,7 @@ export default function UserWishlistPage() {
         };
 
         loadWishlist();
-    }, [targetUserId, miembroDemo]);
+    }, [targetUserId, mostrarDemo]);
 
     const handleReserve = async (item: GiftItem) => {
         if (!user?.id) {

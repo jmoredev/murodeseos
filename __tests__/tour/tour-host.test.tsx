@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TourHost, useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourHost';
+import { TourHost } from '@/components/tour/TourHost';
+import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourState';
 import { TourTargetProvider, useTourTargetRegistry } from '@/components/tour/TourTargetProvider';
 import { TOUR_STEPS } from '@/lib/tour/steps';
 import type { TourStep } from '@/lib/tour/engine';

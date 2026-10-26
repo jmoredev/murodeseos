@@ -80,6 +80,32 @@ const PASOS_DE_VUELTA: readonly TourStep[] = [
     },
 ];
 
+/**
+ * Dos sub-rutas seguidas y después la portada: el camino de vuelta tiene **dos** empujones que
+ * deshacer. Es el camino del guion real (`/groups/tour-group` y luego `/wishlist/tour-member-1`,
+ * D5), y con un solo recuerdo se vuelve una vez y el recorrido se queda dentro del grupo.
+ */
+const PASOS_DOS_EMPUJONES: readonly TourStep[] = [
+    {
+        id: 'detalle-grupo',
+        targetId: 'objetivo',
+        route: '/groups/tour-group',
+        pages: ['Dentro del grupo'],
+    },
+    {
+        id: 'deseos-miembro',
+        targetId: 'objetivo',
+        route: '/wishlist/tour-member-1',
+        pages: ['La lista de Marta'],
+    },
+    {
+        id: 'grupos',
+        targetId: 'objetivo',
+        tab: 'groups',
+        pages: ['Tus grupos'],
+    },
+];
+
 /** La segunda parada apunta a un objetivo que todavía no se ha medido. */
 const PASOS_CON_HUECO: readonly TourStep[] = [
     { id: 'bienvenida', targetId: 'presente', tab: 'wishlist', pages: ['Bienvenido al tour'] },
@@ -292,6 +318,45 @@ describe('TourRunner: volver a la portada', () => {
         // y se pide sin el permiso de volver (un solo argumento: nadie autorizó el `back`).
         expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/?tab=groups' });
         expect(onNavigate.mock.lastCall).toHaveLength(1);
+    });
+
+    it('deshace dos empujones seguidos: una vuelta por cada uno, sin quedarse dentro', async () => {
+        const onNavigate = vi.fn();
+        const en = (pathname: string) => (
+            <Arnes
+                pasos={PASOS_DOS_EMPUJONES}
+                tab="groups"
+                pathname={pathname}
+                medidas={MEDIDAS}
+                onNavigate={onNavigate}
+            />
+        );
+        const vueltas = () => onNavigate.mock.calls.filter(([, volver]) => volver === true).length;
+
+        const { rerender } = render(en('/'));
+
+        expect(await screen.findByText('Dentro del grupo')).toBeInTheDocument();
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/groups/tour-group' });
+
+        rerender(en('/groups/tour-group'));
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+        expect(onNavigate).toHaveBeenLastCalledWith({ kind: 'route', route: '/wishlist/tour-member-1' });
+
+        rerender(en('/wishlist/tour-member-1'));
+        fireEvent.click(screen.getByLabelText('Siguiente página del tour'));
+
+        // La primera vuelta deshace el último `push`, que es el que el tour acaba de hacer.
+        expect(vueltas()).toBe(1);
+
+        // Debajo sigue la otra pantalla que abrió el tour: hace falta una segunda vuelta, y la
+        // parada no puede darse por atendida hasta que se llegue a la portada. Sin esto el
+        // recorrido se queda dentro del grupo, señalando un objetivo que allí no existe.
+        rerender(en('/groups/tour-group'));
+        expect(vueltas()).toBe(2);
+
+        // Ya en la portada, en la pestaña de la parada: no se pide nada más.
+        rerender(en('/'));
+        expect(vueltas()).toBe(2);
     });
 
     it('da una vuelta por cada empujón: la vuelta gastada no se repite', async () => {
