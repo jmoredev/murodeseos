@@ -22,6 +22,16 @@ export interface AppUpdate {
 
 export const updates: AppUpdate[] = [
     {
+        id: '2026-10-26-tour-completo',
+        release: '2026.10.26',
+        date: '2026-10-26',
+        changes: [
+            '🧭 El tour de bienvenida se lee de un vistazo: oscurece el resto de la pantalla, el cuadro tiene fondo propio y ninguna página obliga a desplazar el texto, que ahora va repartido en varias páginas',
+            '👥 Y entra de verdad en el grupo de bienvenida y en la lista de una de sus personas, con un deseo ya reservado: ves cómo se consulta lo que quiere otra persona sin preguntárselo',
+            '✏️ Tres correcciones al guion: lo que de verdad se ve dentro de un grupo, el botón de añadir y el de crear grupo, cada uno explicado donde está',
+        ],
+    },
+    {
         id: '2026-10-25-tour',
         release: '2026.10.25',
         date: '2026-10-25',
