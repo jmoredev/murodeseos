@@ -97,6 +97,15 @@ const ESTILOS = StyleSheet.create({
      * medida. Fijar aquí la estimación haría que la tarjeta naciera con un alto que no es el suyo.
      */
     alturaNatural: { height: 'auto' },
+    /**
+     * La tarjeta, montada pero no pintada, mientras se mide a sí misma.
+     *
+     * Tiene que estar en el árbol para que `onLayout` y `onContentSizeChange` la midan, pero no puede
+     * verse con el alto de la estimación: si la estimación se queda corta, su texto aparece
+     * desplazable durante un fotograma. `opacity` y no `display: none` porque lo segundo la dejaría
+     * sin medir.
+     */
+    medidaPendiente: { opacity: 0 },
     /** El velo: todo lo que no es el objetivo, oscurecido para que el objetivo destaque solo (S1). */
     velo: { backgroundColor: TONO_VELO },
     /** El borde del hueco, en el tono claro de la marca: el único que se lee encima del velo. */
@@ -135,8 +144,23 @@ const ESTILOS = StyleSheet.create({
  * La **primera** colocación de una aparición se salta siempre: animar desde la esquina sería un
  * barrido por toda la pantalla, no una transición entre paradas. El «ya estaba visible» se guarda en
  * un `ref` y se lee dentro del efecto, que es donde un `ref` se puede tocar.
+ *
+ * El **tamaño** se anima para el velo y el anillo, pero no para la tarjeta (`animarTamano: false`).
+ * La tarjeta contiene texto que se reparte según su ancho: mientras el ancho y el alto van de la
+ * estimación a la medida, hay fotogramas en los que el texto necesita más alto del que tiene la caja
+ * y el `ScrollView` de dentro se puede desplazar. Medido en Chromium a 390×844 antes de esto: la
+ * página de `grupos` empezaba con 24 px de sobra y tardaba ~200 ms en llegar a cero — con el
+ * `expect.poll` de la prueba daba verde, y en el móvil se veía la tarjeta con scroll. Con el tamaño
+ * aplicado de golpe no existe ese intervalo: la tarjeta mide lo que mide su contenido desde el primer
+ * fotograma y lo único que se anima es dónde está.
  */
-function useRectMotion(rect: Rect, animar: boolean, visible: boolean) {
+function useRectMotion(
+    rect: Rect,
+    animar: boolean,
+    visible: boolean,
+    opciones: { animarTamano?: boolean } = {}
+) {
+    const animarTamano = opciones.animarTamano ?? true;
     const x = useSharedValue(rect.x);
     const y = useSharedValue(rect.y);
     const ancho = useSharedValue(rect.width);
@@ -165,9 +189,20 @@ function useRectMotion(rect: Rect, animar: boolean, visible: boolean) {
 
         x.value = withTiming(rect.x, config);
         y.value = withTiming(rect.y, config);
+
+        // El tamaño, de golpe, cuando el que se coloca es la tarjeta (ver la nota de arriba).
+        if (!animarTamano) {
+            cancelAnimation(ancho);
+            cancelAnimation(alto);
+            ancho.value = rect.width;
+            alto.value = rect.height;
+
+            return;
+        }
+
         ancho.value = withTiming(rect.width, config);
         alto.value = withTiming(rect.height, config);
-    }, [x, y, ancho, alto, rect.x, rect.y, rect.width, rect.height, animar, visible]);
+    }, [x, y, ancho, alto, rect.x, rect.y, rect.width, rect.height, animar, visible, animarTamano]);
 
     return useAnimatedStyle(() => ({
         left: x.value,
@@ -241,7 +276,7 @@ export function TourOverlay({
     const veloIzquierda = useRectMotion(trozos.left, animar, visible);
     const veloDerecha = useRectMotion(trozos.right, animar, visible);
     const estiloAnillo = useRectMotion(anillo, animar, visible);
-    const estiloTarjeta = useRectMotion(tarjeta, animar, visible);
+    const estiloTarjeta = useRectMotion(tarjeta, animar, visible, { animarTamano: false });
 
     // Un solo aviso por parada sin medida: si el padre reintentara en cada render, esto sería un
     // bucle de renders disfrazado de reintento.
@@ -426,9 +461,12 @@ export function TourOverlay({
                     ESTILOS.elemento,
                     ESTILOS.tarjeta,
                     estiloTarjeta,
-                    // Antes de la primera medida la altura es la del contenido: es el alto que
-                    // todavía no ha llegado por `onContentSizeChange`.
+                    // Mientras no hay medida, el alto es el de su contenido y la tarjeta está
+                    // **invisible**: se monta para poder medirse, pero no se pinta hasta que su
+                    // tamaño es el definitivo. Sin esto se veía un fotograma con la estimación,
+                    // que puede quedarse una línea corta y dejar el texto desplazable.
                     !tarjetaMedida && ESTILOS.alturaNatural,
+                    !tarjetaMedida && ESTILOS.medidaPendiente,
                 ]}
                 role="dialog"
                 aria-modal={true}
@@ -440,6 +478,14 @@ export function TourOverlay({
                     de la tarjeta. Sólo se desplaza si la colocación tuvo que recortarla porque no
                     cabía en el viewport. */}
                 <ScrollView
+                    // Una instancia por página, a propósito: `onContentSizeChange` avisa cuando el
+                    // tamaño del contenido **cambia**, así que dos páginas seguidas que miden lo
+                    // mismo no emiten nada y la segunda se quedaba sin medida (con la estimación y
+                    // el texto desplazándose). Medido: `grupos` y `lista-grupos` miden 180 px las
+                    // dos, y la segunda no recibía ningún aviso. Al remontar, el aviso inicial
+                    // siempre llega. No se pierde el foco: en cada página el foco va a la tarjeta,
+                    // que es el padre de este nodo.
+                    key={claveDePagina}
                     testID="tour-card-content"
                     onContentSizeChange={alCambiarElContenido}
                 >

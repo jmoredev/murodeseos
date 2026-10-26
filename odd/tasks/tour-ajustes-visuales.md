@@ -278,3 +278,47 @@ presupuesto de las lentes del proveedor la rechaza por tamaño, el corte natural
 `c486bd2` (grupo y miembro de ejemplo, pila de empujones y estado del tour) y `e363a56` (los
 objetivos de la portada y la pila del registro); el segundo arreglo es independiente del primero y
 podría ir antes, porque el defecto de los `tab-*` ya existía en `main`.
+
+L8 — Cuarta tanda, reportada por el propietario **en producción** después de `v2026.10.26`,
+verbatim:
+
+> «Ya está mucho mejor el tour aunque todavía hay explicaciones que tienen scroll como el paso 5 y el
+> paso 6»
+
+**Medido antes de tocar nada**, con una sonda que recorre las 22 páginas y apunta el sobrante de alto
+en cuatro tamaños de pantalla:
+
+| Viewport | Páginas con desborde |
+| --- | --- |
+| 390×844 | 8 (`grupos`, «Paso 5»), 14 (`detalle-grupo`), 16 (`deseos-miembro`) |
+| 375×667 | 8 (`grupos`), 18 (`unirse`) |
+| 360×640 | 8 (`grupos`), 18 (`unirse`) |
+| 412×732 | 4 (`agregar-deseo`) |
+
+Siempre **24 px**, que es una línea de texto. Y la prueba de CI no lo veía: muestreando cada 50 ms, el
+sobrante iba `24 → 21 → 9 → 2 → 0` en unos **200 ms**, y el `expect.poll` del spec miraba el valor
+final, que es cero. Dos causas distintas, las dos con evidencia:
+
+1. **La tarjeta animaba su tamaño.** `useRectMotion` animaba el ancho y el alto de la estimación a la
+   medida. Como el texto se reparte según el ancho, durante esos ~200 ms hay fotogramas en los que
+   necesita más alto del que tiene la caja y el `ScrollView` de dentro se puede desplazar. Arreglo:
+   `animarTamano: false` para la tarjeta (el velo y el anillo siguen animando el suyo); la tarjeta
+   mide lo que mide su contenido desde el primer fotograma y lo único que se anima es dónde está.
+2. **`onContentSizeChange` no avisa si el tamaño no cambia.** Instrumentado el enganche:
+   `grupos#0` mide 180 px y `lista-grupos#0` mide también 180, así que la segunda página **no recibía
+   ningún aviso**, se quedaba con la estimación (190) y su texto pedía 214: 24 px de scroll
+   **permanentes**. Coincide con el «paso 6» del reporte. Arreglo: el `ScrollView` lleva
+   `key={claveDePagina}`, una instancia por página, así que el aviso inicial siempre llega. No se
+   pierde el foco: en cada página el foco va a la tarjeta, que es el padre de ese nodo.
+3. **Un fotograma con la estimación.** Al montar la página nueva, la tarjeta se pintaba un fotograma
+   con el alto de la estimación antes de tener la medida. Arreglo: mientras no hay medida, la tarjeta
+   está montada pero con `opacity: 0` — se mide, no se pinta.
+
+**Guardia**: el spec pasa de juzgar el valor final a juzgar **el peor valor mientras se asienta**
+(`peorSobraDeAlto`: 400 ms muestreados por fotograma, y sólo cuenta mientras la tarjeta se ve), y la
+prueba de legibilidad corre en **dos** tamaños (390×844 y 360×640) en vez de uno — el de 360×640 es
+el que destapó la causa 2. Se tolera **un** fotograma y no más: `reanimated` aplica su estilo en el
+fotograma siguiente al commit, así que al pasar de página hay exactamente uno de 16 ms, invisible y no
+interactuable; lo que el guardián caza es lo que se percibe (el estirón de ~200 ms, 12 fotogramas, y
+la página corta para siempre, 25 de 25). Rojos observados antes de los arreglos: «la página 8 del tour
+obliga a desplazar el texto (24 px)» y, ya con el primer arreglo, «la página 9 … (24 px)».

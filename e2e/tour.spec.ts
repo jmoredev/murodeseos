@@ -518,24 +518,58 @@ async function coloresDelTour(page: Page): Promise<ColoresDelTour> {
  * El texto de la tarjeta cabe sin desplazar: `scrollHeight` es lo que mide el contenido y
  * `clientHeight` lo que se ve. Un píxel de holgura absorbe el redondeo del navegador.
  */
-async function sobraDeAlto(page: Page): Promise<number> {
-    return page.evaluate(() => {
+/**
+ * El **peor** sobrante de alto durante los primeros milisegundos de la página.
+ *
+ * Mirar sólo el final no basta y así se escapó un defecto real: la tarjeta se colocaba con una
+ * estimación y se estiraba hasta su alto medido, y mientras se estiraba el texto no cabía y la
+ * tarjeta se podía desplazar. Un `expect.poll` al valor final lo daba por bueno porque a los ~200 ms
+ * el número volvía a cero. Lo que S3 prohíbe no es «acabar sin desplazar» sino desplazar, así que se
+ * muestrea mientras se asienta y se juzga el peor valor.
+ */
+async function peorSobraDeAlto(
+    page: Page,
+    duracionMs = 400,
+): Promise<{ peor: number; fotogramas: number; muestras: number }> {
+    return page.evaluate(async (ms) => {
+        const tarjeta = document.querySelector('[data-testid="tour-card"]');
         const contenido = document.querySelector('[data-testid="tour-card-content"]');
-        if (!contenido) return 0;
+        if (!tarjeta || !contenido) return { peor: 0, fotogramas: 0, muestras: 0 };
 
-        return contenido.scrollHeight - contenido.clientHeight;
-    });
+        let peor = 0;
+        let fotogramas = 0;
+        let muestras = 0;
+        const fin = Date.now() + ms;
+
+        while (Date.now() < fin) {
+            // Sólo cuenta mientras la tarjeta se ve: mientras se mide a sí misma está montada con
+            // `opacity: 0`, y el texto de dentro no se puede ni leer ni tocar.
+            const opacidad = Number(getComputedStyle(tarjeta).opacity);
+
+            if (opacidad > 0.99) {
+                const sobra = contenido.scrollHeight - contenido.clientHeight;
+
+                muestras += 1;
+                peor = Math.max(peor, sobra);
+                if (sobra > 1) fotogramas += 1;
+            }
+
+            await new Promise((listo) => requestAnimationFrame(() => listo(null)));
+        }
+
+        return { peor, fotogramas, muestras };
+    }, duracionMs);
 }
 
-test.describe('Tour de primer inicio: se lee sin esfuerzo', () => {
-    // El velo, la tarjeta y el reparto de páginas se juzgan en el tamaño en que más aprieta: la
-    // pantalla de un móvil, que es donde el tour se usa de verdad (mobile-first, S6 del tour).
-    test.use({ viewport: { width: 390, height: 844 } });
-    test.setTimeout(180_000);
-
-    test('oscurece el resto, la tarjeta es opaca y ninguna página obliga a desplazar', async ({
-        page,
-    }) => {
+/**
+ * El recorrido entero juzgado en el tamaño de pantalla que se le pase.
+ *
+ * Se corre en **dos** tamaños y no en uno: el alto y el ancho de la tarjeta salen del contenido, y el
+ * móvil más pequeño que se usa de verdad (360×640) es donde el texto aprieta. Con un solo tamaño, un
+ * reparto de páginas que sólo desborda en pantallas pequeñas pasa desapercibido.
+ */
+async function recorreYJuzgaElTour(page: Page): Promise<void> {
+    {
         const user = await crearUsuarioRecienRegistrado('legible');
 
         try {
@@ -578,13 +612,20 @@ test.describe('Tour de primer inicio: se lee sin esfuerzo', () => {
                     `el anillo salió negro en la página ${pagina}`,
                 ).not.toBe('rgb(0, 0, 0)');
 
-                // --- S3: el texto cabe sin desplazar ----------------------------------
-                await expect
-                    .poll(async () => sobraDeAlto(page), {
-                        timeout: 5000,
-                        message: `la página ${pagina} del tour obliga a desplazar el texto`,
-                    })
-                    .toBeLessThanOrEqual(1);
+                // --- S3: el texto cabe sin desplazar, tampoco mientras se asienta -----
+                const sobra = await peorSobraDeAlto(page);
+
+                // Se tolera **un** fotograma y no más. `reanimated` aplica su estilo en el
+                // fotograma siguiente al commit, así que al pasar de página hay exactamente uno en
+                // el que la tarjeta ya se ve y su alto todavía es el anterior: 16 ms, invisible y
+                // no interactuable. Lo que sí se caza con este margen es lo que el usuario reportó:
+                // el estirón animado de ~200 ms (12 fotogramas) y la página que se quedaba corta
+                // para siempre (25 de 25).
+                expect(
+                    sobra.fotogramas,
+                    `la página ${pagina} del tour obliga a desplazar el texto ` +
+                        `(${sobra.peor} px en ${sobra.fotogramas} de ${sobra.muestras} fotogramas)`,
+                ).toBeLessThanOrEqual(1);
 
                 if (pagina < totalPaginas) {
                     await page.getByRole('button', { name: 'Siguiente página del tour' }).click();
@@ -596,5 +637,23 @@ test.describe('Tour de primer inicio: se lee sin esfuerzo', () => {
         } finally {
             await borrarUsuario(user);
         }
+    }
+}
+
+for (const [ancho, alto] of [
+    [390, 844],
+    [360, 640],
+] as const) {
+    test.describe(`Tour de primer inicio: se lee sin esfuerzo (${ancho}×${alto})`, () => {
+        // El velo, la tarjeta y el reparto de páginas se juzgan en el tamaño en que más aprieta: la
+        // pantalla de un móvil, que es donde el tour se usa de verdad (mobile-first, S6 del tour).
+        test.use({ viewport: { width: ancho, height: alto } });
+        test.setTimeout(180_000);
+
+        test('oscurece el resto, la tarjeta es opaca y ninguna página obliga a desplazar', async ({
+            page,
+        }) => {
+            await recorreYJuzgaElTour(page);
+        });
     });
-});
+}
