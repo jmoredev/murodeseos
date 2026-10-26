@@ -15,8 +15,10 @@ quemada.
 
 **Reabierta el 2026-10-26** por el tramo 6 (S10, D5), en la rama `feat/tour-grupo-simulado`: el
 recorrido entra de verdad en el grupo de ejemplo y en la lista de una de sus personas para enseñar
-un deseo ya reservado. El estado de ese tramo está en L7; cuando cierre, la ficha vuelve a cerrarse
-con su evidencia.
+un deseo ya reservado. El tramo está implementado y medido —913 pruebas + 1 todo, `tsc` y `eslint`
+limpios y las **5 pruebas de navegador** del tour en verde—; el detalle de los tres defectos que
+aparecieron al retomarlo está en L7. La **entrega** (PR y merge) sigue siendo decisión del
+propietario.
 
 ## Specs
 
@@ -137,7 +139,8 @@ esas acciones escriben en la base de datos y esos deseos no existen allí.
 | T5 | S1, S2, S3 | Guardia de extremo a extremo: velo oscuro, tarjeta opaca y ninguna página desplazable | `e2e/tour.spec.ts` | sí |
 | T7 | S5, S6, S7 | Más páginas en el guion: ver los deseos de los demás, nombrar el clic del botón de añadir y una parada nueva en el botón de unirse | `lib/tour/steps.ts` | `74443d9` |
 | T6 | S3, D4 | La tarjeta mide su alto por el contenido y, si el hueco no deja banda, la hoja se apoya abajo | `lib/tour/geometry.ts`, `lib/tour/use-card-size.ts`, `components/tour/TourOverlay.tsx` | sí |
-| T8 | S10, D5 | El grupo de ejemplo y la lista de una de sus personas se abren en el tour, con un deseo ya reservado | `lib/tour/{demo-data,steps}.ts`, `app/groups/[id]/index.tsx`, `app/wishlist/[id]/index.tsx` | `ef3d81f` (WIP) |
+| T8 | S10, D5 | El grupo de ejemplo y la lista de una de sus personas se abren en el tour, con un deseo ya reservado | `lib/tour/{demo-data,steps}.ts`, `app/groups/[id]/index.tsx`, `app/wishlist/[id]/index.tsx` | `c486bd2` |
+| T9 | D5 | Los objetivos `tab-*` son de la portada y el registro no borra el alta de otra pantalla | `components/ResponsiveLayout.tsx`, `app/index.tsx`, `lib/tour/targets.ts` | `e363a56` |
 
 Commits por tarea (evidencia):
 
@@ -244,3 +247,34 @@ Al retomarlo aparecieron **dos defectos que el WIP tenía y que no se habían me
    tour (`useTourActive`, `useTourRequestedTab`, `useTourTabReporter`) viven en
    `components/tour/TourState.tsx`, un módulo sin el velo, y `TourHost` lo alimenta. Es la misma
    regla que ya seguía el registro de objetivos: sin proveedor los enganches son inertes.
+
+3. **El recorrido se paraba en la parada `perfil`: la tarjeta y el velo desaparecían.** Medido en
+   Chromium: `npx playwright test e2e/tour.spec.ts --project=chromium` daba **3 de 5** en la rama y
+   **5 de 5** en `main` (`dff8682`, 32 s), y las dos fallas caían en la misma parada —página 20 de
+   22—, con la pantalla de perfil perfectamente pintada y sin velo. Causa: el registro de objetivos
+   guardaba **una** entrada por id (`register` la reemplazaba, `unregister` la borraba) y **cada**
+   pantalla que pinta `ResponsiveLayout` reclamaba los mismos `tab-deseos|tab-grupos|tab-perfil`. Las
+   dos paradas nuevas apilan `/groups/tour-group` y `/wishlist/tour-member-1`, que pintan ese mismo
+   chrome: la de arriba reemplazaba el alta de la portada y, al volver con un `back`, su desmontaje
+   **borraba el id**. La portada no se vuelve a montar (queda oculta, no desmontada), así que no lo
+   rehacía: `useTourTargetRect('tab-perfil')` se quedaba en `null` y `TourOverlay` no pinta nada sin
+   medida. El mismo defecto se llevaba por delante la campana (`notificaciones`) una página después, y
+   era **latente para cualquiera**: abrir un grupo o la lista de otra persona durante el tour dejaba
+   esos objetivos muertos para el resto de la sesión. Arreglo en dos partes: los tres `tab-*` son de
+   la portada —`ResponsiveLayout` los recibe como prop opcional `objetivosPestanas` y sólo
+   `app/index.tsx` la rellena— y el registro pasa a guardar una **pila por id**, de modo que la baja
+   de una pantalla retira sólo su alta y, si la que se va era la que mandaba, la de abajo vuelve a
+   mandar y **se vuelve a medir** en vez de heredar una caja de cuando estaba tapada. Rojo primero:
+   `__tests__/tour/tab-targets-sobreviven-a-otra-pantalla.test.tsx` (2 fallas: «`tab-deseos` quedó sin
+   medida después de desmontar la otra pantalla», en las dos formas de pestaña) y dos reglas del
+   registro en `__tests__/tour/targets.test.ts` (`expected null to deeply equal {…}`).
+
+Verificación del tramo 6: `npx vitest run` **913 passed | 1 todo**, `npx tsc --noEmit` y
+`npx eslint --max-warnings 0 .` limpios, y `npx playwright test e2e/tour.spec.ts --project=chromium`
+**5 passed** — las mismas cinco que pasan en `main`.
+
+Entrega: una sola PR sobre `main` (el árbol son ~790 líneas añadidas y ~90 borradas). Si el
+presupuesto de las lentes del proveedor la rechaza por tamaño, el corte natural está entre
+`c486bd2` (grupo y miembro de ejemplo, pila de empujones y estado del tour) y `e363a56` (los
+objetivos de la portada y la pila del registro); el segundo arreglo es independiente del primero y
+podría ir antes, porque el defecto de los `tab-*` ya existía en `main`.
