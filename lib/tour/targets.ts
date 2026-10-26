@@ -25,11 +25,11 @@ export type TargetMeasure = () => TargetRect | null | Promise<TargetRect | null>
 export type TargetListener = () => void;
 
 export type TargetRegistry = {
-    /** Da de alta (o reemplaza) el objetivo. Registrar dos veces el mismo id es un cambio de nodo. */
+    /** Da de alta el objetivo. Cada llamada es **una pantalla** más que lo reclama, no un reemplazo. */
     register(id: string, measure: TargetMeasure): void;
-    /** Da de baja el objetivo y olvida su medida. */
-    unregister(id: string): void;
-    /** Última medida conocida, sin preguntar al nodo. `null` si no hay o no se pudo medir. */
+    /** Da de baja **esa** alta. Las demás pantallas que reclamen el mismo id siguen en pie. */
+    unregister(id: string, measure: TargetMeasure): void;
+    /** Última medida conocida de la pantalla que manda, sin preguntar al nodo. */
     measure(id: string): TargetRect | null;
     /** Pregunta al nodo y avisa si la medida cambió. Sin id, mide todos los registrados. */
     refresh(id?: string): Promise<void>;
@@ -37,6 +37,16 @@ export type TargetRegistry = {
     subscribe(listener: TargetListener): () => void;
 };
 
+/**
+ * Las altas vivas de **un** identificador, de la primera a la última.
+ *
+ * Son una pila y no una sola entrada porque varias pantallas pueden reclamar el mismo objetivo a la
+ * vez: la portada y, encima, el detalle de un grupo o la lista de otra persona, que pintan el mismo
+ * chrome (D5). Manda la última que entró —la pantalla que se ve— y dar de baja una **no** borra las
+ * demás. Cuando el registro tenía una sola entrada por id, la baja de la sub-ruta borraba el alta de
+ * la portada, que no se vuelve a montar para rehacerla: la parada se quedaba sin medida y el overlay
+ * no pintaba nada.
+ */
 type Entrada = {
     medir: TargetMeasure;
     rect: TargetRect | null;
@@ -60,8 +70,15 @@ function mismasCifras(a: TargetRect | null, b: TargetRect | null): boolean {
 }
 
 export function createTargetRegistry(): TargetRegistry {
-    const objetivos = new Map<string, Entrada>();
+    const objetivos = new Map<string, Entrada[]>();
     const oyentes = new Set<TargetListener>();
+
+    /** La pantalla que manda: la última que reclamó el objetivo. */
+    function cima(id: string): Entrada | undefined {
+        const pila = objetivos.get(id);
+
+        return pila?.[pila.length - 1];
+    }
 
     function avisar() {
         // Copia de la lista: un oyente puede darse de baja al recibir el aviso.
@@ -69,43 +86,82 @@ export function createTargetRegistry(): TargetRegistry {
     }
 
     async function medirUno(id: string) {
-        const entrada = objetivos.get(id);
+        const entrada = cima(id);
         if (!entrada) return;
 
         const medida = normalizar(await entrada.medir());
-        const actual = objetivos.get(id);
 
-        // Mientras se medía, el objetivo pudo desregistrarse o registrar otro nodo. En ese caso la
-        // medida que llega es de un nodo que ya no está y no puede resucitarlo.
-        if (!actual || actual.medir !== entrada.medir) return;
+        // Mientras se medía, esa pantalla pudo darse de baja o dejar de mandar (otra se montó
+        // encima). En los dos casos la medida que llega es de un nodo que ya no manda y no puede
+        // resucitarlo ni pisar a la que sí manda.
+        if (cima(id) !== entrada) return;
 
         // Misma medida (aunque sea un objeto nuevo): se conserva la referencia anterior para que
         // `useSyncExternalStore` vea una instantánea estable y no vuelva a renderizar.
-        if (mismasCifras(actual.rect, medida)) return;
+        if (mismasCifras(entrada.rect, medida)) return;
 
-        actual.rect = medida;
+        entrada.rect = medida;
         avisar();
     }
 
     return {
         register(id, measure) {
-            const anterior = objetivos.get(id);
+            const pila = objetivos.get(id) ?? [];
+            const anterior = pila[pila.length - 1];
 
-            objetivos.set(id, { medir: measure, rect: null });
+            pila.push({ medir: measure, rect: null });
+            objetivos.set(id, pila);
 
-            // Un nodo nuevo no conserva la caja del viejo: hay que volver a medir. Sólo se avisa si
-            // de verdad se olvidó una medida; si no había nada, la instantánea no ha cambiado.
+            // Una pantalla nueva por encima es un cambio de nodo: hay que volver a medir. Sólo se
+            // avisa si de verdad se olvidó una medida; si no la había, la instantánea no cambió.
             if (anterior && anterior.rect !== null) avisar();
         },
 
-        unregister(id) {
-            if (!objetivos.delete(id)) return;
+        unregister(id, measure) {
+            const pila = objetivos.get(id);
+            if (!pila) return;
 
-            avisar();
+            // Se da de baja **esta** alta, no el id: puede haber otras pantallas vivas debajo.
+            let indice = -1;
+
+            for (let i = pila.length - 1; i >= 0; i -= 1) {
+                if (pila[i].medir === measure) {
+                    indice = i;
+
+                    break;
+                }
+            }
+
+            if (indice === -1) return;
+
+            const mandaba = indice === pila.length - 1;
+
+            pila.splice(indice, 1);
+
+            if (pila.length === 0) {
+                objetivos.delete(id);
+                avisar();
+
+                return;
+            }
+
+            // Dar de baja una pantalla de debajo no cambia lo que se ve.
+            if (!mandaba) return;
+
+            // La que queda vuelve a mandar, pero su caja es de cuando estaba debajo: se olvida y se
+            // vuelve a medir, para no dibujar el hueco donde ya no está.
+            const heredada = pila[pila.length - 1];
+            const olvidada = heredada.rect;
+
+            heredada.rect = null;
+
+            if (olvidada !== null) avisar();
+
+            void medirUno(id);
         },
 
         measure(id) {
-            return objetivos.get(id)?.rect ?? null;
+            return cima(id)?.rect ?? null;
         },
 
         async refresh(id) {

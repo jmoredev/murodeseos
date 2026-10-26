@@ -23,7 +23,9 @@ const RAIZ = process.cwd();
 
 /** Las pantallas que dan de alta objetivos del tour. Si una se muda, este test la delata. */
 const PANTALLAS_CON_OBJETIVOS = [
-    'components/ResponsiveLayout.tsx',
+    // Los tres `tab-*` los da de alta la portada y no `ResponsiveLayout`: una sub-ruta pinta el mismo
+    // layout y, si registrara los mismos ids, su desmontaje borraría el alta de la portada.
+    'app/index.tsx',
     'components/WishListTab.tsx',
     'components/GroupsTab.tsx',
     'components/NotificationMenu.tsx',

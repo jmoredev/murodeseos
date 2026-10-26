@@ -133,16 +133,23 @@ function Objetivo({
     const ids = useMemo(() => Object.keys(medidas), [medidas]);
 
     useEffect(() => {
-        for (const id of ids) {
-            registro.register(id, () => {
-                onMedir?.(id);
+        // La baja es por alta, no por id: se guardan las funciones para retirar las mismas.
+        const altas = ids.map(
+            (id) =>
+                [
+                    id,
+                    () => {
+                        onMedir?.(id);
 
-                return medidas[id] ?? null;
-            });
-        }
+                        return medidas[id] ?? null;
+                    },
+                ] as const
+        );
+
+        for (const [id, medir] of altas) registro.register(id, medir);
 
         return () => {
-            for (const id of ids) registro.unregister(id);
+            for (const [id, medir] of altas) registro.unregister(id, medir);
         };
     }, [registro, ids, medidas, onMedir]);
 

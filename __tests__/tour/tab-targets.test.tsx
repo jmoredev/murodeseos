@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import {
     TourTargetProvider,
+    useTourTarget,
     useTourTargetRegistry,
 } from '@/components/tour/TourTargetProvider';
 import type { TargetRegistry } from '@/lib/tour/targets';
@@ -15,8 +16,10 @@ import type { TargetRegistry } from '@/lib/tour/targets';
  * 1. La semántica de pestañas: en escritorio, una `tablist` con `role="tab"` y `aria-selected`; en
  *    móvil, botones con `accessibilityState.selected`. Es lo que usan los lectores de pantalla y lo
  *    que T7 necesita para el dock, así que una props de más no puede haberlo pisado.
- * 2. Que las dos formas registren los tres ids: el guion del tour no sabe si está en un móvil o en
- *    un escritorio, y el hueco tiene que encontrar la pestaña que de verdad está en pantalla.
+ * 2. Que las dos formas midan los tres ids: el guion del tour no sabe si está en un móvil o en un
+ *    escritorio, y el hueco tiene que encontrar la pestaña que de verdad está en pantalla. Los
+ *    objetivos los pone la portada —como `app/index.tsx`— y el layout sólo los esparce en cada
+ *    `Pressable`; por eso la prueba de registro monta la portada, no sólo el layout.
  */
 
 const RAIZ = 'muro';
@@ -78,15 +81,36 @@ function Pintar({
     return (
         <TourTargetProvider>
             <SondaDeRegistro registroRef={registroRef} />
-            <ResponsiveLayout
-                userId="user-1"
-                activeTab="wishlist"
-                setActiveTab={onCambiarPestana}
-                onSignOut={vi.fn()}
-            >
-                <div>{RAIZ}</div>
-            </ResponsiveLayout>
+            <Portada onCambiarPestana={onCambiarPestana} />
         </TourTargetProvider>
+    );
+}
+
+/**
+ * La portada: dueña de los tres objetivos, que le pasa al layout como hace `app/index.tsx` (S7).
+ *
+ * Van aquí y no dentro de `ResponsiveLayout` porque una sub-ruta pinta el mismo layout: si también
+ * registrara los mismos ids, su desmontaje borraría el alta de la portada.
+ */
+function Portada({
+    onCambiarPestana,
+}: {
+    onCambiarPestana: (tab: 'wishlist' | 'groups' | 'profile') => void;
+}) {
+    const deseos = useTourTarget('tab-deseos');
+    const grupos = useTourTarget('tab-grupos');
+    const perfil = useTourTarget('tab-perfil');
+
+    return (
+        <ResponsiveLayout
+            userId="user-1"
+            activeTab="wishlist"
+            setActiveTab={onCambiarPestana}
+            onSignOut={vi.fn()}
+            objetivosPestanas={{ deseos, grupos, perfil }}
+        >
+            <div>{RAIZ}</div>
+        </ResponsiveLayout>
     );
 }
 

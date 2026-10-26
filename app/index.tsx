@@ -11,6 +11,7 @@ import { ProfileTab } from '@/components/ProfileTab';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import WhatsNewModal from '@/components/WhatsNewModal';
 import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/components/tour/TourState';
+import { useTourTarget } from '@/components/tour/TourTargetProvider';
 import { DEMO_GROUPS, DEMO_WISHES } from '@/lib/tour/demo-data';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -144,6 +145,22 @@ export default function LandingPage() {
     // en la portada las pestañas son estado y no cambian el pathname.
     useTourTabReporter(activeTab);
 
+    /**
+     * Los tres objetivos del tour de las pestañas (S7) son **de la portada**, y por eso se registran
+     * aquí y se le pasan al layout en vez de que el layout los registre por su cuenta.
+     *
+     * El registro de objetivos guarda una medida por id y dar de baja un id lo borra; mientras los
+     * registraba `ResponsiveLayout`, cada pantalla que lo pinta —la portada y también el detalle de un
+     * grupo o la lista de otra persona (D5)— daba de alta los mismos `tab-*`. Al volver de esas
+     * sub-rutas con un `back`, su desmontaje borraba el alta de la portada, que no se vuelve a montar
+     * para rehacerla: el recorrido se quedaba sin medida para la parada `perfil` y sin tarjeta.
+     *
+     * Sin `TourTargetProvider` por encima estos enganches son inertes, como el resto del registro.
+     */
+    const objetivoDeseos = useTourTarget('tab-deseos');
+    const objetivoGrupos = useTourTarget('tab-grupos');
+    const objetivoPerfil = useTourTarget('tab-perfil');
+
     useEffect(() => {
         // La guarda no es cosmética: sin ella, cada render volvería a pedir la misma pestaña y
         // reavivaría el estado que acaba de cambiar.
@@ -180,6 +197,11 @@ export default function LandingPage() {
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     onSignOut={signOut}
+                    objetivosPestanas={{
+                        deseos: objetivoDeseos,
+                        grupos: objetivoGrupos,
+                        perfil: objetivoPerfil,
+                    }}
                 >
                     {activeTab === 'wishlist' && (
                         <WishListTab

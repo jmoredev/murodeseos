@@ -5,14 +5,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationMenu } from './NotificationMenu';
 import { GlassBar } from './ui/GlassBar';
 import { AppIcon } from '@/components/ui/AppIcon';
-import { useTourTarget } from '@/components/tour/TourTargetProvider';
+import type { TourTargetProps } from '@/components/tour/TourTargetProvider';
 
 /**
  * Las dos formas de pestaña son objetivo del tour (S7): en escritorio la tablist y en móvil el dock.
- * El registro se hace con `useTourTarget`, que se esparce en cada `Pressable`; no hay coordenadas
- * escritas a mano y el hueco sigue a la forma que de verdad está en pantalla. Los tres ids son los
- * mismos en las dos formas a propósito: una parada del guion no cambia según el ancho.
+ * El hueco sigue a la forma que de verdad está en pantalla y no hay coordenadas escritas a mano; los
+ * tres ids son los mismos en las dos formas a propósito, porque una parada del guion no cambia según
+ * el ancho.
+ *
+ * Los objetivos **los pone la portada** (`app/index.tsx`) y este componente sólo los esparce: los ids
+ * `tab-deseos`, `tab-grupos` y `tab-perfil` son de la portada y de nadie más. El detalle de un grupo y
+ * la lista de una persona pintan esta misma barra, pero no son la portada: el guion señala la barra
+ * de la portada, y mientras el registro vivió aquí dentro cada sub-ruta reclamaba los mismos ids y, al
+ * desmontarse (el tour vuelve con un `back`, D5), su baja se llevaba por delante el alta que la
+ * portada necesitaba para el hueco de la parada `perfil`.
+ *
+ * Sin `objetivosPestanas` las pestañas se pintan igual —misma semántica, mismo toque, mismo estilo— y
+ * simplemente no son objetivo de nadie: es lo que hace una sub-ruta.
  */
+
+/** Un objetivo por pestaña, listo para esparcir en su `Pressable`. */
+export type ObjetivosDePestanas = {
+    deseos: TourTargetProps;
+    grupos: TourTargetProps;
+    perfil: TourTargetProps;
+};
 
 interface ResponsiveLayoutProps {
     userId: string;
@@ -20,6 +37,8 @@ interface ResponsiveLayoutProps {
     setActiveTab: (tab: 'wishlist' | 'groups' | 'profile') => void;
     children: React.ReactNode;
     onSignOut: () => void;
+    /** Los tres objetivos del tour, si esta pantalla es la portada. Sin ellos, las pestañas no se miden. */
+    objetivosPestanas?: ObjetivosDePestanas;
 }
 
 function TabLabel({
@@ -40,11 +59,15 @@ function TabLabel({
     );
 }
 
-export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, onSignOut }: ResponsiveLayoutProps) {
+export function ResponsiveLayout({
+    userId,
+    activeTab,
+    setActiveTab,
+    children,
+    onSignOut,
+    objetivosPestanas,
+}: ResponsiveLayoutProps) {
     const isDesktop = useIsDesktop();
-    const objetivoDeseos = useTourTarget('tab-deseos');
-    const objetivoGrupos = useTourTarget('tab-grupos');
-    const objetivoPerfil = useTourTarget('tab-perfil');
 
     const scrollToMain = () => {
         if (Platform.OS !== 'web' || typeof document === 'undefined') return;
@@ -84,7 +107,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                             <View className="flex-row items-center gap-2 ml-8 bg-surface/90 rounded-full px-2 py-1.5 shadow-ambient" {...tabListProps}>
                                 <Pressable
                                     onPress={() => setActiveTab('wishlist')}
-                                    {...objetivoDeseos}
+                                    {...objetivosPestanas?.deseos}
                                     {...(Platform.OS === 'web'
                                         ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'wishlist' } as const)
                                         : {
@@ -98,7 +121,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('groups')}
-                                    {...objetivoGrupos}
+                                    {...objetivosPestanas?.grupos}
                                     {...(Platform.OS === 'web'
                                         ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'groups' } as const)
                                         : {
@@ -112,7 +135,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                                 </Pressable>
                                 <Pressable
                                     onPress={() => setActiveTab('profile')}
-                                    {...objetivoPerfil}
+                                    {...objetivosPestanas?.perfil}
                                     className={`px-4 py-2 min-h-[44px] justify-center rounded-full ${activeTab === 'profile' ? 'bg-surface-container-lowest shadow-ambient' : ''}`}
                                     {...(Platform.OS === 'web'
                                         ? ({ role: 'tab' as const, 'aria-selected': activeTab === 'profile' } as const)
@@ -182,7 +205,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
                     <GlassBar className="rounded-full px-2 py-2 flex-row items-center justify-around shadow-ambient-lg w-[92%] max-w-md">
                         <Pressable
                             onPress={() => setActiveTab('wishlist')}
-                            {...objetivoDeseos}
+                            {...objetivosPestanas?.deseos}
                             accessibilityRole="button"
                             accessibilityLabel="Mis deseos"
                             accessibilityState={{ selected: activeTab === 'wishlist' }}
@@ -207,7 +230,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
 
                         <Pressable
                             onPress={() => setActiveTab('groups')}
-                            {...objetivoGrupos}
+                            {...objetivosPestanas?.grupos}
                             accessibilityRole="button"
                             accessibilityLabel="Mis grupos"
                             accessibilityState={{ selected: activeTab === 'groups' }}
@@ -229,7 +252,7 @@ export function ResponsiveLayout({ userId, activeTab, setActiveTab, children, on
 
                         <Pressable
                             onPress={() => setActiveTab('profile')}
-                            {...objetivoPerfil}
+                            {...objetivosPestanas?.perfil}
                             accessibilityRole="button"
                             accessibilityLabel="Mi perfil"
                             accessibilityState={{ selected: activeTab === 'profile' }}

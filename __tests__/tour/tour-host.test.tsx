@@ -216,11 +216,13 @@ function Objetivos() {
 
     useEffect(() => {
         const ids = TOUR_STEPS.map((paso) => paso.targetId);
+        // La baja es por alta, no por id: se guardan las funciones para retirar las mismas.
+        const altas = ids.map((id) => [id, () => cajaDeObjetivo(id)] as const);
 
-        for (const id of ids) registro.register(id, () => cajaDeObjetivo(id));
+        for (const [id, medir] of altas) registro.register(id, medir);
 
         return () => {
-            for (const id of ids) registro.unregister(id);
+            for (const [id, medir] of altas) registro.unregister(id, medir);
         };
     }, [registro]);
 
