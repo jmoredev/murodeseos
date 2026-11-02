@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { validateNewPassword } from '@/lib/password';
 import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -144,14 +145,13 @@ export default function SignupPage() {
 
                             <View>
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Contraseña</Text>
-                                <TextInput
+                                <PasswordInput
                                     className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={password}
                                     onChangeText={setPassword}
-                                    secureTextEntry
                                     accessibilityLabel="Contraseña"
                                     testID="password-input"
                                 />
@@ -159,14 +159,13 @@ export default function SignupPage() {
 
                             <View>
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Confirmar contraseña</Text>
-                                <TextInput
+                                <PasswordInput
                                     className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${confirmPasswordError ? 'ring-2 ring-primary/30' : ''}`}
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    secureTextEntry
                                     accessibilityLabel="Confirmar contraseña"
                                     accessibilityInvalid={!!confirmPasswordError}
                                     accessibilityDescribedBy={confirmPasswordError ? confirmPasswordErrorId : undefined}
