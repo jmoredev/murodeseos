@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { useIsDesktop } from '@/lib/use-is-desktop';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -23,6 +23,8 @@ export default function UserWishlistPage() {
     const params = useLocalSearchParams();
     const targetUserId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
     const targetUserName = params.name;
+    /** El deseo concreto que trajo la notificación (`?wish=<id>`), para abrir su detalle al llegar. */
+    const targetWishId = typeof params.wish === 'string' ? params.wish : undefined;
     const [items, setItems] = useState<GiftItem[]>([]);
     const [targetProfile, setTargetProfile] = useState<any>(null);
     const [showInfo, setShowInfo] = useState(false);
@@ -43,11 +45,27 @@ export default function UserWishlistPage() {
     /** Con el tour en marcha se pinta su lista; sin él, la pantalla se queda vacía. */
     const mostrarDemo = tourActive && !!miembroDemo;
     /** Lo que se pinta: los deseos del tour con su estado de reserva, o los de la base de datos. */
-    const deseosMostrados = mostrarDemo ? demoWishesForMember(targetUserId) ?? [] : items;
+    const deseosMostrados = useMemo(
+        () => (mostrarDemo ? demoWishesForMember(targetUserId) ?? [] : items),
+        [mostrarDemo, targetUserId, items],
+    );
     /** El perfil que lee la cabecera y el panel lateral, sea del tour o de la base de datos. */
     const perfilMostrado = mostrarDemo && miembroDemo
         ? { display_name: miembroDemo.profiles.display_name, avatar_url: miembroDemo.profiles.avatar_url }
         : targetProfile;
+
+    // Deep-link de notificación (`wish_added`): al llegar con `?wish=<id>`, se abre
+    // el detalle de ese deseo en cuanto la lista carga. Se consume una sola vez:
+    // cerrar el detalle no debe reabrirlo aunque la URL siga trayendo el parámetro.
+    const wishParamConsumed = useRef(false);
+    useEffect(() => {
+        if (!targetWishId || wishParamConsumed.current || deseosMostrados.length === 0) return;
+        const match = deseosMostrados.find(i => i.id === targetWishId);
+        if (match) {
+            wishParamConsumed.current = true;
+            setSelectedItem(match);
+        }
+    }, [targetWishId, deseosMostrados]);
 
     useEffect(() => {
         const loadWishlist = async () => {

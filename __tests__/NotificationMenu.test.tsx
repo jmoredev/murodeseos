@@ -8,6 +8,12 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 // Mock local: sólo NotificationMenu necesita la suscripción realtime
 // (`channel/on/subscribe` + `removeChannel`), así que no toca el mock global
 // de `vitest.setup.ts`.
+const mockRouterPush = vi.fn();
+
+vi.mock('expo-router', () => ({
+    useRouter: () => ({ push: mockRouterPush }),
+}));
+
 vi.mock('@/lib/supabase', () => ({
     supabase: {
         channel: vi.fn(() => ({
@@ -35,7 +41,7 @@ function setWindowWidth(width: number) {
 }
 
 const notifications = [
-    { id: '1', user_id: 'user-1', actor_id: 'actor-1', type: 'wish_added', is_read: false, created_at: new Date().toISOString() },
+    { id: '1', user_id: 'user-1', actor_id: 'actor-1', wish_id: 'wish-9', type: 'wish_added', is_read: false, created_at: new Date().toISOString(), actor: { display_name: 'Lucía', avatar_url: '' } },
     { id: '2', user_id: 'user-1', actor_id: 'actor-2', type: 'wish_reserved', is_read: true, created_at: new Date().toISOString() },
 ] as any[];
 
@@ -111,5 +117,36 @@ describe('NotificationMenu', () => {
 
         expect(screen.getByRole('button', { name: 'Cerrar notificaciones' })).toBeInTheDocument();
         expect(screen.queryByText('Sólo las últimas 20')).not.toBeInTheDocument();
+    });
+
+    it('una notificación de deseo añadido navega a la lista de esa persona y cierra el menú', async () => {
+        setWindowWidth(1024);
+        render(<NotificationMenu userId="user-1" />);
+        await openMenu();
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: /Lucía añadió/ }));
+        });
+
+        // Se marca como leída antes de navegar.
+        expect(markAsRead).toHaveBeenCalledWith('1');
+        expect(mockRouterPush).toHaveBeenCalledWith({
+            pathname: '/wishlist/[id]',
+            params: { id: 'actor-1', name: 'Lucía', wish: 'wish-9' },
+        });
+        // El menú se cierra aunque `router.push` sea un mock y no desmonte la vista.
+        expect(screen.queryByText('Sólo las últimas 20')).not.toBeInTheDocument();
+    });
+
+    it('otros tipos de notificación no navegan', async () => {
+        setWindowWidth(1024);
+        render(<NotificationMenu userId="user-1" />);
+        await openMenu();
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole('button', { name: /reservó/ }));
+        });
+
+        expect(mockRouterPush).not.toHaveBeenCalled();
     });
 });
