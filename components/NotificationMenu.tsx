@@ -8,6 +8,7 @@ import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib
 import { ensureBirthdayReminders } from '@/lib/reminder-utils';
 import { NotificationItem } from './NotificationItem';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { useTourTarget } from '@/components/tour/TourTargetProvider';
 
@@ -25,6 +26,7 @@ interface NotificationMenuProps {
 }
 
 export function NotificationMenu({ userId }: NotificationMenuProps) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -146,6 +148,20 @@ export function NotificationMenu({ userId }: NotificationMenuProps) {
             await markAsRead(notif.id);
             setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+
+        // Un aviso de deseo añadido lleva directo a la lista de quien lo publicó; el
+        // parámetro `wish` abre además el detalle de ese deseo al llegar.
+        if (notif.type === 'wish_added' && notif.actor_id) {
+            setIsOpen(false);
+            router.push({
+                pathname: '/wishlist/[id]',
+                params: {
+                    id: notif.actor_id,
+                    name: notif.actor?.display_name || 'Usuario',
+                    ...(notif.wish_id ? { wish: notif.wish_id } : {}),
+                },
+            } as any);
         }
     };
 
