@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -183,14 +184,13 @@ export default function LoginPage() {
 
                             <View>
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Contraseña</Text>
-                                <TextInput
+                                <PasswordInput
                                     className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={password}
                                     onChangeText={setPassword}
-                                    secureTextEntry
                                     accessibilityLabel="Contraseña"
                                     testID="password-input"
                                 />

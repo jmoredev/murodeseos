@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { validateNewPassword } from '@/lib/password';
 import { getSiteBaseUrl } from '@/lib/site-url';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -54,7 +55,7 @@ export default function SignupPage() {
             // EXPO_PUBLIC_SITE_URL y, si no está, deriva el sitio actual.
             const redirectTo = `${getSiteBaseUrl()}/login`;
 
-            const { error: signupError } = await supabase.auth.signUp({
+            const { data: signupData, error: signupError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
@@ -69,6 +70,17 @@ export default function SignupPage() {
                     setError(signupError.message);
                 }
                 setLoading(false);
+                return;
+            }
+
+            // Con «Confirm email» apagado, Supabase devuelve la sesión ya abierta: el
+            // alta no tiene por qué pedir la misma contraseña otra vez, así que se entra
+            // directo al alta de perfil —el mismo destino que usa el login cuando el
+            // perfil todavía no tiene nombre—. Si el proyecto sigue exigiendo confirmar
+            // el correo no hay sesión y se mantiene el camino de siempre: al login con
+            // el aviso de cuenta creada.
+            if (signupData.session) {
+                router.replace('/profile/setup');
                 return;
             }
 
@@ -133,14 +145,13 @@ export default function SignupPage() {
 
                             <View>
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Contraseña</Text>
-                                <TextInput
+                                <PasswordInput
                                     className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={password}
                                     onChangeText={setPassword}
-                                    secureTextEntry
                                     accessibilityLabel="Contraseña"
                                     testID="password-input"
                                 />
@@ -148,14 +159,13 @@ export default function SignupPage() {
 
                             <View>
                                 <Text className="text-sm font-sans-semibold text-on-background mb-2">Confirmar contraseña</Text>
-                                <TextInput
+                                <PasswordInput
                                     className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${confirmPasswordError ? 'ring-2 ring-primary/30' : ''}`}
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
                                     placeholderTextColor="#4c212b88"
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    secureTextEntry
                                     accessibilityLabel="Confirmar contraseña"
                                     accessibilityInvalid={!!confirmPasswordError}
                                     accessibilityDescribedBy={confirmPasswordError ? confirmPasswordErrorId : undefined}

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { validateNewPassword } from '@/lib/password';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 /** Margen para que el cliente canjee el código del enlace antes de darlo por inválido. */
 const LINK_CHECK_MS = 3000;
@@ -143,14 +144,13 @@ export default function ResetPasswordPage() {
                                         <Text className="text-sm font-sans-semibold text-on-background mb-2">
                                             Contraseña nueva
                                         </Text>
-                                        <TextInput
+                                        <PasswordInput
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                             style={{ fontSize: 16 }}
                                             placeholder="••••••••"
                                             placeholderTextColor="#4c212b88"
                                             value={password}
                                             onChangeText={setPassword}
-                                            secureTextEntry
                                             accessibilityLabel="Contraseña nueva"
                                             testID="new-password-input"
                                         />
@@ -160,14 +160,13 @@ export default function ResetPasswordPage() {
                                         <Text className="text-sm font-sans-semibold text-on-background mb-2">
                                             Repite la contraseña
                                         </Text>
-                                        <TextInput
+                                        <PasswordInput
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                             style={{ fontSize: 16 }}
                                             placeholder="••••••••"
                                             placeholderTextColor="#4c212b88"
                                             value={confirmPassword}
                                             onChangeText={setConfirmPassword}
-                                            secureTextEntry
                                             accessibilityLabel="Repite la contraseña nueva"
                                             testID="confirm-password-input"
                                         />
