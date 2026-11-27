@@ -104,9 +104,10 @@
       "excerpt": "Nuevo deseo",
       "comment": "A la hora de añadir un nuevo deseo entiendo que debajo d Notas van también las opciones de ¿Quien puede verlo? y el/los enlaces a la tienda. Al final la vista de de la pantalla 2 de añadir un deseo y la pantalla 3 de editarlo tienen que ser casi idénticas",
       "createdAt": "2026-11-27T07:51:51.844Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T07:51:51.896Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.076Z",
+      "resolution": "Añadir y editar comparten formulario y orden; bajo Nota van ¿Quién puede verlo? y los enlaces con «Añadir otra tienda». Las diferencias (título, aviso de lectura, botón y «Borrar») quedan anotadas en una fila propia."
     },
     {
       "id": "02d95b8d",
@@ -115,9 +116,10 @@
       "excerpt": "🎸",
       "comment": "Cuidado con que se compriman los iconos, se ve muy mal",
       "createdAt": "2026-11-27T07:52:47.422Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T07:52:47.441Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.035Z",
+      "resolution": "Ningún emoji ni icono se comprime: tamaño fijo, proporción 1:1 y flex-shrink 0 en avatares, iconos de grupo, etiquetas y tarjetas. Medido a 390 px: el avatar que salía 31×48 ahora es 48×48."
     },
     {
       "id": "tvjmajj8",
@@ -126,9 +128,10 @@
       "excerpt": "🎸 Familia Martín",
       "comment": "Estos grupos deberían de ser clickeables para que te lleve a su vista",
       "createdAt": "2026-11-27T07:53:10.976Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T07:53:10.993Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.024Z",
+      "resolution": "Cada etiqueta de grupo de una persona abre la ficha de ese grupo: chevrón visible, «Abrir el grupo …», foco visible y 48 px de zona táctil, sin enlaces anidados."
     },
     {
       "id": "k2nt4exm",
@@ -137,9 +140,10 @@
       "excerpt": "Móvil · la pestaña «Personas»",
       "comment": "No me gusta nada esta pantalla, porque mezcla personas y grupos y si tienes muchas personas tienes que bajar hasta abajo del todo para encontrar los grupos. Hay que rediseñarla, hay que tener acceso rápido tanto a los grupos como a la spersonas",
       "createdAt": "2026-11-27T07:54:40.475Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T07:54:40.492Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.012Z",
+      "resolution": "Pestaña redibujada en dos opciones lado a lado: A) selector «Personas | Grupos» con buscador por vista y memoria de la última; B) tira de grupos arriba con «Crear» y «Unirme», personas debajo con buscador y salto por letra. Elige A o B."
     },
     {
       "id": "cccqaboa",
@@ -148,9 +152,10 @@
       "excerpt": "Perfil",
       "comment": "No entiendo bien en esta pantalla como editar tu perfil. Entiendo que desde la pantalla 3 deberías de llegar a las pantallas 1 y 2",
       "createdAt": "2026-11-27T07:58:01.182Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T07:58:01.215Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.097Z",
+      "resolution": "Perfil reordenado en índice + dos apartados: la pantalla 3 resume quién eres y abre «Tus datos y fechas» (1) y «Tallas y gustos» (2), con «‹ Perfil» y «Guardar» propios; flechas entre marcos y escritorio con lista + panel."
     },
     {
       "id": "qrjd91mu",
@@ -159,9 +164,10 @@
       "excerpt": "🌻 📚 ⚽ Amigos de la Uni 8 participantes",
       "comment": "Entiendo que no hace falta pulsar unicamente sobre el radio button sino que al pulsar sobre toda la tarjeta se selecciona",
       "createdAt": "2026-11-27T08:08:30.418Z",
-      "status": "open",
+      "status": "resolved",
       "sentAt": "2026-11-27T08:08:30.466Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-11-27T09:30:30.086Z",
+      "resolution": "Sí: toda la tarjeta selecciona. Ahora lo dice una nota bajo la pregunta, hay cursor de mano, realce al pasar y al pulsar, y el estado elegido y el foco rodean la tarjeta entera."
     }
   ]
 }

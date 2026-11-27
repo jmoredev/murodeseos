@@ -414,7 +414,7 @@
   .fd-prio-row .fd-prio-card{display:flex;flex-direction:column;justify-content:flex-start;gap:6px}
 
   /* enlaces de la tienda */
-  .fd-links{display:grid;gap:6px;margin-top:2px}
+  .fd-links{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:2px}
   .fd-link-row{
     display:flex;align-items:center;gap:10px;padding:1px 4px 1px 10px;
     border:1px solid var(--border-strong);border-radius:14px;background:var(--surface);
@@ -597,7 +597,7 @@
       <h1>Añadir y editar un deseo</h1>
       <p class="tradeoff">
         <span class="tradeoff-tag">Propósito</span>
-        Pegar el enlace de la tienda y repasar lo que la app ya ha rellenado: nombre, precio, categoría e ilusión, con la vista previa de cómo lo verán tus grupos.
+        Pegar el enlace de la tienda y repasar lo que la app ya ha rellenado: nombre, precio, categoría e ilusión, con la vista previa de cómo lo verán tus grupos. Añadir y editar son el mismo formulario, en el mismo orden.
       </p>
     </div>
     <div class="keys">
@@ -606,7 +606,7 @@
         <li><span class="kn" aria-hidden="true">1</span><span>El enlace primero: la app lee la página y rellena nombre, precio y categoría. Si no puede, el enlace sigue guardado y se acaba a mano.</span></li>
         <li><span class="kn" aria-hidden="true">2</span><span>Todo con etiqueta visible encima, campos de 56 px y un solo botón principal: «Guardar deseo» siempre al alcance en la barra de abajo.</span></li>
         <li><span class="kn" aria-hidden="true">3</span><span>La ilusión se dice con palabras y corazones («Un detalle», «Me gustaría», «Me hace mucha ilusión»), no con un número.</span></li>
-        <li><span class="kn" aria-hidden="true">4</span><span>Varios enlaces por deseo y visibilidad por grupos, con un resumen en palabras: quién lo verá y quién no.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Debajo de la nota, y en las dos pantallas: «¿Quién puede verlo?» con un resumen en palabras de quién lo verá y los enlaces de la tienda con «Añadir otra tienda».</span></li>
       </ol>
     </div>
   </div>
@@ -620,8 +620,8 @@
        ========================================================== -->
   <section class="row" aria-labelledby="movil-h">
     <div class="row-head">
-      <h2 id="movil-h">Móvil</h2>
-      <p>Las tres pantallas del formulario. Sin barra de pestañas: es una tarea con principio y fin, y la acción principal vive en la barra inferior.</p>
+      <h2 id="movil-h">Móvil · parte de arriba</h2>
+      <p>Añadir y editar usan el mismo formulario y el mismo orden: primero los datos del deseo. A 390 px no cabe entero, así que cada vista ocupa dos pantallas de scroll y la barra de la acción principal no se mueve.</p>
     </div>
 
     <div class="devices">
@@ -676,11 +676,11 @@
         </div>
       </figure>
 
-      <!-- ---------- PANTALLA 2: FORMULARIO RELLENADO ---------- -->
+      <!-- ---------- PANTALLA 2: NUEVO DESEO · PARTE DE ARRIBA ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 2</span>
-          <span class="cap-t">Formulario rellenado · parte de arriba</span>
+          <span class="cap-n">Pantalla 2 · nuevo deseo</span>
+          <span class="cap-t">Parte de arriba: los datos</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -784,7 +784,7 @@
 
               <div class="fd-field">
                 <label class="alta-label" for="p2-nota">Nota (opcional)</label>
-                <textarea class="fd-textarea" id="p2-nota" name="nota-2" rows="3" placeholder="Talla, color, detalles…"></textarea>
+                <textarea class="fd-textarea" id="p2-nota" name="nota-2" rows="2" placeholder="Talla, color, detalles…"></textarea>
               </div>
             </div>
           </div>
@@ -796,11 +796,11 @@
         </div>
       </figure>
 
-      <!-- ---------- PANTALLA 3: EDITAR · PARTE DE ABAJO ---------- -->
+      <!-- ---------- PANTALLA 3: EDITAR DESEO · PARTE DE ARRIBA ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 3</span>
-          <span class="cap-t">Editar deseo · parte de abajo</span>
+          <span class="cap-n">Pantalla 3 · editar deseo</span>
+          <span class="cap-t">Parte de arriba: los mismos datos</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -816,12 +816,241 @@
           <div class="pf-scroll fd-scroll-bar">
             <header class="fd-top">
               <a class="back" href="#movil-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
-              <h3 class="fd-screen fd-screen-sm">Editar deseo</h3>
+              <h3 class="fd-screen">Editar deseo</h3>
             </header>
 
+            <div class="fd-form">
+              <div class="fd-field">
+                <label class="alta-label" for="p3-titulo">¿Qué te gustaría?</label>
+                <input class="alta-input" id="p3-titulo" type="text" name="titulo-3" value="Auriculares inalámbricos Sony WH-1000XM5">
+              </div>
+
+              <div class="fd-field">
+                <p class="alta-label" id="p3-cat-h">Categoría</p>
+                <button class="cat-pick fd-cat" type="button" aria-labelledby="p3-cat-h">
+                  <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                  <span class="cat-pick-txt">
+                    <span class="cat-pick-name">Tecnología</span>
+                    <span class="cat-pick-help">Elegida a partir del enlace</span>
+                  </span>
+                  <span class="cat-pick-act">Cambiar<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                </button>
+              </div>
+
+              <div class="fd-field">
+                <div class="fd-price-row">
+                  <div>
+                    <label class="alta-label" for="p3-precio">Precio (opcional)</label>
+                    <input class="alta-input" id="p3-precio" type="text" name="precio-3" inputmode="decimal" value="349,00">
+                  </div>
+                  <div>
+                    <label class="alta-label" for="p3-moneda">Moneda</label>
+                    <span class="alta-sel-wrap">
+                      <select class="alta-select" id="p3-moneda" name="moneda-3">
+                        <option selected>€ EUR</option>
+                        <option>US$ USD</option>
+                        <option>£ GBP</option>
+                        <option>ARS</option>
+                        <option>MXN</option>
+                        <option>Sin moneda</option>
+                      </select>
+                      <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+                <p class="alta-hint">Teclado numérico con coma decimal.</p>
+              </div>
+
+              <fieldset class="alta-fs">
+                <legend class="alta-legend fd-legend">¿Cuánta ilusión te hace?</legend>
+                <div class="fd-prio">
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p3-prioridad" value="1">
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Un detalle</span>
+                  </label>
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p3-prioridad" value="2">
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Me gustaría</span>
+                  </label>
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p3-prioridad" value="3" checked>
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Me hace mucha ilusión</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="fd-field">
+                <label class="alta-label" for="p3-nota">Nota (opcional)</label>
+                <textarea class="fd-textarea" id="p3-nota" name="nota-3" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="fd-bar">
+            <button class="btn btn-primary btn-block" type="button">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA MÓVIL · PARTE DE ABAJO: NOTA, VISIBILIDAD Y ENLACES
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil2-h">
+    <div class="row-head">
+      <h2 id="movil2-h">Móvil · parte de abajo</h2>
+      <p>Debajo de la nota van, en este orden y en las dos pantallas, «¿Quién puede verlo?» y los enlaces de la tienda con «Añadir otra tienda».</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 2: NUEVO DESEO · PARTE DE ABAJO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2 · nuevo deseo</span>
+          <span class="cap-t">Parte de abajo: nota, quién lo ve y enlaces</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll fd-scroll-bar">
+            <header class="fd-top">
+              <a class="back" href="#p1-enlace"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+              <h3 class="fd-screen">Nuevo deseo</h3>
+            </header>
+
+            <div class="fd-field fd-field-gap">
+              <label class="alta-label" for="p2b-nota">Nota (opcional)</label>
+              <textarea class="fd-textarea" id="p2b-nota" name="nota-2b" rows="2" placeholder="Talla, color, detalles…"></textarea>
+            </div>
+
+            <fieldset class="alta-fs fd-fs-tight">
+              <legend class="alta-legend fd-legend">¿Quién puede verlo?</legend>
+              <label class="fd-opt">
+                <input type="radio" name="p2b-visible" value="todos" checked>
+                <span class="fd-opt-t">Todos mis grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <label class="fd-opt">
+                <input type="radio" name="p2b-visible" value="algunos">
+                <span class="fd-opt-t">Solo algunos grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <p class="fd-vis-hint">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Lo verán Familia Martín y Amigos de la Uni: tus dos grupos.</span>
+              </p>
+            </fieldset>
+
             <div class="alta-fs fd-fs-tight">
-              <h4 class="alta-legend fd-legend" id="p3-links-h">Enlaces de la tienda</h4>
-              <ul class="fd-links" aria-labelledby="p3-links-h">
+              <h4 class="alta-legend fd-legend" id="p2b-links-h">Enlaces de la tienda</h4>
+              <ul class="fd-links" aria-labelledby="p2b-links-h">
+                <li class="fd-link-row">
+                  <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                  <span class="fd-link-txt">
+                    <span class="fd-link-host">amazon.es</span>
+                    <span class="fd-link-url">amazon.es/dp/B09XS7JWHH</span>
+                  </span>
+                  <button class="fd-quitar" type="button" aria-label="Quitar el enlace de amazon.es">Quitar</button>
+                </li>
+              </ul>
+              <p class="fd-add-row"><button class="link-btn" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir otra tienda</button></p>
+            </div>
+          </div>
+
+          <div class="fd-bar">
+            <button class="btn btn-primary btn-block" type="button">Guardar deseo</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: EDITAR DESEO · PARTE DE ABAJO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3 · editar deseo</span>
+          <span class="cap-t">Parte de abajo: lo mismo, más «Borrar»</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll fd-scroll-bar">
+            <header class="fd-top">
+              <a class="back" href="#movil-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+              <h3 class="fd-screen">Editar deseo</h3>
+            </header>
+
+            <div class="fd-field fd-field-gap">
+              <label class="alta-label" for="p3b-nota">Nota (opcional)</label>
+              <textarea class="fd-textarea" id="p3b-nota" name="nota-3b" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
+            </div>
+
+            <fieldset class="alta-fs fd-fs-tight">
+              <legend class="alta-legend fd-legend">¿Quién puede verlo?</legend>
+              <label class="fd-opt">
+                <input type="radio" name="p3b-visible" value="todos">
+                <span class="fd-opt-t">Todos mis grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <label class="fd-opt">
+                <input type="radio" name="p3b-visible" value="algunos" checked>
+                <span class="fd-opt-t">Solo algunos grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <div class="fd-checks">
+                <label class="fd-check">
+                  <input type="checkbox" name="p3b-grupo" value="familia" checked>
+                  <span class="fd-check-t">Familia Martín</span>
+                  <span class="fd-check-s">Lo verá</span>
+                </label>
+                <label class="fd-check">
+                  <input type="checkbox" name="p3b-grupo" value="uni">
+                  <span class="fd-check-t">Amigos de la Uni</span>
+                  <span class="fd-check-s">No lo verá</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="alta-fs fd-fs-tight">
+              <h4 class="alta-legend fd-legend" id="p3b-links-h">Enlaces de la tienda</h4>
+              <ul class="fd-links" aria-labelledby="p3b-links-h">
                 <li class="fd-link-row">
                   <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
                   <span class="fd-link-txt">
@@ -842,41 +1071,6 @@
               <p class="fd-add-row"><button class="link-btn" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir otra tienda</button></p>
             </div>
 
-            <div class="fd-field fd-field-gap">
-              <label class="alta-label" for="p3-nota">Nota (opcional)</label>
-              <textarea class="fd-textarea fd-textarea-sm" id="p3-nota" name="nota-3" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
-            </div>
-
-            <fieldset class="alta-fs fd-fs-tight">
-              <legend class="alta-legend fd-legend">¿Quién puede verlo?</legend>
-              <label class="fd-opt">
-                <input type="radio" name="p3-visible" value="todos">
-                <span class="fd-opt-t">Todos mis grupos</span>
-                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
-              </label>
-              <label class="fd-opt">
-                <input type="radio" name="p3-visible" value="algunos" checked>
-                <span class="fd-opt-t">Solo algunos grupos</span>
-                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
-              </label>
-              <div class="fd-checks">
-                <label class="fd-check">
-                  <input type="checkbox" name="p3-grupo" value="familia" checked>
-                  <span class="fd-check-t">Familia Martín</span>
-                  <span class="fd-check-s">Lo verá</span>
-                </label>
-                <label class="fd-check">
-                  <input type="checkbox" name="p3-grupo" value="uni">
-                  <span class="fd-check-t">Amigos de la Uni</span>
-                  <span class="fd-check-s">No lo verá</span>
-                </label>
-              </div>
-              <p class="fd-vis-hint">
-                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
-                <span>Amigos de la Uni no verá este deseo.</span>
-              </p>
-            </fieldset>
-
             <div class="fd-sep">
               <button class="fd-danger" type="button"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Borrar este deseo</button>
             </div>
@@ -890,6 +1084,23 @@
       </figure>
 
     </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: QUÉ CAMBIA ENTRE AÑADIR Y EDITAR
+       ========================================================== -->
+  <section class="row" aria-labelledby="difs-h">
+    <div class="row-head">
+      <h2 id="difs-h">Añadir y editar: qué cambia y qué no</h2>
+      <p>La estructura y el orden de los campos son los mismos; solo cambian el título, el aviso del principio, el botón principal y las acciones del final.</p>
+    </div>
+
+    <ul class="fd-bullets">
+      <li><span class="fn" aria-hidden="true">1</span><span><b>Texto, no forma</b>: «Nuevo deseo» / «Editar deseo» arriba y «Guardar deseo» / «Guardar cambios» en la barra. Los campos, sus etiquetas y su orden son idénticos.</span></li>
+      <li><span class="fn" aria-hidden="true">2</span><span><b>El aviso verde solo al añadir</b>: «Rellenado a partir de amazon.es» informa de lo que acaba de leer la app; al editar no hay nada recién leído, así que no aparece.</span></li>
+      <li><span class="fn" aria-hidden="true">3</span><span><b>«Borrar este deseo» solo al editar</b>, al final y separado por una línea: no se puede borrar lo que aún no existe. «Ya lo tengo» sigue en Mi lista, no en el formulario.</span></li>
+      <li><span class="fn" aria-hidden="true">4</span><span><b>Distinto estado, mismo bloque</b>: al añadir, «¿Quién puede verlo?» viene en «Todos mis grupos» y se resume en una frase; este deseo está en «Solo algunos grupos», donde cada casilla ya dice «Lo verá» o «No lo verá» y la frase sobra. Los enlaces son 1 al añadir y 2 al editar.</span></li>
+    </ul>
   </section>
 
   <!-- ==========================================================
@@ -947,7 +1158,7 @@
                   </article>
                   <article class="wish">
                     <div class="wish-media tile-b">
-                      <svg class="ic ic-36"><use href="#i-moka"/></svg>
+                      <svg class="ic ic-36"><use href="#i-gift"/></svg>
                       <span class="w-media-end"><span class="w-price">34,95 €</span><span class="w-cat">Hogar y cocina</span></span>
                     </div>
                     <p class="w-title">Cafetera italiana Bialetti 6 tazas</p>
@@ -1056,6 +1267,26 @@
                       </div>
                     </fieldset>
 
+                    <div class="fd-field">
+                      <label class="alta-label" for="w-nota">Nota (opcional)</label>
+                      <textarea class="fd-textarea" id="w-nota" name="nota-web" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
+                    </div>
+
+                    <fieldset class="alta-fs fd-fs-flush">
+                      <legend class="alta-legend">¿Quién puede verlo?</legend>
+                      <div class="fd-prio fd-prio-2">
+                        <label class="fd-opt fd-opt-flush">
+                          <input type="radio" name="w-visible" value="todos" checked>
+                          <span class="fd-opt-t">Todos mis grupos</span>
+                        </label>
+                        <label class="fd-opt fd-opt-flush">
+                          <input type="radio" name="w-visible" value="algunos">
+                          <span class="fd-opt-t">Solo algunos grupos</span>
+                        </label>
+                      </div>
+                      <p class="alta-hint">Lo verán <b>Familia Martín</b> y <b>Amigos de la Uni</b>: tus dos grupos.</p>
+                    </fieldset>
+
                     <div class="alta-fs fd-fs-flush">
                       <h4 class="alta-legend" id="w-links-h">Enlaces de la tienda</h4>
                       <ul class="fd-links" aria-labelledby="w-links-h">
@@ -1078,26 +1309,6 @@
                       </ul>
                       <p class="fd-add-row"><button class="link-btn" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir otra tienda</button></p>
                     </div>
-
-                    <div class="fd-field">
-                      <label class="alta-label" for="w-nota">Nota (opcional)</label>
-                      <textarea class="fd-textarea" id="w-nota" name="nota-web" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
-                    </div>
-
-                    <fieldset class="alta-fs fd-fs-flush">
-                      <legend class="alta-legend">¿Quién puede verlo?</legend>
-                      <div class="fd-prio fd-prio-2">
-                        <label class="fd-opt fd-opt-flush">
-                          <input type="radio" name="w-visible" value="todos" checked>
-                          <span class="fd-opt-t">Todos mis grupos</span>
-                        </label>
-                        <label class="fd-opt fd-opt-flush">
-                          <input type="radio" name="w-visible" value="algunos">
-                          <span class="fd-opt-t">Solo algunos grupos</span>
-                        </label>
-                      </div>
-                      <p class="alta-hint">Lo verán <b>Familia Martín</b> y <b>Amigos de la Uni</b>: tus dos grupos.</p>
-                    </fieldset>
                   </div>
                 </div>
               </div>

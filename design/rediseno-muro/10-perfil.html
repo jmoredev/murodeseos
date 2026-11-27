@@ -139,7 +139,7 @@
     padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
   }
   .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
-  .row-head p{font-size:16px;color:var(--ink-2)}
+  .row-head p{font-size:16px;color:var(--ink-2);max-width:1000px}
   .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
   .device{width:390px}
   .cap{margin-bottom:12px}
@@ -248,7 +248,7 @@
   .pr-sub{margin-top:6px;font-size:17px;line-height:1.4;color:var(--ink-2)}
   .pr-blk{
     font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em;
-    margin-top:18px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    margin-top:16px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
   }
   .pr-blk-sub{font-size:16px;line-height:1.3;font-weight:600;color:var(--ink-2)}
   .pr-new{
@@ -257,7 +257,7 @@
     font-size:15px;line-height:1.35;font-weight:800;white-space:nowrap;
   }
   .pr-card{
-    margin-top:10px;padding:14px;background:var(--surface);
+    margin-top:10px;padding:13px 14px;background:var(--surface);
     border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1);
   }
   .pr-card + .pr-card{margin-top:10px}
@@ -327,7 +327,7 @@
   .pr-legend{padding:0;margin-bottom:8px;font-size:18px;line-height:1.25;font-weight:800}
   .pr-opt{font-size:16px;font-weight:600;color:var(--ink-2)}
   .pr-sug{
-    display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:10px 12px;
+    display:flex;align-items:flex-start;gap:9px;margin-top:8px;padding:9px 12px;
     border-radius:14px;background:var(--sand);border:1px solid var(--border-strong);
     font-size:16px;line-height:1.35;color:var(--ink);
   }
@@ -353,8 +353,6 @@
     transition:background-color .16s ease,border-color .16s ease;
   }
   .pr-row:hover{background:#FFF3E9;border-color:var(--border-strong)}
-  .pr-row-static{cursor:default}
-  .pr-row-static:hover{background:var(--surface);border-color:var(--border)}
   .pr-row-ic{
     flex:0 0 auto;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
     background:var(--sand);color:#7A4A2A;
@@ -364,16 +362,15 @@
   .pr-row-t{display:flex;align-items:center;gap:8px;font-size:17px;line-height:1.25;font-weight:800}
   .pr-row-d{display:block;font-size:16px;line-height:1.3;color:var(--ink-2);margin-top:2px}
   .pr-chev{width:20px;height:20px;flex:0 0 auto;color:var(--primary-dark)}
-  .pr-mail{font-size:17px;font-weight:700;overflow-wrap:anywhere}
 
   /* barra de guardado fija sobre el gesto del sistema */
   .pr-save{
     position:absolute;left:0;right:0;bottom:0;z-index:6;
-    padding:10px 16px 28px;
+    padding:10px 16px 24px;
     background:linear-gradient(180deg,rgba(255,248,241,0) 0%,var(--bg) 34%);
   }
   .pr-save-msg{
-    display:flex;align-items:center;gap:7px;margin-bottom:8px;
+    display:flex;align-items:center;gap:7px;margin-bottom:6px;
     font-size:16px;line-height:1.3;font-weight:700;color:var(--ink-2);
   }
   .pr-save-msg .ic{width:18px;height:18px}
@@ -382,7 +379,75 @@
   .pr-scroll-save{padding-bottom:132px}
 
   /* ============================================================
-     PANTALLA 3 · hoja del dibujo
+     PANTALLA 3 · EL ÍNDICE Y SUS DOS APARTADOS
+     ============================================================ */
+  .pr-me{display:flex;align-items:flex-start;gap:14px;padding:12px 14px}
+  .pr-me-txt{flex:1 1 auto;min-width:0}
+  .pr-me-name{font-size:23px;line-height:1.15;font-weight:800;letter-spacing:-.015em}
+  .pr-me-facts{
+    display:flex;align-items:flex-start;gap:7px;margin-top:3px;
+    font-size:16px;line-height:1.3;color:var(--ink-2);
+  }
+  .pr-me-facts .ic{width:18px;height:18px;margin-top:1px;color:var(--primary-dark)}
+  .pr-me-mail{margin-top:5px;font-size:15.5px;line-height:1.3;font-weight:700;overflow-wrap:anywhere}
+
+  .pr-hub .pr-h{font-size:27px}
+  .pr-hub .pr-sub{margin-top:4px;font-size:16.5px;line-height:1.35}
+  .pr-hub .pr-blk{font-size:20px;margin-top:10px}
+  .pr-hub .pr-rows{margin-top:6px;gap:7px}
+  .pr-hub .pr-card{margin-top:8px}
+  .pr-hub .pr-row{min-height:54px;padding:5px 12px;border-radius:16px}
+  .pr-hub .pr-row-ic{width:38px;height:38px;border-radius:12px}
+  .pr-hub .pr-row-ic .ic{width:21px;height:21px}
+  .pr-hub .pr-row-t{font-size:16.5px}
+  .pr-hub .pr-row-d{font-size:15.5px;margin-top:1px;line-height:1.25}
+  .pr-hub .pr-chev{width:18px;height:18px}
+  .pr-hub .pr-hint{margin-top:4px;font-size:15px}
+  .pr-hub .pr-me{padding:10px 12px}
+  .pr-hub .pr-me-name{font-size:22px}
+  .pr-hub .pr-me-facts{font-size:15.5px;line-height:1.25;margin-top:2px}
+  .pr-hub .pr-me-mail{font-size:15px;margin-top:3px}
+
+  .pr-nav{
+    min-height:74px;padding:10px 12px;text-decoration:none;
+    border-color:var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pr-nav .pr-row-t{font-size:17.5px}
+  .pr-nav .pr-chev{width:22px;height:22px}
+  .pr-hub .pr-nav{min-height:68px}
+  .pr-hub .pr-nav .pr-row-ic{display:none}
+  .pr-hub .pr-nav .pr-row-t{font-size:17.5px}
+
+  /* ---------- el flujo dibujado entre marcos ---------- */
+  .pr-flow{
+    position:relative;width:1018px;margin:0 auto;
+    display:flex;align-items:flex-start;gap:26px;
+  }
+  .pr-flow-gap{flex:0 0 auto;width:186px;align-self:stretch}
+  .pr-subs{display:grid;gap:34px;flex:0 0 auto}
+  .pr-arrows{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+  .pr-arw{fill:none;stroke:var(--primary);stroke-width:2.6;stroke-linecap:round}
+  .pr-arw-back{
+    fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;
+    stroke-dasharray:8 7;
+  }
+  .pr-arw-b{fill:var(--surface);stroke:var(--primary);stroke-width:2.2}
+  .pr-arw-t{
+    fill:var(--primary-dark);font-family:var(--font);font-size:16px;
+    font-weight:800;text-anchor:middle;dominant-baseline:central;
+  }
+  .pr-arw-lab{
+    fill:var(--ink-2);font-family:var(--font);font-size:15px;font-weight:700;
+  }
+  .pr-flow-legend{
+    width:1018px;margin:20px auto 0;display:flex;align-items:flex-start;gap:9px;
+    font-size:16px;line-height:1.45;color:var(--ink-2);
+  }
+  .pr-flow-legend .ic{width:20px;height:20px;margin-top:1px;color:var(--primary-dark)}
+  .pr-flow-legend b{font-weight:800;color:var(--ink)}
+
+  /* ============================================================
+     hoja del dibujo · se abre desde el índice
      ============================================================ */
   .pr-scrim{position:absolute;inset:0;background:rgba(43,26,18,.52);z-index:8}
   .pr-sheet{
@@ -421,7 +486,7 @@
   .pr-sheet-note{margin-top:8px;font-size:16px;line-height:1.35;color:var(--ink-2);text-align:center}
 
   /* ============================================================
-     PANTALLA 4 · confirmación de cerrar sesión
+     PANTALLA 3 · confirmación de cerrar sesión
      ============================================================ */
   .pr-dialog-wrap{position:absolute;inset:0;z-index:9;display:grid;place-items:center;padding:0 18px}
   .pr-dialog{
@@ -441,16 +506,20 @@
   .pr-dialog-btns{display:grid;gap:10px;margin-top:16px}
 
   /* ============================================================
-     ESCRITORIO · perfil en dos columnas
+     ESCRITORIO · índice a la izquierda, apartado a la derecha
      ============================================================ */
   .pr-dmain{
     flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:14px 0;
-    display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:start;
+    display:grid;grid-template-columns:352px 1fr;gap:22px;align-items:start;
   }
   .pr-dcol{min-width:0}
+  .pr-drail{
+    padding:14px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--r-card);box-shadow:var(--sh-1);
+  }
   .pr-dtop{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-  .pr-dh{font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
-  .pr-dsub{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:3px}
+  .pr-dh{font-size:26px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .pr-dsub{font-size:16.5px;line-height:1.3;color:var(--ink-2);margin-top:3px}
   .pr-dstatus{
     display:inline-flex;align-items:center;gap:6px;
     padding:5px 12px;border-radius:999px;background:var(--accent-soft);
@@ -468,13 +537,11 @@
   .pr-dblk-sub{font-size:15.5px;font-weight:600;color:var(--ink-2);margin-top:1px}
   .pr-dwho{display:flex;align-items:flex-start;gap:14px;margin-top:8px}
   .pr-dfields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
-  .pr-dfields4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
   .pr-dcard .pr-input,.pr-dcard .pr-select{height:52px;font-size:16.5px}
   .pr-dcard .pr-av-72{width:64px;height:64px;font-size:32px}
   .pr-dcard .pr-avbtn{width:68px;height:68px}
   .pr-dcard .pr-label{font-size:16px}
   .pr-dcard .pr-hint{font-size:15.5px;margin-top:5px}
-  .pr-dsep{margin-top:14px;padding-top:12px;border-top:1.5px solid var(--border)}
   .pr-drow{
     display:flex;align-items:center;gap:11px;width:100%;min-height:64px;
     padding:8px 10px;border-radius:16px;background:var(--surface);
@@ -482,15 +549,41 @@
     transition:background-color .16s ease,border-color .16s ease;
   }
   .pr-drow:hover{background:#FFF3E9;border-color:var(--border-strong)}
-  .pr-drow-static{cursor:default}
-  .pr-drow-static:hover{background:var(--surface);border-color:var(--border)}
+  .pr-drow[aria-current="page"]{
+    border-color:var(--primary);background:#FFF3EB;box-shadow:0 0 0 3px var(--primary-soft);
+  }
+  .pr-drow[aria-current="page"]:hover{background:#FFF3EB;border-color:var(--primary)}
   .pr-drow .pr-row-ic{width:40px;height:40px;border-radius:12px}
   .pr-drow .pr-row-t{font-size:16.5px}
   .pr-drow .pr-row-d{font-size:15.5px}
   .pr-drows{display:grid;gap:8px;margin-top:10px}
-  .pr-dmail{font-size:16.5px;font-weight:700;overflow-wrap:anywhere}
-  .pr-dout{margin-top:10px}
-  .pr-dhint{font-size:15.5px;line-height:1.35;color:var(--ink-2);margin-top:8px}
+
+  /* raíl del escritorio: el índice, en versión compacta */
+  .pr-drail .pr-me{padding:6px 10px;gap:12px;margin-top:8px;border-radius:16px;box-shadow:none}
+  .pr-drail .pr-me .pr-avbtn{width:50px;height:50px}
+  .pr-drail .pr-me .pr-av-72{width:48px;height:48px;font-size:25px}
+  .pr-drail .pr-me-name{font-size:19px}
+  .pr-drail .pr-me-facts{font-size:15px;margin-top:1px}
+  .pr-drail .pr-me-facts .ic{width:16px;height:16px}
+  .pr-drail .pr-me-mail{font-size:14.5px;margin-top:2px}
+  .pr-drail .pr-blk{font-size:16px;margin-top:10px;display:block;color:var(--ink-2);
+    font-weight:800;letter-spacing:0}
+  .pr-drail .pr-drows{margin-top:5px;gap:5px}
+  .pr-drail .pr-drow{min-height:44px;padding:4px 9px;border-radius:13px}
+  .pr-drail .pr-drow .pr-row-ic{width:30px;height:30px;border-radius:9px}
+  .pr-drail .pr-drow .pr-row-ic .ic{width:18px;height:18px}
+  .pr-drail .pr-drow .pr-row-t{font-size:15.5px}
+  .pr-drail .pr-drow .pr-row-d{font-size:14.5px;line-height:1.2;margin-top:1px}
+  .pr-drail .pr-chev{width:17px;height:17px}
+  .pr-drail .pr-nav{min-height:48px;border-color:var(--border-strong);border-width:1.5px}
+  .pr-drail .pr-nav .pr-row-t{font-size:16px}
+  .pr-drail .pr-hint{margin-top:6px;font-size:14.5px}
+  .pr-dpanel{min-width:0}
+  .pr-dcrumb{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:15.5px;font-weight:700;color:var(--ink-2);
+  }
+  .pr-dcrumb .ic{width:17px;height:17px;color:var(--primary-dark)}
 
   /* movimiento opcional */
   @media (prefers-reduced-motion:reduce){
@@ -498,6 +591,7 @@
   }
 </style>
 </head>
+
 <body>
 
 <!-- ===== sprite de iconos (SVG en línea) ===== -->
@@ -540,16 +634,16 @@
       <h1>Perfil</h1>
       <p class="tradeoff">
         <span class="tradeoff-tag">Compromiso</span>
-        Todo lo que la app sabe de ti en una sola pantalla con guardado explícito: se entiende sin menús, pero es larga y en el móvil hay que desplazar para llegar a «Cerrar sesión».
+        El perfil pasa a ser un índice: dos filas con su resumen llevan a «Tus datos y fechas» y a «Tallas y gustos», cada una con su «Guardar»; se entiende de un vistazo, pero editar cuesta un toque más.
       </p>
     </div>
     <div class="keys">
       <h2>Claves de esta pantalla</h2>
       <ol>
-        <li><span class="kn" aria-hidden="true">1</span><span>Lo tuyo primero: nombre, dibujo, fechas y tallas. Lo de la app (instalar, novedades, tour) va después, porque se toca una vez.</span></li>
-        <li><span class="kn" aria-hidden="true">2</span><span>«Guardar cambios» dice siempre en qué punto estás: guardado en verde, o qué falta corregir en rojo y con texto.</span></li>
-        <li><span class="kn" aria-hidden="true">3</span><span>El dibujo es solo emoji: doce opciones en una hoja, sin subir ninguna foto y sin salir del perfil.</span></li>
-        <li><span class="kn" aria-hidden="true">4</span><span>Cerrar sesión pide confirmación y dice que no se borra nada: nadie pierde sus listas por pulsar de más.</span></li>
+        <li><span class="kn" aria-hidden="true">1</span><span>El perfil es el índice: quién eres y dos filas grandes, «Tus datos y fechas» y «Tallas y gustos», con el resumen de lo que hay ahora y una flecha.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Cada fila abre su propia pantalla, con «‹ Perfil» para volver y su «Guardar»: se guarda lo que has tocado, no todo a la vez.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Cuenta y app (contraseña, instalar, novedades, tour, cerrar sesión) se quedan en el índice, que es donde se buscan.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Las flechas entre los marcos dibujan ese camino: el índice (pantalla 3) lleva a la pantalla 1 y a la 2, y «‹ Perfil» vuelve.</span></li>
       </ol>
     </div>
   </div>
@@ -559,21 +653,44 @@
 <main>
 
   <!-- ==========================================================
-       FILA MÓVIL
+       FILA MÓVIL · EL ÍNDICE Y SUS DOS APARTADOS
        ========================================================== -->
   <section class="row" aria-labelledby="movil-h">
     <div class="row-head">
-      <h2 id="movil-h">Móvil</h2>
-      <p>El perfil, de arriba abajo: tus datos y tus fechas, las tallas y gustos, y la cuenta con la app. Sin barra de pestañas: se entra desde tu nombre y se sale con «Inicio».</p>
+      <h2 id="movil-h">Móvil · el índice y sus dos apartados</h2>
+      <p>La pantalla 3 que hoy es la única pasa a ser el índice: dice quién eres y a qué se puede entrar, y las antiguas 1 y 2 se convierten en sus dos apartados. Cada fila con flecha abre su pantalla y «‹ Perfil» vuelve al índice: justo lo que pedía el comentario del propietario.</p>
     </div>
 
-    <div class="devices">
+    <div class="pr-flow">
+      <svg class="pr-arrows" width="1018" height="1843" viewBox="0 0 1018 1843" aria-hidden="true" focusable="false">
+        <defs>
+          <marker id="pr-arhead" viewBox="0 0 11 11" refX="9.2" refY="5.5" markerWidth="5.4" markerHeight="5.4" orient="auto-start-reverse">
+            <path d="M1.4 1.4 9.4 5.5 1.4 9.6" fill="none" stroke="#B93D12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <marker id="pr-arhead-back" viewBox="0 0 11 11" refX="9.2" refY="5.5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M1.4 1.4 9.4 5.5 1.4 9.6" fill="none" stroke="#5C4033" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <!-- la fila «Tus datos y fechas» abre la pantalla 1 -->
+        <path class="pr-arw" d="M406 385H610" marker-end="url(#pr-arhead)"/>
+        <circle class="pr-arw-b" cx="556" cy="385" r="15"/>
+        <text class="pr-arw-t" x="556" y="385">1</text>
 
-      <!-- ---------- PANTALLA 1: PERFIL · TUS DATOS ---------- -->
-      <figure class="device">
+        <!-- la fila «Tallas y gustos» abre la pantalla 2 -->
+        <path class="pr-arw" d="M406 460H444Q468 460 468 484V1294Q468 1318 492 1318H610" marker-end="url(#pr-arhead)"/>
+        <circle class="pr-arw-b" cx="556" cy="1318" r="15"/>
+        <text class="pr-arw-t" x="556" y="1318">2</text>
+
+        <!-- «‹ Perfil» vuelve al índice -->
+        <path class="pr-arw-back" d="M610 1600H324Q300 1600 300 1576V936" marker-end="url(#pr-arhead-back)"/>
+        <text class="pr-arw-lab" x="330" y="1578">‹ Perfil vuelve al índice</text>
+      </svg>
+
+      <!-- ---------- PANTALLA 3: EL ÍNDICE ---------- -->
+      <figure class="device" id="pantalla-3">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 1</span>
-          <span class="cap-t">Perfil · tus datos (con un error a la vista)</span>
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Perfil · el índice de todo lo tuyo</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -586,326 +703,312 @@
             </span>
           </div>
 
-          <div class="pf-scroll pr-scroll-save">
-            <a class="back" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Inicio</a>
+          <div class="pf-scroll pr-hub">
+            <h2 class="pr-h">Perfil</h2>
+            <p class="pr-sub">Elige qué quieres cambiar.</p>
 
-            <h2 class="pr-h">Tu perfil</h2>
-            <p class="pr-sub">Así te ven tus grupos. Esto solo lo cambias tú.</p>
+            <section class="pr-card pr-me" aria-labelledby="p1-me-h">
+              <h3 class="sr-only" id="p1-me-h">Tú</h3>
+              <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                <span class="pr-av-72" aria-hidden="true">🌻</span>
+                <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+              </button>
+              <div class="pr-me-txt">
+                <p class="pr-me-name">Lucía</p>
+                <p class="pr-me-facts"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>Cumple el 14 de marzo</p>
+                <p class="pr-me-facts"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>Santo el 13 de diciembre</p>
+                <p class="pr-me-mail">lucia.martin@gmail.com</p>
+              </div>
+            </section>
+            <p class="pr-hint">Toca tu dibujo si quieres cambiarlo.</p>
 
-            <section class="pr-card" aria-labelledby="p1-who-h">
-              <h3 class="sr-only" id="p1-who-h">Tu nombre y tu dibujo</h3>
-              <div class="pr-who">
-                <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
-                  <span class="pr-av-72" aria-hidden="true">🌻</span>
-                  <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
-                </button>
-                <div class="pr-who-txt">
-                  <label class="pr-label" for="p1-nombre">Tu nombre</label>
-                  <input class="pr-input pr-input-err" id="p1-nombre" name="nombre" type="text" value="Lu" autocomplete="nickname" aria-invalid="true" aria-describedby="p1-nombre-err">
-                  <p class="pr-err" id="p1-nombre-err">
-                    <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
-                    <span>Escribe al menos 3 letras: es el nombre que verán tus grupos.</span>
-                  </p>
+            <h3 class="pr-blk">Edita tu perfil</h3>
+            <div class="pr-rows">
+              <a class="pr-row pr-nav" href="#pantalla-1">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tus datos y fechas</span>
+                  <span class="pr-row-d">Lucía · 14 de marzo · santo 13 dic</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </a>
+              <a class="pr-row pr-nav" href="#pantalla-2">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tallas y gustos</span>
+                  <span class="pr-row-d">Camiseta L · Pantalón 42 · Calzado 39</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </a>
+            </div>
+
+            <h3 class="pr-blk">Tu cuenta</h3>
+            <div class="pr-rows">
+              <button class="pr-row" type="button">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
+                  <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+              <button class="pr-row" type="button" aria-haspopup="dialog">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Cerrar sesión</span>
+                  <span class="pr-row-d">Se pide confirmación.</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+            </div>
+
+            <h3 class="pr-blk">La app <span class="pr-blk-sub">Se toca una vez</span></h3>
+            <div class="pr-rows">
+              <button class="pr-row" type="button">
+                <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
+                  <span class="pr-row-d">Añádela a tu pantalla de inicio.</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+              <button class="pr-row" type="button">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
+                  <span class="pr-row-d">Lo que ha cambiado · 26 de octubre.</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+              <button class="pr-row" type="button">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
+                  <span class="pr-row-d">Dos minutos por todas las pantallas.</span>
+                </span>
+                <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <div class="pr-flow-gap" aria-hidden="true"></div>
+
+      <div class="pr-subs">
+
+        <!-- ---------- PANTALLA 1: TUS DATOS Y FECHAS ---------- -->
+        <figure class="device" id="pantalla-1">
+          <figcaption class="cap">
+            <span class="cap-n">Pantalla 1</span>
+            <span class="cap-t">Tus datos y fechas · se abre desde el índice</span>
+          </figcaption>
+          <div class="pf">
+            <div class="pf-notch" aria-hidden="true"></div>
+            <div class="pf-status" aria-hidden="true">
+              <span class="sb-time">9:41</span>
+              <span class="sb-right">
+                <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+              </span>
+            </div>
+
+            <div class="pf-scroll pr-scroll-save">
+              <a class="back" href="#pantalla-3"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Perfil</a>
+
+              <h2 class="pr-h">Tus datos y fechas</h2>
+              <p class="pr-sub">Solo cambias lo de esta pantalla.</p>
+
+              <section class="pr-card" aria-labelledby="p2-who-h">
+                <h3 class="sr-only" id="p2-who-h">Tu nombre y tu dibujo</h3>
+                <div class="pr-who">
+                  <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                    <span class="pr-av-72" aria-hidden="true">🌻</span>
+                    <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                  </button>
+                  <div class="pr-who-txt">
+                    <label class="pr-label" for="p2-nombre">Tu nombre</label>
+                    <input class="pr-input" id="p2-nombre" name="nombre" type="text" value="Lucía" autocomplete="nickname" aria-describedby="p2-nombre-hint">
+                    <p class="pr-hint" id="p2-nombre-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section aria-labelledby="p1-fechas-h">
-              <h3 class="pr-blk" id="p1-fechas-h">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
-              <div class="pr-card">
-                <fieldset class="pr-fs">
-                  <legend class="pr-legend">Tu cumpleaños</legend>
-                  <div class="pr-row2">
-                    <div class="pr-field">
-                      <label class="pr-label" for="p1-dia">Día</label>
-                      <span class="pr-sel-wrap">
-                        <select class="pr-select" id="p1-dia" name="dia-cumple">
-                          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
-                        </select>
-                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                      </span>
+              <section aria-labelledby="p2-fechas-h">
+                <h3 class="pr-blk" id="p2-fechas-h">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+                <div class="pr-card">
+                  <fieldset class="pr-fs">
+                    <legend class="pr-legend">Tu cumpleaños</legend>
+                    <div class="pr-row2">
+                      <div class="pr-field">
+                        <label class="pr-label" for="p2-dia">Día</label>
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="p2-dia" name="dia-cumple">
+                            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
+                      <div class="pr-field">
+                        <label class="pr-label" for="p2-mes">Mes</label>
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="p2-mes" name="mes-cumple">
+                            <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
                     </div>
-                    <div class="pr-field">
-                      <label class="pr-label" for="p1-mes">Mes</label>
-                      <span class="pr-sel-wrap">
-                        <select class="pr-select" id="p1-mes" name="mes-cumple">
-                          <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
-                        </select>
-                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                      </span>
-                    </div>
-                  </div>
-                </fieldset>
+                  </fieldset>
 
-                <fieldset class="pr-fs">
-                  <legend class="pr-legend">Tu santo <span class="pr-opt">(opcional)</span></legend>
-                  <div class="pr-row2">
-                    <div class="pr-field">
-                      <label class="pr-label" for="p1-santo-dia">Día</label>
-                      <span class="pr-sel-wrap">
-                        <select class="pr-select" id="p1-santo-dia" name="dia-santo">
-                          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
-                        </select>
-                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                      </span>
+                  <fieldset class="pr-fs">
+                    <legend class="pr-legend">Tu santo <span class="pr-opt">(opcional)</span></legend>
+                    <div class="pr-row2">
+                      <div class="pr-field">
+                        <label class="pr-label" for="p2-santo-dia">Día</label>
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="p2-santo-dia" name="dia-santo">
+                            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
+                      <div class="pr-field">
+                        <label class="pr-label" for="p2-santo-mes">Mes</label>
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="p2-santo-mes" name="mes-santo">
+                            <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
                     </div>
-                    <div class="pr-field">
-                      <label class="pr-label" for="p1-santo-mes">Mes</label>
-                      <span class="pr-sel-wrap">
-                        <select class="pr-select" id="p1-santo-mes" name="mes-santo">
-                          <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
-                        </select>
-                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                      </span>
-                    </div>
-                  </div>
-                  <p class="pr-sug">
-                    <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
-                    <span><b>Sugerido por tu nombre:</b> Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></span>
-                  </p>
-                </fieldset>
-              </div>
-            </section>
+                    <p class="pr-sug">
+                      <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                      <span><b>Sugerido por tu nombre:</b> Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></span>
+                    </p>
+                  </fieldset>
+                </div>
+              </section>
+            </div>
 
-            <section aria-labelledby="p1-tallas-h">
-              <h3 class="pr-blk" id="p1-tallas-h">Tallas y gustos <span class="pr-blk-sub">Para que acierten con el regalo</span></h3>
+            <div class="pr-save">
+              <p class="pr-save-msg">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span id="p2-save-msg">Se guarda solo este apartado.</span>
+              </p>
+              <button class="btn btn-primary btn-block" type="button" aria-describedby="p2-save-msg">Guardar cambios</button>
+            </div>
+            <div class="pf-home" aria-hidden="true"></div>
+          </div>
+        </figure>
+
+        <!-- ---------- PANTALLA 2: TALLAS Y GUSTOS ---------- -->
+        <figure class="device" id="pantalla-2">
+          <figcaption class="cap">
+            <span class="cap-n">Pantalla 2</span>
+            <span class="cap-t">Tallas y gustos · se abre desde el índice</span>
+          </figcaption>
+          <div class="pf">
+            <div class="pf-notch" aria-hidden="true"></div>
+            <div class="pf-status" aria-hidden="true">
+              <span class="sb-time">9:41</span>
+              <span class="sb-right">
+                <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+              </span>
+            </div>
+
+            <div class="pf-scroll pr-scroll-save">
+              <a class="back" href="#pantalla-3"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Perfil</a>
+
+              <h2 class="pr-h">Tallas y gustos</h2>
+              <p class="pr-sub">Para que acierten con el regalo.</p>
+
               <div class="pr-card">
                 <div class="pr-grid2">
                   <div class="pr-field">
-                    <label class="pr-label" for="p1-camiseta">Camiseta</label>
+                    <label class="pr-label" for="p3-camiseta">Camiseta</label>
                     <span class="pr-sel-wrap">
-                      <select class="pr-select" id="p1-camiseta" name="talla-camiseta">
+                      <select class="pr-select" id="p3-camiseta" name="talla-camiseta">
                         <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
                       </select>
                       <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
                     </span>
                   </div>
                   <div class="pr-field">
-                    <label class="pr-label" for="p1-pantalon">Pantalón</label>
+                    <label class="pr-label" for="p3-pantalon">Pantalón</label>
                     <span class="pr-sel-wrap">
-                      <select class="pr-select" id="p1-pantalon" name="talla-pantalon">
+                      <select class="pr-select" id="p3-pantalon" name="talla-pantalon">
                         <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
                       </select>
                       <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
                     </span>
                   </div>
                 </div>
-                <p class="pr-hint">Elige de la lista, sin escribir: <span class="pr-new">nuevo</span></p>
-              </div>
-            </section>
-          </div>
-
-          <div class="pr-save">
-            <p class="pr-save-msg is-err">
-              <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
-              <span id="p1-save-why">Corrige tu nombre para poder guardar.</span>
-            </p>
-            <button class="btn btn-primary btn-block" type="button" disabled aria-describedby="p1-save-why">Guardar cambios</button>
-          </div>
-          <div class="pf-home" aria-hidden="true"></div>
-        </div>
-      </figure>
-
-      <!-- ---------- PANTALLA 2: TALLAS Y GUSTOS ---------- -->
-      <figure class="device">
-        <figcaption class="cap">
-          <span class="cap-n">Pantalla 2</span>
-          <span class="cap-t">Perfil · tallas y gustos</span>
-        </figcaption>
-        <div class="pf">
-          <div class="pf-notch" aria-hidden="true"></div>
-          <div class="pf-status" aria-hidden="true">
-            <span class="sb-time">9:41</span>
-            <span class="sb-right">
-              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
-              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
-            </span>
-          </div>
-
-          <div class="pf-scroll pr-scroll-save">
-            <h2 class="pr-h">Tallas y gustos</h2>
-            <p class="pr-sub">Lo ven quienes miran tu lista, para acertar con el regalo.</p>
-
-            <div class="pr-card">
-              <div class="pr-grid2">
-                <div class="pr-field">
-                  <label class="pr-label" for="p2-camiseta">Camiseta</label>
+                <div class="pr-field" style="margin-top:12px">
+                  <label class="pr-label" for="p3-calzado">Calzado</label>
                   <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p2-camiseta" name="talla-camiseta">
-                      <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                    <select class="pr-select" id="p3-calzado" name="talla-calzado">
+                      <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
                     </select>
                     <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
                   </span>
                 </div>
-                <div class="pr-field">
-                  <label class="pr-label" for="p2-pantalon">Pantalón</label>
-                  <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p2-pantalon" name="talla-pantalon">
-                      <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
-                    </select>
-                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                <div class="pr-field" style="margin-top:12px">
+                  <label class="pr-label" for="p3-color">Color favorito</label>
+                  <span class="pr-color-wrap">
+                    <input class="pr-input pr-color" id="p3-color" name="color-favorito" type="text" value="azul marino">
+                    <span class="pr-swatch" aria-hidden="true"></span>
                   </span>
                 </div>
-              </div>
-              <div class="pr-field" style="margin-top:12px">
-                <label class="pr-label" for="p2-calzado">Calzado</label>
-                <span class="pr-sel-wrap">
-                  <select class="pr-select" id="p2-calzado" name="talla-calzado">
-                    <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
-                  </select>
-                  <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                </span>
-              </div>
-              <div class="pr-field" style="margin-top:12px">
-                <label class="pr-label" for="p2-color">Color favorito</label>
-                <span class="pr-color-wrap">
-                  <input class="pr-input pr-color" id="p2-color" name="color-favorito" type="text" value="azul marino">
-                  <span class="pr-swatch" aria-hidden="true"></span>
-                </span>
-              </div>
-              <div class="pr-field" style="margin-top:12px">
-                <label class="pr-label" for="p2-marcas">Marcas favoritas</label>
-                <input class="pr-input" id="p2-marcas" name="marcas" type="text" value="Levi's, Fender">
-              </div>
-              <p class="pr-hint">Elige la talla de la lista, sin escribir: <span class="pr-new">nuevo</span></p>
-            </div>
-
-            <h3 class="pr-blk">Tu cuenta</h3>
-            <div class="pr-rows">
-              <div class="pr-row pr-row-static">
-                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
-                <span class="pr-row-body">
-                  <span class="pr-row-t">Tu correo</span>
-                  <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="pr-save">
-            <p class="pr-save-msg">
-              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
-              <span id="p2-save-msg">Tienes cambios sin guardar.</span>
-            </p>
-            <button class="btn btn-primary btn-block" type="button" aria-describedby="p2-save-msg">Guardar cambios</button>
-          </div>
-          <div class="pf-home" aria-hidden="true"></div>
-        </div>
-      </figure>
-
-      <!-- ---------- PANTALLA 2: PERFIL · CUENTA Y APP ---------- -->
-      <figure class="device">
-        <figcaption class="cap">
-          <span class="cap-n">Pantalla 3</span>
-          <span class="cap-t">Perfil · cuenta y app, ya guardado</span>
-        </figcaption>
-        <div class="pf">
-          <div class="pf-notch" aria-hidden="true"></div>
-          <div class="pf-status" aria-hidden="true">
-            <span class="sb-time">9:41</span>
-            <span class="sb-right">
-              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
-              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
-            </span>
-          </div>
-
-          <div class="pf-scroll">
-            <p class="pr-banner" role="status">
-              <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
-              <span>Cambios guardados</span>
-            </p>
-
-            <section aria-labelledby="p2-cuenta-h">
-              <h3 class="pr-blk" id="p2-cuenta-h">Tu cuenta</h3>
-              <div class="pr-rows">
-                <div class="pr-row pr-row-static">
-                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Tu correo</span>
-                    <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
-                    <span class="pr-row-d">Con él entras en la app.</span>
-                  </span>
+                <div class="pr-field" style="margin-top:12px">
+                  <label class="pr-label" for="p3-marcas">Marcas favoritas</label>
+                  <input class="pr-input" id="p3-marcas" name="marcas" type="text" value="Levi's, Fender">
                 </div>
-                <button class="pr-row" type="button">
-                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
-                    <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
-                  </span>
-                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </button>
+                <p class="pr-hint">Elige la talla de la lista, sin escribir: <span class="pr-new">nuevo</span></p>
               </div>
-            </section>
 
-            <section aria-labelledby="p2-app-h">
-              <h3 class="pr-blk" id="p2-app-h">La app <span class="pr-blk-sub">Se toca una vez</span></h3>
-              <div class="pr-rows">
-                <button class="pr-row" type="button">
-                  <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
-                    <span class="pr-row-d">Añádela a tu pantalla de inicio.</span>
-                  </span>
-                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </button>
-                <button class="pr-row" type="button">
-                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
-                    <span class="pr-row-d">Lo que ha cambiado · 26 de octubre.</span>
-                  </span>
-                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </button>
-                <button class="pr-row" type="button">
-                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
-                    <span class="pr-row-d">Dos minutos por todas las pantallas.</span>
-                  </span>
-                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </button>
-              </div>
-            </section>
+              <p class="pr-hint">Estas tallas también se piden al añadir un deseo de ropa o calzado.</p>
+            </div>
 
-            <section aria-labelledby="p2-sesion-h">
-              <h3 class="pr-blk" id="p2-sesion-h">Sesión</h3>
-              <div class="pr-rows">
-                <button class="pr-row" type="button" aria-haspopup="dialog">
-                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
-                  <span class="pr-row-body">
-                    <span class="pr-row-t">Cerrar sesión</span>
-                    <span class="pr-row-d">Tendrás que volver a entrar con tu correo.</span>
-                  </span>
-                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </button>
-              </div>
-              <p class="pr-hint">Tus listas, tus grupos y tus reservas se quedan donde están.</p>
-            </section>
+            <div class="pr-save">
+              <p class="pr-save-msg">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span id="p3-save-msg">Se guarda solo este apartado.</span>
+              </p>
+              <button class="btn btn-primary btn-block" type="button" aria-describedby="p3-save-msg">Guardar cambios</button>
+            </div>
+            <div class="pf-home" aria-hidden="true"></div>
           </div>
-          <div class="pf-home" aria-hidden="true"></div>
-        </div>
-      </figure>
-
+        </figure>
+      </div>
     </div>
+
+    <p class="pr-flow-legend">
+      <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+      <span><b>El camino:</b> la fila «Tus datos y fechas» abre la <b>pantalla 1</b> y «Tallas y gustos» la <b>pantalla 2</b>; las dos salen del índice (pantalla 3), empiezan por «‹ Perfil» y terminan en su propio «Guardar cambios». Nadie edita a ciegas: el resumen de cada fila ya dice lo que hay guardado.</span>
+    </p>
   </section>
 
   <!-- ==========================================================
-       FILA MÓVIL · LO QUE NO ES EL CAMINO FELIZ
+       FILA MÓVIL · LOS ESTADOS, COLGANDO DE SU PANTALLA
        ========================================================== -->
   <section class="row" aria-labelledby="movil2-h">
     <div class="row-head">
       <h2 id="movil2-h">Móvil · el dibujo y lo que va mal</h2>
-      <p>La hoja del dibujo y los dos estados que no son el camino feliz: un guardado que no llega y una salida que pide permiso.</p>
+      <p>El dibujo se elige sobre el índice (pantalla 3). El nombre mal escrito y el guardado que no llega viven en «Tus datos y fechas» (pantalla 1), cada uno con su «‹ Perfil» detrás, así que se sale sin perder lo escrito.</p>
     </div>
 
     <div class="devices">
 
-      <!-- ---------- PANTALLA 3: HOJA DEL DIBUJO ---------- -->
+      <!-- ---------- ESTADO 1: HOJA DEL DIBUJO, SOBRE EL ÍNDICE ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 4</span>
+          <span class="cap-n">Sobre la pantalla 3</span>
           <span class="cap-t">Elige tu dibujo · hoja con los doce emoji</span>
         </figcaption>
         <div class="pf">
@@ -919,110 +1022,118 @@
             </span>
           </div>
 
-          <!-- el perfil, atenuado detrás de la hoja -->
-          <div class="pf-scroll" aria-hidden="true">
-            <span class="back"><svg class="ic"><use href="#i-back"/></svg>Inicio</span>
-            <p class="pr-h">Tu perfil</p>
-            <p class="pr-sub">Así te ven tus grupos. Esto solo lo cambias tú.</p>
-            <div class="pr-card">
-              <div class="pr-who">
-                <span class="pr-avbtn"><span class="pr-av-72">🌻</span></span>
-                <div class="pr-who-txt">
-                  <span class="pr-label">Tu nombre</span>
-                  <span class="btn btn-secondary btn-block">Lucía</span>
-                  <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
-                </div>
+          <!-- el índice, atenuado detrás de la hoja -->
+          <div class="pf-scroll pr-hub" aria-hidden="true">
+            <span class="pr-h">Perfil</span>
+            <div class="pr-card pr-me">
+              <span class="pr-avbtn"><span class="pr-av-72">🌻</span></span>
+              <div class="pr-me-txt">
+                <span class="pr-me-name">Lucía</span>
+                <p class="pr-me-facts"><svg class="ic"><use href="#i-cake"/></svg>Cumple el 14 de marzo</p>
+                <p class="pr-me-facts"><svg class="ic"><use href="#i-cal"/></svg>Santo el 13 de diciembre</p>
+                <p class="pr-me-mail">lucia.martin@gmail.com</p>
               </div>
             </div>
-            <h3 class="pr-blk">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
-            <div class="pr-card">
-              <span class="pr-legend">Tu cumpleaños</span>
-              <div class="pr-row2">
-                <span class="btn btn-secondary">14</span>
-                <span class="btn btn-secondary">marzo</span>
-              </div>
+            <h3 class="pr-blk">Edita tu perfil</h3>
+            <div class="pr-rows">
+              <span class="pr-row pr-nav">
+                <span class="pr-row-ic"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tus datos y fechas</span>
+                  <span class="pr-row-d">Lucía · 14 de marzo · santo 13 dic</span>
+                </span>
+                <svg class="pr-chev"><use href="#i-chev"/></svg>
+              </span>
+              <span class="pr-row pr-nav">
+                <span class="pr-row-ic"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tallas y gustos</span>
+                  <span class="pr-row-d">Camiseta L · Pantalón 42 · Calzado 39</span>
+                </span>
+                <svg class="pr-chev"><use href="#i-chev"/></svg>
+              </span>
             </div>
           </div>
 
           <div class="pr-scrim" aria-hidden="true"></div>
 
-          <div class="pr-sheet" role="dialog" aria-modal="true" aria-labelledby="p3-sheet-h" aria-describedby="p3-sheet-sub">
+          <div class="pr-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h" aria-describedby="sheet-sub">
             <div class="pr-grab" aria-hidden="true"></div>
             <div class="pr-sheet-head">
-              <h3 class="pr-sheet-h" id="p3-sheet-h">Elige tu dibujo</h3>
+              <h3 class="pr-sheet-h" id="sheet-h">Elige tu dibujo</h3>
               <button class="pr-x" type="button" aria-label="Cerrar">×</button>
             </div>
-            <p class="pr-sheet-sub" id="p3-sheet-sub">Es el dibujo que ven tus grupos. Se guarda al elegir.</p>
+            <p class="pr-sheet-sub" id="sheet-sub">Es el dibujo que ven tus grupos. Se guarda al elegir.</p>
 
             <div class="pr-faces">
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="girasol" checked>
+                <input type="radio" name="dibujo" value="girasol" checked>
                 <span aria-hidden="true">🌻</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Girasol · Elegido</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="guitarra">
+                <input type="radio" name="dibujo" value="guitarra">
                 <span aria-hidden="true">🎸</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Guitarra</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="abuela">
+                <input type="radio" name="dibujo" value="abuela">
                 <span aria-hidden="true">👵</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Abuela</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="bicicleta">
+                <input type="radio" name="dibujo" value="bicicleta">
                 <span aria-hidden="true">🚲</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Bicicleta</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="libros">
+                <input type="radio" name="dibujo" value="libros">
                 <span aria-hidden="true">📚</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Libros</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="balon">
+                <input type="radio" name="dibujo" value="balon">
                 <span aria-hidden="true">⚽</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Balón</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="gato">
+                <input type="radio" name="dibujo" value="gato">
                 <span aria-hidden="true">🐱</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Gato</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="luna">
+                <input type="radio" name="dibujo" value="luna">
                 <span aria-hidden="true">🌙</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Luna</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="paleta">
+                <input type="radio" name="dibujo" value="paleta">
                 <span aria-hidden="true">🎨</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Paleta de pintor</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="auriculares">
+                <input type="radio" name="dibujo" value="auriculares">
                 <span aria-hidden="true">🎧</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Auriculares</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="flor">
+                <input type="radio" name="dibujo" value="flor">
                 <span aria-hidden="true">🌷</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Tulipán</span>
               </label>
               <label class="pr-face">
-                <input type="radio" name="p3-dibujo" value="tarta">
+                <input type="radio" name="dibujo" value="tarta">
                 <span aria-hidden="true">🍰</span>
                 <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
                 <span class="sr-only">Tarta</span>
@@ -1038,10 +1149,111 @@
         </div>
       </figure>
 
-      <!-- ---------- PANTALLA 4: NO SE HA PODIDO GUARDAR ---------- -->
+      <!-- ---------- ESTADO 2: EL NOMBRE NO VALE ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 5</span>
+          <span class="cap-n">Sobre la pantalla 1</span>
+          <span class="cap-t">El nombre no vale: no se puede guardar</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll pr-scroll-save">
+            <a class="back" href="#pantalla-3"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Perfil</a>
+
+            <h2 class="pr-h">Tus datos y fechas</h2>
+            <p class="pr-sub">Solo cambias lo de esta pantalla.</p>
+
+            <section class="pr-card" aria-labelledby="e1-who-h">
+              <h3 class="sr-only" id="e1-who-h">Tu nombre y tu dibujo</h3>
+              <div class="pr-who">
+                <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                  <span class="pr-av-72" aria-hidden="true">🌻</span>
+                  <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                </button>
+                <div class="pr-who-txt">
+                  <label class="pr-label" for="e1-nombre">Tu nombre</label>
+                  <input class="pr-input pr-input-err" id="e1-nombre" name="nombre-error" type="text" value="Lu" autocomplete="nickname" aria-invalid="true" aria-describedby="e1-nombre-err">
+                  <p class="pr-err" id="e1-nombre-err">
+                    <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+                    <span>Escribe al menos 3 letras: es el nombre que verán tus grupos.</span>
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="e1-fechas-h">
+              <h3 class="pr-blk" id="e1-fechas-h">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+              <div class="pr-card">
+                <p class="pr-legend" id="e1-cumple-h">Tu cumpleaños</p>
+                <div class="pr-row2" role="group" aria-labelledby="e1-cumple-h">
+                  <div class="pr-field">
+                    <label class="pr-label" for="e1-dia">Día</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e1-dia" name="dia-error">
+                        <option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="e1-mes">Mes</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e1-mes" name="mes-error">
+                        <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+                <p class="pr-legend" style="margin-top:14px" id="e1-santo-h">Tu santo <span class="pr-opt">(opcional)</span></p>
+                <div class="pr-row2" role="group" aria-labelledby="e1-santo-h">
+                  <div class="pr-field">
+                    <label class="pr-label" for="e1-santo-dia">Día</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e1-santo-dia" name="dia-santo-error">
+                        <option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="e1-santo-mes">Mes</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e1-santo-mes" name="mes-santo-error">
+                        <option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="pr-save">
+            <p class="pr-save-msg is-err">
+              <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+              <span id="e1-save-why">Corrige tu nombre para poder guardar.</span>
+            </p>
+            <button class="btn btn-primary btn-block" type="button" disabled aria-describedby="e1-save-why">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- ESTADO 3: NO SE HA PODIDO GUARDAR ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Sobre la pantalla 1</span>
           <span class="cap-t">No se ha podido guardar</span>
         </figcaption>
         <div class="pf">
@@ -1056,95 +1268,190 @@
           </div>
 
           <div class="pf-scroll pr-scroll-save">
-            <a class="back" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Inicio</a>
+            <a class="back" href="#pantalla-3"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Perfil</a>
 
             <p class="pr-banner pr-banner-err" role="alert">
               <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
               <span>No se ha podido guardar. Lo que has escrito sigue aquí.</span>
             </p>
 
-            <section class="pr-card" aria-labelledby="p4-who-h">
-              <h3 class="sr-only" id="p4-who-h">Tu nombre y tu dibujo</h3>
+            <section class="pr-card" aria-labelledby="e2-who-h">
+              <h3 class="sr-only" id="e2-who-h">Tu nombre y tu dibujo</h3>
               <div class="pr-who">
                 <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
                   <span class="pr-av-72" aria-hidden="true">🌻</span>
                   <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
                 </button>
                 <div class="pr-who-txt">
-                  <label class="pr-label" for="p4-nombre">Tu nombre</label>
-                  <input class="pr-input" id="p4-nombre" name="nombre-error" type="text" value="Lucía" autocomplete="nickname">
+                  <label class="pr-label" for="e2-nombre">Tu nombre</label>
+                  <input class="pr-input" id="e2-nombre" name="nombre-fallo" type="text" value="Lucía" autocomplete="nickname">
                   <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
                 </div>
               </div>
             </section>
 
-            <h3 class="pr-blk">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
-            <div class="pr-card">
-              <p class="pr-legend" id="p4-cumple-h">Tu cumpleaños</p>
-              <div class="pr-row2" role="group" aria-labelledby="p4-cumple-h">
-                <div class="pr-field">
-                  <label class="pr-label" for="p4-dia">Día</label>
-                  <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p4-dia" name="dia-error">
-                      <option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option>
-                    </select>
-                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </span>
+            <section aria-labelledby="e2-fechas-h">
+              <h3 class="pr-blk" id="e2-fechas-h">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+              <div class="pr-card">
+                <p class="pr-legend" id="e2-cumple-h">Tu cumpleaños</p>
+                <div class="pr-row2" role="group" aria-labelledby="e2-cumple-h">
+                  <div class="pr-field">
+                    <label class="pr-label" for="e2-dia">Día</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e2-dia" name="dia-fallo">
+                        <option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="e2-mes">Mes</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e2-mes" name="mes-fallo">
+                        <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
                 </div>
-                <div class="pr-field">
-                  <label class="pr-label" for="p4-mes">Mes</label>
-                  <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p4-mes" name="mes-error">
-                      <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option>
-                    </select>
-                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </span>
+                <p class="pr-legend" style="margin-top:14px" id="e2-santo-h">Tu santo <span class="pr-opt">(opcional)</span></p>
+                <div class="pr-row2" role="group" aria-labelledby="e2-santo-h">
+                  <div class="pr-field">
+                    <label class="pr-label" for="e2-santo-dia">Día</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e2-santo-dia" name="dia-santo-fallo">
+                        <option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="e2-santo-mes">Mes</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="e2-santo-mes" name="mes-santo-fallo">
+                        <option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <h3 class="pr-blk">Tallas y gustos</h3>
-            <div class="pr-card">
-              <div class="pr-grid2">
-                <div class="pr-field">
-                  <label class="pr-label" for="p4-camiseta">Camiseta</label>
-                  <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p4-camiseta" name="talla-camiseta-error">
-                      <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
-                    </select>
-                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </span>
-                </div>
-                <div class="pr-field">
-                  <label class="pr-label" for="p4-pantalon">Pantalón</label>
-                  <span class="pr-sel-wrap">
-                    <select class="pr-select" id="p4-pantalon" name="talla-pantalon-error">
-                      <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
-                    </select>
-                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </span>
-                </div>
-              </div>
-            </div>
+            </section>
           </div>
 
           <div class="pr-save">
             <p class="pr-save-msg is-err">
               <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
-              <span id="p4-save-why">Sin conexión. Puedes reintentarlo sin volver a escribirlo.</span>
+              <span id="e2-save-why">Sin conexión. Puedes reintentarlo sin volver a escribirlo.</span>
             </p>
-            <button class="btn btn-primary btn-block" type="button" aria-describedby="p4-save-why">
+            <button class="btn btn-primary btn-block" type="button" aria-describedby="e2-save-why">
               <svg class="ic ic-20" aria-hidden="true"><use href="#i-redo"/></svg>Reintentar
             </button>
           </div>
           <div class="pf-home" aria-hidden="true"></div>
         </div>
       </figure>
+    </div>
+  </section>
 
-      <!-- ---------- PANTALLA 5: CERRAR SESIÓN ---------- -->
+  <!-- ==========================================================
+       FILA MÓVIL · GUARDADO Y SESIÓN
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil3-h">
+    <div class="row-head">
+      <h2 id="movil3-h">Móvil · guardado y sesión</h2>
+      <p>Las dos confirmaciones: el verde solo cuando el guardado ha ido bien (pantalla 2) y la salida, que se pregunta desde el índice porque es donde está «Cerrar sesión» (pantalla 3).</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- ESTADO 4: GUARDADO EN LA PANTALLA 2 ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 6</span>
+          <span class="cap-n">Sobre la pantalla 2</span>
+          <span class="cap-t">Tallas y gustos · cambios guardados</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll pr-scroll-save">
+            <a class="back" href="#pantalla-3"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Perfil</a>
+
+            <h2 class="pr-h">Tallas y gustos</h2>
+            <p class="pr-sub">Para que acierten con el regalo.</p>
+
+            <p class="pr-banner" role="status">
+              <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+              <span>Cambios guardados</span>
+            </p>
+
+            <div class="pr-card">
+              <div class="pr-grid2">
+                <div class="pr-field">
+                  <label class="pr-label" for="s3-camiseta">Camiseta</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="s3-camiseta" name="talla-camiseta-guardada">
+                      <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+                <div class="pr-field">
+                  <label class="pr-label" for="s3-pantalon">Pantalón</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="s3-pantalon" name="talla-pantalon-guardada">
+                      <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="s3-calzado">Calzado</label>
+                <span class="pr-sel-wrap">
+                  <select class="pr-select" id="s3-calzado" name="talla-calzado-guardada">
+                    <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
+                  </select>
+                  <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                </span>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="s3-color">Color favorito</label>
+                <span class="pr-color-wrap">
+                  <input class="pr-input pr-color" id="s3-color" name="color-favorito-guardado" type="text" value="azul marino">
+                  <span class="pr-swatch" aria-hidden="true"></span>
+                </span>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="s3-marcas">Marcas favoritas</label>
+                <input class="pr-input" id="s3-marcas" name="marcas-guardado" type="text" value="Levi's, Fender">
+              </div>
+            </div>
+          </div>
+
+          <div class="pr-save">
+            <p class="pr-save-msg">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span id="s3-save-msg">La fila del índice ya lo dice.</span>
+            </p>
+            <button class="btn btn-primary btn-block" type="button" aria-describedby="s3-save-msg">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- ESTADO 5: CERRAR SESIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Sobre la pantalla 3</span>
           <span class="cap-t">Cerrar sesión · confirmación</span>
         </figcaption>
         <div class="pf">
@@ -1158,46 +1465,45 @@
             </span>
           </div>
 
-          <!-- el perfil, atenuado detrás del diálogo -->
-          <div class="pf-scroll" aria-hidden="true">
+          <!-- el índice, atenuado detrás del diálogo -->
+          <div class="pf-scroll pr-hub" aria-hidden="true">
+            <span class="pr-h">Perfil</span>
+            <div class="pr-card pr-me">
+              <span class="pr-avbtn"><span class="pr-av-72">🌻</span></span>
+              <div class="pr-me-txt">
+                <span class="pr-me-name">Lucía</span>
+                <p class="pr-me-facts"><svg class="ic"><use href="#i-cake"/></svg>Cumple el 14 de marzo</p>
+                <p class="pr-me-mail">lucia.martin@gmail.com</p>
+              </div>
+            </div>
             <h3 class="pr-blk">Tu cuenta</h3>
             <div class="pr-rows">
-              <div class="pr-row pr-row-static">
-                <span class="pr-row-ic"><svg class="ic"><use href="#i-mail"/></svg></span>
-                <span class="pr-row-body">
-                  <span class="pr-row-t">Tu correo</span>
-                  <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
-                </span>
-              </div>
-              <div class="pr-row">
+              <span class="pr-row">
                 <span class="pr-row-ic"><svg class="ic"><use href="#i-key"/></svg></span>
                 <span class="pr-row-body">
                   <span class="pr-row-t">Cambiar contraseña</span>
                   <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
                 </span>
                 <svg class="pr-chev"><use href="#i-chev"/></svg>
-              </div>
-            </div>
-            <h3 class="pr-blk">Sesión</h3>
-            <div class="pr-rows">
-              <div class="pr-row">
+              </span>
+              <span class="pr-row">
                 <span class="pr-row-ic"><svg class="ic"><use href="#i-exit"/></svg></span>
                 <span class="pr-row-body">
                   <span class="pr-row-t">Cerrar sesión</span>
-                  <span class="pr-row-d">Tendrás que volver a entrar con tu correo.</span>
+                  <span class="pr-row-d">Se pide confirmación.</span>
                 </span>
                 <svg class="pr-chev"><use href="#i-chev"/></svg>
-              </div>
+              </span>
             </div>
           </div>
 
           <div class="pr-scrim" aria-hidden="true"></div>
 
           <div class="pr-dialog-wrap">
-            <div class="pr-dialog" role="dialog" aria-modal="true" aria-labelledby="p4-dlg-h" aria-describedby="p4-dlg-p">
+            <div class="pr-dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-h" aria-describedby="dlg-p">
               <span class="pr-dialog-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
-              <h3 class="pr-dialog-h" id="p4-dlg-h">¿Cerrar sesión?</h3>
-              <p class="pr-dialog-p" id="p4-dlg-p">Tendrás que volver a entrar con tu correo lucia.martin@gmail.com y tu contraseña.</p>
+              <h3 class="pr-dialog-h" id="dlg-h">¿Cerrar sesión?</h3>
+              <p class="pr-dialog-p" id="dlg-p">Tendrás que volver a entrar con tu correo lucia.martin@gmail.com y tu contraseña.</p>
               <p class="pr-dialog-note">No se borra nada: tus listas, tus grupos y tus reservas se quedan como están.</p>
               <div class="pr-dialog-btns">
                 <button class="btn btn-secondary btn-block" type="button">Seguir dentro</button>
@@ -1218,13 +1524,13 @@
   <section class="row" aria-labelledby="desk-h">
     <div class="row-head">
       <h2 id="desk-h">Navegador (escritorio)</h2>
-      <p>El mismo perfil en 1180 px: tus datos y tus fechas a la izquierda, la cuenta, la app y la sesión a la derecha. El nombre de arriba a la derecha es esta pantalla y también su puerta.</p>
+      <p>El mismo modelo en 1180 px: el índice en una lista a la izquierda y el apartado elegido en el panel de la derecha, con su estado de guardado y su botón. Tu nombre, arriba a la derecha, sigue siendo la puerta al perfil.</p>
     </div>
 
     <figure class="browser">
       <figcaption class="cap">
         <span class="cap-n">Escritorio</span>
-        <span class="cap-t">Tu perfil · sesión de Lucía</span>
+        <span class="cap-t">Tu perfil · índice a la izquierda, «Tus datos y fechas» a la derecha</span>
       </figcaption>
 
       <div class="bf">
@@ -1250,11 +1556,98 @@
           </header>
 
           <div class="pr-dmain">
+            <!-- ---------- el índice ---------- -->
             <div class="pr-dcol">
+              <div class="pr-drail">
+                <h2 class="pr-dh">Perfil</h2>
+                <p class="pr-dsub">Elige qué quieres cambiar.</p>
+
+                <section class="pr-card pr-me" aria-labelledby="d-me-h">
+                  <h3 class="sr-only" id="d-me-h">Tú</h3>
+                  <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                    <span class="pr-av-72" aria-hidden="true">🌻</span>
+                    <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                  </button>
+                  <div class="pr-me-txt">
+                    <p class="pr-me-name">Lucía</p>
+                    <p class="pr-me-facts"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>Cumple el 14 de marzo</p>
+                    <p class="pr-me-mail">lucia.martin@gmail.com</p>
+                  </div>
+                </section>
+
+                <h3 class="pr-blk">Edita tu perfil</h3>
+                <div class="pr-drows">
+                  <a class="pr-drow pr-nav" href="#pantalla-1" aria-current="page">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Tus datos y fechas</span>
+                      <span class="pr-row-d">Lucía · 14 de marzo · santo 13 dic</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                  <a class="pr-drow pr-nav" href="#pantalla-2">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Tallas y gustos</span>
+                      <span class="pr-row-d">Camiseta L · Pantalón 42</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </div>
+
+                <h3 class="pr-blk">Tu cuenta</h3>
+                <div class="pr-drows">
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                  <button class="pr-drow" type="button" aria-haspopup="dialog">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Cerrar sesión</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                </div>
+
+                <h3 class="pr-blk">La app</h3>
+                <div class="pr-drows">
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
+                      <span class="pr-row-d">Lo que ha cambiado</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ---------- el apartado elegido ---------- -->
+            <div class="pr-dcol pr-dpanel">
               <div class="pr-dtop">
                 <div>
-                  <h2 class="pr-dh">Tu perfil</h2>
-                  <p class="pr-dsub">Así te ven tus grupos.</p>
+                  <p class="pr-dcrumb"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg>Edita tu perfil · apartado 1 de 2</p>
+                  <h2 class="pr-dh">Tus datos y fechas</h2>
+                  <p class="pr-dsub">Así te ven tus grupos. Solo se guarda este apartado.</p>
                 </div>
                 <div class="pr-dacts">
                   <p class="pr-dstatus" role="status"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Cambios guardados</p>
@@ -1263,7 +1656,7 @@
               </div>
 
               <section class="pr-dcard" aria-labelledby="d-datos-h">
-                <h3 class="pr-dblk" id="d-datos-h">Tus datos y tus fechas</h3>
+                <h3 class="pr-dblk" id="d-datos-h">Tu nombre y tu dibujo</h3>
                 <div class="pr-dwho">
                   <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
                     <span class="pr-av-72" aria-hidden="true">🌻</span>
@@ -1275,160 +1668,69 @@
                     <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
                   </div>
                 </div>
+              </section>
 
-                <div class="pr-dsep">
-                  <div class="pr-dfields">
-                    <div>
-                      <p class="pr-label" id="d-cumple-h">Tu cumpleaños</p>
-                      <div class="pr-row2" role="group" aria-labelledby="d-cumple-h">
-                        <div class="pr-field">
-                          <span class="pr-sel-wrap">
-                            <select class="pr-select" id="d-dia" name="dia-cumple-web" aria-label="Día de tu cumpleaños">
-                              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
-                            </select>
-                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                          </span>
-                        </div>
-                        <div class="pr-field">
-                          <span class="pr-sel-wrap">
-                            <select class="pr-select" id="d-mes" name="mes-cumple-web" aria-label="Mes de tu cumpleaños">
-                              <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
-                            </select>
-                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                          </span>
-                        </div>
+              <section class="pr-dcard" aria-labelledby="d-fechas-h">
+                <h3 class="pr-dblk" id="d-fechas-h">Tus fechas</h3>
+                <p class="pr-dblk-sub">Solo el día y el mes.</p>
+                <div class="pr-dfields">
+                  <div>
+                    <p class="pr-label" id="d-cumple-h">Tu cumpleaños</p>
+                    <div class="pr-row2" role="group" aria-labelledby="d-cumple-h">
+                      <div class="pr-field">
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="d-dia" name="dia-cumple-web" aria-label="Día de tu cumpleaños">
+                            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
+                      <div class="pr-field">
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="d-mes" name="mes-cumple-web" aria-label="Mes de tu cumpleaños">
+                            <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <p class="pr-label" id="d-santo-h">Tu santo <span class="pr-opt">(opcional)</span></p>
-                      <div class="pr-row2" role="group" aria-labelledby="d-santo-h">
-                        <div class="pr-field">
-                          <span class="pr-sel-wrap">
-                            <select class="pr-select" id="d-santo-dia" name="dia-santo-web" aria-label="Día de tu santo">
-                              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
-                            </select>
-                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                          </span>
-                        </div>
-                        <div class="pr-field">
-                          <span class="pr-sel-wrap">
-                            <select class="pr-select" id="d-santo-mes" name="mes-santo-web" aria-label="Mes de tu santo">
-                              <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
-                            </select>
-                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                          </span>
-                        </div>
+                  </div>
+                  <div>
+                    <p class="pr-label" id="d-santo-h">Tu santo <span class="pr-opt">(opcional)</span></p>
+                    <div class="pr-row2" role="group" aria-labelledby="d-santo-h">
+                      <div class="pr-field">
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="d-santo-dia" name="dia-santo-web" aria-label="Día de tu santo">
+                            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
                       </div>
-                      <p class="pr-hint">Sugerido por tu nombre: Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></p>
+                      <div class="pr-field">
+                        <span class="pr-sel-wrap">
+                          <select class="pr-select" id="d-santo-mes" name="mes-santo-web" aria-label="Mes de tu santo">
+                            <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                          </select>
+                          <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
                     </div>
+                    <p class="pr-hint">Sugerido por tu nombre: Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></p>
                   </div>
                 </div>
               </section>
 
-              <section class="pr-dcard" aria-labelledby="d-tallas-h">
-                <h3 class="pr-dblk" id="d-tallas-h">Tallas y gustos</h3>
-                <p class="pr-dblk-sub">Lo ven quienes miran tu lista. Elige de la lista, sin escribir. <span class="pr-new">nuevo</span></p>
-                <div class="pr-dfields4">
-                  <div class="pr-field">
-                    <label class="pr-label" for="d-camiseta">Camiseta</label>
-                    <span class="pr-sel-wrap">
-                      <select class="pr-select" id="d-camiseta" name="talla-camiseta-web">
-                        <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
-                      </select>
-                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                    </span>
-                  </div>
-                  <div class="pr-field">
-                    <label class="pr-label" for="d-pantalon">Pantalón</label>
-                    <span class="pr-sel-wrap">
-                      <select class="pr-select" id="d-pantalon" name="talla-pantalon-web">
-                        <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
-                      </select>
-                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                    </span>
-                  </div>
-                  <div class="pr-field">
-                    <label class="pr-label" for="d-calzado">Calzado</label>
-                    <span class="pr-sel-wrap">
-                      <select class="pr-select" id="d-calzado" name="talla-calzado-web">
-                        <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
-                      </select>
-                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
-                    </span>
-                  </div>
-                  <div class="pr-field">
-                    <label class="pr-label" for="d-color">Color favorito</label>
-                    <span class="pr-color-wrap">
-                      <input class="pr-input pr-color" id="d-color" name="color-favorito" type="text" value="azul marino">
-                      <span class="pr-swatch" aria-hidden="true"></span>
-                    </span>
-                  </div>
-                </div>
-                <div class="pr-field" style="margin-top:12px">
-                  <label class="pr-label" for="d-marcas">Marcas favoritas</label>
-                  <input class="pr-input" id="d-marcas" name="marcas" type="text" value="Levi's, Fender">
-                </div>
-              </section>
-            </div>
-
-            <div class="pr-dcol">
-              <section class="pr-dcard" aria-labelledby="d-cuenta-h">
-                <h3 class="pr-dblk" id="d-cuenta-h">Tu cuenta</h3>
-                <div class="pr-drows">
-                  <div class="pr-drow pr-drow-static">
-                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
-                    <span class="pr-row-body">
-                      <span class="pr-row-t">Tu correo</span>
-                      <span class="pr-row-d pr-dmail">lucia.martin@gmail.com</span>
-                    </span>
-                  </div>
-                  <button class="pr-drow" type="button">
-                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
-                    <span class="pr-row-body">
-                      <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
-                      <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
-                    </span>
-                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </button>
-                </div>
-                <div class="pr-dsep">
-                  <h4 class="pr-dblk">Sesión</h4>
-                  <button class="btn btn-secondary btn-block pr-dout" type="button" aria-haspopup="dialog">
-                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-exit"/></svg>Cerrar sesión
-                  </button>
-                  <p class="pr-dhint">Se pide confirmación. No se borra nada.</p>
-                </div>
-              </section>
-
-              <section class="pr-dcard" aria-labelledby="d-app-h">
-                <h3 class="pr-dblk" id="d-app-h">La app</h3>
-                <p class="pr-dblk-sub">Se toca una vez.</p>
-                <div class="pr-drows">
-                  <button class="pr-drow" type="button">
-                    <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
-                    <span class="pr-row-body">
-                      <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
-                      <span class="pr-row-d">Añádela a tu pantalla de inicio.</span>
-                    </span>
-                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </button>
-                  <button class="pr-drow" type="button">
-                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
-                    <span class="pr-row-body">
-                      <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
-                      <span class="pr-row-d">Lo que ha cambiado · 26 de octubre.</span>
-                    </span>
-                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </button>
-                  <button class="pr-drow" type="button">
-                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
-                    <span class="pr-row-body">
-                      <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
-                      <span class="pr-row-d">Dos minutos por todas las pantallas.</span>
-                    </span>
-                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </button>
-                </div>
+              <section class="pr-dcard" aria-labelledby="d-next-h">
+                <h3 class="pr-dblk" id="d-next-h">El otro apartado</h3>
+                <p class="pr-dblk-sub">Se guarda por separado, con su propio botón.</p>
+                <a class="pr-drow pr-nav" href="#pantalla-2" style="margin-top:8px">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Tallas y gustos</span>
+                    <span class="pr-row-d">Camiseta L · Pantalón 42 · Calzado 39</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </a>
               </section>
             </div>
           </div>
@@ -1449,14 +1751,14 @@
     <div class="devices">
       <div class="flow-notes pr-notas">
         <h3>Qué hay, qué es nuevo y qué no</h3>
-        <p>El perfil es la pantalla con menos sorpresas de la app: lo de siempre, con nombres claros y sin esconder nada detrás de iconos. Ojo: no es una pestaña, y por dónde se entra (tu nombre en Inicio, tu ficha en Personas) se cierra cuando se dibuje «Personas».</p>
+        <p>El perfil deja de ser una lista larga de campos: es un índice que dice quién eres y a qué apartado entrar. Así se responde al comentario del propietario —«no entiendo bien cómo editar tu perfil»— sin esconder nada detrás de iconos.</p>
         <ol>
-          <li><span class="fn" aria-hidden="true">1</span><span><b>Lo que ya existe:</b> nombre, dibujo (emoji), cumpleaños, santo, talla de camiseta, pantalón y calzado, color favorito, marcas favoritas y cerrar sesión. Nada de eso cambia de sitio: cambia de forma.</span></li>
-          <li><span class="fn" aria-hidden="true">2</span><span><b>Lo marcado «nuevo»:</b> instalar la app, volver a ver las novedades, repetir el tour, cambiar la contraseña desde aquí y la sugerencia de santo a partir del nombre. Son cinco cosas que hoy no están en la app; si el propietario no las quiere, se quitan y la pantalla sigue en pie.</span></li>
-          <li><span class="fn" aria-hidden="true">3</span><span><b>Tallas de la lista, no escritas a mano:</b> camiseta, pantalón y calzado se eligen de una lista corta (hoy son campos de texto libre). Es la decisión que hace falta confirmar: se gana en aciertos, se pierde el «talla 42 larga».</span></li>
-          <li><span class="fn" aria-hidden="true">4</span><span><b>Un solo botón para guardar:</b> nombre, fechas, tallas y gustos se guardan juntos con «Guardar cambios», que dice qué falta si algo falta. Los emoji se guardan al elegirlos, porque son un toque y no un formulario.</span></li>
-          <li><span class="fn" aria-hidden="true">5</span><span><b>Feedback con texto, no solo con color:</b> «Cambios guardados» en verde únicamente cuando el guardado ha ido bien. Si falla, el aviso rojo dice que no se ha guardado, que lo escrito sigue donde estaba y ofrece «Reintentar»: nunca se anuncia un éxito que no ha ocurrido.</span></li>
-          <li><span class="fn" aria-hidden="true">6</span><span><b>No dibujado a propósito:</b> borrar la cuenta y elegir moneda no existen en la app; las reservas del dueño tampoco se muestran aquí, porque la sorpresa se respeta. Si borrar la cuenta entra en el producto, va aquí abajo, en «Sesión», con confirmación escrita.</span></li>
+          <li><span class="fn" aria-hidden="true">1</span><span><b>Lo que ya existe:</b> nombre, dibujo (emoji), cumpleaños, santo, talla de camiseta, pantalón y calzado, color favorito, marcas favoritas y cerrar sesión. Nada desaparece: cambia de sitio y de forma.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span><b>Lo que cambia:</b> la pantalla 3 pasa a ser el índice; «Tus datos y fechas» (pantalla 1) y «Tallas y gustos» (pantalla 2) son pantallas propias, con «‹ Perfil» para volver y su «Guardar cambios». El dibujo y la cuenta se quedan en el índice.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span><b>Las filas dicen lo que hay:</b> «Lucía · 14 de marzo · santo 13 dic» y «Camiseta L · Pantalón 42 · Calzado 39». Si algo está vacío, la fila lo dice («Sin fechas», «Sin tallas») y sigue llevando a su pantalla.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span><b>Lo marcado «nuevo»:</b> instalar la app, volver a ver las novedades, repetir el tour, cambiar la contraseña desde aquí y la sugerencia de santo a partir del nombre. Si el propietario no las quiere, se quitan y la pantalla sigue en pie.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span><b>Guardado por apartado y con texto, no solo con color:</b> el verde «Cambios guardados» solo aparece cuando se ha guardado. Si falla, el aviso rojo dice que no se ha guardado, que lo escrito sigue donde estaba y ofrece «Reintentar». El dibujo se guarda al elegirlo, porque es un toque.</span></li>
+          <li><span class="fn" aria-hidden="true">6</span><span><b>Abierto y no dibujado:</b> ¿se quedan las tallas con pantalla propia o vuelven a la ficha de la persona? ¿Tallas de la lista o texto libre (se pierde el «talla 42 larga»)? Borrar la cuenta y la moneda no existen; si entran, van en «Tu cuenta» con confirmación escrita. Las reservas del dueño no se muestran aquí.</span></li>
         </ol>
       </div>
     </div>

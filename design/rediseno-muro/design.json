@@ -14,7 +14,7 @@
       "title": "Personas primero — celebraciones",
       "tradeoff": "Comunica al instante el objetivo social (regalar a quien quieres, a tiempo); tu propia lista queda a un toque y la portada tiene más elementos.",
       "width": 1440,
-      "height": 7234
+      "height": 7284
     },
     {
       "file": "03-muro-visual.html",
@@ -40,16 +40,16 @@
     {
       "file": "06-formulario-deseo.html",
       "title": "Personas primero · Añadir y editar deseo",
-      "tradeoff": "Pantalla de la dirección elegida: el enlace rellena casi todo y hay vista previa; el formulario es largo y en móvil requiere scroll.",
+      "tradeoff": "Pantalla de la dirección elegida: el enlace rellena casi todo y hay vista previa; añadir y editar comparten formulario, que es largo y en móvil ocupa dos pantallas por vista.",
       "width": 1440,
-      "height": 2730
+      "height": 4194
     },
     {
       "file": "07-personas.html",
       "title": "Personas primero · Personas",
-      "tradeoff": "Cada persona una vez con sus grupos y su próxima celebración; los grupos pasan a ser una sección más y crear o unirse queda a un toque, a costa de una lista algo más larga.",
+      "tradeoff": "Dos opciones para la misma pestaña: A separa personas y grupos con un selector (un toque más para cambiar) y B deja los grupos en una tira arriba (ocupa alto y hay que deslizar para «Crear» y «Unirme»); en escritorio caben las dos columnas.",
       "width": 1440,
-      "height": 4835
+      "height": 6950
     },
     {
       "file": "08-detalle-deseo.html",
@@ -68,9 +68,9 @@
     {
       "file": "10-perfil.html",
       "title": "Personas primero · Perfil",
-      "tradeoff": "Todo tu perfil en una sola pantalla con guardado explícito: se entiende sin menús, pero es larga y en el móvil hay que desplazar para llegar a «Cerrar sesión».",
+      "tradeoff": "El perfil pasa a ser un índice: dos filas con su resumen llevan a «Tus datos y fechas» y a «Tallas y gustos», cada una con su «Guardar»; se entiende de un vistazo, pero editar cuesta un toque más.",
       "width": 1440,
-      "height": 3837
+      "height": 6046
     },
     {
       "file": "11-acceso.html",

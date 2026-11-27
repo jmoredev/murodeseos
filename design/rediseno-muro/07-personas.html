@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1440">
-<title>Muro de Deseos · Personas · Personas primero</title>
+<title>Muro de Deseos · Personas · dos opciones para la pestaña</title>
 <style>
   /* ============================================================
      Dirección 02 — “Personas primero” · artboard «Personas».
@@ -11,6 +11,14 @@
      paleta (S2), reset, tipografía, botones, píldoras, avatares,
      marco de móvil, marco de navegador y cabecera del dueño.
      Lo específico de esta pantalla usa el prefijo «psn-».
+
+     Ronda de comentarios del dueño (L6):
+       · k2nt4exm — la pestaña mezclaba personas y grupos: aquí se
+         dibujan DOS opciones (A: dos vistas; B: grupos arriba).
+       · 02d95b8d — ningún emoji ni icono se comprime: caja fija,
+         proporción 1:1 y flex-shrink 0, comprobado a 390 px.
+       · tvjmajj8 — las etiquetas de grupo son enlaces a su ficha y
+         nunca van dentro del enlace de la persona.
      ============================================================ */
   :root{
     --bg:#FFF8F1;
@@ -56,10 +64,11 @@
   main{padding-bottom:28px}
 
   /* ---------- iconos ---------- */
-  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic{width:24px;height:24px;flex:0 0 auto;aspect-ratio:1/1}
   .ic-20{width:20px;height:20px}
   .ic-28{width:28px;height:28px}
   .ic-36{width:36px;height:36px}
+  .sb-ic{flex:0 0 auto}
 
   /* ---------- piezas comunes ---------- */
   .btn{
@@ -82,10 +91,14 @@
     text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
   }
   .link-btn:hover{background:var(--primary-soft)}
+
+  /* ---------- avatares: caja fija y cuadrada (comentario 02d95b8d) ---------- */
   .avatar{
+    flex:0 0 auto;aspect-ratio:1/1;
     width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
     font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
     border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+    overflow:hidden;
   }
   .pill{
     display:inline-flex;align-items:center;gap:6px;border-radius:999px;
@@ -110,6 +123,17 @@
   .back:hover{background:var(--primary-soft)}
   .back .ic{width:20px;height:20px}
 
+  /* ---------- nada con forma de icono se comprime ni se deforma ----------
+     Regla dura del dueño (02d95b8d): ancho y alto fijos, 1:1, shrink 0.
+     Cualquier pieza nueva con emoji o icono debe pasar por aquí. */
+  .avatar,.psn-gic,.psn-scard-e,.psn-gtag-e,.psn-ok-ic,.psn-empty-ic,
+  .psn-step-n,.wm-ic,.kn,.fn,.nav-badge,.dt-badge,.psn-seg-n,.ic,.sb-ic{
+    flex:0 0 auto;
+  }
+  .psn-gic,.psn-scard-e,.psn-gtag-e,.psn-ok-ic,.psn-empty-ic,.psn-step-n,
+  .wm-ic,.kn,.fn,.avatar{aspect-ratio:1/1}
+  .psn-gic,.psn-scard-e,.psn-gtag-e,.avatar,.psn-step-n,.kn,.fn,.wm-ic{line-height:1}
+
   /* ============================================================
      CABECERA DE LA DIRECCIÓN (para el dueño)
      ============================================================ */
@@ -129,7 +153,7 @@
   .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
   .keys li{font-size:15.5px;line-height:1.4}
   .keys .kn{
-    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
     color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
     margin-top:2px;
   }
@@ -149,12 +173,13 @@
     padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
   }
   .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
-  .row-head p{font-size:16px;color:var(--ink-2)}
-  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
-  .device{width:390px}
-  .cap{margin-bottom:12px}
+  .row-head p{font-size:16px;color:var(--ink-2);max-width:920px}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:stretch}
+  .device{width:390px;display:flex;flex-direction:column}
+  .cap{flex:1 1 auto;margin-bottom:12px}
   .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
   .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+  .cap-note{display:block;font-size:14.5px;line-height:1.35;color:var(--ink-2);margin-top:5px}
 
   /* ============================================================
      MARCO DE MÓVIL 390 × 844
@@ -164,7 +189,6 @@
     background:var(--bg);
     box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
   }
-  .pf *{min-width:0}
   .pf-notch{
     position:absolute;top:0;left:50%;transform:translateX(-50%);
     width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
@@ -221,7 +245,7 @@
     background:#F6E8DC;border-bottom:1px solid var(--border-strong);
   }
   .dots{display:flex;gap:7px}
-  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block;flex:0 0 auto}
   .url{
     flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
     background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
@@ -263,7 +287,7 @@
   .psn-notas{width:1200px;padding-top:0}
   .psn-notas ol{grid-template-columns:1fr 1fr;gap:16px 40px}
   .fn{
-    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
     color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
   }
 
@@ -273,7 +297,7 @@
   .psn-head{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin-top:2px}
   .psn-meta{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:3px}
 
-  /* buscador que filtra personas y grupos a la vez */
+  /* buscador acotado a la vista que está abierta */
   .psn-search{position:relative;display:block;margin-top:12px}
   .psn-search-in{
     display:block;width:100%;height:56px;padding:0 16px 0 48px;
@@ -339,18 +363,30 @@
   .psn-celeb-next .ic,.psn-celeb-next b{color:var(--primary-dark)}
   .psn-celeb-off{color:var(--ink-2)}
 
-  /* sus grupos, como etiquetas legibles (se abren en «Tus grupos») */
+  /* sus grupos: cada etiqueta es un enlace a la ficha del grupo
+     (comentario tvjmajj8). Van fuera del enlace de la persona: nunca
+     un <a> dentro de otro <a>. */
   .psn-groups{
-    display:flex;align-items:center;gap:6px;flex-wrap:wrap;
-    margin:6px 0 2px;padding-left:60px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    margin:4px 0 0;padding-left:60px;
   }
-  .psn-groups-k{font-size:16px;line-height:1.3;font-weight:700;color:var(--ink-2)}
+  .psn-groups-k{font-size:16px;line-height:1.3;font-weight:700;color:var(--ink-2);flex:0 0 auto}
   .psn-gtag{
-    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
-    padding:2px 10px;background:var(--sand);border:1px solid var(--border);
-    font-size:16px;line-height:1.35;font-weight:700;color:var(--ink);
+    position:relative;display:inline-flex;align-items:center;gap:7px;
+    min-height:40px;padding:0 12px;border-radius:999px;
+    background:var(--sand);border:1.5px solid var(--border-strong);
+    font-size:16px;line-height:1.2;font-weight:700;color:var(--ink);
+    text-decoration:none;
+    transition:background-color .16s ease,border-color .16s ease;
   }
-  .psn-gtag-e{font-size:15px;line-height:1}
+  /* 40 px pintados + 4 px de aire por lado: zona táctil de 48 px */
+  .psn-gtag::after{content:"";position:absolute;inset:-4px;border-radius:999px}
+  .psn-gtag:hover{background:#F7DFC9;border-color:var(--ink-2)}
+  .psn-gtag:hover .psn-gtag-t{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .psn-gtag:focus-visible{border-radius:999px;border-color:var(--primary-dark)}
+  .psn-gtag-e{width:20px;height:20px;display:grid;place-items:center;font-size:15px}
+  .psn-gtag-t{display:inline-block}
+  .psn-gtag-c{width:14px;height:14px;flex:0 0 auto;color:var(--primary-dark)}
 
   /* tus grupos: filas completas que abren la ficha del grupo */
   .psn-glist{
@@ -366,8 +402,8 @@
   .psn-grow:hover{background:#FFF1E5}
   .psn-grow:hover .psn-gname{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
   .psn-gic{
-    flex:0 0 auto;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
-    background:var(--sand);border:1.5px solid var(--border-strong);font-size:23px;line-height:1;
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    background:var(--sand);border:1.5px solid var(--border-strong);font-size:23px;
   }
   .psn-gb{flex:1 1 auto;min-width:0}
   .psn-gname{display:block;font-size:18px;line-height:1.25;font-weight:800}
@@ -382,6 +418,146 @@
     font-size:16px;line-height:1.35;color:#244C36;
   }
   .psn-helper .ic{width:20px;height:20px;margin-top:1px;color:var(--accent)}
+
+  /* ============================================================
+     LAS DOS OPCIONES DE LA PESTAÑA (comentario k2nt4exm)
+     ============================================================ */
+  .opt-grid{
+    display:grid;grid-template-columns:626px 626px;gap:44px;
+    justify-content:center;align-items:start;
+  }
+  .opt{min-width:0}
+  .opt-head{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:16px 18px;box-shadow:var(--sh-1);
+  }
+  .opt-chip{
+    display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:999px;
+    font-size:14.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  }
+  .opt-a .opt-chip{background:var(--primary-soft);color:var(--primary-dark);border:1.5px solid #EEC4A8}
+  .opt-b .opt-chip{background:var(--accent-soft);color:var(--accent);border:1.5px solid #BFDCCB}
+  .opt-h{font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.015em;margin-top:10px}
+  .opt-p{font-size:16.5px;line-height:1.45;color:var(--ink-2);margin-top:6px}
+  .opt-rules{display:grid;gap:7px;margin-top:12px;font-size:16px;line-height:1.4;color:var(--ink)}
+  .opt-rules li{display:flex;gap:8px;align-items:flex-start}
+  .opt-rules .ic{width:18px;height:18px;margin-top:2px;color:var(--accent)}
+  .opt-cost{
+    margin-top:12px;padding:9px 12px;border-radius:12px;background:var(--sand);
+    border:1px solid var(--border-strong);font-size:15.5px;line-height:1.4;color:#7A4A2A;
+  }
+  .opt-cost b{color:#5C3A20}
+  .opt-devices{display:grid;gap:26px;justify-items:center;margin-top:22px}
+  .opt-devices .cap{width:390px}
+  .opt-pick{
+    display:flex;gap:9px;align-items:flex-start;margin-top:16px;padding:11px 13px;
+    border-radius:14px;background:var(--primary-soft);border:1.5px solid #EEC4A8;
+    font-size:16px;line-height:1.4;color:var(--primary-dark);font-weight:600;
+  }
+  .opt-pick .ic{width:20px;height:20px;margin-top:1px;color:var(--primary-dark)}
+
+  /* ---------- Opción A · selector de dos vistas ---------- */
+  .psn-seg{
+    display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px;padding:5px;
+    background:var(--sand);border:2px solid var(--border-strong);border-radius:16px;
+  }
+  .psn-seg-i{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:0 8px;border-radius:11px;border:1.5px solid transparent;
+    font-size:17px;font-weight:700;line-height:1.15;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .psn-seg-i .ic{width:20px;height:20px}
+  .psn-seg-i:hover{background:#FFF3E9;color:var(--ink)}
+  .psn-seg-i[aria-selected="true"],.psn-seg-i.is-on{
+    background:var(--surface);color:var(--ink);font-weight:800;
+    border-color:var(--border);box-shadow:var(--sh-1);
+  }
+  .psn-seg-i:focus-visible{border-radius:11px}
+  .psn-seg-n{
+    min-width:24px;height:24px;padding:0 6px;border-radius:99px;background:#EFE0D3;
+    color:var(--ink-2);font-size:13.5px;font-weight:800;line-height:24px;text-align:center;
+  }
+  .psn-seg-i[aria-selected="true"] .psn-seg-n,.psn-seg-i.is-on .psn-seg-n{background:var(--primary-soft);color:var(--primary-dark)}
+  .psn-remember{
+    display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:10px 12px;
+    border-radius:14px;background:var(--accent-soft);
+    font-size:16px;line-height:1.35;color:#244C36;
+  }
+  .psn-remember .ic{width:20px;height:20px;margin-top:1px;color:var(--accent)}
+  .psn-cross{
+    display:flex;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;
+    border-radius:14px;background:var(--surface);border:1.5px solid var(--border-strong);
+    font-size:16px;line-height:1.35;color:var(--ink);text-decoration:none;font-weight:600;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .psn-cross:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .psn-cross b{font-weight:800}
+  .psn-cross .ic{width:20px;height:20px;flex:0 0 auto;color:var(--primary-dark)}
+  .psn-cross-t{flex:1 1 auto;min-width:0}
+
+  /* ---------- Opción B · la tira de grupos arriba ---------- */
+  .psn-strip-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:16px;
+  }
+  .psn-strip-h{font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .psn-strip-hint{
+    display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;
+    font-size:14.5px;line-height:1.3;font-weight:800;color:var(--primary-dark);
+  }
+  .psn-strip-hint .ic{width:15px;height:15px}
+  .psn-strip-wrap{position:relative;margin-top:6px}
+  .psn-strip-wrap::after{
+    content:"";position:absolute;right:0;top:0;bottom:10px;width:36px;
+    pointer-events:none;border-radius:0 16px 16px 0;
+    background:linear-gradient(90deg,rgba(255,248,241,0),var(--bg) 72%);
+  }
+  .psn-strip{
+    display:flex;gap:10px;padding:2px 0 10px;
+    overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;
+  }
+  .psn-strip::-webkit-scrollbar{display:none}
+  .psn-scard{
+    flex:0 0 auto;width:154px;min-height:112px;padding:10px 12px;scroll-snap-align:start;
+    display:flex;flex-direction:column;gap:6px;
+    background:var(--surface);border:1.5px solid var(--border-strong);border-radius:16px;
+    text-decoration:none;color:inherit;box-shadow:var(--sh-1);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .psn-scard:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .psn-scard:hover .psn-scard-n{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .psn-scard-e{
+    width:36px;height:36px;border-radius:11px;display:grid;place-items:center;
+    background:var(--sand);border:1px solid var(--border-strong);font-size:21px;
+  }
+  .psn-scard-n{font-size:16.5px;line-height:1.15;font-weight:800}
+  .psn-scard-m{font-size:14.5px;line-height:1.25;color:var(--ink-2);font-weight:600}
+  .psn-scard.is-action{
+    justify-content:center;align-items:flex-start;gap:6px;
+    background:var(--primary-soft);border:2px dashed #E0B48F;color:var(--primary-dark);
+  }
+  .psn-scard.is-action:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .psn-scard.is-action .psn-scard-n{font-size:16px;line-height:1.2}
+  .psn-scard.is-action .ic{width:24px;height:24px;color:var(--primary-dark)}
+  .psn-scard.is-action .psn-scard-m{color:var(--primary-dark);opacity:.92}
+  .psn-strip-foot{
+    display:flex;gap:8px;align-items:flex-start;margin-top:2px;
+    font-size:15.5px;line-height:1.35;color:var(--ink-2);
+  }
+  .psn-strip-foot .ic{width:17px;height:17px;flex:0 0 auto;margin-top:2px}
+
+  /* ---------- Opción B · salto por letra ---------- */
+  .psn-az{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:14px}
+  .psn-az-k{flex:0 0 auto;margin-right:1px;font-size:14.5px;line-height:1.2;font-weight:800;color:var(--ink-2)}
+  .psn-az-i{
+    display:grid;place-items:center;min-width:32px;height:44px;padding:0 4px;
+    background:var(--surface);border:1.5px solid var(--border-strong);border-radius:11px;
+    font-size:16px;font-weight:800;line-height:1;color:var(--ink);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .psn-az-i:hover{background:#FFF1E5;border-color:var(--ink-2)}
+  .psn-az-i[aria-current="true"]{background:var(--primary-soft);border-color:#EEC4A8;color:var(--primary-dark)}
+  .psn-az-i:focus-visible{border-radius:11px}
 
   /* ============================================================
      HOJAS (unirse con código · alias de persona)
@@ -484,7 +660,7 @@
   .psn-step-b{background:var(--accent-soft)}
   .psn-step-c{background:var(--sand)}
   .psn-step-n{
-    flex:0 0 auto;width:32px;height:32px;border-radius:50%;background:var(--surface);
+    width:32px;height:32px;border-radius:50%;background:var(--surface);
     color:var(--ink);font-size:16px;font-weight:800;display:grid;place-items:center;
     box-shadow:var(--sh-1);
   }
@@ -510,12 +686,12 @@
   .psn-search-dt{height:52px;font-size:17px}
   .psn-dlist{margin-top:12px}
   .psn-drow{
-    display:flex;align-items:center;gap:14px;padding:9px 4px;
+    display:flex;align-items:center;gap:14px;padding:7px 4px;
     border-top:1px solid var(--border);
   }
   .psn-drow:first-child{border-top:0}
   .psn-dmain-link{
-    display:flex;align-items:center;gap:11px;flex:0 0 250px;
+    display:flex;align-items:center;gap:11px;flex:0 0 216px;
     padding:4px 6px;margin:-4px -6px;border-radius:14px;
     text-decoration:none;color:inherit;
   }
@@ -525,9 +701,14 @@
   .psn-db{min-width:0}
   .psn-dname{display:block;font-size:18px;line-height:1.25;font-weight:800}
   .psn-dmeta{display:block;font-size:16px;line-height:1.3;color:var(--ink-2)}
-  .psn-dgroups{flex:1 1 auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+  .psn-dgroups{flex:1 1 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+  /* en escritorio la etiqueta se ve más pequeña pero conserva 48 px de alto táctil */
+  .psn-dgroups .psn-gtag{min-height:34px;padding:0 10px;gap:6px;font-size:15px}
+  .psn-dgroups .psn-gtag-e{width:18px;height:18px;font-size:14px}
+  .psn-dgroups .psn-gtag-c{width:12px;height:12px}
+  .psn-dgroups .psn-gtag::after{inset:-7px -5px}
   .psn-dceleb{
-    flex:0 0 246px;display:flex;align-items:center;gap:6px;justify-content:flex-end;
+    flex:0 0 200px;display:flex;align-items:center;gap:6px;justify-content:flex-end;
     font-size:16px;line-height:1.3;color:var(--ink-2);text-align:right;
   }
   .psn-dceleb .ic{width:17px;height:17px}
@@ -540,12 +721,27 @@
   .psn-dcol .psn-actions{margin-top:10px}
   .psn-dcol .psn-hint{margin-top:8px}
 
+  /* ---------- recorte de una pieza concreta, sin marco de móvil ---------- */
+  .crop{width:390px;margin-top:26px}
+  .crop-k{font-size:13.5px;line-height:1.3;font-weight:700;color:var(--primary-dark);margin-bottom:8px}
+  .crop-b{
+    position:relative;padding:14px 12px 10px;background:var(--bg);
+    border:1.5px solid var(--border-strong);border-radius:18px;box-shadow:var(--sh-1);
+  }
+  .crop-b::before{
+    content:"";position:absolute;left:2px;top:16px;bottom:18px;width:20px;pointer-events:none;
+    border-radius:14px 0 0 14px;
+    background:linear-gradient(270deg,rgba(255,248,241,0),var(--bg) 76%);
+  }
+  .crop-strip{display:flex;gap:10px;overflow:hidden;justify-content:center}
+  .crop-n{font-size:15px;line-height:1.4;color:var(--ink-2);margin-top:8px}
+
   /* movimiento opcional */
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
   }
 </style>
-</head>
+
 <body>
 
 <!-- ===== sprite de iconos (SVG en línea) ===== -->
@@ -554,6 +750,7 @@
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
     <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-groups" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.6 20.4 8 12 12.4 3.6 8Z"/><path d="m3.8 12.4 8.2 4.4 8.2-4.4"/><path d="m3.8 16.6 8.2 4.4 8.2-4.4" opacity=".45"/></g></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
     <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
@@ -575,446 +772,661 @@
     <div class="strip-lead">
       <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
       <h1>Personas</h1>
-      <p class="tradeoff">La pestaña que hace de mapa: cada persona sale una sola vez con sus grupos y su próxima celebración, y los grupos quedan debajo como filas grandes; buscar, crear y unirse caben sin esconderse.</p>
+      <p class="tradeoff">Dos maneras de tener a mano personas y grupos: dos vistas con su selector (A) o los grupos en una tira arriba y las personas debajo (B), sin bajar hasta el final para llegar a los grupos.</p>
     </div>
     <div class="keys">
       <h2>Claves de esta pantalla</h2>
       <ol>
-        <li><span class="kn" aria-hidden="true">1</span><span>Una persona, una fila: si está en tres grupos no se repite; sus grupos se leen como etiquetas y su celebración, con palabras.</span></li>
-        <li><span class="kn" aria-hidden="true">2</span><span>Los grupos son filas completas con su icono y su número de personas: se abren con el dedo entero, no con un enlace pequeño.</span></li>
-        <li><span class="kn" aria-hidden="true">3</span><span>Unirse con un código vive aquí dentro y dice qué pasa cuando el código no existe, sin dejar a nadie mirando una pantalla parada.</span></li>
-        <li><span class="kn" aria-hidden="true">4</span><span>El alias es privado y solo de personas: «Abuela Carmen» es como la llamas tú; los grupos se llaman igual para todos.</span></li>
+        <li><span class="kn" aria-hidden="true">1</span><span>La pestaña se dibuja <b>dos veces</b>, A y B, para elegir una: personas y grupos quedan a un toque en las dos, sin mezclarse en la misma lista.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Los grupos son enlaces de verdad: la etiqueta de cada persona abre la ficha de ese grupo, y nunca va dentro del enlace de la persona.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Ningún emoji ni icono se comprime: caja fija y cuadrada en todas las piezas, comprobado a 390 px.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Unirse con un código, alias, búsqueda sin resultados y pantalla sin grupos siguen dentro, cada uno con su salida.</span></li>
       </ol>
     </div>
   </div>
-  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre</p>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre · Comenta en el canvas qué opción prefieres</p>
 </header>
 
 <main>
 
   <!-- ==========================================================
-       FILA 1 · MÓVIL: LA PESTAÑA PERSONAS
+       FILA 1 · MÓVIL: LA PESTAÑA PERSONAS, DOS OPCIONES
        ========================================================== -->
   <section class="row" aria-labelledby="movil1-h">
     <div class="row-head">
-      <h2 id="movil1-h">Móvil · la pestaña «Personas»</h2>
-      <p>Primero las personas, después tus grupos, y al final las dos acciones que hacen falta cuando alguien llega nuevo.</p>
+      <h2 id="movil1-h">Móvil · la pestaña «Personas»: dos opciones para elegir</h2>
+      <p>El problema era éste: personas y grupos vivían en la misma lista y, con mucha gente, los grupos quedaban al final del todo. Las dos opciones dan acceso rápido a las dos cosas; comenta en el canvas con cuál te quedas.</p>
     </div>
 
-    <div class="devices">
+    <div class="opt-grid">
 
-      <!-- ---------- PANTALLA 1: LA LISTA ---------- -->
-      <figure class="device">
-        <figcaption class="cap">
-          <span class="cap-n">Pantalla 1</span>
-          <span class="cap-t">Personas · cada una, una sola vez</span>
-        </figcaption>
-        <div class="pf">
-          <div class="pf-notch" aria-hidden="true"></div>
-          <div class="pf-status" aria-hidden="true">
-            <span class="sb-time">9:41</span>
-            <span class="sb-right">
-              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
-              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
-            </span>
-          </div>
-
-          <div class="pf-scroll has-nav">
-            <header>
-              <h2 class="psn-head">Personas</h2>
-              <p class="psn-meta">11 personas en 3 grupos</p>
-            </header>
-
-            <div class="psn-search">
-              <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
-              <label class="sr-only" for="p1-q">Buscar una persona o un grupo</label>
-              <input class="psn-search-in" id="p1-q" type="search" name="buscar" placeholder="Busca una persona o un grupo" autocomplete="off">
-            </div>
-
-            <section aria-labelledby="p1-people-h">
-              <h3 class="psn-blk" id="p1-people-h">Tus personas <span class="psn-blk-sub">Cada una, una sola vez</span></h3>
-
-              <ul class="psn-people">
-                <li>
-                  <a class="psn-main" href="#javier">
-                    <span class="avatar" aria-hidden="true">🎸</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Javier</span>
-                        <span class="psn-wishes">4 deseos</span>
-                      </span>
-                      <span class="psn-celeb psn-celeb-next">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
-                        <span><b>La próxima:</b> su santo, el 3 de diciembre · faltan 7 días</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                  </p>
-                </li>
-
-                <li>
-                  <a class="psn-main" href="#mi-lista">
-                    <span class="avatar" aria-hidden="true">🌻</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Lucía</span>
-                        <span class="psn-wishes">Tú · 5 deseos</span>
-                      </span>
-                      <span class="psn-celeb">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
-                        <span>Su santo, el 13 de diciembre</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                  </p>
-                </li>
-
-                <li>
-                  <a class="psn-main" href="#abuela-carmen">
-                    <span class="avatar" aria-hidden="true">👵</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Abuela Carmen</span>
-                        <span class="psn-wishes">3 deseos</span>
-                      </span>
-                      <span class="psn-real">Carmen · solo la llamas así tú</span>
-                      <span class="psn-celeb">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
-                        <span>Su santo, el 16 de julio</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                  </p>
-                </li>
-
-                <li>
-                  <a class="psn-main" href="#pablo">
-                    <span class="avatar" aria-hidden="true">🚲</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Pablo</span>
-                        <span class="psn-wishes">2 deseos</span>
-                      </span>
-                      <span class="psn-celeb">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
-                        <span>Su cumpleaños, el 9 de enero</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                  </p>
-                </li>
-
-                <li>
-                  <a class="psn-main" href="#marta">
-                    <span class="avatar" aria-hidden="true">📚</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Marta</span>
-                        <span class="psn-wishes">6 deseos</span>
-                      </span>
-                      <span class="psn-celeb">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
-                        <span>Su cumpleaños, el 3 de febrero</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                  </p>
-                </li>
-
-                <li>
-                  <a class="psn-main" href="#andres">
-                    <span class="avatar" aria-hidden="true">⚽</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Andrés</span>
-                        <span class="psn-wishes">1 deseo</span>
-                      </span>
-                      <span class="psn-celeb psn-celeb-off">
-                        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
-                        <span>Sin fechas todavía</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                  </p>
-                </li>
-              </ul>
-            </section>
-          </div>
-
-          <nav class="pf-nav" aria-label="Navegación principal">
-            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
-            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
-            <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
-            <a class="nav-i" href="#avisos">
-              <span class="nav-ic-wrap">
-                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
-                <span class="nav-badge" aria-hidden="true">2</span>
-              </span>
-              <span>Avisos</span>
-              <span class="sr-only">2 avisos sin leer</span>
-            </a>
-          </nav>
-          <div class="pf-home" aria-hidden="true"></div>
+      <!-- =================== OPCIÓN A =================== -->
+      <div class="opt opt-a">
+        <div class="opt-head">
+          <p class="opt-chip">Opción A · dos vistas</p>
+          <h3 class="opt-h">«Personas | Grupos», un selector arriba</h3>
+          <p class="opt-p">Un selector de dos posiciones, siempre en el mismo sitio y al alcance del pulgar. Cada vista tiene su lista y su buscador, así que nunca hay que bajar para encontrar la otra cosa.</p>
+          <ul class="opt-rules">
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>El buscador busca <b>sólo en la vista abierta</b>. El texto del campo lo dice: «Buscar en tus personas» / «Buscar en tus grupos».</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>La pestaña <b>recuerda la última vista</b>: si te vas a Inicio y vuelves, sigues donde estabas.</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Si lo que buscas está en la otra vista, la pantalla lo dice y ofrece el salto en un toque.</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Crear un grupo y «Unirme con un código» viven en la vista «Grupos», con su lista, y no se pierden entre la gente.</span></li>
+          </ul>
+          <p class="opt-cost"><b>A cambio:</b> nunca ves personas y grupos a la vez; cambiar de vista es un toque más y el buscador no mira en las dos.</p>
         </div>
-      </figure>
 
-      <!-- ---------- PANTALLA 2: TUS GRUPOS Y LAS ACCIONES ---------- -->
-      <figure class="device">
-        <figcaption class="cap">
-          <span class="cap-n">Pantalla 2</span>
-          <span class="cap-t">Desplazada a «Tus grupos»</span>
-        </figcaption>
-        <div class="pf">
-          <div class="pf-notch" aria-hidden="true"></div>
-          <div class="pf-status" aria-hidden="true">
-            <span class="sb-time">9:41</span>
-            <span class="sb-right">
-              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
-              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
-            </span>
-          </div>
+        <div class="opt-devices">
 
-          <div class="pf-scroll has-nav">
-            <ul class="psn-people" style="margin-top:0">
-              <li>
-                <a class="psn-main" href="#nerea">
-                  <span class="avatar" aria-hidden="true">🎾</span>
-                  <span class="psn-b">
-                    <span class="psn-top">
-                      <span class="psn-name">Nerea</span>
-                      <span class="psn-wishes">2 deseos</span>
-                    </span>
-                    <span class="psn-celeb">
-                      <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
-                      <span>Su cumpleaños, el 21 de mayo</span>
-                    </span>
-                  </span>
-                  <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </a>
-                <p class="psn-groups">
-                  <span class="psn-groups-k">En</span>
-                  <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                  <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                </p>
-              </li>
-              <li>
-                <a class="psn-main" href="#guille">
-                  <span class="avatar" aria-hidden="true">🏓</span>
-                  <span class="psn-b">
-                    <span class="psn-top">
-                      <span class="psn-name">Guille</span>
-                      <span class="psn-wishes">3 deseos</span>
-                    </span>
-                    <span class="psn-celeb">
-                      <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
-                      <span>Su santo, el 12 de febrero</span>
-                    </span>
-                  </span>
-                  <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                </a>
-                <p class="psn-groups">
-                  <span class="psn-groups-k">En</span>
-                  <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                  <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                </p>
-              </li>
-            </ul>
-
-            <section aria-labelledby="p2-groups-h">
-              <h3 class="psn-blk" id="p2-groups-h">Tus grupos <span class="psn-blk-sub">3 grupos</span></h3>
-              <ul class="psn-glist">
-                <li>
-                  <a class="psn-grow" href="#grupo-familia-martin">
-                    <span class="psn-gic" aria-hidden="true">🎸</span>
-                    <span class="psn-gb">
-                      <span class="psn-gname">Familia Martín</span>
-                      <span class="psn-gmeta">6 personas · administras tú</span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                </li>
-                <li>
-                  <a class="psn-grow" href="#grupo-amigos-de-la-uni">
-                    <span class="psn-gic" aria-hidden="true">📚</span>
-                    <span class="psn-gb">
-                      <span class="psn-gname">Amigos de la Uni</span>
-                      <span class="psn-gmeta">8 personas</span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                </li>
-                <li>
-                  <a class="psn-grow" href="#grupo-padel-del-martes">
-                    <span class="psn-gic" aria-hidden="true">🎾</span>
-                    <span class="psn-gb">
-                      <span class="psn-gname">Pádel del martes</span>
-                      <span class="psn-gmeta">4 personas</span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                </li>
-              </ul>
-
-              <div class="psn-actions">
-                <button class="btn btn-primary btn-block" type="button">
-                  <svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Crear un grupo
-                </button>
-                <button class="btn btn-secondary btn-block" type="button" aria-haspopup="dialog">
-                  <svg class="ic ic-20" aria-hidden="true"><use href="#i-key"/></svg>Unirme con un código
-                </button>
+          <!-- ---------- A1: VISTA PERSONAS ---------- -->
+          <figure class="device">
+            <figcaption class="cap">
+              <span class="cap-n">Opción A · pantalla 1</span>
+              <span class="cap-t">Vista «Personas»</span>
+            </figcaption>
+            <div class="pf">
+              <div class="pf-notch" aria-hidden="true"></div>
+              <div class="pf-status" aria-hidden="true">
+                <span class="sb-time">9:41</span>
+                <span class="sb-right">
+                  <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+                </span>
               </div>
-              <p class="psn-hint">El código te lo pasa quien te invita: 6 letras y números, sin distinguir mayúsculas.</p>
-            </section>
-          </div>
 
-          <nav class="pf-nav" aria-label="Navegación principal">
-            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
-            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
-            <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
-            <a class="nav-i" href="#avisos">
-              <span class="nav-ic-wrap">
-                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
-                <span class="nav-badge" aria-hidden="true">2</span>
-              </span>
-              <span>Avisos</span>
-              <span class="sr-only">2 avisos sin leer</span>
-            </a>
-          </nav>
-          <div class="pf-home" aria-hidden="true"></div>
-        </div>
-      </figure>
+              <div class="pf-scroll has-nav">
+                <header>
+                  <h2 class="psn-head">Personas</h2>
+                  <p class="psn-meta">11 personas en 3 grupos</p>
+                </header>
 
-      <!-- ---------- PANTALLA 3: BUSCAR CON MUCHA GENTE ---------- -->
-      <figure class="device">
-        <figcaption class="cap">
-          <span class="cap-n">Pantalla 3</span>
-          <span class="cap-t">Buscar · personas y grupos a la vez</span>
-        </figcaption>
-        <div class="pf">
-          <div class="pf-notch" aria-hidden="true"></div>
-          <div class="pf-status" aria-hidden="true">
-            <span class="sb-time">9:41</span>
-            <span class="sb-right">
-              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
-              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
-            </span>
-          </div>
+                <div class="psn-seg" role="tablist" aria-label="Ver personas o ver grupos">
+                  <button class="psn-seg-i" id="a1t-p" type="button" role="tab" aria-selected="true" aria-controls="a1-people">
+                    <svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span>
+                  </button>
+                  <button class="psn-seg-i" id="a1t-g" type="button" role="tab" aria-selected="false" aria-controls="a1-groups" tabindex="-1">
+                    <svg class="ic" aria-hidden="true"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span>
+                  </button>
+                </div>
 
-          <div class="pf-scroll has-nav">
-            <h2 class="psn-head">Personas</h2>
+                <section id="a1-people" role="tabpanel" aria-labelledby="a1t-p">
+                  <div class="psn-search">
+                    <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
+                    <label class="sr-only" for="a1-q">Buscar en tus personas</label>
+                    <input class="psn-search-in" id="a1-q" type="search" name="buscar-personas" placeholder="Buscar en tus personas" autocomplete="off">
+                  </div>
+                  <p class="psn-results"><span><b>11 personas</b> · de la A a la Z</span></p>
 
-            <div class="psn-search">
-              <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
-              <label class="sr-only" for="p3-q">Buscar una persona o un grupo</label>
-              <input class="psn-search-in" id="p3-q" type="search" name="buscar-mar" value="mar" autocomplete="off" style="padding-right:52px">
-              <button class="psn-search-clear" type="button" aria-label="Limpiar la búsqueda">×</button>
+                  <ul class="psn-people">
+                    <li>
+                      <a class="psn-main" href="#abuela-carmen">
+                        <span class="avatar" aria-hidden="true">👵</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Abuela Carmen</span>
+                            <span class="psn-wishes">3 deseos</span>
+                          </span>
+                          <span class="psn-real">Carmen · solo la llamas así tú</span>
+                          <span class="psn-celeb">
+                            <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                            <span>Su santo, el 16 de julio</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="psn-main" href="#andres">
+                        <span class="avatar" aria-hidden="true">⚽</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Andrés</span>
+                            <span class="psn-wishes">1 deseo</span>
+                          </span>
+                          <span class="psn-celeb psn-celeb-off">
+                            <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                            <span>Sin fechas todavía</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                        <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="psn-main" href="#javier">
+                        <span class="avatar" aria-hidden="true">🎸</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Javier</span>
+                            <span class="psn-wishes">4 deseos</span>
+                          </span>
+                          <span class="psn-celeb psn-celeb-next">
+                            <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                            <span><b>La próxima:</b> su santo, el 3 de diciembre · faltan 7 días</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="psn-main" href="#mi-lista">
+                        <span class="avatar" aria-hidden="true">🌻</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Lucía</span>
+                            <span class="psn-wishes">Tú · 5 deseos</span>
+                          </span>
+                          <span class="psn-celeb">
+                            <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
+                            <span>Su santo, el 13 de diciembre</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                        <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                        <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="psn-main" href="#marta">
+                        <span class="avatar" aria-hidden="true">📚</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Marta</span>
+                            <span class="psn-wishes">6 deseos</span>
+                          </span>
+                          <span class="psn-celeb">
+                            <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
+                            <span>Su cumpleaños, el 3 de febrero</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                        <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="psn-main" href="#pablo">
+                        <span class="avatar" aria-hidden="true">🚲</span>
+                        <span class="psn-b">
+                          <span class="psn-top">
+                            <span class="psn-name">Pablo</span>
+                            <span class="psn-wishes">2 deseos</span>
+                          </span>
+                          <span class="psn-celeb">
+                            <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
+                            <span>Su cumpleaños, el 9 de enero</span>
+                          </span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                      <div class="psn-groups">
+                        <span class="psn-groups-k">En</span>
+                        <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                        <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      </div>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+
+              <nav class="pf-nav" aria-label="Navegación principal">
+                <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+                <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+                <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+                <a class="nav-i" href="#avisos">
+                  <span class="nav-ic-wrap">
+                    <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                    <span class="nav-badge" aria-hidden="true">2</span>
+                  </span>
+                  <span>Avisos</span>
+                  <span class="sr-only">2 avisos sin leer</span>
+                </a>
+              </nav>
+              <div class="pf-home" aria-hidden="true"></div>
             </div>
+          </figure>
 
-            <p class="psn-results"><span><b>3 resultados</b> para «mar»</span></p>
+          <!-- ---------- A2: VISTA GRUPOS ---------- -->
+          <figure class="device">
+            <figcaption class="cap">
+              <span class="cap-n">Opción A · pantalla 2</span>
+              <span class="cap-t">Vista «Grupos», buscando «mar»</span>
+            </figcaption>
+            <div class="pf">
+              <div class="pf-notch" aria-hidden="true"></div>
+              <div class="pf-status" aria-hidden="true">
+                <span class="sb-time">9:41</span>
+                <span class="sb-right">
+                  <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+                </span>
+              </div>
 
-            <section aria-labelledby="p3-people-h">
-              <h3 class="psn-blk" id="p3-people-h">Personas <span class="psn-blk-sub">1</span></h3>
-              <ul class="psn-people">
-                <li>
-                  <a class="psn-main" href="#marta">
-                    <span class="avatar" aria-hidden="true">📚</span>
-                    <span class="psn-b">
-                      <span class="psn-top">
-                        <span class="psn-name">Marta</span>
-                        <span class="psn-wishes">6 deseos</span>
-                      </span>
-                      <span class="psn-celeb">
-                        <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
-                        <span>Su cumpleaños, el 3 de febrero</span>
-                      </span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              <div class="pf-scroll has-nav">
+                <header>
+                  <h2 class="psn-head">Personas</h2>
+                  <p class="psn-meta">11 personas en 3 grupos</p>
+                </header>
+
+                <div class="psn-seg" role="tablist" aria-label="Ver personas o ver grupos">
+                  <button class="psn-seg-i" id="a2t-p" type="button" role="tab" aria-selected="false" aria-controls="a2-people" tabindex="-1">
+                    <svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span>
+                  </button>
+                  <button class="psn-seg-i" id="a2t-g" type="button" role="tab" aria-selected="true" aria-controls="a2-groups">
+                    <svg class="ic" aria-hidden="true"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span>
+                  </button>
+                </div>
+
+                <section id="a2-groups" role="tabpanel" aria-labelledby="a2t-g">
+                  <div class="psn-search">
+                    <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
+                    <label class="sr-only" for="a2-q">Buscar en tus grupos</label>
+                    <input class="psn-search-in" id="a2-q" type="search" name="buscar-grupos" value="mar" autocomplete="off" style="padding-right:52px">
+                    <button class="psn-search-clear" type="button" aria-label="Limpiar la búsqueda">×</button>
+                  </div>
+                  <p class="psn-results"><span><b>2 grupos</b> para «mar»</span></p>
+
+                  <ul class="psn-glist">
+                    <li>
+                      <a class="psn-grow" href="#grupo-familia-martin">
+                        <span class="psn-gic" aria-hidden="true">🎸</span>
+                        <span class="psn-gb">
+                          <span class="psn-gname">Familia Martín</span>
+                          <span class="psn-gmeta">6 personas · administras tú</span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="psn-grow" href="#grupo-padel-del-martes">
+                        <span class="psn-gic" aria-hidden="true">🎾</span>
+                        <span class="psn-gb">
+                          <span class="psn-gname">Pádel del martes</span>
+                          <span class="psn-gmeta">4 personas</span>
+                        </span>
+                        <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                  </ul>
+
+                  <a class="psn-cross" href="#personas">
+                    <svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>
+                    <span class="psn-cross-t"><b>1 persona</b> coincide con «mar» en «Personas»</span>
+                    <svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg>
                   </a>
-                  <p class="psn-groups">
-                    <span class="psn-groups-k">En</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                    <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                  </p>
-                </li>
-              </ul>
-            </section>
+                </section>
 
-            <section aria-labelledby="p3-groups-h">
-              <h3 class="psn-blk" id="p3-groups-h">Grupos <span class="psn-blk-sub">2</span></h3>
-              <ul class="psn-glist">
-                <li>
-                  <a class="psn-grow" href="#grupo-familia-martin">
-                    <span class="psn-gic" aria-hidden="true">🎸</span>
-                    <span class="psn-gb">
-                      <span class="psn-gname">Familia Martín</span>
-                      <span class="psn-gmeta">6 personas · administras tú</span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                </li>
-                <li>
-                  <a class="psn-grow" href="#grupo-padel-del-martes">
-                    <span class="psn-gic" aria-hidden="true">🎾</span>
-                    <span class="psn-gb">
-                      <span class="psn-gname">Pádel del martes</span>
-                      <span class="psn-gmeta">4 personas</span>
-                    </span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </a>
-                </li>
-              </ul>
-              <p class="psn-hint">La búsqueda mira a la vez en tus personas y en tus grupos: «mar» encuentra a Marta, a la familia Martín y al pádel de los martes.</p>
-            </section>
-          </div>
+                <div class="psn-actions">
+                  <button class="btn btn-primary btn-block" type="button">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Crear un grupo
+                  </button>
+                  <button class="btn btn-secondary btn-block" type="button" aria-haspopup="dialog">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-key"/></svg>Unirme con un código
+                  </button>
+                </div>
 
-          <nav class="pf-nav" aria-label="Navegación principal">
-            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
-            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
-            <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
-            <a class="nav-i" href="#avisos">
-              <span class="nav-ic-wrap">
-                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
-                <span class="nav-badge" aria-hidden="true">2</span>
-              </span>
-              <span>Avisos</span>
-              <span class="sr-only">2 avisos sin leer</span>
-            </a>
-          </nav>
-          <div class="pf-home" aria-hidden="true"></div>
+                <p class="psn-remember">
+                  <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                  <span><b>Recuerda la última vista:</b> si te vas a Inicio y vuelves, sigues en «Grupos».</span>
+                </p>
+              </div>
+
+              <nav class="pf-nav" aria-label="Navegación principal">
+                <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+                <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+                <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+                <a class="nav-i" href="#avisos">
+                  <span class="nav-ic-wrap">
+                    <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                    <span class="nav-badge" aria-hidden="true">2</span>
+                  </span>
+                  <span>Avisos</span>
+                  <span class="sr-only">2 avisos sin leer</span>
+                </a>
+              </nav>
+              <div class="pf-home" aria-hidden="true"></div>
+            </div>
+          </figure>
         </div>
-      </figure>
+
+        <p class="opt-pick">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <span>Si eliges la Opción A, escribe aquí tu comentario con la vista que quieres que abra por defecto: «Personas» (lo natural para quien llega nuevo) o «Grupos».</span>
+        </p>
+      </div>
+
+      <!-- =================== OPCIÓN B =================== -->
+      <div class="opt opt-b">
+        <div class="opt-head">
+          <p class="opt-chip">Opción B · todo en una pantalla</p>
+          <h3 class="opt-h">Los grupos, en una tira arriba; las personas, debajo</h3>
+          <p class="opt-p">Sin pestañas ni vistas: una tira horizontal de grupos pegada arriba, con «Crear» y «Unirme» al final, y debajo la lista de personas con su buscador y un salto por letra para quien tenga mucha gente.</p>
+          <ul class="opt-rules">
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Los grupos <b>se quedan arriba al desplazar</b> la lista: nunca hay que bajar hasta el fondo para llegar a ellos.</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>La tira se desliza en horizontal y <b>anuncia que se desliza</b> (flecha, texto y degradado), con «Crear un grupo» y «Unirme» como las dos últimas tarjetas.</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>El buscador de personas y el salto por letra están donde están las personas, sin compartir sitio con los grupos.</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Buscando, la tira se filtra también: se ven los grupos que coinciden sin perder los resultados de personas.</span></li>
+          </ul>
+          <p class="opt-cost"><b>A cambio:</b> la tira ocupa alto valioso arriba y las dos acciones («Crear» y «Unirme») quedan al final de la tira: con tres grupos ya hay que deslizar.</p>
+        </div>
+
+        <div class="opt-devices">
+
+          <!-- ---------- B1: LOS GRUPOS ARRIBA ---------- -->
+          <figure class="device">
+            <figcaption class="cap">
+              <span class="cap-n">Opción B · pantalla 1</span>
+              <span class="cap-t">Grupos en tira, personas debajo</span>
+            </figcaption>
+            <div class="pf">
+              <div class="pf-notch" aria-hidden="true"></div>
+              <div class="pf-status" aria-hidden="true">
+                <span class="sb-time">9:41</span>
+                <span class="sb-right">
+                  <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+                </span>
+              </div>
+
+              <div class="pf-scroll has-nav">
+                <header>
+                  <h2 class="psn-head">Personas</h2>
+                  <p class="psn-meta">11 personas · 3 grupos</p>
+                </header>
+
+                <div class="psn-strip-head">
+                  <h3 class="psn-strip-h">Tus grupos</h3>
+                  <span class="psn-strip-hint">Desliza<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                </div>
+                <div class="psn-strip-wrap">
+                  <div class="psn-strip" role="list" aria-label="Tus grupos">
+                    <a class="psn-scard" role="listitem" href="#grupo-familia-martin">
+                      <span class="psn-scard-e" aria-hidden="true">🎸</span>
+                      <span class="psn-scard-n">Familia Martín</span>
+                      <span class="psn-scard-m">6 personas</span>
+                    </a>
+                    <a class="psn-scard" role="listitem" href="#grupo-amigos-de-la-uni">
+                      <span class="psn-scard-e" aria-hidden="true">📚</span>
+                      <span class="psn-scard-n">Amigos de la Uni</span>
+                      <span class="psn-scard-m">8 personas</span>
+                    </a>
+                    <a class="psn-scard" role="listitem" href="#grupo-padel-del-martes">
+                      <span class="psn-scard-e" aria-hidden="true">🎾</span>
+                      <span class="psn-scard-n">Pádel del martes</span>
+                      <span class="psn-scard-m">4 personas</span>
+                    </a>
+                    <a class="psn-scard is-action" role="listitem" href="#crear-grupo">
+                      <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+                      <span class="psn-scard-n">Crear un grupo</span>
+                      <span class="psn-scard-m">Nombre y listo</span>
+                    </a>
+                    <a class="psn-scard is-action" role="listitem" href="#unirme-con-codigo">
+                      <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>
+                      <span class="psn-scard-n">Unirme</span>
+                      <span class="psn-scard-m">Con un código</span>
+                    </a>
+                  </div>
+                </div>
+                <p class="psn-strip-foot">
+                  <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                  <span>La tira se queda pegada arriba: los grupos siguen a mano aunque la lista de personas sea larga.</span>
+                </p>
+
+                <div class="psn-search">
+                  <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
+                  <label class="sr-only" for="b1-q">Buscar en tus personas</label>
+                  <input class="psn-search-in" id="b1-q" type="search" name="buscar-personas-b" placeholder="Buscar en tus personas" autocomplete="off">
+                </div>
+
+                <div class="psn-az" aria-label="Ir a una letra">
+                  <span class="psn-az-k" aria-hidden="true">Ir a</span>
+                  <a class="psn-az-i" href="#letra-a" aria-current="true" aria-label="Ir a la letra A">A</a>
+                  <a class="psn-az-i" href="#letra-c" aria-label="Ir a la letra C">C</a>
+                  <a class="psn-az-i" href="#letra-g" aria-label="Ir a la letra G">G</a>
+                  <a class="psn-az-i" href="#letra-j" aria-label="Ir a la letra J">J</a>
+                  <a class="psn-az-i" href="#letra-l" aria-label="Ir a la letra L">L</a>
+                  <a class="psn-az-i" href="#letra-m" aria-label="Ir a la letra M">M</a>
+                  <a class="psn-az-i" href="#letra-n" aria-label="Ir a la letra N">N</a>
+                  <a class="psn-az-i" href="#letra-p" aria-label="Ir a la letra P">P</a>
+                </div>
+
+                <ul class="psn-people">
+                  <li>
+                    <a class="psn-main" href="#abuela-carmen">
+                      <span class="avatar" aria-hidden="true">👵</span>
+                      <span class="psn-b">
+                        <span class="psn-top">
+                          <span class="psn-name">Abuela Carmen</span>
+                          <span class="psn-wishes">3 deseos</span>
+                        </span>
+                        <span class="psn-real">Carmen · solo la llamas así tú</span>
+                        <span class="psn-celeb">
+                          <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                          <span>Su santo, el 16 de julio</span>
+                        </span>
+                      </span>
+                      <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                    <div class="psn-groups">
+                      <span class="psn-groups-k">En</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </div>
+                  </li>
+                  <li>
+                    <a class="psn-main" href="#andres">
+                      <span class="avatar" aria-hidden="true">⚽</span>
+                      <span class="psn-b">
+                        <span class="psn-top">
+                          <span class="psn-name">Andrés</span>
+                          <span class="psn-wishes">1 deseo</span>
+                        </span>
+                        <span class="psn-celeb psn-celeb-off">
+                          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                          <span>Sin fechas todavía</span>
+                        </span>
+                      </span>
+                      <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                    <div class="psn-groups">
+                      <span class="psn-groups-k">En</span>
+                      <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </div>
+                  </li>
+                  <li>
+                    <a class="psn-main" href="#javier">
+                      <span class="avatar" aria-hidden="true">🎸</span>
+                      <span class="psn-b">
+                        <span class="psn-top">
+                          <span class="psn-name">Javier</span>
+                          <span class="psn-wishes">4 deseos</span>
+                        </span>
+                        <span class="psn-celeb psn-celeb-next">
+                          <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                          <span><b>La próxima:</b> su santo, el 3 de diciembre · faltan 7 días</span>
+                        </span>
+                      </span>
+                      <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                    <div class="psn-groups">
+                      <span class="psn-groups-k">En</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <nav class="pf-nav" aria-label="Navegación principal">
+                <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+                <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+                <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+                <a class="nav-i" href="#avisos">
+                  <span class="nav-ic-wrap">
+                    <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                    <span class="nav-badge" aria-hidden="true">2</span>
+                  </span>
+                  <span>Avisos</span>
+                  <span class="sr-only">2 avisos sin leer</span>
+                </a>
+              </nav>
+              <div class="pf-home" aria-hidden="true"></div>
+            </div>
+          </figure>
+
+          <!-- ---------- B2: BUSCANDO «MAR» ---------- -->
+          <figure class="device">
+            <figcaption class="cap">
+              <span class="cap-n">Opción B · pantalla 2</span>
+              <span class="cap-t">Buscando «mar» · la tira se filtra</span>
+            </figcaption>
+            <div class="pf">
+              <div class="pf-notch" aria-hidden="true"></div>
+              <div class="pf-status" aria-hidden="true">
+                <span class="sb-time">9:41</span>
+                <span class="sb-right">
+                  <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+                </span>
+              </div>
+
+              <div class="pf-scroll has-nav">
+                <header>
+                  <h2 class="psn-head">Personas</h2>
+                  <p class="psn-meta">11 personas · 3 grupos</p>
+                </header>
+
+                <div class="psn-strip-head">
+                  <h3 class="psn-strip-h">Tus grupos</h3>
+                  <span class="psn-strip-hint">2 coinciden</span>
+                </div>
+                <div class="psn-strip-wrap">
+                  <div class="psn-strip" role="list" aria-label="Grupos que coinciden con mar">
+                    <a class="psn-scard" role="listitem" href="#grupo-familia-martin">
+                      <span class="psn-scard-e" aria-hidden="true">🎸</span>
+                      <span class="psn-scard-n">Familia Martín</span>
+                      <span class="psn-scard-m">6 personas</span>
+                    </a>
+                    <a class="psn-scard" role="listitem" href="#grupo-padel-del-martes">
+                      <span class="psn-scard-e" aria-hidden="true">🎾</span>
+                      <span class="psn-scard-n">Pádel del martes</span>
+                      <span class="psn-scard-m">4 personas</span>
+                    </a>
+                    <a class="psn-scard is-action" role="listitem" href="#crear-grupo">
+                      <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+                      <span class="psn-scard-n">Crear un grupo</span>
+                      <span class="psn-scard-m">Nombre y listo</span>
+                    </a>
+                    <a class="psn-scard is-action" role="listitem" href="#unirme-con-codigo">
+                      <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>
+                      <span class="psn-scard-n">Unirme</span>
+                      <span class="psn-scard-m">Con un código</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div class="psn-search">
+                  <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
+                  <label class="sr-only" for="b2-q">Buscar en tus personas</label>
+                  <input class="psn-search-in" id="b2-q" type="search" name="buscar-personas-b2" value="mar" autocomplete="off" style="padding-right:52px">
+                  <button class="psn-search-clear" type="button" aria-label="Limpiar la búsqueda">×</button>
+                </div>
+                <p class="psn-results"><span><b>3 resultados</b> para «mar»: 1 persona y 2 grupos</span></p>
+
+                <ul class="psn-people">
+                  <li>
+                    <a class="psn-main" href="#marta">
+                      <span class="avatar" aria-hidden="true">📚</span>
+                      <span class="psn-b">
+                        <span class="psn-top">
+                          <span class="psn-name">Marta</span>
+                          <span class="psn-wishes">6 deseos</span>
+                        </span>
+                        <span class="psn-celeb">
+                          <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
+                          <span>Su cumpleaños, el 3 de febrero</span>
+                        </span>
+                      </span>
+                      <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                    <div class="psn-groups">
+                      <span class="psn-groups-k">En</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </div>
+                  </li>
+                </ul>
+
+                <p class="psn-strip-foot">
+                  <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                  <span>Mientras buscas, la tira de grupos se filtra y el salto por letra se esconde: aquí sólo hacen falta los resultados.</span>
+                </p>
+              </div>
+
+              <nav class="pf-nav" aria-label="Navegación principal">
+                <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+                <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+                <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+                <a class="nav-i" href="#avisos">
+                  <span class="nav-ic-wrap">
+                    <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                    <span class="nav-badge" aria-hidden="true">2</span>
+                  </span>
+                  <span>Avisos</span>
+                  <span class="sr-only">2 avisos sin leer</span>
+                </a>
+              </nav>
+              <div class="pf-home" aria-hidden="true"></div>
+            </div>
+          </figure>
+
+          <!-- recorte: el final de la tira, donde viven las dos acciones -->
+          <div class="crop">
+            <p class="crop-k">Opción B · el final de la tira, a un desliz</p>
+            <div class="crop-b">
+              <div class="crop-strip">
+                <a class="psn-scard is-action" href="#crear-grupo">
+                  <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+                  <span class="psn-scard-n">Crear un grupo</span>
+                  <span class="psn-scard-m">Nombre y listo</span>
+                </a>
+                <a class="psn-scard is-action" href="#unirme-con-codigo">
+                  <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>
+                  <span class="psn-scard-n">Unirme</span>
+                  <span class="psn-scard-m">Con un código</span>
+                </a>
+              </div>
+            </div>
+            <p class="crop-n">Las dos acciones son las últimas tarjetas de la tira y llevan borde discontinuo para distinguirse de un grupo: siempre están en el mismo sitio, no entre la gente.</p>
+          </div>
+        </div>
+
+        <p class="opt-pick">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <span>Si eliges la Opción B, di en tu comentario cuántos grupos quieres ver antes de deslizar y si el salto por letra te sobra o te falta.</span>
+        </p>
+      </div>
 
     </div>
   </section>
@@ -1025,7 +1437,7 @@
   <section class="row" aria-labelledby="movil2-h">
     <div class="row-head">
       <h2 id="movil2-h">Móvil · «Unirme con un código»</h2>
-      <p>La hoja que abre el botón de «Personas»: escribir, corregir y entrar. Los tres estados, con el mismo ancho de botón.</p>
+      <p>La hoja es idéntica en las dos opciones: se abre desde «Unirme», que en la Opción A vive en la vista «Grupos» y en la Opción B es la última tarjeta de la tira. Detrás se ve la vista «Grupos» de la Opción A.</p>
     </div>
 
     <div class="devices">
@@ -1050,11 +1462,14 @@
           <div class="pf-scroll has-nav" aria-hidden="true">
             <h2 class="psn-head">Personas</h2>
             <p class="psn-meta">11 personas en 3 grupos</p>
+            <div class="psn-seg">
+              <span class="psn-seg-i"><svg class="ic"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span></span>
+              <span class="psn-seg-i is-on"><svg class="ic"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span></span>
+            </div>
             <div class="psn-search">
               <svg class="ic psn-search-ic"><use href="#i-search"/></svg>
-              <p class="psn-search-in" style="color:var(--ink-2)">Busca una persona o un grupo</p>
+              <p class="psn-search-in" style="color:var(--ink-2)">Buscar en tus grupos</p>
             </div>
-            <h3 class="psn-blk">Tus grupos</h3>
             <ul class="psn-glist">
               <li><span class="psn-grow"><span class="psn-gic">🎸</span><span class="psn-gb"><span class="psn-gname">Familia Martín</span><span class="psn-gmeta">6 personas · administras tú</span></span></span></li>
               <li><span class="psn-grow"><span class="psn-gic">📚</span><span class="psn-gb"><span class="psn-gname">Amigos de la Uni</span><span class="psn-gmeta">8 personas</span></span></span></li>
@@ -1114,11 +1529,10 @@
           <div class="pf-scroll has-nav" aria-hidden="true">
             <h2 class="psn-head">Personas</h2>
             <p class="psn-meta">11 personas en 3 grupos</p>
-            <div class="psn-search">
-              <svg class="ic psn-search-ic"><use href="#i-search"/></svg>
-              <p class="psn-search-in" style="color:var(--ink-2)">Busca una persona o un grupo</p>
+            <div class="psn-seg">
+              <span class="psn-seg-i"><svg class="ic"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span></span>
+              <span class="psn-seg-i is-on"><svg class="ic"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span></span>
             </div>
-            <h3 class="psn-blk">Tus grupos</h3>
             <ul class="psn-glist">
               <li><span class="psn-grow"><span class="psn-gic">🎸</span><span class="psn-gb"><span class="psn-gname">Familia Martín</span><span class="psn-gmeta">6 personas · administras tú</span></span></span></li>
               <li><span class="psn-grow"><span class="psn-gic">📚</span><span class="psn-gb"><span class="psn-gname">Amigos de la Uni</span><span class="psn-gmeta">8 personas</span></span></span></li>
@@ -1180,10 +1594,13 @@
           <div class="pf-scroll has-nav" aria-hidden="true">
             <h2 class="psn-head">Personas</h2>
             <p class="psn-meta">11 personas en 3 grupos</p>
-            <h3 class="psn-blk">Tus grupos</h3>
+            <div class="psn-seg">
+              <span class="psn-seg-i"><svg class="ic"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span></span>
+              <span class="psn-seg-i is-on"><svg class="ic"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span></span>
+            </div>
             <ul class="psn-glist">
               <li><span class="psn-grow"><span class="psn-gic">🎸</span><span class="psn-gb"><span class="psn-gname">Familia Martín</span><span class="psn-gmeta">6 personas · administras tú</span></span></span></li>
-              <li><span class="psn-grow"><span class="psn-gic">📚</span><span class="psn-gb"><span class="psn-gname">Amigos de la Uni</span><span class="psn-gmeta">8 personas</span></span></span></li>
+              <li><span class="psn-grow"><span class="psn-gic">🎾</span><span class="psn-gb"><span class="psn-gname">Pádel del martes</span><span class="psn-gmeta">4 personas</span></span></span></li>
             </ul>
           </div>
           <nav class="pf-nav" aria-label="Navegación principal (atenuada)" aria-hidden="true">
@@ -1222,12 +1639,12 @@
   </section>
 
   <!-- ==========================================================
-       FILA 3 · MÓVIL: ALIAS Y PRIMERA VEZ
+       FILA 3 · MÓVIL: ALIAS, SIN GRUPOS Y SIN RESULTADOS
        ========================================================== -->
   <section class="row" aria-labelledby="movil3-h">
     <div class="row-head">
       <h2 id="movil3-h">Móvil · alias, sin resultados y primera vez</h2>
-      <p>El alias se edita en una hoja corta y privada; una búsqueda que no encuentra nada también dice qué hacer; y sin grupos la pestaña explica para qué sirven.</p>
+      <p>Dibujados sobre la Opción A (dos vistas). La línea pequeña de cada lápida dice el mismo estado en la Opción B, que sólo cambia la cabecera de la pestaña.</p>
     </div>
 
     <div class="devices">
@@ -1237,6 +1654,7 @@
         <figcaption class="cap">
           <span class="cap-n">Pantalla 7</span>
           <span class="cap-t">Alias de persona · «Abuela Carmen»</span>
+          <span class="cap-note">En la Opción B, esta hoja se abre igual desde la ficha de la persona; detrás se ve la tira de grupos y la lista.</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -1252,7 +1670,11 @@
           <div class="pf-scroll has-nav" aria-hidden="true">
             <h2 class="psn-head">Personas</h2>
             <p class="psn-meta">11 personas en 3 grupos</p>
-            <ul class="psn-people">
+            <div class="psn-seg">
+              <span class="psn-seg-i is-on"><svg class="ic"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span></span>
+              <span class="psn-seg-i"><svg class="ic"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span></span>
+            </div>
+            <ul class="psn-people" style="margin-top:14px">
               <li>
                 <span class="psn-main">
                   <span class="avatar">👵</span>
@@ -1262,7 +1684,10 @@
                     <span class="psn-celeb"><svg class="ic"><use href="#i-cal"/></svg><span>Su santo, el 16 de julio</span></span>
                   </span>
                 </span>
-                <p class="psn-groups"><span class="psn-groups-k">En</span><span class="psn-gtag">🎸 Familia Martín</span></p>
+                <div class="psn-groups">
+                  <span class="psn-groups-k">En</span>
+                  <span class="psn-gtag"><span class="psn-gtag-e">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c"><use href="#i-chev"/></svg></span>
+                </div>
               </li>
             </ul>
           </div>
@@ -1316,6 +1741,7 @@
         <figcaption class="cap">
           <span class="cap-n">Pantalla 8</span>
           <span class="cap-t">Personas · todavía sin grupos</span>
+          <span class="cap-note">En la Opción B, la tira de grupos se convierte en una sola tarjeta «Crea tu primer grupo» y debajo queda la lista vacía con el mismo texto.</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -1331,30 +1757,41 @@
           <div class="pf-scroll has-nav">
             <header>
               <h2 class="psn-head">Personas</h2>
-              <p class="psn-meta">Nadie todavía</p>
+              <p class="psn-meta">Nadie todavía · 0 grupos</p>
             </header>
 
-            <div class="psn-empty">
-              <span class="psn-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-36"><use href="#i-people"/></svg></span>
-              <h3 class="psn-empty-t">Aquí verás a las personas de tus grupos</h3>
-              <p class="psn-empty-s">Los grupos son círculos cerrados: tú decides con quién compartes tu lista y ellos reservan tu regalo sin repetirlo.</p>
-
-              <ol class="psn-steps">
-                <li class="psn-step psn-step-a"><span class="psn-step-n" aria-hidden="true">1</span><span class="psn-step-t">Crea un grupo: familia, amigos, compañeros.</span></li>
-                <li class="psn-step psn-step-b"><span class="psn-step-n" aria-hidden="true">2</span><span class="psn-step-t">Comparte su código o su enlace.</span></li>
-                <li class="psn-step psn-step-c"><span class="psn-step-n" aria-hidden="true">3</span><span class="psn-step-t">Cada uno apunta lo que quiere y los demás reservan.</span></li>
-              </ol>
-
-              <div class="psn-actions">
-                <button class="btn btn-primary btn-block" type="button">
-                  <svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Crear un grupo
-                </button>
-                <button class="btn btn-secondary btn-block" type="button" aria-haspopup="dialog">
-                  <svg class="ic ic-20" aria-hidden="true"><use href="#i-key"/></svg>Unirme con un código
-                </button>
-              </div>
-              <p class="psn-hint">Sin grupos también funciona: tu lista y tus deseos siguen en «Mi lista».</p>
+            <div class="psn-seg" role="tablist" aria-label="Ver personas o ver grupos">
+              <button class="psn-seg-i" id="p8t-p" type="button" role="tab" aria-selected="true" aria-controls="p8-panel">
+                <svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">0</span>
+              </button>
+              <button class="psn-seg-i" id="p8t-g" type="button" role="tab" aria-selected="false" aria-controls="p8-panel" tabindex="-1">
+                <svg class="ic" aria-hidden="true"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">0</span>
+              </button>
             </div>
+
+            <section id="p8-panel" role="tabpanel" aria-labelledby="p8t-p">
+              <div class="psn-empty">
+                <span class="psn-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-36"><use href="#i-people"/></svg></span>
+                <h3 class="psn-empty-t">Aquí verás a las personas de tus grupos</h3>
+                <p class="psn-empty-s">Tú decides con quién compartes tu lista; ellos reservan tu regalo sin repetirlo.</p>
+
+                <ol class="psn-steps">
+                  <li class="psn-step psn-step-a"><span class="psn-step-n" aria-hidden="true">1</span><span class="psn-step-t">Crea un grupo: familia, amigos…</span></li>
+                  <li class="psn-step psn-step-b"><span class="psn-step-n" aria-hidden="true">2</span><span class="psn-step-t">Comparte su código o su enlace.</span></li>
+                  <li class="psn-step psn-step-c"><span class="psn-step-n" aria-hidden="true">3</span><span class="psn-step-t">Cada uno apunta lo que quiere.</span></li>
+                </ol>
+
+                <div class="psn-actions">
+                  <button class="btn btn-primary btn-block" type="button">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Crear un grupo
+                  </button>
+                  <button class="btn btn-secondary btn-block" type="button" aria-haspopup="dialog">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-key"/></svg>Unirme con un código
+                  </button>
+                </div>
+                <p class="psn-hint">Sin grupos también funciona: tu lista y tus deseos siguen en «Mi lista».</p>
+              </div>
+            </section>
           </div>
 
           <nav class="pf-nav" aria-label="Navegación principal">
@@ -1367,11 +1804,12 @@
         </div>
       </figure>
 
-      <!-- ---------- PANTALLA 3b: NADIE COINCIDE ---------- -->
+      <!-- ---------- PANTALLA 9: NADIE COINCIDE ---------- -->
       <figure class="device">
         <figcaption class="cap">
-          <span class="cap-n">Pantalla 3b</span>
+          <span class="cap-n">Pantalla 9</span>
           <span class="cap-t">Buscar · nadie coincide</span>
+          <span class="cap-note">En la Opción B no hace falta saltar de vista: la tira se queda vacía con el aviso y la lista dice lo mismo.</span>
         </figcaption>
         <div class="pf">
           <div class="pf-notch" aria-hidden="true"></div>
@@ -1385,30 +1823,41 @@
           </div>
 
           <div class="pf-scroll has-nav">
-            <h2 class="psn-head">Personas</h2>
+            <header>
+              <h2 class="psn-head">Personas</h2>
+              <p class="psn-meta">11 personas en 3 grupos</p>
+            </header>
 
-            <div class="psn-search">
-              <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
-              <label class="sr-only" for="p3b-q">Buscar una persona o un grupo</label>
-              <input class="psn-search-in" id="p3b-q" type="search" name="buscar-bici" value="bici" autocomplete="off" style="padding-right:52px">
-              <button class="psn-search-clear" type="button" aria-label="Limpiar la búsqueda">×</button>
+            <div class="psn-seg" role="tablist" aria-label="Ver personas o ver grupos">
+              <button class="psn-seg-i" id="p9t-p" type="button" role="tab" aria-selected="true" aria-controls="p9-panel">
+                <svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas<span class="psn-seg-n">11</span>
+              </button>
+              <button class="psn-seg-i" id="p9t-g" type="button" role="tab" aria-selected="false" aria-controls="p9-panel" tabindex="-1">
+                <svg class="ic" aria-hidden="true"><use href="#i-groups"/></svg>Grupos<span class="psn-seg-n">3</span>
+              </button>
             </div>
 
-            <p class="psn-results"><span><b>Ningún resultado</b> para «bici»</span></p>
-
-            <div class="psn-empty">
-              <span class="psn-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-36"><use href="#i-search"/></svg></span>
-              <h3 class="psn-empty-t">Nadie se llama así</h3>
-              <p class="psn-empty-s">Prueba con el nombre de la persona o con el del grupo. Tu búsqueda no se borra hasta que tú quieras.</p>
-
-              <div class="psn-actions">
-                <button class="btn btn-primary btn-block" type="button">Limpiar la búsqueda</button>
-                <button class="btn btn-secondary btn-block" type="button" aria-haspopup="dialog">
-                  <svg class="ic ic-20" aria-hidden="true"><use href="#i-key"/></svg>Unirme con un código
-                </button>
+            <section id="p9-panel" role="tabpanel" aria-labelledby="p9t-p">
+              <div class="psn-search">
+                <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
+                <label class="sr-only" for="p9-q">Buscar en tus personas</label>
+                <input class="psn-search-in" id="p9-q" type="search" name="buscar-bici" value="bici" autocomplete="off" style="padding-right:52px">
+                <button class="psn-search-clear" type="button" aria-label="Limpiar la búsqueda">×</button>
               </div>
-              <p class="psn-hint">La búsqueda mira a la vez en tus personas y en tus grupos.</p>
-            </div>
+              <p class="psn-results"><span><b>Ningún resultado</b> para «bici» en personas</span></p>
+
+              <div class="psn-empty">
+                <span class="psn-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-36"><use href="#i-search"/></svg></span>
+                <h3 class="psn-empty-t">Nadie se llama así</h3>
+                <p class="psn-empty-s">Prueba con el nombre de la persona. Tu búsqueda no se borra hasta que tú quieras, y puedes buscarla en los grupos sin volver a escribirla.</p>
+
+                <div class="psn-actions">
+                  <button class="btn btn-primary btn-block" type="button">Limpiar la búsqueda</button>
+                  <button class="btn btn-secondary btn-block" type="button">Buscar «bici» en tus grupos</button>
+                </div>
+                <p class="psn-hint">La búsqueda mira sólo en la vista abierta: aquí, personas.</p>
+              </div>
+            </section>
           </div>
 
           <nav class="pf-nav" aria-label="Navegación principal">
@@ -1437,13 +1886,14 @@
   <section class="row" aria-labelledby="desk-h">
     <div class="row-head">
       <h2 id="desk-h">Navegador (escritorio)</h2>
-      <p>La misma pestaña en 1180 px: las personas con su búsqueda a la izquierda; tus grupos y las dos acciones a la derecha.</p>
+      <p>En escritorio no hay que elegir entre A y B: caben las dos cosas a la vez. Las personas, a la izquierda con su buscador; tus grupos y las dos acciones, a la derecha, así que el acceso a ambos es inmediato y sin cambiar de vista.</p>
     </div>
 
     <figure class="browser">
       <figcaption class="cap">
         <span class="cap-n">Escritorio</span>
         <span class="cap-t">Personas · sesión de Lucía</span>
+        <span class="cap-note">Aquí no hay selector «Personas | Grupos»: las dos listas se ven a la vez, cada una con su scroll. Las etiquetas de grupo de cada fila también son enlaces a la ficha del grupo.</span>
       </figcaption>
 
       <div class="bf">
@@ -1475,18 +1925,43 @@
                   </div>
                   <div class="psn-dsearch">
                     <svg class="ic psn-search-ic" aria-hidden="true"><use href="#i-search"/></svg>
-                    <label class="sr-only" for="d-q">Buscar una persona o un grupo</label>
-                    <input class="psn-search-in psn-search-dt" id="d-q" type="search" name="buscar-dt" placeholder="Buscar personas o grupos" autocomplete="off">
+                    <label class="sr-only" for="d-q">Buscar en tus personas</label>
+                    <input class="psn-search-in psn-search-dt" id="d-q" type="search" name="buscar-dt" placeholder="Buscar en tus personas" autocomplete="off">
                   </div>
                 </div>
 
                 <ul class="psn-dlist">
                   <li class="psn-drow">
+                    <a class="psn-dmain-link" href="#abuela-carmen">
+                      <span class="avatar psn-dav" aria-hidden="true">👵</span>
+                      <span class="psn-db"><span class="psn-dname">Abuela Carmen</span><span class="psn-dmeta">Carmen · 3 deseos</span></span>
+                    </a>
+                    <span class="psn-dgroups">
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </span>
+                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Su santo, el 16 de julio</span></span>
+                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </li>
+                  <li class="psn-drow">
+                    <a class="psn-dmain-link" href="#andres">
+                      <span class="avatar psn-dav" aria-hidden="true">⚽</span>
+                      <span class="psn-db"><span class="psn-dname">Andrés</span><span class="psn-dmeta">1 deseo</span></span>
+                    </a>
+                    <span class="psn-dgroups">
+                      <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </span>
+                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>Sin fechas todavía</span></span>
+                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </li>
+                  <li class="psn-drow">
                     <a class="psn-dmain-link" href="#javier">
                       <span class="avatar psn-dav" aria-hidden="true">🎸</span>
                       <span class="psn-db"><span class="psn-dname">Javier</span><span class="psn-dmeta">4 deseos · tu hermano</span></span>
                     </a>
-                    <span class="psn-dgroups"><span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span></span>
+                    <span class="psn-dgroups">
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                    </span>
                     <span class="psn-dceleb is-next"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span><b>La próxima:</b> su santo, el 3 de diciembre</span></span>
                     <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
                   </li>
@@ -1496,32 +1971,11 @@
                       <span class="psn-db"><span class="psn-dname">Lucía</span><span class="psn-dmeta">Tú · 5 deseos</span></span>
                     </a>
                     <span class="psn-dgroups">
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
                     </span>
                     <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg><span>Su santo, el 13 de diciembre</span></span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </li>
-                  <li class="psn-drow">
-                    <a class="psn-dmain-link" href="#abuela-carmen">
-                      <span class="avatar psn-dav" aria-hidden="true">👵</span>
-                      <span class="psn-db"><span class="psn-dname">Abuela Carmen</span><span class="psn-dmeta">Carmen · 3 deseos</span></span>
-                    </a>
-                    <span class="psn-dgroups"><span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span></span>
-                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Su santo, el 16 de julio</span></span>
-                    <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
-                  </li>
-                  <li class="psn-drow">
-                    <a class="psn-dmain-link" href="#pablo">
-                      <span class="avatar psn-dav" aria-hidden="true">🚲</span>
-                      <span class="psn-db"><span class="psn-dname">Pablo</span><span class="psn-dmeta">2 deseos</span></span>
-                    </a>
-                    <span class="psn-dgroups">
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                    </span>
-                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg><span>Su cumpleaños, el 9 de enero</span></span>
                     <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
                   </li>
                   <li class="psn-drow">
@@ -1530,22 +1984,22 @@
                       <span class="psn-db"><span class="psn-dname">Marta</span><span class="psn-dmeta">6 deseos</span></span>
                     </a>
                     <span class="psn-dgroups">
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎸</span>Familia Martín</span>
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-amigos-de-la-uni" aria-label="Abrir el grupo Amigos de la Uni"><span class="psn-gtag-e" aria-hidden="true">📚</span><span class="psn-gtag-t">Amigos de la Uni</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
                     </span>
                     <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg><span>Su cumpleaños, el 3 de febrero</span></span>
                     <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
                   </li>
                   <li class="psn-drow">
-                    <a class="psn-dmain-link" href="#andres">
-                      <span class="avatar psn-dav" aria-hidden="true">⚽</span>
-                      <span class="psn-db"><span class="psn-dname">Andrés</span><span class="psn-dmeta">1 deseo</span></span>
+                    <a class="psn-dmain-link" href="#pablo">
+                      <span class="avatar psn-dav" aria-hidden="true">🚲</span>
+                      <span class="psn-db"><span class="psn-dname">Pablo</span><span class="psn-dmeta">2 deseos</span></span>
                     </a>
                     <span class="psn-dgroups">
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">🎾</span>Pádel del martes</span>
-                      <span class="psn-gtag"><span class="psn-gtag-e" aria-hidden="true">📚</span>Amigos de la Uni</span>
+                      <a class="psn-gtag" href="#grupo-familia-martin" aria-label="Abrir el grupo Familia Martín"><span class="psn-gtag-e" aria-hidden="true">🎸</span><span class="psn-gtag-t">Familia Martín</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
+                      <a class="psn-gtag" href="#grupo-padel-del-martes" aria-label="Abrir el grupo Pádel del martes"><span class="psn-gtag-e" aria-hidden="true">🎾</span><span class="psn-gtag-t">Pádel del martes</span><svg class="psn-gtag-c" aria-hidden="true"><use href="#i-chev"/></svg></a>
                     </span>
-                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>Sin fechas todavía</span></span>
+                    <span class="psn-dceleb"><svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg><span>Su cumpleaños, el 9 de enero</span></span>
                     <svg class="psn-chev" aria-hidden="true"><use href="#i-chev"/></svg>
                   </li>
                 </ul>
@@ -1555,7 +2009,7 @@
             <div class="psn-dcol">
               <section class="psn-dcard" aria-labelledby="d-groups-h">
                 <h2 class="psn-dh" id="d-groups-h">Tus grupos</h2>
-                <p class="psn-dsub">Cada fila abre la ficha del grupo.</p>
+                <p class="psn-dsub">A la vista sin cambiar de pestaña: cada fila abre la ficha del grupo.</p>
                 <ul class="psn-glist">
                   <li>
                     <a class="psn-grow" href="#grupo-familia-martin">
@@ -1617,7 +2071,7 @@
   <section class="row" aria-labelledby="notas-h">
     <div class="row-head">
       <h2 id="notas-h">Notas de la pantalla</h2>
-      <p>Seis reglas que la pestaña respeta y que conviene no romper al implementarla.</p>
+      <p>Seis reglas que las dos opciones respetan y que conviene no romper al implementarlas.</p>
     </div>
 
     <div class="devices">
@@ -1625,12 +2079,12 @@
         <h3>Qué se ve, qué se busca y qué no se repite</h3>
         <p>La ficha de la persona (celebraciones, «Sus tallas» y sus deseos) y la ficha del grupo ya están dibujadas en 02 y 04: esta pestaña sólo lleva a ellas.</p>
         <ol>
-          <li><span class="fn" aria-hidden="true">1</span><span>Una persona, una fila: si está en tres grupos no se duplica. Sus grupos se leen como etiquetas con el icono del grupo y su próxima celebración se dice con palabras —«la próxima», «faltan 7 días»—, no sólo con color.</span></li>
-          <li><span class="fn" aria-hidden="true">2</span><span>Los grupos son filas completas de 64 px con su icono y su número de personas: el dedo entero entra. Administrar un grupo sigue estando dentro de su ficha, no aquí.</span></li>
-          <li><span class="fn" aria-hidden="true">3</span><span>El alias es privado y sólo de personas. «Abuela Carmen» lo ves tú; el grupo ve «Carmen», y su nombre real queda pequeño debajo para no confundir a nadie. Los grupos no se renombran.</span></li>
-          <li><span class="fn" aria-hidden="true">4</span><span>Unirse con código vive sólo dentro de la app (S3): el enlace de la invitación abre la bienvenida «Lucía te ha invitado a «Familia Martín»» y no pide escribir nada. Aquí el código tiene 6 caracteres y nunca lleva O, I ni L, que se confunden.</span></li>
-          <li><span class="fn" aria-hidden="true">5</span><span>El error dice qué pasa y cómo se arregla: el campo se marca en rojo, el texto avisa de que el código no existe y propone revisar lo copiado. Hoy la app responde «Código incorrecto o grupo no encontrado»; se propone el texto de la pantalla 5.</span></li>
-          <li><span class="fn" aria-hidden="true">6</span><span>Sin grupos no hay callejón: dos acciones grandes y una explicación de para qué sirven, y el recordatorio de que «Mi lista» funciona igual. La búsqueda mira a la vez en personas y en grupos.</span></li>
+          <li><span class="fn" aria-hidden="true">1</span><span>Dos opciones, una decisión: <b>A</b> separa «Personas» y «Grupos» con un selector, busca dentro de la vista abierta y recuerda la última; <b>B</b> deja los grupos en una tira pegada arriba (con «Crear» y «Unirme» al final) y las personas debajo con buscador y salto por letra. Lo que no se hace nunca es volver a la lista única en la que los grupos caían al final.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>Los grupos son enlaces de verdad: cada etiqueta de una fila de persona abre la ficha de ese grupo, con aria-label «Abrir el grupo Familia Martín», 48 px de zona táctil (40 pintados + 4 de aire por lado) y foco visible. La etiqueta vive <b>fuera</b> del enlace de la persona: nunca un enlace dentro de otro enlace. Las filas de «Tus grupos» y las tarjetas de la tira también se abren enteras.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Nada que sea emoji o icono se comprime: alto y ancho fijos, proporción 1:1 y <code>flex-shrink:0</code>, comprobado a 390 px. Sin esa regla, un nombre largo aplastaba el avatar (se veía 31 × 48 px) y el emoji de la etiqueta se deformaba, que es justo lo que avisó el dueño.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>El buscador dice dónde busca y no borra el trabajo: «Buscar en tus personas» / «Buscar en tus grupos» en A, y en B la tira se filtra junto a la lista. Sin resultados se conserva el texto, hay «Limpiar la búsqueda» y, en A, el salto a la otra vista con la misma palabra.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span>Unirse con código vive sólo dentro de la app (S3) y la hoja es idéntica en A y B. El código tiene 6 caracteres y nunca lleva O, I ni L, que se confunden; el error dice qué pasa y cómo se arregla. Hoy la app responde «Código incorrecto o grupo no encontrado»: se propone el texto de la pantalla 5.</span></li>
+          <li><span class="fn" aria-hidden="true">6</span><span>Sin grupos no hay callejón: tres pasos, dos acciones grandes y el recordatorio de que «Mi lista» funciona igual. El alias es privado y sólo de personas: «Abuela Carmen» lo ves tú, el grupo sigue viendo «Carmen», y los grupos no se renombran.</span></li>
         </ol>
       </div>
     </div>

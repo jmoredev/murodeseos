@@ -66,6 +66,15 @@ versión de escritorio, como 04–06. El manifiesto `design.json` lo actualiza s
 - [x] T9 — Especificación del nuevo sistema de diseño (tokens, tipografía, componentes) sin pisar
   `design/system.md` (que es la foto del sistema actual). S2 · pendiente · commit —
 
+- [x] T10 — Comentarios L6 sobre `07-personas.html`: rediseñar la pestaña con acceso rápido a
+  personas y a grupos, grupos clicables, iconos sin comprimir. S2–S3, L6 · worker · commit —
+- [x] T11 — Comentario L6 sobre `06-formulario-deseo.html`: añadir y editar casi idénticos, con
+  «¿Quién puede verlo?» y enlaces debajo de Notas. S2–S3, L6 · worker · commit —
+- [x] T12 — Comentario L6 sobre `10-perfil.html`: dejar claro cómo se edita el perfil (desde la
+  pantalla 3 se llega a la 1 y la 2). S2–S3, L6 · worker · commit —
+- [x] T13 — Comentario L6 sobre `02-personas-primero.html`: toda la tarjeta del selector de grupo
+  es pulsable. S2, L6 · worker · commit —
+
 ## Log
 
 L1 — Petición original (2026-11-26): «Tengo un problema con esta aplicación y es que el diseño de la
@@ -110,3 +119,7 @@ L6 — 2026-11-27: comentarios del propietario en el canvas (verbatim):
   pantalla 3 deberías de llegar a las pantallas 1 y 2»
 - 02 selector de grupo: «Entiendo que no hace falta pulsar unicamente sobre el radio button sino que
   al pulsar sobre toda la tarjeta se selecciona»
+
+L7 — 2026-11-27: comentarios L6 aplicados y resueltos en el canvas (T10–T13). 07 ofrece ahora dos
+opciones para elegir (A selector «Personas | Grupos», B tira de grupos arriba); 06 iguala añadir y
+editar; 10 pasa a índice + dos apartados; 02 deja claro que toda la tarjeta del selector es pulsable.
