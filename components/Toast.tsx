@@ -4,21 +4,64 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useIsDesktop } from '@/lib/use-is-desktop';
 
+/**
+ * El brindis (12 · P7–P9, nota 3): una sola pieza para lo momentáneo.
+ *
+ * Qué cambia respecto al de antes:
+ *
+ * 1. **Lleva acción cuando hay algo que deshacer o reintentar** («Deshacer», «Reintentar»), y
+ *    entonces **no** lleva además una ×: dos botones competirían por el mismo sitio. Sin acción
+ *    sí tiene × para cerrarlo antes.
+ * 2. **El de error no se va solo.** Si desapareciera a los tres segundos, el aviso se quedaría sin
+ *    leer y sin decir por qué: espera a que se reintente o se cierre.
+ * 3. **La forma es la del artboard**: burbuja de tinta oscura, texto `--on-ink` y la acción en
+ *    `--on-ink-accent`, subrayada. En 390 px el que lleva acción pasa a dos líneas (mensaje arriba,
+ *    acción abajo a la derecha); en escritorio vuelve a una sola línea.
+ *
+ * La API sigue siendo la de antes para los cuatro llamadores actuales (`WishListTab`, `GroupsTab`,
+ * `WishLinkChip` y el detalle de un deseo): `message`, `type`, `duration` y `onClose`. La acción es
+ * un cuarto argumento opcional, así que nada de lo que ya existe cambia de forma.
+ */
+
 export type ToastType = 'success' | 'error' | 'info';
+
+export interface ToastAction {
+    /** Texto del botón: «Deshacer» o «Reintentar». */
+    label: string;
+    onPress: () => void;
+}
 
 interface ToastProps {
     message: string;
     type?: ToastType;
+    /** Milisegundos en pantalla. Si no se pasa, 3 s (10 s cuando hay acción). */
     duration?: number;
     onClose: () => void;
+    /** Acción única; sustituye a la × (nota 3 del artboard). */
+    action?: ToastAction;
 }
 
-export function Toast({ message, type = 'success', duration = 3000, onClose }: ToastProps) {
+/** Lo que dura un brindis de confirmación (12 · nota 3). */
+const DURACION_CONFIRMACION_MS = 3000;
+/**
+ * Lo que dura uno con acción. La ficha deja la pregunta abierta (§13, pregunta 1) con esta
+ * propuesta: 10 s, o hasta que se pulse, para que dé tiempo a leerlo y alcanzarlo con el pulgar.
+ */
+const DURACION_CON_ACCION_MS = 10_000;
+/** Lo que tarda la salida antes de avisar al llamador. */
+const SALIDA_MS = 300;
+
+export function Toast({ message, type = 'success', duration, onClose, action }: ToastProps) {
     const [isVisible, setIsVisible] = useState(false);
     const isDesktop = useIsDesktop();
-    // Mismo umbral que el resto de la app (>768): por encima no hay dock y el
-    // toast mantiene el `bottom-6` (24px) de siempre; por debajo debe despegarse
-    // del dock, que tras el inset ancla a `16px + env(safe-area-inset-bottom)`.
+    // El de error se queda hasta que se cierre: irse solo dejaría el aviso sin leer.
+    const esError = type === 'error';
+    const duracion = duration ?? (action ? DURACION_CON_ACCION_MS : DURACION_CONFIRMACION_MS);
+
+    const cerrar = () => {
+        setIsVisible(false);
+        setTimeout(onClose, SALIDA_MS);
+    };
 
     useEffect(() => {
         // La entrada va en el siguiente cuadro: el render inicial pinta el estado
@@ -26,37 +69,60 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         // efecto encadena renders que no hacen falta.
         const enterFrame = requestAnimationFrame(() => setIsVisible(true));
 
+        if (esError) {
+            return () => cancelAnimationFrame(enterFrame);
+        }
+
         const timer = setTimeout(() => {
             // Si el cierre llega antes que el cuadro de entrada —una `duration` más corta que
             // un cuadro—, se cancela el cuadro: si no, volvería a mostrar el brindis ya cerrado.
             cancelAnimationFrame(enterFrame);
             setIsVisible(false);
-            setTimeout(onClose, 300); // Wait for transition
-        }, duration);
+            setTimeout(onClose, SALIDA_MS);
+        }, duracion);
 
         return () => {
             cancelAnimationFrame(enterFrame);
             clearTimeout(timer);
         };
-    }, [duration, onClose]);
+    }, [duracion, esError, onClose]);
 
-    const bgColors = {
-        success: 'bg-green-600',
-        error: 'bg-red-600',
-        info: 'bg-primary'
-    };
-
-    const icons = {
+    /**
+     * Los tres iconos son los del artboard: comprobado, alerta e información. Van en SVG en línea
+     * porque el brindis se pinta con `createPortal` (sólo web) y no necesita la fuente de iconos.
+     */
+    const iconos: Record<ToastType, React.ReactNode> = {
         success: (
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4.8 12.6 9.6 17.4 19.2 6.6" />
+            </svg>
         ),
         error: (
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3.8 21 19.4H3Z" />
+                <path d="M12 9.6v4.4" />
+                <circle cx="12" cy="16.9" r="1.1" fill="currentColor" stroke="none" />
+            </svg>
         ),
         info: (
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-        )
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.6" />
+                <path d="M12 11v5.2" />
+                <circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none" />
+            </svg>
+        ),
     };
+
+    // El aro del icono cambia de color con el tipo; la burbuja, nunca (una pieza por patrón).
+    const aroIcono =
+        type === 'error'
+            ? 'bg-danger-soft/15 text-danger-soft'
+            : type === 'success'
+              ? 'bg-accent-soft/15 text-accent-soft'
+              : 'bg-on-ink/15 text-on-ink';
+
+    // Dos líneas sólo en el móvil y sólo cuando hay acción: mensaje arriba, acción abajo a la derecha.
+    const dosLineas = !!action && !isDesktop;
 
     return createPortal(
         // `z-[10000]` no es una afirmación estética: RNW monta el envoltorio de
@@ -77,50 +143,99 @@ export function Toast({ message, type = 'success', duration = 3000, onClose }: T
         // capturas. Medirlo aquí no fue posible: la pila de e2e (Docker/Supabase)
         // no está disponible, así que queda sin comprobar en dispositivo real.
         //
-        // Guardia de clics: al sobrepasar ahora todo, durante su ~3 s la caja
-        // queda encima de los pies de los modales (botones de acción en centro
-        // inferior). `pointer-events-none` en el posicionador y en la burbuja
-        // concentra los toques solo en el botón de cerrar (`pointer-events-auto`;
-        // un hijo reactiva bajo un ancestro `none`). No simplificar: sin esta
-        // guardia, el brindis traga toques ajenos; con ella, el fondo permanece
-        // interactivo.
+        // Guardia de clics: al sobrepasar ahora todo, mientras vive queda encima
+        // de los pies de los modales (botones de acción en centro inferior).
+        // `pointer-events-none` en el posicionador y en la burbuja concentra los
+        // toques solo en los botones (`pointer-events-auto`; un hijo reactiva bajo
+        // un ancestro `none`). No simplificar: sin esta guardia, el brindis traga
+        // toques ajenos; con ella, el fondo permanece interactivo.
         <div
-            className={`fixed left-1/2 -translate-x-1/2 z-[10000] transition-all duration-300 transform pointer-events-none ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+            className={`fixed left-1/2 z-[10000] -translate-x-1/2 transform transition-all duration-300 pointer-events-none ${
+                isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+            }`}
             style={{
-                // El dock (bottom 16px + inset) mide `54 + labelLineBox` px de alto, deducido
-                // de sus clases (px-2 py-2 + etiqueta text-xs con line-height 1rem): su borde
-                // superior queda en `70 + L` px + inset, con L la caja de línea de la etiqueta.
-                // Es una estimación aritmética, no una medición — revisar el número si cambia
-                // el padding o el tamaño de etiqueta del dock. Con el offset a 6.75rem (108px)
-                // el aire es `38 − L` px: 22px con L = 16px, y sigue ≥19px en todo el rango
-                // plausible de crecimiento de la etiqueta. (El 6.5rem anterior daba 15–18px,
-                // por debajo del aire previsto cuando la etiqueta pasó de 10px a 12px.)
-                // En escritorio: 24px, idéntico al `bottom-6` de antes.
+                // En el móvil el brindis despega de la barra de pestañas (72 px) más 12 px, como
+                // pide la ficha §10.11; en escritorio baja al centro del pie, a 24 px.
                 bottom: isDesktop ? 24 : 'calc(6.75rem + env(safe-area-inset-bottom))',
             }}
         >
             <div
-                className={`${bgColors[type]} text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 min-w-[min(280px,calc(100vw_-_2rem))] max-w-[calc(100vw_-_2rem)] pointer-events-none`}
+                role={esError ? 'alert' : 'status'}
+                aria-live={esError ? undefined : 'polite'}
+                className={`pointer-events-none min-w-[min(280px,calc(100vw_-_2rem))] max-w-[calc(100vw_-_2rem)] rounded-2xl bg-ink py-[9px] pl-[13px] pr-2 text-on-ink shadow-sh-toast ${
+                    dosLineas
+                        ? 'grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-[10px] gap-y-0.5'
+                        : 'flex items-center gap-[10px]'
+                }`}
             >
-                <div className="shrink-0">
-                    {icons[type]}
-                </div>
-                <p className="text-sm font-bold flex-1">{message}</p>
-                <button onClick={() => { setIsVisible(false); setTimeout(onClose, 300); }} className="p-3.5 -mr-2 hover:bg-white/20 rounded-lg transition-colors pointer-events-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <span
+                    aria-hidden="true"
+                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${aroIcono} ${
+                        dosLineas ? 'mt-[3px]' : ''
+                    }`}
+                >
+                    {iconos[type]}
+                </span>
+
+                <p className="min-w-0 flex-1 text-[17px] leading-[1.3] text-on-ink">{message}</p>
+
+                {action ? (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            action.onPress();
+                            cerrar();
+                        }}
+                        className={`pointer-events-auto inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[17px] font-bold text-on-ink-accent underline decoration-2 underline-offset-4 hover:bg-on-ink/15 hover:text-on-ink ${
+                            dosLineas ? 'col-span-2 justify-self-end' : ''
+                        }`}
+                    >
+                        {type === 'error' ? (
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3" />
+                                <path d="M19.6 4.4v4.2h-4.2" />
+                            </svg>
+                        ) : (
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M9.2 6.4 4.6 11l4.6 4.6" />
+                                <path d="M4.6 11h8.4a5.6 5.6 0 0 1 0 11.2H9" />
+                            </svg>
+                        )}
+                        {action.label}
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={cerrar}
+                        aria-label="Cerrar el aviso"
+                        className="pointer-events-auto grid h-12 w-12 shrink-0 place-items-center rounded-xl text-on-ink hover:bg-on-ink/15"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" aria-hidden="true">
+                            <path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6" />
+                        </svg>
+                    </button>
+                )}
             </div>
         </div>,
         document.body
     );
 }
 
+export interface ShowToastOptions {
+    /** Acción única que sustituye a la × («Deshacer», «Reintentar»). */
+    action?: ToastAction;
+    /** Milisegundos en pantalla; el de error los ignora porque no se va solo. */
+    duration?: number;
+}
+
 // Hook simple para usar toasts (Alternativa a un context completo por ahora)
 export function useToast() {
-    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const [toast, setToast] = useState<
+        { message: string; type: ToastType; action?: ToastAction; duration?: number } | null
+    >(null);
 
-    const showToast = (message: string, type: ToastType = 'success') => {
-        setToast({ message, type });
+    const showToast = (message: string, type: ToastType = 'success', options?: ShowToastOptions) => {
+        setToast({ message, type, action: options?.action, duration: options?.duration });
     };
 
     const hideToast = () => setToast(null);
@@ -133,6 +248,8 @@ export function useToast() {
             <Toast
                 message={toast.message}
                 type={toast.type}
+                action={toast.action}
+                duration={toast.duration}
                 onClose={hideToast}
             />
         ) : null

@@ -14,10 +14,11 @@ import { useTourActive, useTourRequestedTab, useTourTabReporter } from '@/compon
 import { useTourTarget } from '@/components/tour/TourTargetProvider';
 import { DEMO_GROUPS, DEMO_WISHES } from '@/lib/tour/demo-data';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { BootScreen } from '@/components/BootScreen';
 
 // Shared budget for the auth session check and the profile-name gate: both
 // race their request against this timeout so a hung request can never leave
-// the screen stuck on "Cargando...".
+// the screen stuck on the boot screen.
 const AUTH_SESSION_MS = 12_000;
 
 export default function LandingPage() {
@@ -181,12 +182,10 @@ export default function LandingPage() {
     const profileGatePending = !!user && profileCheckDone.userId !== user.id;
 
     if (loading || profileGatePending) {
-        return (
-            <View className="flex-1 items-center justify-center bg-surface">
-                <View className="w-10 h-10 border-4 border-primary/25 border-t-primary rounded-full animate-spin" />
-                <Text className="mt-4 text-primary font-sans-medium">Cargando...</Text>
-            </View>
-        );
+        // Arranque (12 · P1): antes era un círculo girando con «Cargando...», que no decía qué
+        // estaba pasando ni cuánto podía tardar. La misma pantalla cubre también la espera de las
+        // fuentes en `app/_layout.tsx`, así que no hay salto al pasar de una a otra.
+        return <BootScreen />;
     }
 
     if (user) {
