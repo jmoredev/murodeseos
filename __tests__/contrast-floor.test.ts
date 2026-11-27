@@ -231,6 +231,10 @@ describe('aritmética WCAG del guardián de contraste', () => {
   it('minAlphaFor reproduce el borde real sobre el lienzo canónico: /61 no pasa, /62 sí', () => {
     // El lienzo es `surface` desde T1 del rediseño: --bg #FFF8F1. Con la tinta
     // canónica (#2B1A12) el borde cae en /62, no en el /66 del granate viejo.
+    // /61 es frontera fina: la mezcla algebraica sin redondear da ~4.5037:1, pero
+    // `blendOver` redondea cada canal a 8 bits como los píxeles pintados (#7e7169),
+    // y ese color real se queda por debajo de AA.
+    expect(blendOver(ON_SURFACE, '#FFF8F1', 0.61)).toBe('#7e7169');
     expect(contrastRatio(ON_SURFACE, '#FFF8F1', 0.61)).toBeLessThan(AA_TARGET);
     expect(contrastRatio(ON_SURFACE, '#FFF8F1', 0.62)).toBeGreaterThanOrEqual(AA_TARGET);
     expect(minAlphaFor(ON_SURFACE, '#FFF8F1', AA_TARGET)).toBe(0.62);
