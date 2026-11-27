@@ -45,11 +45,11 @@ function offlinePage() {
     '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<title>Sin conexión</title></head>' +
-      '<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff4f4;color:#4c212b;font-family:system-ui,-apple-system,sans-serif">' +
+      '<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FFF8F1;color:#2B1A12;font-family:system-ui,-apple-system,sans-serif">' +
       '<main style="text-align:center;padding:2rem;max-width:26rem">' +
       '<h1 style="font-size:1.25rem;margin:0 0 0.5rem">Sin conexión</h1>' +
       '<p style="margin:0 0 1.5rem;line-height:1.5;opacity:0.8">No se ha podido cargar la aplicación. Comprueba tu conexión e inténtalo de nuevo.</p>' +
-      '<button onclick="location.reload()" style="min-height:44px;padding:0.75rem 1.5rem;border:0;border-radius:9999px;background:#aa2c32;color:#fff4f4;font-size:1rem;font-weight:700;cursor:pointer">Reintentar</button>' +
+      '<button onclick="location.reload()" style="min-height:44px;padding:0.75rem 1.5rem;border:0;border-radius:9999px;background:#B93D12;color:#FFFFFF;font-size:1rem;font-weight:700;cursor:pointer">Reintentar</button>' +
       '</main></body></html>',
     { status: 200, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
   );

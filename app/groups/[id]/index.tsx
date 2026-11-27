@@ -148,7 +148,7 @@ export default function GroupDetailsPage() {
     if (loading) {
         return (
             <View className="flex-1 items-center justify-center bg-surface">
-                <ActivityIndicator size="large" color="#aa2c32" />
+                <ActivityIndicator size="large" color="#B93D12" />
             </View>
         );
     }

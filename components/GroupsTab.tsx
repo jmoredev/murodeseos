@@ -351,7 +351,7 @@ export function GroupsTab({ userId, demoData }: GroupsTabProps) {
     if (loading) {
         return (
             <View className="flex-1 items-center justify-center p-20">
-                <ActivityIndicator size="large" color="#aa2c32" />
+                <ActivityIndicator size="large" color="#B93D12" />
                 <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando grupos...</Text>
             </View>
         );

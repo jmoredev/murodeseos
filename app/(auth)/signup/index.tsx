@@ -123,7 +123,7 @@ export default function SignupPage() {
                                     className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${emailError ? 'ring-2 ring-primary/30' : ''}`}
                                     style={{ fontSize: 16 }}
                                     placeholder="tu@ejemplo.com"
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     value={email}
                                     onChangeText={(text) => {
                                         setEmail(text);
@@ -149,7 +149,7 @@ export default function SignupPage() {
                                     className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     value={password}
                                     onChangeText={setPassword}
                                     accessibilityLabel="Contraseña"
@@ -163,7 +163,7 @@ export default function SignupPage() {
                                     className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${confirmPasswordError ? 'ring-2 ring-primary/30' : ''}`}
                                     style={{ fontSize: 16 }}
                                     placeholder="••••••••"
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
                                     accessibilityLabel="Confirmar contraseña"

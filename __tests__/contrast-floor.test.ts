@@ -122,8 +122,9 @@ const SURFACES = config.surfaces;
  * que obliga a una opacidad mayor, se DERIVA el suelo token a token y se
  * queda el máximo — no se adivina cuál será el peor por su luminancia. Como
  * efecto secundario útil, `WORST_CASE_BG` es el fondo cuyo suelo es el que
- * manda (el relleno de inputs `surface-container-highest`, #ecd8e0, el más
- * oscuro de la familia: es el que empuja el suelo global a /70).
+ * manda: con la paleta canónica «Personas primero» es la sección
+ * `surface-container-low` (--sand #FBEBDC, el más oscuro de la familia), que
+ * empuja el suelo global a /63. El mínimo exigido sigue siendo AA 4,5:1.
  */
 export function deriveOpacityFloor(values: Hex[], fg: Hex, target: number): { floor: number; bindingBg: Hex } {
   let floor = 0;
@@ -227,21 +228,27 @@ describe('aritmética WCAG del guardián de contraste', () => {
     expect(contrastRatio('#4c212b', '#4c212b')).toBeCloseTo(1, 5);
   });
 
-  it('minAlphaFor reproduce el borde real sobre el token de superficie: /65 no pasa, /66 sí', () => {
-    expect(contrastRatio(ON_SURFACE, '#fff4f4', 0.65)).toBeLessThan(AA_TARGET);
-    expect(contrastRatio(ON_SURFACE, '#fff4f4', 0.66)).toBeGreaterThanOrEqual(AA_TARGET);
-    expect(minAlphaFor(ON_SURFACE, '#fff4f4', AA_TARGET)).toBe(0.66);
+  it('minAlphaFor reproduce el borde real sobre el lienzo canónico: /61 no pasa, /62 sí', () => {
+    // El lienzo es `surface` desde T1 del rediseño: --bg #FFF8F1. Con la tinta
+    // canónica (#2B1A12) el borde cae en /62, no en el /66 del granate viejo.
+    // /61 es frontera fina: la mezcla algebraica sin redondear da ~4.5037:1, pero
+    // `blendOver` redondea cada canal a 8 bits como los píxeles pintados (#7e7169),
+    // y ese color real se queda por debajo de AA.
+    expect(blendOver(ON_SURFACE, '#FFF8F1', 0.61)).toBe('#7e7169');
+    expect(contrastRatio(ON_SURFACE, '#FFF8F1', 0.61)).toBeLessThan(AA_TARGET);
+    expect(contrastRatio(ON_SURFACE, '#FFF8F1', 0.62)).toBeGreaterThanOrEqual(AA_TARGET);
+    expect(minAlphaFor(ON_SURFACE, '#FFF8F1', AA_TARGET)).toBe(0.62);
   });
 
-  it('control negativo: el defecto real del repositorio — /45 NO llega a AA, /70 sí', () => {
-    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.45)).toBeLessThan(AA_TARGET);
-    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.7)).toBeGreaterThanOrEqual(AA_TARGET);
-    // Y el suelo global, con la peor superficie real, es exactamente /70.
-    expect(OPACITY_FLOOR).toBe(0.7);
-    // El que manda es el fondo MÁS OSCURO de la familia (el relleno de
-    // inputs, surface-container-highest #ecd8e0): contra él /69 aún falla.
-    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.69)).toBeLessThan(AA_TARGET);
-    expect(WORST_CASE_BG.toLowerCase()).toBe('#ecd8e0');
+  it('control negativo: el defecto real del repositorio — /62 NO llega a AA, /63 sí', () => {
+    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.62)).toBeLessThan(AA_TARGET);
+    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.63)).toBeGreaterThanOrEqual(AA_TARGET);
+    // Y el suelo global, con la peor superficie real, es exactamente /63.
+    expect(OPACITY_FLOOR).toBe(0.63);
+    // El que manda es el fondo MÁS OSCURO de la familia (`surface-container-low`,
+    // --sand #FBEBDC): contra él /62 aún falla.
+    expect(contrastRatio(ON_SURFACE, WORST_CASE_BG, 0.62)).toBeLessThan(AA_TARGET);
+    expect(WORST_CASE_BG.toLowerCase()).toBe('#fbebdc');
   });
 
   it('los tokens se LEYEN de tailwind.config.cjs, no van hardcodeados aquí', () => {

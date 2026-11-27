@@ -11,16 +11,18 @@ type DateFieldProps = {
 // Mirrors the neighbouring text inputs (bg-surface-container-highest,
 // rounded-full, text-on-background) with the resolved theme hex values,
 // because NativeWind classes on a raw DOM element are not guaranteed.
+// Los valores son los tokens canónicos (`--surface` #FFFFFF, `--ink` #2B1A12) y
+// la familia que carga `app/_layout.tsx` con `useFonts`.
 const webInputStyle = {
     width: '100%',
     padding: 16,
     borderRadius: 9999,
-    backgroundColor: '#ecd8e0',
-    color: '#4c212b',
+    backgroundColor: '#FFFFFF',
+    color: '#2B1A12',
     border: 'none',
     outline: 'none',
-    fontFamily: 'BeVietnamPro_400Regular',
-    fontSize: 16,
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 17,
 } as const;
 
 export function DateField({ label, value, onChange }: DateFieldProps) {
@@ -42,7 +44,7 @@ export function DateField({ label, value, onChange }: DateFieldProps) {
                     value={value}
                     onChangeText={onChange}
                     placeholder="AAAA-MM-DD"
-                    placeholderTextColor="#4c212b88"
+                    placeholderTextColor="#5C4033"
                     aria-label={label}
                     className="bg-surface-container-highest p-4 rounded-full text-on-background text-lg font-sans"
                 />

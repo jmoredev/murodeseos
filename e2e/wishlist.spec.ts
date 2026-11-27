@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { supabaseAdmin } from './supabase-admin';
 import { abrirFormularioDeDeseo } from './helpers/nuevo-deseo';
 const createdIds = new Set<string>();
@@ -353,9 +355,16 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
 
     test('el control de imagen no se recorta y no compite con Guardar', async ({ page }) => {
         // La causa que se pudo afirmar leyendo el código es la de **jerarquía**: el
-        // selector usaba `PrimaryButton`, el mismo degradado de la acción principal.
-        // Aquí se comprueba midiendo: el control de imagen no lleva degradado y el de
-        // Guardar sí, así que la app dice cuál es la acción principal.
+        // selector usaba `PrimaryButton`, el mismo relleno de la acción principal.
+        // Aquí se comprueba midiendo: el control de imagen no lleva el relleno
+        // `primary` y el de Guardar sí, así que la app dice cuál es la acción principal.
+        // Desde el rediseño «Personas primero» ese relleno es plano (`bg-primary`,
+        // `sistema-nuevo.md` §10.1), no un degradado; el token se lee de
+        // `tailwind.config.cjs`, como en `pwa.spec.ts`, en vez de repetir el hex.
+        const config = readFileSync(path.resolve(__dirname, '..', 'tailwind.config.cjs'), 'utf8');
+        const primario = config.match(/(?:^|\n)\s*primary:\s*'(#[0-9a-fA-F]{6})'/)?.[1];
+        if (!primario) throw new Error('No se encontró el token `primary` en tailwind.config.cjs.');
+        const rgbPrimario = `rgb(${[1, 3, 5].map((i) => parseInt(primario.slice(i, i + 2), 16)).join(', ')})`;
         await page.setViewportSize({ width: 360, height: 800 });
         await page.reload();
         await abrirFormularioDeDeseo(page);
@@ -375,22 +384,21 @@ test.describe('Funcionalidad de Lista de Deseos', () => {
         expect(medida.alto, `el control se recorta a lo alto (${medida.alto}px)`).toBeLessThanOrEqual(1);
         expect(medida.caja, 'el control no llega a 44px').toBeGreaterThanOrEqual(44);
 
-        // El degradado no vive en el `Pressable` exterior sino en un hijo: así lo pinta
-        // `LinearGradient` en web. Mirar solo el elemento exterior daría «sin degradado»
-        // para la propia acción principal — que es lo que me pasó al escribir esto la
-        // primera vez—, así que se busca en el botón y en sus descendientes.
-        const tieneDegradado = (el: Element): boolean =>
-            getComputedStyle(el).backgroundImage.includes('gradient') ||
-            Array.from(el.querySelectorAll('*')).some((hijo) =>
-                getComputedStyle(hijo).backgroundImage.includes('gradient')
+        // El relleno no vive en el `Pressable` exterior sino en un hijo (`View` con
+        // `bg-primary` dentro de `PrimaryButton`). Mirar solo el elemento exterior daría
+        // «sin relleno» para la propia acción principal, así que se busca en el botón y
+        // en sus descendientes.
+        const tieneRellenoPrimario = (el: Element, rgb: string): boolean =>
+            [el, ...Array.from(el.querySelectorAll('*'))].some(
+                (nodo) => getComputedStyle(nodo).backgroundColor === rgb
             );
 
         const guardar = page.getByRole('button', { name: 'Guardar deseo' });
-        const [degradadoImagen, degradadoGuardar] = await Promise.all([
-            anadir.evaluate(tieneDegradado),
-            guardar.evaluate(tieneDegradado),
+        const [rellenoImagen, rellenoGuardar] = await Promise.all([
+            anadir.evaluate(tieneRellenoPrimario, rgbPrimario),
+            guardar.evaluate(tieneRellenoPrimario, rgbPrimario),
         ]);
-        expect(degradadoImagen, 'el control de imagen no debe llevar el degradado principal').toBe(false);
-        expect(degradadoGuardar, 'Guardar es la acción principal y lleva el degradado').toBe(true);
+        expect(rellenoImagen, 'el control de imagen no debe llevar el relleno principal').toBe(false);
+        expect(rellenoGuardar, 'Guardar es la acción principal y lleva el relleno primary').toBe(true);
     });
 });

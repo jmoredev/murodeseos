@@ -112,7 +112,7 @@ export function ProfileTab({ userId }: ProfileTabProps) {
     if (loading) {
         return (
             <View className="flex-1 items-center justify-center p-20">
-                <ActivityIndicator size="large" color="#aa2c32" />
+                <ActivityIndicator size="large" color="#B93D12" />
             </View>
         );
     }

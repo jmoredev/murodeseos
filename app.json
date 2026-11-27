@@ -9,7 +9,7 @@
         "newArchEnabled": true,
         "splash": {
             "resizeMode": "contain",
-            "backgroundColor": "#fff4f4"
+            "backgroundColor": "#FFF8F1"
         },
         "assetBundlePatterns": [
             "**/*"
@@ -19,7 +19,7 @@
         },
         "android": {
             "adaptiveIcon": {
-                "backgroundColor": "#fff4f4"
+                "backgroundColor": "#FFF8F1"
             }
         },
         "web": {
@@ -28,8 +28,8 @@
             "output": "static",
             "name": "Muro de Deseos",
             "shortName": "MuroDeseos",
-            "themeColor": "#aa2c32",
-            "backgroundColor": "#fff4f4",
+            "themeColor": "#B93D12",
+            "backgroundColor": "#FFF8F1",
             "display": "standalone",
             "description": "Comparte tus sueños y organiza tus regalos."
         },

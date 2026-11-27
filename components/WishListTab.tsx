@@ -522,7 +522,7 @@ export function WishListTab({ userId, demoData }: WishListTabProps) {
     if (loading && !isFormOpen && !demoWishes) {
         return (
             <View className="flex-1 items-center justify-center p-20">
-                <ActivityIndicator size="large" color="#aa2c32" />
+                <ActivityIndicator size="large" color="#B93D12" />
                 <Text className="mt-4 text-on-surface/70 font-sans-medium">Cargando deseos...</Text>
             </View>
         );
@@ -642,7 +642,7 @@ export function WishListTab({ userId, demoData }: WishListTabProps) {
                     // La lista todavía no llegó y el formulario ya está abierto (un compartir):
                     // decir «Tu lista está vacía» sería afirmar algo que no se sabe.
                     <View className="items-center justify-center py-20">
-                        <ActivityIndicator size="large" color="#aa2c32" />
+                        <ActivityIndicator size="large" color="#B93D12" />
                     </View>
                 ) : (
                     <View className="items-center justify-center py-20 text-center">

@@ -158,7 +158,7 @@ export default function ProfileSetupPage() {
                                     value={displayName}
                                     onChangeText={setDisplayName}
                                     placeholder="Ej: John Doe, El Mago..."
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     testID="setup-name-input"
                                     className="bg-surface-container-highest p-4 rounded-full text-on-background text-lg font-sans"
                                 />
@@ -214,7 +214,7 @@ export default function ProfileSetupPage() {
                                         value={shirtSize}
                                         onChangeText={setShirtSize}
                                         placeholder="M, L, XL..."
-                                        placeholderTextColor="#4c212b88"
+                                        placeholderTextColor="#5C4033"
                                         testID="setup-shirt-input"
                                         className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                                     />
@@ -227,7 +227,7 @@ export default function ProfileSetupPage() {
                                         value={pantsSize}
                                         onChangeText={setPantsSize}
                                         placeholder="42, 32..."
-                                        placeholderTextColor="#4c212b88"
+                                        placeholderTextColor="#5C4033"
                                         testID="setup-pants-input"
                                         className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                                     />
@@ -242,7 +242,7 @@ export default function ProfileSetupPage() {
                                     value={shoeSize}
                                     onChangeText={setShoeSize}
                                     placeholder="Ej: 43..."
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     testID="setup-shoes-input"
                                     className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                                 />
@@ -260,7 +260,7 @@ export default function ProfileSetupPage() {
                                     value={favoriteBrands}
                                     onChangeText={setFavoriteBrands}
                                     placeholder="Nike, Zara..."
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     testID="setup-brands-input"
                                     className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                                 />
@@ -274,7 +274,7 @@ export default function ProfileSetupPage() {
                                     value={favoriteColor}
                                     onChangeText={setFavoriteColor}
                                     placeholder="Azul, verde..."
-                                    placeholderTextColor="#4c212b88"
+                                    placeholderTextColor="#5C4033"
                                     testID="setup-color-input"
                                     className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                                 />

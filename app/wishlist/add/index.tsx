@@ -136,7 +136,7 @@ export default function WishlistAddPage() {
                                 className={`p-4 rounded-full bg-surface-container-highest text-on-background font-sans ${error ? 'ring-2 ring-primary/30' : ''}`}
                                 style={{ fontSize: 16 }}
                                 placeholder="https://tienda.com/articulo"
-                                placeholderTextColor="#4c212b88"
+                                placeholderTextColor="#5C4033"
                                 value={value}
                                 onChangeText={(text) => {
                                     setValue(text);
@@ -158,7 +158,7 @@ export default function WishlistAddPage() {
 
                         {reading ? (
                             <View className="mt-6 flex-row items-center justify-center gap-2" accessibilityLiveRegion="polite">
-                                <ActivityIndicator size="small" color="#aa2c32" />
+                                <ActivityIndicator size="small" color="#B93D12" />
                                 <Text className="text-sm text-on-surface/70 font-sans-medium">Leyendo la página…</Text>
                             </View>
                         ) : null}

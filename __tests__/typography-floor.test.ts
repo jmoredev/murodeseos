@@ -137,3 +137,72 @@ describe('suelo tipográfico de 12px', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/* ---------------------------------------------------------------------- */
+/* Familia canónica: Nunito (sistema-nuevo.md §2, S6)                      */
+/* ---------------------------------------------------------------------- */
+
+/** Bloque `fontFamily: { ... }` de tailwind.config.cjs, sin comentarios. */
+export function readFontFamilyTokens(): Record<string, string[]> {
+  const config = readFileSync(path.join(ROOT, 'tailwind.config.cjs'), 'utf8');
+  const start = config.indexOf('fontFamily: {');
+  if (start === -1) throw new Error('No se encontró `fontFamily` en tailwind.config.cjs.');
+  const block = config.slice(start, config.indexOf('},', start));
+  const tokens: Record<string, string[]> = {};
+  for (const match of block.matchAll(/['"]?([\w-]+)['"]?:\s*\[([^\]]+)\]/g)) {
+    tokens[match[1]] = [...match[2].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  }
+  return tokens;
+}
+
+describe('familia canónica Nunito (§2)', () => {
+  it('cada token de fontFamily apunta a una familia Nunito cargada por expo-font', () => {
+    const tokens = readFontFamilyTokens();
+    // Guardia de no-vacuidad: la app usa sans / sans-medium / sans-semibold /
+    // sans-bold / display / display-extrabold.
+    expect(Object.keys(tokens).length).toBeGreaterThanOrEqual(6);
+    for (const [token, families] of Object.entries(tokens)) {
+      expect(families[0], `fontFamily.${token}`).toMatch(/^Nunito_\d{3}/);
+    }
+  });
+
+  it('`app/_layout.tsx` carga Nunito con useFonts y ya no importa las familias antiguas', () => {
+    const layout = readFileSync(path.join(ROOT, 'app', '_layout.tsx'), 'utf8');
+    expect(layout).toMatch(/from '@expo-google-fonts\/nunito'/);
+    expect(layout).toMatch(/useFonts\(\{/);
+    for (const weight of ['Nunito_600SemiBold', 'Nunito_700Bold', 'Nunito_800ExtraBold']) {
+      expect(layout, `falta ${weight} en useFonts`).toContain(weight);
+    }
+    expect(layout).not.toMatch(/BeVietnamPro|PlusJakartaSans/);
+    expect(layout).not.toMatch(/@expo-google-fonts\/(be-vietnam-pro|plus-jakarta-sans)/);
+  });
+
+  it('`app/global.css` declara --font-app con una cara de Nunito registrada por expo-font como primera familia', () => {
+    // expo-font registra las caras como `Nunito_600SemiBold`, no como `Nunito`:
+    // con el nombre genérico el texto sin clase `font-*` caía a system-ui.
+    const css = readFileSync(path.join(ROOT, 'app', 'global.css'), 'utf8');
+    const fontApp = css.match(/--font-app:\s*'([^']+)'/)?.[1];
+    expect(fontApp).toBe('Nunito_600SemiBold');
+  });
+
+  it('no queda ninguna referencia a Be Vietnam Pro ni a Plus Jakarta Sans en el código', () => {
+    const files = [
+      ...collectTsFiles(path.join(ROOT, 'app')),
+      ...collectTsFiles(path.join(ROOT, 'components')),
+      ...collectTsFiles(path.join(ROOT, 'lib')),
+    ];
+    const offenders = files
+      .filter((file) => /BeVietnamPro|PlusJakartaSans/.test(readFileSync(file, 'utf8')))
+      .map((file) => path.relative(ROOT, file).split(path.sep).join('/'));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('las dependencias de fuentes son sólo la familia canónica', () => {
+    const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+    const fontPackages = Object.keys(pkg.dependencies).filter((name) =>
+      name.startsWith('@expo-google-fonts/'),
+    );
+    expect(fontPackages).toEqual(['@expo-google-fonts/nunito']);
+  });
+});
