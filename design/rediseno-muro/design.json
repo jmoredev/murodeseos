@@ -47,9 +47,9 @@
     {
       "file": "07-personas.html",
       "title": "Personas primero · Personas",
-      "tradeoff": "Dos opciones para la misma pestaña: A separa personas y grupos con un selector (un toque más para cambiar) y B deja los grupos en una tira arriba (ocupa alto y hay que deslizar para «Crear» y «Unirme»); en escritorio caben las dos columnas.",
+      "tradeoff": "Un selector «Personas | Grupos» deja cada lista con su propio buscador y recuerda la última vista: cambiar de vista cuesta un toque, y en escritorio se ven las dos columnas sin selector.",
       "width": 1440,
-      "height": 6950
+      "height": 5328
     },
     {
       "file": "08-detalle-deseo.html",

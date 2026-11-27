@@ -74,6 +74,8 @@ versión de escritorio, como 04–06. El manifiesto `design.json` lo actualiza s
   pantalla 3 se llega a la 1 y la 2). S2–S3, L6 · worker · commit —
 - [x] T13 — Comentario L6 sobre `02-personas-primero.html`: toda la tarjeta del selector de grupo
   es pulsable. S2, L6 · worker · commit —
+- [x] T14 — Decisión L8 sobre `07-personas.html`: queda sólo la Opción A (selector «Personas |
+  Grupos»); se retira la B. S2–S3, L8 · worker · commit —
 
 ## Log
 
