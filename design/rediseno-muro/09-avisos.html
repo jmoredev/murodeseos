@@ -1,0 +1,1557 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Avisos · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero” · artboard «Avisos».
+     Fundamentos (paleta, reset, tipografía, botones, píldoras,
+     avatares, marco de móvil, marco de navegador y cabecera del
+     dueño) copiados tal cual de 04-ficha-grupo.html, que a su vez
+     los toma de 02-personas-primero.html.
+     Lo específico de esta pantalla usa el prefijo «av-».
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .tile-n{background:#F6EBE2;color:var(--ink-2)}
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5;font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .pf-nav{
+    position:absolute;left:0;right:0;bottom:0;height:72px;z-index:5;
+    padding:4px 8px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:rgba(255,248,241,.97);border-top:1px solid var(--border);
+  }
+  .nav-i{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    min-height:48px;border-radius:14px;text-decoration:none;
+    color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.1;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .nav-i .ic{width:23px;height:23px}
+  .nav-i:hover{background:#FFF1E5}
+  .nav-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .nav-ic-wrap{position:relative;display:block}
+  .nav-badge{
+    position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;
+    border-radius:99px;background:var(--primary);color:#fff;
+    font-size:12.5px;font-weight:800;line-height:19px;text-align:center;
+  }
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  /* ---------- notas del dueño ---------- */
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     AVISOS · piezas nuevas (prefijo av-)
+     ============================================================ */
+  .av-head{margin-top:2px}
+  .av-title{font-size:29px;line-height:1.14;font-weight:800;letter-spacing:-.02em}
+  .av-sub{margin-top:3px;font-size:17px;line-height:1.3;color:var(--ink-2)}
+  .av-sub b{font-weight:800;color:var(--primary-dark)}
+  .av-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+  .av-mark{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    min-height:48px;padding:8px 14px;border-radius:999px;
+    background:var(--surface);border:2px solid var(--border-strong);
+    font-size:16.5px;font-weight:800;color:var(--primary-dark);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-mark:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .av-mark .ic{width:19px;height:19px}
+
+  /* entrada a los ajustes por grupo */
+  .av-set{
+    display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:7px 10px;
+    border-radius:14px;background:var(--sand);border:1.5px solid var(--border-strong);
+    text-align:left;transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-set:hover{background:#FBDFC6;border-color:var(--ink-2)}
+  .av-set-ic{
+    flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:var(--surface);border:1.5px solid var(--border-strong);color:#7A4A2A;
+  }
+  .av-set-ic .ic{width:19px;height:19px}
+  .av-set-b{flex:1 1 auto;min-width:0}
+  .av-set-t{display:block;font-size:16.5px;line-height:1.25;font-weight:800}
+  .av-set-d{display:block;font-size:15.5px;line-height:1.3;color:var(--ink-2);margin-top:1px}
+  .av-set .av-chev{margin-top:0}
+
+  /* etiqueta «nuevo en el rediseño» */
+  .av-new{
+    display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 10px;
+    background:var(--accent-soft);color:#1F4A33;font-size:15px;line-height:1.4;font-weight:800;
+    white-space:nowrap;
+  }
+
+  /* próximas celebraciones */
+  .av-blk{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-top:14px;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.015em;
+  }
+  .av-celebs{display:grid;gap:7px;margin-top:8px}
+  .av-celeb{
+    display:flex;align-items:center;gap:10px;padding:6px 10px;text-decoration:none;color:inherit;
+    background:var(--surface);border:1.5px solid var(--border-strong);border-radius:14px;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-celeb:hover{background:#FFFDFB;border-color:var(--primary)}
+  .av-celeb:hover .av-celeb-t b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .av-celeb-next{background:var(--primary-soft);border-color:#F3CDB6}
+  .av-celeb .avatar{width:40px;height:40px;font-size:20px}
+  .av-celeb-b{flex:1 1 auto;min-width:0}
+  .av-celeb-t{display:block;font-size:17px;line-height:1.22}
+  .av-celeb-t b{font-weight:800}
+  .av-celeb-d{display:block;font-size:15.5px;line-height:1.25;color:var(--ink-2);margin-top:1px}
+  .av-celeb-d b{font-weight:800;color:var(--primary-dark)}
+
+  /* separador de día */
+  .av-day{display:flex;align-items:center;gap:10px;margin-top:16px}
+  .av-day-h{font-size:19px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .av-day-n{font-size:15.5px;line-height:1.2;font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .av-day-line{flex:1 1 auto;height:2px;border-radius:99px;background:var(--border)}
+
+  /* lista de avisos */
+  .av-list{display:grid;gap:6px;margin-top:8px}
+  .av-item{
+    display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:16px;
+    background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--sh-1);
+    text-decoration:none;color:inherit;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  a.av-item:hover{background:#FFFDFB;border-color:var(--primary)}
+  a.av-item:hover .av-txt{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .av-item-read{background:#FFFCF8}
+  .av-item-unread{background:#FFF6EC;border-color:#F3CDB6}
+  .av-face{position:relative;flex:0 0 auto;display:block;width:42px;height:42px}
+  .av-emoji{
+    width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+    font-size:21px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);
+  }
+  .av-kind{
+    position:absolute;right:-6px;bottom:-6px;width:23px;height:23px;border-radius:9px;
+    display:grid;place-items:center;border:2px solid var(--surface);
+  }
+  .av-kind .ic{width:13px;height:13px}
+  .av-kind-danger{background:#FDECEA;color:var(--danger)}
+  .av-body{flex:1 1 auto;min-width:0}
+  .av-txt{display:block;font-size:16.5px;line-height:1.28}
+  .av-txt b{font-weight:800}
+  .av-wish{font-weight:700}
+  .av-meta{display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px;margin-top:3px;font-size:15px;line-height:1.25;color:var(--ink-2)}
+  .av-meta b{font-weight:800;color:var(--ink)}
+  .av-meta-dot{width:4px;height:4px;border-radius:50%;background:var(--border-strong);flex:0 0 auto}
+  .av-unread-flag{
+    border-radius:999px;padding:1px 8px;background:var(--primary);color:#fff;
+    font-size:13.5px;line-height:1.45;font-weight:800;white-space:nowrap;
+  }
+  .av-chev{flex:0 0 auto;width:18px;height:18px;margin-top:11px;color:var(--primary-dark)}
+  .av-foot{margin-top:10px;font-size:15.5px;line-height:1.35;color:var(--ink-2);text-align:center}
+
+  /* permiso del dispositivo (nuevo en el rediseño) */
+  .av-perm{
+    margin-top:8px;padding:12px 13px;border-radius:18px;
+    background:var(--primary-soft);border:2px solid #F3CDB6;
+  }
+  .av-perm-h{display:flex;align-items:center;gap:9px;font-size:18px;line-height:1.25;font-weight:800}
+  .av-perm-h .ic{width:22px;height:22px;color:var(--primary-dark)}
+  .av-perm-t{margin-top:6px;font-size:16.5px;line-height:1.33;color:var(--ink)}
+  .av-perm-acts{display:flex;gap:8px;margin-top:10px}
+  .av-perm-acts .btn{flex:1 1 0;padding:10px 8px;font-size:16.5px;gap:6px}
+  .av-perm-warn{background:#FDECEA;border-color:#EFC9C5}
+  .av-perm-warn .av-perm-h{color:var(--danger-dark)}
+  .av-perm-warn .av-perm-h .ic{color:var(--danger)}
+  .av-steps{margin-top:8px;display:grid;gap:6px}
+  .av-steps li{display:flex;gap:8px;font-size:16.5px;line-height:1.3;color:var(--ink)}
+  .av-step-n{
+    flex:0 0 auto;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;
+    background:var(--surface);border:1.5px solid var(--border-strong);
+    font-size:13.5px;font-weight:800;color:var(--ink-2);margin-top:1px;
+  }
+
+  /* ajustes por grupo */
+  .av-groups{display:grid;gap:8px;margin-top:10px}
+  .av-group{
+    display:flex;align-items:center;gap:11px;width:100%;padding:8px 10px;text-align:left;
+    border-radius:16px;background:var(--surface);border:1.5px solid var(--border);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-group:hover{background:#FFFDFB;border-color:var(--primary)}
+  .av-stack{display:flex;flex:0 0 auto}
+  .av-stack span{
+    width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;
+    background:linear-gradient(180deg,#fff,#FFF2E6);border:2px solid var(--border-strong);
+  }
+  .av-stack span + span{margin-left:-10px}
+  .av-group-b{flex:1 1 auto;min-width:0}
+  .av-group-t{display:block;font-size:16.5px;line-height:1.25;font-weight:800}
+  .av-group-d{display:block;font-size:15.5px;line-height:1.28;color:var(--ink-2);margin-top:1px}
+  .av-group .av-chev{margin-top:0}
+
+  /* interruptor del dispositivo (mismo dibujo que la ficha de grupo) */
+  .av-sw-card{
+    display:flex;align-items:center;gap:12px;margin-top:10px;padding:9px 11px;
+    border-radius:14px;background:#FFFCF8;border:1.5px solid var(--border);
+  }
+  .av-sw-b{flex:1 1 auto;min-width:0}
+  .av-sw-t{display:block;font-size:16.5px;line-height:1.25;font-weight:800}
+  .av-sw-d{display:block;font-size:15.5px;line-height:1.28;color:var(--ink-2);margin-top:1px}
+  .av-sw-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+  .av-sw{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:10px;
+    min-height:48px;padding:5px 12px 5px 8px;border-radius:999px;
+    border:2px solid var(--border-strong);background:var(--surface);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-sw:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .av-trk{
+    position:relative;display:block;width:52px;height:30px;border-radius:99px;
+    background:#EFE2D7;border:2px solid #7A5B45;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .av-knb{
+    position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:2px solid #7A5B45;
+    transition:transform .16s ease,border-color .16s ease;
+  }
+  .av-sw-s{font-size:16.5px;font-weight:800;line-height:1.2;color:var(--ink-2);min-width:22px}
+  .av-sw[aria-checked="true"]{border-color:#B4D5C3;background:var(--accent-soft)}
+  .av-sw[aria-checked="true"] .av-trk{background:var(--accent);border-color:var(--accent)}
+  .av-sw[aria-checked="true"] .av-knb{transform:translateX(22px);border-color:var(--accent)}
+  .av-sw[aria-checked="true"] .av-sw-s{color:#1F4A33}
+
+  /* estado vacío */
+  .av-empty{
+    margin-top:22px;padding:20px 16px;text-align:center;
+    background:var(--surface);border:1.5px solid var(--border-strong);
+    border-radius:var(--r-card);box-shadow:var(--sh-1);
+  }
+  .av-empty-ic{
+    width:62px;height:62px;border-radius:20px;display:grid;place-items:center;
+    margin:0 auto 12px;
+  }
+  .av-empty-t{font-size:21px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .av-empty-s{margin-top:8px;font-size:16.5px;line-height:1.38;color:var(--ink-2)}
+  .av-empty-acts{display:grid;gap:8px;margin-top:16px}
+
+  /* anotaciones bajo el móvil */
+  .av-anno{
+    margin-top:12px;padding:9px 11px;border-radius:14px;
+    background:var(--surface);border:1.5px dashed var(--border-strong);
+  }
+  .av-anno ol{display:grid;gap:6px}
+  .av-anno li{display:flex;gap:8px;font-size:15.5px;line-height:1.35;color:var(--ink-2)}
+  .av-anno li b{font-weight:800;color:var(--ink)}
+  .av-anno-n{
+    flex:0 0 auto;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;
+    background:var(--primary-soft);color:var(--primary-dark);
+    font-size:13px;font-weight:800;margin-top:1px;
+  }
+
+  /* ============================================================
+     ESCRITORIO · avisos en dos columnas
+     ============================================================ */
+  .av-dmain{
+    flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:14px 0;
+    display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;
+  }
+  .av-dleft{min-width:0}
+  .av-dcol{min-width:0}
+  .av-dcard{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:15px 17px;box-shadow:var(--sh-1);
+  }
+  .av-dcard + .av-dcard{margin-top:12px}
+  .av-dtop{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+  .av-dtitle{font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .av-dsub{margin-top:3px;font-size:16.5px;line-height:1.3;color:var(--ink-2)}
+  .av-dsub b{font-weight:800;color:var(--primary-dark)}
+  .av-dacts{flex:0 0 auto;padding-top:2px}
+  .av-dacts .btn{padding:10px 16px;font-size:16.5px}
+  .av-dcard .av-day:first-of-type{margin-top:10px}
+  .av-dcard .av-day{margin-top:11px}
+  .av-dh{font-size:19px;line-height:1.2;font-weight:800;letter-spacing:-.015em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .av-dsub2{margin-top:3px;font-size:15.5px;line-height:1.32;color:var(--ink-2)}
+  .av-dcard .av-item{padding:6px 9px}
+  .av-dcard .av-face,.av-dcard .av-emoji{width:38px;height:38px}
+  .av-dcard .av-emoji{font-size:19px}
+  .av-dcard .av-txt{font-size:16px;line-height:1.26}
+  .av-dcard .av-meta{font-size:14.5px}
+  .av-dcard .av-chev{margin-top:9px}
+  .av-dcard .av-list{gap:4px;margin-top:6px}
+  .av-celebs-flat .av-celeb{padding:5px 9px}
+  .av-side-link{
+    display:inline-flex;align-items:center;gap:5px;margin-top:6px;min-height:44px;
+    padding:4px 9px;border-radius:12px;font-size:15.5px;font-weight:800;
+    color:var(--primary-dark);text-decoration:underline;
+    text-decoration-thickness:2px;text-underline-offset:3px;
+  }
+  .av-side-link:hover{background:var(--primary-soft)}
+  .av-side-link .ic{width:17px;height:17px}
+  .av-dcol .av-groups{gap:6px}
+  .av-dcol .av-group{padding:7px 10px}
+  .av-dcol .av-dsep{margin-top:9px}
+  .av-dcol .av-sw-row{margin-top:8px}
+  .av-dcol .av-dnote{margin-top:6px}
+  .av-dsep{height:0;margin:12px 0 0;border-top:1.5px solid var(--border)}
+  .av-dnote{margin-top:8px;font-size:15.5px;line-height:1.32;color:var(--ink-2)}
+
+  /* ============================================================
+     NOTAS
+     ============================================================ */
+  .av-notas{width:1200px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+  .av-types{display:grid;gap:8px}
+  .av-type{
+    display:flex;align-items:flex-start;gap:10px;padding:8px 11px;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    font-size:16.5px;line-height:1.3;
+  }
+  .av-type-ic{
+    flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  }
+  .av-type-ic .ic{width:17px;height:17px}
+  .av-type-ic-danger{background:#FDECEA;color:var(--danger)}
+  .av-type-b{flex:1 1 auto;min-width:0}
+  .av-type-n{display:block;font-weight:800;font-size:16.5px}
+  .av-type-d{display:block;font-size:15.5px;color:var(--ink-2);margin-top:1px}
+  .av-yes{
+    flex:0 0 auto;border-radius:999px;padding:1px 9px;background:var(--accent-soft);
+    color:#1F4A33;font-size:14.5px;font-weight:800;line-height:1.5;white-space:nowrap;
+  }
+  .av-no{
+    flex:0 0 auto;border-radius:999px;padding:1px 9px;background:#F6EBE2;
+    color:var(--ink-2);font-size:14.5px;font-weight:800;line-height:1.5;white-space:nowrap;
+  }
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-bell-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/><path d="M4 20 20 4"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 6.8h14.8"/><path d="M9.4 6.8V4.9h5.2v1.9"/><path d="m6.6 6.8.9 12.1a1.8 1.8 0 0 0 1.8 1.6h5.4a1.8 1.8 0 0 0 1.8-1.6l.9-12.1"/><path d="M10.2 10.6v6.4M13.8 10.6v6.4"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
+      <h1>Avisos</h1>
+      <p class="tradeoff">Los avisos se leen como un recado de alguien: quién, qué ha pasado y cuándo, agrupados por día; lo que se toca lleva a algo concreto y lo que no se puede tocar lo dice.</p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Cada aviso es una frase con nombre propio: la persona en emoji, la frase entera y la hora. Nada de «Notificación».</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Sin leer se ve de tres maneras a la vez: fondo, píldora «Sin leer» y número en la pestaña. No depende del color.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Lo que se toca lleva a algo: un deseo añadido abre ese deseo exacto; una celebración, la página de la persona.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Cuando no hay nada, se explica qué llegará aquí y se ofrece una salida, en vez de una pantalla vacía y muda.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre · Sesión de Lucía</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA 1 MÓVIL · el hilo de avisos
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil · el hilo de avisos</h2>
+      <p>Arriba, lo que se acerca y lo que ha llegado hoy; después, los días anteriores. «Avisos» es la cuarta pestaña y su número es el de avisos sin leer.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: AVISOS · HOY ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Avisos · lo de hoy</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="av-head">
+              <h2 class="av-title">Avisos</h2>
+              <p class="av-sub"><b>2 sin leer</b> · de 7 en total</p>
+              <div class="av-bar">
+                <button class="av-mark" type="button">
+                  <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Marcar todo como leído
+                </button>
+              </div>
+            </header>
+
+            <button class="av-set" type="button">
+              <span class="av-set-ic" aria-hidden="true"><svg class="ic"><use href="#i-bell"/></svg></span>
+              <span class="av-set-b">
+                <span class="av-set-t">Avisos por grupo</span>
+                <span class="av-set-d">Elige qué te avisamos de cada grupo</span>
+              </span>
+              <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+            </button>
+
+            <section aria-labelledby="p1-celeb-h">
+              <h3 class="av-blk" id="p1-celeb-h">
+                Próximas celebraciones
+                <span class="av-new">Nuevo en el rediseño</span>
+              </h3>
+              <ul class="av-celebs">
+                <li>
+                  <a class="av-celeb av-celeb-next" href="#javier">
+                    <span class="avatar" aria-hidden="true">🎸</span>
+                    <span class="av-celeb-b">
+                      <span class="av-celeb-t"><b>Javier</b> · Su santo</span>
+                      <span class="av-celeb-d">3 de diciembre · <b>faltan 7 días</b></span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="av-celeb" href="#pablo">
+                    <span class="avatar" aria-hidden="true">🚲</span>
+                    <span class="av-celeb-b">
+                      <span class="av-celeb-t"><b>Pablo</b> · Su cumpleaños</span>
+                      <span class="av-celeb-d">9 de enero · faltan 44 días</span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+
+            <section aria-labelledby="p1-hoy-h">
+              <div class="av-day">
+                <h3 class="av-day-h" id="p1-hoy-h">Hoy</h3>
+                <span class="av-day-n">3 avisos</span>
+                <span class="av-day-line" aria-hidden="true"></span>
+              </div>
+              <ul class="av-list">
+                <li>
+                  <a class="av-item av-item-unread" href="#deseo-infinito-junco"
+                     aria-label="Sin leer. Javier ha añadido el deseo El infinito en un junco en Familia Martín, hace 20 minutos. Abre el deseo.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🎸</span>
+                      <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Javier</b> ha añadido <span class="av-wish">«El infinito en un junco»</span>.</span>
+                      <span class="av-meta">
+                        <span class="av-unread-flag">Sin leer</span>
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 20 min</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="av-item av-item-unread" href="#deseo-cafetera"
+                     aria-label="Sin leer. La abuela Carmen ha reservado el deseo Cafetera italiana de 6 tazas en Familia Martín, hace 2 horas.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">👵</span>
+                      <span class="av-kind tile-b"><svg class="ic"><use href="#i-gift"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>La abuela Carmen</b> ha reservado <span class="av-wish">«Cafetera italiana de 6 tazas»</span>.</span>
+                      <span class="av-meta">
+                        <span class="av-unread-flag">Sin leer</span>
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 2 h</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="av-item av-item-read" href="#deseo-rotuladores"
+                     aria-label="Leído. Marta ha añadido el deseo Set de rotuladores de punta pincel en Familia Martín, hace 5 horas.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">📚</span>
+                      <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Marta</b> ha añadido <span class="av-wish">«Set de rotuladores de punta pincel»</span>.</span>
+                      <span class="av-meta">
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 5 h</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span>«Javier ha añadido «El infinito en un junco»» <b>abre ese deseo exacto</b>, no la lista de Javier: el toque lleva a lo que se cuenta.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span>Las dos filas de arriba llevan la píldora <b>«Sin leer»</b>; la tercera, ya leída, no la lleva y su fondo es más claro. Al tocarlas se marcan leídas y el número de la pestaña baja.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span><b>«Próximas celebraciones»</b> es lo nuevo: el mismo aviso de cumpleaños y de santo que ya existe, agrupado arriba con la antelación del grupo en lugar de perderse en el hilo.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: AVISOS · DÍAS ANTERIORES ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Avisos · ayer y esta semana</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <section aria-labelledby="p2-ayer-h">
+              <div class="av-day">
+                <h2 class="av-day-h" id="p2-ayer-h">Ayer</h2>
+                <span class="av-day-n">2 avisos</span>
+                <span class="av-day-line" aria-hidden="true"></span>
+              </div>
+              <ul class="av-list">
+                <li>
+                  <a class="av-item av-item-read" href="#deseo-auriculares"
+                     aria-label="Leído. Javier ha reservado el deseo Auriculares inalámbricos con cancelación de ruido en Familia Martín, ayer a las 18:40.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🎸</span>
+                      <span class="av-kind tile-b"><svg class="ic"><use href="#i-gift"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Javier</b> ha reservado <span class="av-wish">«Auriculares inalámbricos con cancelación de ruido»</span>.</span>
+                      <span class="av-meta">
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>ayer, 18:40</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="av-item av-item-read" href="#deseo-cubierta"
+                     aria-label="Leído. Pablo ha añadido el deseo Cubierta antipinchazos para bicicleta de 28 en Amigos de la Uni, ayer a las 12:05.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🚲</span>
+                      <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Pablo</b> ha añadido <span class="av-wish">«Cubierta antipinchazos para bicicleta de 28»</span>.</span>
+                      <span class="av-meta">
+                        <span>Amigos de la Uni</span><span class="av-meta-dot" aria-hidden="true"></span><span>ayer, 12:05</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+
+            <section aria-labelledby="p2-sem-h">
+              <div class="av-day">
+                <h3 class="av-day-h" id="p2-sem-h">Esta semana</h3>
+                <span class="av-day-n">2 avisos</span>
+                <span class="av-day-line" aria-hidden="true"></span>
+              </div>
+              <ul class="av-list">
+                <li>
+                  <div class="av-item av-item-read">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">📚</span>
+                      <span class="av-kind av-kind-danger"><svg class="ic"><use href="#i-trash"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Marta</b> ha eliminado <span class="av-wish">«Lámpara de mesa de madera»</span>, que tenías reservada.</span>
+                      <span class="av-meta"><b>No hace falta que la compres</b><span class="av-meta-dot" aria-hidden="true"></span><span>el domingo</span></span>
+                    </span>
+                  </div>
+                </li>
+                <li>
+                  <a class="av-item av-item-read" href="#novedades"
+                     aria-label="Leído. Novedades de la app: ya eliges qué avisos te llegan de cada grupo, versión 2026.11.26, el lunes.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🌻</span>
+                      <span class="av-kind tile-c"><svg class="ic"><use href="#i-bell"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Novedades de la app</b>: ya eliges qué avisos te llegan de cada grupo.</span>
+                      <span class="av-meta">
+                        <span class="av-new">Nuevo</span>
+                        <span>Versión 2026.11.26</span><span class="av-meta-dot" aria-hidden="true"></span><span>el lunes</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+              <p class="av-foot">Solo se guardan los últimos 20 avisos.</p>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal, días anteriores">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span>El aviso de <b>deseo eliminado</b> no es un enlace: ya no hay nada que abrir, así que no lleva a ningún sitio y lo dice («No hace falta que la compres»).</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span><b>«Novedades de la app»</b> entra en el mismo hilo con su versión y su fecha; hoy esa información vive en una ventana aparte.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span>El pie recuerda el límite real de la app: <b>solo se guardan los últimos 20 avisos</b>.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: SIN AVISOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Sin avisos todavía</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="av-head">
+              <h2 class="av-title">Avisos</h2>
+              <p class="av-sub">Nada sin leer</p>
+            </header>
+
+            <button class="av-set" type="button">
+              <span class="av-set-ic" aria-hidden="true"><svg class="ic"><use href="#i-bell"/></svg></span>
+              <span class="av-set-b">
+                <span class="av-set-t">Avisos por grupo</span>
+                <span class="av-set-d">Elige qué te avisamos de cada grupo</span>
+              </span>
+              <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+            </button>
+
+            <div class="av-empty">
+              <span class="av-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-36"><use href="#i-bell"/></svg></span>
+              <p class="av-empty-t">Todavía no hay avisos</p>
+              <p class="av-empty-s">Aquí verás cuando alguien añada un deseo, cuando reserven uno y cuando se acerque un cumpleaños. De momento no ha pasado nada.</p>
+              <div class="av-empty-acts">
+                <button class="btn btn-primary btn-block" type="button">Ver mis grupos</button>
+                <button class="btn btn-secondary btn-block" type="button">Ajustes de avisos</button>
+              </div>
+            </div>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal, sin avisos pendientes">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>Avisos</span></a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span>Sin nada, <b>«Marcar todo como leído» desaparece</b>: no se enseña un botón que no hace nada.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span>El vacío dice <b>qué llegará aquí</b> y ofrece una salida real («Ver mis grupos»), no una pantalla muda.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span>La pestaña pierde el número: el contador solo existe cuando hay algo que contar.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 2 MÓVIL · permiso y ajustes
+       ========================================================== -->
+  <section class="row" aria-labelledby="permiso-h">
+    <div class="row-head">
+      <h2 id="permiso-h">Móvil · permiso del dispositivo y ajustes</h2>
+      <p>El permiso se pide una vez, con la promesa por delante; si se deniega, se explica dónde se desbloquea sin culpar a nadie.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 4: PEDIR PERMISO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 4</span>
+          <span class="cap-t">Activar los avisos · tarjeta en el hilo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="av-head">
+              <h2 class="av-title">Avisos</h2>
+              <p class="av-sub"><b>2 sin leer</b> · de 7 en total</p>
+            </header>
+
+            <div class="av-perm">
+              <p class="av-perm-h"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Activa los avisos</p>
+              <p class="av-perm-t">Te avisamos cuando alguien añada un deseo, cuando reserven uno de los tuyos y cuando se acerque un cumpleaños. Después eliges grupo por grupo.</p>
+              <div class="av-perm-acts">
+                <button class="btn btn-primary" type="button">Activar avisos</button>
+                <button class="btn btn-secondary" type="button">Ahora no</button>
+              </div>
+            </div>
+
+            <section aria-labelledby="p4-hoy-h">
+              <div class="av-day">
+                <h3 class="av-day-h" id="p4-hoy-h">Hoy</h3>
+                <span class="av-day-n">3 avisos</span>
+                <span class="av-day-line" aria-hidden="true"></span>
+              </div>
+              <ul class="av-list">
+                <li>
+                  <a class="av-item av-item-unread" href="#deseo-infinito-junco"
+                     aria-label="Sin leer. Javier ha añadido el deseo El infinito en un junco en Familia Martín, hace 20 minutos.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🎸</span>
+                      <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Javier</b> ha añadido <span class="av-wish">«El infinito en un junco»</span>.</span>
+                      <span class="av-meta">
+                        <span class="av-unread-flag">Sin leer</span>
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 20 min</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="av-item av-item-unread" href="#deseo-cafetera"
+                     aria-label="Sin leer. La abuela Carmen ha reservado el deseo Cafetera italiana de 6 tazas en Familia Martín, hace 2 horas.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">👵</span>
+                      <span class="av-kind tile-b"><svg class="ic"><use href="#i-gift"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>La abuela Carmen</b> ha reservado <span class="av-wish">«Cafetera italiana de 6 tazas»</span>.</span>
+                      <span class="av-meta">
+                        <span class="av-unread-flag">Sin leer</span>
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 2 h</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal con la tarjeta del permiso">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span><b>Nuevo en el rediseño:</b> hoy la app no pide ningún permiso; los avisos solo existen dentro de ella. La tarjeta lo pide con la promesa delante.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span><b>«Ahora no»</b> es una respuesta de primera, no letra pequeña: la app se sigue usando igual sin aceptar.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span>La tarjeta no tapa el hilo: mientras decides, los avisos se leen igual.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 5: PERMISO DENEGADO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 5</span>
+          <span class="cap-t">Avisos bloqueados · cómo se desbloquean</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="av-head">
+              <h2 class="av-title">Avisos</h2>
+              <p class="av-sub"><b>2 sin leer</b> · de 7 en total</p>
+            </header>
+
+            <div class="av-perm av-perm-warn">
+              <p class="av-perm-h"><svg class="ic" aria-hidden="true"><use href="#i-bell-off"/></svg>Los avisos están bloqueados</p>
+              <p class="av-perm-t">Este dispositivo no deja que te avisemos. Se cambia en el navegador, no dentro de la app: mientras tanto, todo sigue llegando a esta pantalla.</p>
+              <ol class="av-steps">
+                <li><span class="av-step-n" aria-hidden="true">1</span>Toca el candado de la barra de direcciones.</li>
+                <li><span class="av-step-n" aria-hidden="true">2</span>Abre «Notificaciones» y elige «Permitir».</li>
+                <li><span class="av-step-n" aria-hidden="true">3</span>Vuelve aquí y toca «Comprobar otra vez».</li>
+              </ol>
+              <div class="av-perm-acts">
+                <button class="btn btn-soft" type="button">Comprobar otra vez</button>
+                <button class="btn btn-secondary" type="button">Seguir sin avisos</button>
+              </div>
+            </div>
+
+            <section aria-labelledby="p5-hoy-h">
+              <div class="av-day">
+                <h3 class="av-day-h" id="p5-hoy-h">Hoy</h3>
+                <span class="av-day-n">3 avisos</span>
+                <span class="av-day-line" aria-hidden="true"></span>
+              </div>
+              <ul class="av-list">
+                <li>
+                  <a class="av-item av-item-unread" href="#deseo-infinito-junco"
+                     aria-label="Sin leer. Javier ha añadido el deseo El infinito en un junco, hace 20 minutos.">
+                    <span class="av-face" aria-hidden="true">
+                      <span class="av-emoji">🎸</span>
+                      <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                    </span>
+                    <span class="av-body">
+                      <span class="av-txt"><b>Javier</b> ha añadido <span class="av-wish">«El infinito en un junco»</span>.</span>
+                      <span class="av-meta">
+                        <span class="av-unread-flag">Sin leer</span>
+                        <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 20 min</span>
+                      </span>
+                    </span>
+                    <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal con los avisos bloqueados">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span>Cuando el navegador ya ha dicho «no», <b>la app no puede volver a preguntar</b>: por eso se explica dónde se cambia, con tres pasos numerados.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span>El aviso va <b>en rojo y con texto</b> («Los avisos están bloqueados»), no solo con el icono tachado.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span>Se dice que <b>nada se pierde</b>: esta pantalla sigue funcionando sin permiso, y «Seguir sin avisos» cierra el tema.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 6: AVISOS POR GRUPO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 6</span>
+          <span class="cap-t">Avisos por grupo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <a class="back" href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Avisos</a>
+
+            <h2 class="av-title">Avisos por grupo</h2>
+            <p class="av-sub">Cada grupo se ajusta por separado y solo cambia lo que te llega a ti.</p>
+
+            <ul class="av-groups">
+              <li>
+                <button class="av-group" type="button">
+                  <span class="av-stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                  <span class="av-group-b">
+                    <span class="av-group-t">Familia Martín</span>
+                    <span class="av-group-d">Todo activado · avisa 7 días antes</span>
+                  </span>
+                  <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+              </li>
+              <li>
+                <button class="av-group" type="button">
+                  <span class="av-stack" aria-hidden="true"><span>📚</span><span>⚽</span><span>🌻</span></span>
+                  <span class="av-group-b">
+                    <span class="av-group-t">Amigos de la Uni</span>
+                    <span class="av-group-d">Sin avisos de deseos · 15 días antes</span>
+                  </span>
+                  <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+              </li>
+            </ul>
+
+            <p class="av-foot">Toca un grupo para elegir qué avisos te llegan y con cuánta antelación.</p>
+
+            <div class="av-sw-card">
+              <span class="av-sw-b">
+                <span class="av-sw-t" id="p6-dev-t">Avisos en este móvil</span>
+                <span class="av-sw-d" id="p6-dev-d">Solo tú lo ves; el grupo no sabe si los tienes puestos.</span>
+              </span>
+              <button class="av-sw" type="button" role="switch" aria-checked="true" aria-labelledby="p6-dev-t" aria-describedby="p6-dev-d">
+                <span class="av-trk" aria-hidden="true"><span class="av-knb"></span></span>
+                <span class="av-sw-s">Sí</span>
+              </button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+
+        <div class="av-anno">
+          <ol>
+            <li><span class="av-anno-n" aria-hidden="true">1</span><span>La entrada de Avisos lleva aquí, y cada grupo abre la hoja de ajustes ya dibujada en <b>04-ficha-grupo.html</b> (pantalla 3): mismos tipos y misma antelación.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">2</span><span>El resumen de cada grupo se lee sin entrar: <b>«Todo activado»</b> o <b>«Sin avisos de deseos»</b>, con su antelación.</span></li>
+            <li><span class="av-anno-n" aria-hidden="true">3</span><span>El interruptor de abajo es <b>del móvil, no del grupo</b>: lo dicen el título y la explicación, no un icono suelto.</span></li>
+          </ol>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>En 1180 px el hilo ocupa la columna ancha y las celebraciones, los ajustes y el estado del dispositivo van a la derecha.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Avisos · sesión de Lucía</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Avisos</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="av-dmain">
+            <div class="av-dleft">
+              <section class="av-dcard" aria-labelledby="d-title">
+                <div class="av-dtop">
+                  <div>
+                    <h2 class="av-dtitle" id="d-title">Avisos</h2>
+                    <p class="av-dsub"><b>2 sin leer</b> · de 7 en total · hoy, 26 de noviembre</p>
+                  </div>
+                  <div class="av-dacts">
+                    <button class="btn btn-secondary" type="button">
+                      <svg class="ic ic-20" aria-hidden="true"><use href="#i-check"/></svg>Marcar todo como leído
+                    </button>
+                  </div>
+                </div>
+
+                <section aria-labelledby="d-hoy-h">
+                  <div class="av-day">
+                    <h3 class="av-day-h" id="d-hoy-h">Hoy</h3>
+                    <span class="av-day-n">3 avisos</span>
+                    <span class="av-day-line" aria-hidden="true"></span>
+                  </div>
+                  <ul class="av-list">
+                    <li>
+                      <a class="av-item av-item-unread" href="#deseo-infinito-junco"
+                         aria-label="Sin leer. Javier ha añadido el deseo El infinito en un junco en Familia Martín, hace 20 minutos.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">🎸</span>
+                          <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Javier</b> ha añadido <span class="av-wish">«El infinito en un junco»</span>.</span>
+                          <span class="av-meta">
+                            <span class="av-unread-flag">Sin leer</span>
+                            <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 20 min</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="av-item av-item-unread" href="#deseo-cafetera"
+                         aria-label="Sin leer. La abuela Carmen ha reservado el deseo Cafetera italiana de 6 tazas en Familia Martín, hace 2 horas.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">👵</span>
+                          <span class="av-kind tile-b"><svg class="ic"><use href="#i-gift"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>La abuela Carmen</b> ha reservado <span class="av-wish">«Cafetera italiana de 6 tazas»</span>.</span>
+                          <span class="av-meta">
+                            <span class="av-unread-flag">Sin leer</span>
+                            <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 2 h</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="av-item av-item-read" href="#deseo-rotuladores"
+                         aria-label="Leído. Marta ha añadido el deseo Set de rotuladores de punta pincel en Familia Martín, hace 5 horas.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">📚</span>
+                          <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Marta</b> ha añadido <span class="av-wish">«Set de rotuladores de punta pincel»</span>.</span>
+                          <span class="av-meta">
+                            <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>hace 5 h</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                  </ul>
+                </section>
+
+                <section aria-labelledby="d-ayer-h">
+                  <div class="av-day">
+                    <h3 class="av-day-h" id="d-ayer-h">Ayer</h3>
+                    <span class="av-day-n">2 avisos</span>
+                    <span class="av-day-line" aria-hidden="true"></span>
+                  </div>
+                  <ul class="av-list">
+                    <li>
+                      <a class="av-item av-item-read" href="#deseo-auriculares"
+                         aria-label="Leído. Javier ha reservado el deseo Auriculares inalámbricos con cancelación de ruido, ayer a las 18:40.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">🎸</span>
+                          <span class="av-kind tile-b"><svg class="ic"><use href="#i-gift"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Javier</b> ha reservado <span class="av-wish">«Auriculares inalámbricos con cancelación de ruido»</span>.</span>
+                          <span class="av-meta">
+                            <span>Familia Martín</span><span class="av-meta-dot" aria-hidden="true"></span><span>ayer, 18:40</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="av-item av-item-read" href="#deseo-cubierta"
+                         aria-label="Leído. Pablo ha añadido el deseo Cubierta antipinchazos para bicicleta de 28, ayer a las 12:05.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">🚲</span>
+                          <span class="av-kind tile-a"><svg class="ic"><use href="#i-plus"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Pablo</b> ha añadido <span class="av-wish">«Cubierta antipinchazos para bicicleta de 28»</span>.</span>
+                          <span class="av-meta">
+                            <span>Amigos de la Uni</span><span class="av-meta-dot" aria-hidden="true"></span><span>ayer, 12:05</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                  </ul>
+                </section>
+
+                <section aria-labelledby="d-sem-h">
+                  <div class="av-day">
+                    <h3 class="av-day-h" id="d-sem-h">Esta semana</h3>
+                    <span class="av-day-n">2 avisos</span>
+                    <span class="av-day-line" aria-hidden="true"></span>
+                  </div>
+                  <ul class="av-list">
+                    <li>
+                      <div class="av-item av-item-read">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">📚</span>
+                          <span class="av-kind av-kind-danger"><svg class="ic"><use href="#i-trash"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Marta</b> ha eliminado <span class="av-wish">«Lámpara de mesa de madera»</span>, que tenías reservada.</span>
+                          <span class="av-meta"><b>No hace falta que la compres</b><span class="av-meta-dot" aria-hidden="true"></span><span>el domingo</span></span>
+                        </span>
+                      </div>
+                    </li>
+                    <li>
+                      <a class="av-item av-item-read" href="#novedades"
+                         aria-label="Leído. Novedades de la app: ya eliges qué avisos te llegan de cada grupo, versión 2026.11.26, el lunes.">
+                        <span class="av-face" aria-hidden="true">
+                          <span class="av-emoji">🌻</span>
+                          <span class="av-kind tile-c"><svg class="ic"><use href="#i-bell"/></svg></span>
+                        </span>
+                        <span class="av-body">
+                          <span class="av-txt"><b>Novedades de la app</b>: ya eliges qué avisos te llegan de cada grupo.</span>
+                          <span class="av-meta">
+                            <span class="av-new">Nuevo</span>
+                            <span>Versión 2026.11.26</span><span class="av-meta-dot" aria-hidden="true"></span><span>el lunes</span>
+                          </span>
+                        </span>
+                        <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </a>
+                    </li>
+                  </ul>
+                  <p class="av-foot">Solo se guardan los últimos 20 avisos.</p>
+                </section>
+              </section>
+            </div>
+
+            <aside class="av-dcol" aria-label="Celebraciones, ajustes y dispositivo">
+              <section class="av-dcard" aria-labelledby="d-celeb-h">
+                <h2 class="av-dh" id="d-celeb-h">Próximas celebraciones <span class="av-new">Nuevo</span></h2>
+                <p class="av-dsub2">De tus grupos, con la antelación que elijas.</p>
+                <ul class="av-celebs av-celebs-flat">
+                  <li>
+                    <a class="av-celeb av-celeb-next" href="#javier">
+                      <span class="av-celeb-b">
+                        <span class="av-celeb-t"><b>Javier</b> · Su santo</span>
+                        <span class="av-celeb-d">3 de diciembre · <b>faltan 7 días</b> · Familia Martín</span>
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="av-celeb" href="#pablo">
+                      <span class="av-celeb-b">
+                        <span class="av-celeb-t"><b>Pablo</b> · Su cumpleaños</span>
+                        <span class="av-celeb-d">9 de enero · faltan 44 días · Amigos de la Uni</span>
+                      </span>
+                    </a>
+                  </li>
+                </ul>
+                <a class="av-side-link" href="#personas">Ver todas en Personas<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></a>
+              </section>
+
+              <section class="av-dcard" aria-labelledby="d-grp-h">
+                <h2 class="av-dh" id="d-grp-h">Avisos por grupo</h2>
+                <p class="av-dsub2">Lo que cambies aquí solo te afecta a ti.</p>
+                <ul class="av-groups">
+                  <li>
+                    <button class="av-group" type="button">
+                      <span class="av-stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                      <span class="av-group-b">
+                        <span class="av-group-t">Familia Martín</span>
+                        <span class="av-group-d">Todo activado · 7 días antes</span>
+                      </span>
+                      <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="av-group" type="button">
+                      <span class="av-stack" aria-hidden="true"><span>📚</span><span>⚽</span><span>🌻</span></span>
+                      <span class="av-group-b">
+                        <span class="av-group-t">Amigos de la Uni</span>
+                        <span class="av-group-d">Sin avisos de deseos · 15 días antes</span>
+                      </span>
+                      <svg class="av-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </button>
+                  </li>
+                </ul>
+
+                <div class="av-dsep"></div>
+                <div class="av-sw-row">
+                  <span class="av-sw-t" id="d-dev-t">Avisos en este ordenador</span>
+                  <button class="av-sw" type="button" role="switch" aria-checked="true" aria-labelledby="d-dev-t">
+                    <span class="av-trk" aria-hidden="true"><span class="av-knb"></span></span>
+                    <span class="av-sw-s">Sí</span>
+                  </button>
+                </div>
+                <p class="av-dnote">Cada dispositivo tiene su propio permiso.</p>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="notas-h">
+    <div class="row-head">
+      <h2 id="notas-h">Notas de la pantalla</h2>
+      <p>Qué avisos existen de verdad, cuáles añade el rediseño y qué reglas no conviene romper al implementar.</p>
+    </div>
+
+    <div class="av-notas">
+      <div class="flow-notes">
+        <h3>Qué se ve y qué no</h3>
+        <p>El hilo cuenta lo que pasa entre personas; lo que no existe, no se dibuja.</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span>El dueño <b>nunca</b> ve que alguien ha reservado un deseo suyo: ese aviso no se genera para quien lo pidió. La pantalla no puede enseñar lo que la base no crea.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>El aviso de deseo eliminado llega <b>a quien lo tenía reservado</b>, y solo si ese grupo no lo tiene silenciado. Es el único que no lleva a ningún sitio.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Los ajustes son <b>por persona y por grupo</b>: desactivar los avisos de un grupo no cambia los de otro ni los de nadie más.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span><b>Sin leer</b> nunca se dice solo con color: fondo distinto, píldora con las palabras «Sin leer», contador en la pestaña y el texto del lector de pantalla.</span></li>
+        </ol>
+      </div>
+
+      <div class="flow-notes">
+        <h3>Los avisos que existen hoy</h3>
+        <p>Inventario del código actual: seis tipos en la base y ninguno más.</p>
+        <ul class="av-types">
+          <li class="av-type">
+            <span class="av-type-ic tile-a" aria-hidden="true"><svg class="ic"><use href="#i-plus"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">Alguien añade un deseo</span>
+              <span class="av-type-d">Abre ese deseo exacto.</span>
+            </span>
+            <span class="av-yes">Dibujado</span>
+          </li>
+          <li class="av-type">
+            <span class="av-type-ic tile-b" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">Alguien reserva un deseo</span>
+              <span class="av-type-d">Nunca llega a quien lo pidió.</span>
+            </span>
+            <span class="av-yes">Dibujado</span>
+          </li>
+          <li class="av-type">
+            <span class="av-type-ic av-type-ic-danger" aria-hidden="true"><svg class="ic"><use href="#i-trash"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">El dueño borra un deseo reservado</span>
+              <span class="av-type-d">No lleva a ningún sitio y lo dice.</span>
+            </span>
+            <span class="av-yes">Dibujado</span>
+          </li>
+          <li class="av-type">
+            <span class="av-type-ic tile-c" aria-hidden="true"><svg class="ic"><use href="#i-cake"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">Cumpleaños y onomástica</span>
+              <span class="av-type-d">Agrupados en «Próximas celebraciones»: eso es lo nuevo.</span>
+            </span>
+            <span class="av-yes">Dibujado</span>
+          </li>
+          <li class="av-type">
+            <span class="av-type-ic tile-n" aria-hidden="true"><svg class="ic"><use href="#i-info"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">Sorteo de Amigo Invisible</span>
+              <span class="av-type-d">Fuera del diseño por ahora, por decisión del propietario.</span>
+            </span>
+            <span class="av-no">Fuera</span>
+          </li>
+          <li class="av-type">
+            <span class="av-type-ic tile-n" aria-hidden="true"><svg class="ic"><use href="#i-bell"/></svg></span>
+            <span class="av-type-b">
+              <span class="av-type-n">Novedades de la app</span>
+              <span class="av-type-d">Hoy vive en una ventana aparte; aquí entra en el hilo.</span>
+            </span>
+            <span class="av-new">Nuevo</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

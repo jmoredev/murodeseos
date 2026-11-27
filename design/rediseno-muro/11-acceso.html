@@ -1,0 +1,1197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Acceso y contraseña · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero” · artboard «Acceso».
+     Fundamentos copiados tal cual de 04-ficha-grupo.html (que a su
+     vez los copia de 02-personas-primero.html): paleta, reset,
+     tipografía, botones, píldoras, avatares, marco de móvil, marco
+     de navegador y cabecera del dueño. Lo específico de las
+     pantallas de acceso usa el prefijo «ac-».
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    display:flex;flex-direction:column;scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-auth{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;color:var(--ink-2)}
+
+  /* ---------- notas del dueño ---------- */
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .ac-notas{width:1200px;padding-top:0}
+  .ac-notas ol{grid-template-columns:1fr 1fr;gap:16px 40px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     ACCESO · piezas nuevas (prefijo ac-)
+     ============================================================ */
+  /* margin:auto centra el bloque sin recortarlo cuando no cabe: con
+     espacio negativo los márgenes automáticos valen 0 y se desplaza. */
+  .ac{margin:auto 0;padding-top:2px}
+  .ac-mark{display:flex;align-items:center;gap:10px;margin:6px 0 16px}
+  .ac-mark-ic{
+    width:44px;height:44px;border-radius:14px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .ac-mark-t{font-size:18px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .ac-mark-s{display:block;font-size:15px;line-height:1.2;font-weight:600;color:var(--ink-2)}
+
+  .ac-h{font-size:29px;line-height:1.14;font-weight:800;letter-spacing:-.02em}
+  .ac-h-mt{margin-top:14px}
+  .ac-h-after-ic{margin-top:16px}
+  .ac-back-off{opacity:.45}
+  .ac-show-off{opacity:.5;text-decoration:none}
+  .ac-input-focus{outline:3px solid var(--primary-dark);outline-offset:3px}
+  .ac-sub{margin-top:8px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+
+  .ac-form{display:grid;gap:16px;margin-top:18px}
+  .ac-field{display:block;min-width:0}
+  .ac-label{display:block;font-size:17px;line-height:1.25;font-weight:800;margin-bottom:6px}
+  .ac-input{
+    display:block;width:100%;height:56px;padding:0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);
+    background:var(--surface);border:2px solid var(--border-strong);border-radius:14px;
+  }
+  .ac-input::placeholder{color:var(--ink-2);opacity:1;font-weight:600}
+  .ac-input:focus-visible{border-radius:14px}
+  .ac-input-wrap{position:relative;display:block}
+  .ac-input-pw{padding-right:104px}
+  .ac-show{
+    position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    min-height:48px;padding:0 12px;border-radius:12px;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;
+  }
+  .ac-show:hover{background:var(--primary-soft)}
+  .ac-input[aria-invalid="true"]{border-color:#DE9D97;background:#FEF7F6}
+  .ac-input-off{background:#FFF6EF;border-color:var(--border);color:var(--ink-2)}
+  .ac-hint{display:flex;gap:7px;margin-top:6px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+  .ac-hint .ic{width:18px;height:18px;flex:0 0 auto;margin-top:1px;color:var(--ink-2)}
+  .ac-hint-c{font-size:16px;line-height:1.35;color:var(--ink-2);text-align:center;margin-top:10px}
+  .ac-ferr{
+    display:flex;gap:7px;align-items:flex-start;margin-top:6px;
+    font-size:17px;line-height:1.35;font-weight:700;color:var(--danger-dark);
+  }
+  .ac-ferr .ic{width:19px;height:19px;flex:0 0 auto;margin-top:2px;color:var(--danger)}
+
+  .ac-alert-tight{margin-top:18px}
+  .ac-alert{
+    display:flex;gap:11px;align-items:flex-start;margin-top:16px;padding:12px 14px;
+    border-radius:16px;background:#FDECEA;border:2px solid #EFC9C5;
+  }
+  .ac-alert > .ic{width:24px;height:24px;flex:0 0 auto;margin-top:1px;color:var(--danger)}
+  .ac-alert-t{display:block;font-size:17px;line-height:1.3;font-weight:800;color:var(--danger-dark)}
+  .ac-alert-d{display:block;font-size:17px;line-height:1.35;color:var(--danger-dark);margin-top:2px;font-weight:500}
+  .ac-alert-ok{background:var(--accent-soft);border-color:#B4D5C3}
+  .ac-alert-ok > .ic{color:var(--accent)}
+  .ac-alert-ok .ac-alert-t,.ac-alert-ok .ac-alert-d{color:#1F4A33}
+
+  .ac-actions{display:grid;gap:10px;margin-top:18px}
+  .ac-links{display:grid;gap:4px;margin-top:12px}
+  .ac-sep{display:block;height:1px;background:var(--border);margin:16px 0 2px}
+  .ac-alt{
+    display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;
+    font-size:17px;line-height:1.3;color:var(--ink-2);
+  }
+  .ac-note{
+    display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:10px 12px;
+    border-radius:14px;background:var(--primary-soft);
+    font-size:17px;line-height:1.35;color:var(--ink);
+  }
+  .ac-note .ic{width:20px;height:20px;flex:0 0 auto;margin-top:1px;color:var(--primary-dark)}
+  .ac-chip{
+    display:inline-flex;align-items:center;gap:7px;margin-top:12px;
+    background:var(--surface);border:1.5px solid var(--border-strong);border-radius:999px;
+    padding:6px 13px;font-size:17px;font-weight:700;word-break:break-all;
+  }
+  .ac-chip .ic{width:19px;height:19px;color:var(--ink-2)}
+
+  .ac-banner{
+    display:flex;gap:12px;align-items:center;margin-top:16px;padding:12px 14px;
+    border-radius:16px;background:var(--primary-soft);border:1.5px solid #F3CDB6;
+  }
+  .ac-banner .avatar{width:46px;height:46px;flex:0 0 auto;font-size:22px}
+  .ac-banner-t{display:block;font-size:18px;line-height:1.25;font-weight:800}
+  .ac-banner-s{display:block;font-size:16px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+
+  .ac-btn-load{display:inline-flex;align-items:center;justify-content:center;gap:10px}
+  .ac-spin{
+    width:20px;height:20px;border-radius:50%;
+    border:3px solid rgba(43,26,18,.22);border-top-color:#4A2C20;
+    animation:ac-turn .9s linear infinite;
+  }
+  @keyframes ac-turn{to{transform:rotate(360deg)}}
+  .ac-btn-off{background:#D9A491;color:#4A2C20;box-shadow:none}
+  .ac-btn-off:hover{background:#D9A491}
+
+  .ac-big-ic{
+    width:76px;height:76px;border-radius:50%;display:grid;place-items:center;
+    margin:10px auto 0;background:var(--accent-soft);border:2px solid #B4D5C3;color:#1F4A33;
+  }
+  .ac-big-ic-bad{background:#FDECEA;border-color:#EFC9C5;color:var(--danger)}
+  .ac-big-ic .ic{width:38px;height:38px}
+  .ac-center{text-align:center}
+  .ac-center .ac-sub{max-width:320px;margin-left:auto;margin-right:auto}
+  .ac-center .ac-chip{margin-top:14px}
+
+  /* ============================================================
+     ESCRITORIO · acceso partido en dos: qué es y el formulario
+     ============================================================ */
+  .ac-dmain{
+    flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:24px 0;
+    display:grid;grid-template-columns:1fr 448px;gap:64px;align-items:center;
+  }
+  .ac-dleft{min-width:0}
+  .ac-dh{font-size:40px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin-top:16px}
+  .ac-dp{font-size:19px;line-height:1.45;color:var(--ink-2);margin-top:12px;max-width:520px}
+  .ac-steps{display:grid;gap:12px;margin-top:22px;max-width:540px}
+  .ac-step{display:flex;gap:12px;align-items:center}
+  .ac-step-n{
+    flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:16px;font-weight:800;display:grid;place-items:center;
+  }
+  .ac-step-t{font-size:18px;line-height:1.35}
+  .ac-step .ic{width:22px;height:22px;margin-left:auto;color:var(--accent)}
+  .ac-dfoot{font-size:16px;line-height:1.4;color:var(--ink-2);margin-top:16px;max-width:520px}
+  .ac-dcard{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:26px;box-shadow:var(--sh-2);
+  }
+  .ac-dcard .ac-h{font-size:28px}
+  .ac-dcard .ac-form{margin-top:16px}
+  .ac-dcard-note{font-size:16px;line-height:1.4;color:var(--ink-2);text-align:center;margin-top:14px}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2 21.2 20H2.8Z"/><path d="M12 9.9v4.7"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.4 8.8a13.4 13.4 0 0 1 5.8-3"/><path d="M17.6 8.5a13.4 13.4 0 0 1 3 2.3"/><path d="M6.8 12.1a8.6 8.6 0 0 1 3-1.5"/><path d="M14.9 11.8a8.6 8.6 0 0 1 2.3 1.9"/><path d="M9.9 15.5a3.7 3.7 0 0 1 4.4.2"/><circle cx="12" cy="18.6" r="1.2" fill="currentColor" stroke="none"/><path d="M3.2 3.8 20.8 21"/></g></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="5.4" width="17.6" height="13.2" rx="2.4"/><path d="m4.4 7 7.6 6 7.6-6"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.4" cy="8.6" r="4.2"/><path d="m11.4 11.6 8.2 8.2"/><path d="m16.4 16.6 1.8-1.8"/><path d="m18.8 19 1.8-1.8"/></g></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4.8" y="10.4" width="14.4" height="9.8" rx="2.4"/><path d="M8.2 10.4V8a3.8 3.8 0 0 1 7.6 0v2.4"/><path d="M12 14.4v2" stroke-linecap="round"/></g></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
+      <h1>Acceso y contraseña</h1>
+      <p class="tradeoff">Sigue justo donde acaba la bienvenida: entrar, equivocarse, recuperar la contraseña y volver. Nunca revela si un correo tiene cuenta y nunca borra lo escrito.</p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Una sola contraseña con «Mostrar», como en el alta: nadie escribe dos veces lo mismo ni tiene que adivinar qué se equivocó.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>El enlace de invitación no se pierde: una franja dice «Al entrar te unirás a «Familia Martín»» y el botón lo confirma.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Recuperar contesta siempre lo mismo, tenga cuenta o no el correo, y el enlace solo sirve en este mismo dispositivo.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Los errores se leen al lado del campo, dicen qué hacer y no borran nada: se corrige y se reintenta.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Cuenta de ejemplo lucia.martin@gmail.com</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA 1 · INICIAR SESIÓN Y SU ESTADO
+       ========================================================== -->
+  <section class="row" aria-labelledby="acceso-h">
+    <div class="row-head">
+      <h2 id="acceso-h">Entrar</h2>
+      <p>El acceso normal, el error de credenciales y el momento en que se está entrando. Sin barra de pestañas: todavía no hay sesión.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: INICIAR SESIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Iniciar sesión</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#bienvenida"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <form class="ac-form" aria-label="Iniciar sesión">
+                <div class="ac-field">
+                  <label class="ac-label" for="p1-email">Correo electrónico</label>
+                  <input class="ac-input" id="p1-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="tu@ejemplo.com" value="lucia.martin@gmail.com">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p1-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p1-pass" type="password" name="password" autocomplete="current-password" value="Muro2026lucia">
+                    <button class="ac-show" type="button" aria-controls="p1-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Iniciar sesión</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+
+              <span class="ac-sep" aria-hidden="true"></span>
+              <p class="ac-alt">¿No tienes cuenta?</p>
+              <div class="ac-actions">
+                <button class="btn btn-secondary btn-block" type="button">Crear mi cuenta</button>
+              </div>
+              <p class="ac-hint-c" id="p1-nota">Tus deseos y los de tu familia siguen donde los dejaste.</p>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: CORREO O CONTRASEÑA INCORRECTOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Error: correo o contraseña incorrectos</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:42</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#bienvenida"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <div class="ac-alert" id="p2-alerta" role="alert">
+                <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+                <p>
+                  <span class="ac-alert-t">Correo electrónico o contraseña incorrectos</span>
+                  <span class="ac-alert-d">Revisa los dos datos. Si no recuerdas la contraseña, pide un enlace para cambiarla.</span>
+                </p>
+              </div>
+
+              <form class="ac-form" aria-describedby="p2-alerta" aria-label="Iniciar sesión">
+                <div class="ac-field">
+                  <label class="ac-label" for="p2-email">Correo electrónico</label>
+                  <input class="ac-input" id="p2-email" type="email" name="email" autocomplete="email" inputmode="email" value="lucia.martin@gmail.com">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p2-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p2-pass" type="password" name="password" autocomplete="current-password" value="Muro2025lucia">
+                    <button class="ac-show" type="button" aria-controls="p2-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Iniciar sesión</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: ENTRANDO (CARGA) ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Entrando · el botón trabaja</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:42</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <span class="back ac-back-off" aria-hidden="true"><svg class="ic"><use href="#i-back"/></svg>Volver</span>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <form class="ac-form" aria-label="Iniciar sesión" aria-busy="true">
+                <div class="ac-field">
+                  <label class="ac-label" for="p3-email">Correo electrónico</label>
+                  <input class="ac-input ac-input-off" id="p3-email" type="email" name="email" autocomplete="email" inputmode="email" value="lucia.martin@gmail.com" aria-disabled="true">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p3-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw ac-input-off" id="p3-pass" type="password" name="password" autocomplete="current-password" value="Muro2026lucia" aria-disabled="true">
+                    <span class="ac-show ac-show-off" aria-hidden="true">Mostrar</span>
+                  </span>
+                </div>
+                <button class="btn btn-block ac-btn-off" type="button" aria-disabled="true">
+                  <span class="ac-btn-load"><span class="ac-spin" aria-hidden="true"></span>Iniciando sesión…</span>
+                </button>
+              </form>
+
+              <p class="ac-hint-c" role="status">Comprobando tu correo y tu contraseña. Esto tarda un segundo.</p>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 2 · ERRORES DE CAMPO, SIN CONEXIÓN Y ENLACE DE INVITACIÓN
+       ========================================================== -->
+  <section class="row" aria-labelledby="errores-h">
+    <div class="row-head">
+      <h2 id="errores-h">Cuando algo no cuadra</h2>
+      <p>Los dos errores de campo que se corrigen sin empezar de cero, el fallo de conexión y la misma pantalla llegando desde una invitación.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 4: CAMPOS SIN RELLENAR ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 4</span>
+          <span class="cap-t">Faltan datos · error junto al campo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:43</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#bienvenida"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <form class="ac-form" aria-label="Iniciar sesión" novalidate>
+                <div class="ac-field">
+                  <label class="ac-label" for="p4-email">Correo electrónico</label>
+                  <input class="ac-input ac-input-focus" id="p4-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="tu@ejemplo.com" aria-invalid="true" aria-describedby="p4-email-err">
+                  <p class="ac-ferr" id="p4-email-err"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span>Escribe tu correo electrónico</span></p>
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p4-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p4-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" aria-invalid="true" aria-describedby="p4-pass-err">
+                    <button class="ac-show" type="button" aria-controls="p4-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                  <p class="ac-ferr" id="p4-pass-err"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span>Escribe tu contraseña</span></p>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Iniciar sesión</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 5: SIN CONEXIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 5</span>
+          <span class="cap-t">Sin conexión · lo escrito sigue aquí</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:44</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 10.6 6 8.3"/><path d="M4.4 6.4a5.2 5.2 0 0 1 7.2 0"/><path d="M2.2 3.9a8.4 8.4 0 0 1 11.6 0"/><path d="M1 11.4 15 1.6"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#bienvenida"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <div class="ac-alert" id="p5-alerta" role="alert">
+                <svg class="ic" aria-hidden="true"><use href="#i-wifi-off"/></svg>
+                <p>
+                  <span class="ac-alert-t">Sin conexión</span>
+                  <span class="ac-alert-d">No hemos podido conectar. Comprueba tu conexión e inténtalo otra vez: lo que has escrito sigue aquí.</span>
+                </p>
+              </div>
+
+              <form class="ac-form" aria-label="Iniciar sesión" aria-describedby="p5-alerta">
+                <div class="ac-field">
+                  <label class="ac-label" for="p5-email">Correo electrónico</label>
+                  <input class="ac-input" id="p5-email" type="email" name="email" autocomplete="email" inputmode="email" value="lucia.martin@gmail.com">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p5-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p5-pass" type="password" name="password" autocomplete="current-password" value="Muro2026lucia">
+                    <button class="ac-show" type="button" aria-controls="p5-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Volver a intentarlo</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 6: DESDE UN ENLACE DE INVITACIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 6</span>
+          <span class="cap-t">Entrar desde una invitación</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:46</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#bienvenida-invitacion"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+
+              <div class="ac-mark">
+                <span class="ac-mark-ic" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                <span class="ac-mark-t">Muro de Deseos<span class="ac-mark-s">Listas de deseos compartidas</span></span>
+              </div>
+
+              <div class="ac-banner">
+                <span class="avatar" aria-hidden="true">🌻</span>
+                <p>
+                  <span class="ac-banner-t">Al entrar te unirás a «Familia Martín»</span>
+                  <span class="ac-banner-s">Lucía te ha invitado. Después podrás ver los deseos del grupo y reservar sin que lo sepa.</span>
+                </p>
+              </div>
+
+              <h2 class="ac-h ac-h-mt">Iniciar sesión</h2>
+              <p class="ac-sub">Entra con tu cuenta y el grupo se añade solo.</p>
+
+              <form class="ac-form" aria-label="Iniciar sesión y unirse a Familia Martín">
+                <div class="ac-field">
+                  <label class="ac-label" for="p6-email">Correo electrónico</label>
+                  <input class="ac-input" id="p6-email" type="email" name="email" autocomplete="email" inputmode="email" value="marta.ruiz@gmail.com">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="p6-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p6-pass" type="password" name="password" autocomplete="current-password" value="Marta2026muro">
+                    <button class="ac-show" type="button" aria-controls="p6-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Iniciar sesión y unirme</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+
+              <span class="ac-sep" aria-hidden="true"></span>
+              <p class="ac-alt">¿Todavía no tienes cuenta?</p>
+              <div class="ac-actions">
+                <button class="btn btn-secondary btn-block" type="button">Crear mi cuenta y unirme</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+
+  <!-- ==========================================================
+       FILA 3 · RECUPERAR LA CONTRASEÑA
+       ========================================================== -->
+  <section class="row" aria-labelledby="recuperar-h">
+    <div class="row-head">
+      <h2 id="recuperar-h">Recuperar la contraseña</h2>
+      <p>Pedir el enlace, la confirmación que no revela si el correo tiene cuenta y el caso de haber pedido demasiados seguidos.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 7: RECUPERAR CONTRASEÑA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 7</span>
+          <span class="cap-t">Recuperar contraseña</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:48</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#iniciar-sesion"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Iniciar sesión</a>
+
+              <h2 class="ac-h">Recuperar contraseña</h2>
+              <p class="ac-sub">Escribe tu correo y te mandamos un enlace para elegir una contraseña nueva.</p>
+
+              <form class="ac-form" aria-label="Recuperar contraseña">
+                <div class="ac-field">
+                  <label class="ac-label" for="p7-email">Correo electrónico</label>
+                  <input class="ac-input" id="p7-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="tu@ejemplo.com" value="lucia.martin@gmail.com" aria-describedby="p7-hint">
+                  <p class="ac-hint" id="p7-hint"><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg><span>Solo puede ser el correo con el que entras en Muro de Deseos.</span></p>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Enviar enlace</button>
+              </form>
+
+              <div class="ac-note">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <p>Te contestaremos lo mismo tanto si ese correo tiene cuenta como si no. Así nadie puede averiguar quién está en la app.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 8: TE HEMOS ENVIADO UN CORREO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 8</span>
+          <span class="cap-t">Te hemos enviado un correo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:49</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#iniciar-sesion"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Iniciar sesión</a>
+
+              <div class="ac-center" role="status">
+                <span class="ac-big-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
+                <h2 class="ac-h ac-h-after-ic">Te hemos enviado un correo</h2>
+                <p class="ac-sub">Si este correo tiene cuenta, te enviamos un enlace para restablecer la contraseña. Ábrelo en este mismo dispositivo.</p>
+                <span class="ac-chip"><svg class="ic" aria-hidden="true"><use href="#i-mail"/></svg>lucia.martin@gmail.com</span>
+              </div>
+
+              <div class="ac-actions">
+                <button class="btn btn-primary btn-block" type="button">Volver a iniciar sesión</button>
+                <button class="btn btn-secondary btn-block" type="button">Enviar otra vez</button>
+              </div>
+
+              <div class="ac-note">
+                <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>
+                <p>El enlace caduca en una hora. Si no lo ves, mira en la carpeta de spam antes de pedir otro.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 9: DEMASIADOS ENLACES SEGUIDOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 9</span>
+          <span class="cap-t">Demasiados enlaces seguidos</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:50</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <a class="back" href="#iniciar-sesion"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Iniciar sesión</a>
+
+              <h2 class="ac-h">Recuperar contraseña</h2>
+              <p class="ac-sub">Escribe tu correo y te mandamos un enlace para elegir una contraseña nueva.</p>
+
+              <div class="ac-alert" role="alert">
+                <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+                <p>
+                  <span class="ac-alert-t">Se pidieron demasiados enlaces seguidos</span>
+                  <span class="ac-alert-d">Espera unos minutos e inténtalo otra vez. No hace falta pedir uno nuevo ahora.</span>
+                </p>
+              </div>
+
+              <form class="ac-form" aria-label="Recuperar contraseña">
+                <div class="ac-field">
+                  <label class="ac-label" for="p9-email">Correo electrónico</label>
+                  <input class="ac-input" id="p9-email" type="email" name="email" autocomplete="email" inputmode="email" value="lucia.martin@gmail.com">
+                </div>
+                <button class="btn btn-block ac-btn-off" type="button" aria-disabled="true">Enviar enlace</button>
+              </form>
+              <p class="ac-hint-c">Cuando pasen unos minutos, vuelve a intentarlo. Si te acuerdas de la contraseña, entra con ella.</p>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 4 · NUEVA CONTRASEÑA DESDE EL ENLACE DEL CORREO
+       ========================================================== -->
+  <section class="row" aria-labelledby="nueva-h">
+    <div class="row-head">
+      <h2 id="nueva-h">Nueva contraseña</h2>
+      <p>El enlace del correo abre esta pantalla: un solo campo con «Mostrar», la confirmación y el caso del enlace caducado.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 10: ELEGIR LA CONTRASEÑA NUEVA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 10</span>
+          <span class="cap-t">Elegir la contraseña nueva</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:52</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <h2 class="ac-h">Nueva contraseña</h2>
+              <p class="ac-sub">Escribe tu contraseña nueva. Entrarás directamente.</p>
+
+              <form class="ac-form" aria-label="Nueva contraseña">
+                <div class="ac-field">
+                  <label class="ac-label" for="p10-pass">Contraseña nueva</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="p10-pass" type="password" name="password" autocomplete="new-password" value="Muro2026lucia" aria-describedby="p10-hint">
+                    <button class="ac-show" type="button" aria-controls="p10-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                  <p class="ac-hint" id="p10-hint"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg><span>Al menos 8 caracteres. Pulsa «Mostrar» para comprobar que está bien escrita.</span></p>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Guardar contraseña</button>
+              </form>
+
+              <div class="ac-note">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <p>No hace falta escribirla dos veces: con «Mostrar» lo compruebas y no hay dos sitios donde equivocarse.</p>
+              </div>
+
+              <p class="ac-hint-c">Este enlace sirve solo en este dispositivo, el mismo donde pediste el correo.</p>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 11: CONTRASEÑA CAMBIADA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 11</span>
+          <span class="cap-t">Contraseña cambiada</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:53</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <div class="ac-center" role="status">
+                <span class="ac-big-ic" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <h2 class="ac-h ac-h-after-ic">Contraseña cambiada</h2>
+                <p class="ac-sub">Ya puedes entrar con tu contraseña nueva. Te dejamos dentro, con tu lista y tus grupos como estaban.</p>
+              </div>
+
+              <div class="ac-actions">
+                <button class="btn btn-primary btn-block" type="button">Ir a mi lista</button>
+                <button class="btn btn-secondary btn-block" type="button">Cerrar sesión</button>
+              </div>
+
+              <div class="ac-alert ac-alert-ok" role="status">
+                <svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
+                <p>
+                  <span class="ac-alert-t">Tus listas no cambian</span>
+                  <span class="ac-alert-d">Los grupos y los regalos que ya habías reservado siguen como estaban.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 12: ENLACE CADUCADO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 12</span>
+          <span class="cap-t">Enlace caducado</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">10:14</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="ac">
+              <h2 class="ac-h">Nueva contraseña</h2>
+
+              <div class="ac-alert ac-alert-tight" role="alert">
+                <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+                <p>
+                  <span class="ac-alert-t">Este enlace no es válido o ha caducado</span>
+                  <span class="ac-alert-d">Los enlaces duran una hora. Pide uno nuevo desde el inicio de sesión y ábrelo en este mismo dispositivo.</span>
+                </p>
+              </div>
+
+              <div class="ac-actions">
+                <button class="btn btn-primary btn-block" type="button">Pedir un enlace nuevo</button>
+                <button class="btn btn-secondary btn-block" type="button">Volver al inicio de sesión</button>
+              </div>
+
+              <div class="ac-note">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <p>Si ya pediste el enlace en el ordenador, ábrelo ahí: en el móvil no funcionará.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>En 1280 px el acceso es una tarjeta a la derecha y, a la izquierda, para qué sirve la app: quien llega por primera vez lo entiende sin registrarse.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Iniciar sesión · misma cuenta que en el móvil</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Iniciar sesión</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <p class="dt-auth">¿Primera vez aquí?<button class="link-btn" type="button">Crear mi cuenta</button></p>
+          </header>
+
+          <div class="ac-dmain">
+            <div class="ac-dleft">
+              <h2 class="ac-dh">Regalos sin repetir para la gente que quieres</h2>
+              <p class="ac-dp">Muro de Deseos es tu lista de deseos compartida: apuntas lo que te gustaría recibir y tu familia o tus amigos reservan un regalo para que nadie lo repita.</p>
+
+              <ol class="ac-steps">
+                <li class="ac-step"><span class="ac-step-n" aria-hidden="true">1</span><span class="ac-step-t">Apunta lo que te gustaría recibir.</span><svg class="ic" aria-hidden="true"><use href="#i-gift"/></svg></li>
+                <li class="ac-step"><span class="ac-step-n" aria-hidden="true">2</span><span class="ac-step-t">Compártelo con tu familia o amigos en un grupo.</span><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg></li>
+                <li class="ac-step"><span class="ac-step-n" aria-hidden="true">3</span><span class="ac-step-t">Ellos reservan un regalo y nadie lo repite.</span><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg></li>
+              </ol>
+
+              <p class="ac-dfoot">La misma cuenta sirve en el móvil y aquí: lo que reserves en el ordenador aparece al momento en el teléfono.</p>
+            </div>
+
+            <div class="ac-dcard">
+              <h2 class="ac-h">Iniciar sesión</h2>
+              <p class="ac-sub">Entra para ver tu lista y la de tu gente.</p>
+
+              <form class="ac-form" aria-label="Iniciar sesión">
+                <div class="ac-field">
+                  <label class="ac-label" for="d-email">Correo electrónico</label>
+                  <input class="ac-input" id="d-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="tu@ejemplo.com" value="lucia.martin@gmail.com">
+                </div>
+                <div class="ac-field">
+                  <label class="ac-label" for="d-pass">Contraseña</label>
+                  <span class="ac-input-wrap">
+                    <input class="ac-input ac-input-pw" id="d-pass" type="password" name="password" autocomplete="current-password" value="Muro2026lucia">
+                    <button class="ac-show" type="button" aria-controls="d-pass" aria-pressed="false">Mostrar</button>
+                  </span>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Iniciar sesión</button>
+              </form>
+
+              <div class="ac-links">
+                <button class="link-btn" type="button">¿Has olvidado tu contraseña?</button>
+              </div>
+              <p class="ac-dcard-note">Tus deseos y los de tu familia siguen donde los dejaste.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+
+  <!-- ==========================================================
+       NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="notas-h">
+    <div class="row-head">
+      <h2 id="notas-h">Notas de la pantalla</h2>
+      <p>Cinco reglas de estas pantallas que conviene no romper al implementarlas.</p>
+    </div>
+
+    <div class="devices">
+      <div class="flow-notes ac-notas">
+        <h3>Qué se dice y qué no</h3>
+        <p>El acceso es el momento más frágil de la app: aquí nadie debería perder lo escrito, ni saber más de la cuenta de lo que le corresponde.</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span>Una sola contraseña con «Mostrar», como en el alta. Hoy la app pide repetirla y exige 8 caracteres: el diseño mantiene los 8 y quita la repetición, así que al implementarlo cambian la validación y el campo de confirmación.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>Recuperar contesta siempre lo mismo, exista o no la cuenta, y lo dice: «Si este correo tiene cuenta, te enviamos un enlace». El enlace caduca en una hora y solo vale en el dispositivo donde se pidió.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Mientras se envía, el botón dice qué está pasando («Iniciando sesión…», «Enviando…») y conserva su tamaño, para que nada salte. Los campos se atenúan pero guardan lo escrito.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>Los errores se leen junto al campo y el foco va al primero que falla. Se mantienen los mensajes que ya existen («Correo electrónico o contraseña incorrectos», «Por favor, introduce un correo electrónico válido» para un correo mal escrito); los de campo vacío son copy nuevo: «Escribe tu correo electrónico» y «Escribe tu contraseña».</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span>Con invitación, la franja «Al entrar te unirás a «Familia Martín»» se queda por encima del formulario, en móvil y en el navegador, y al entrar se aterriza en el grupo, no en Inicio.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+</body>
+</html>

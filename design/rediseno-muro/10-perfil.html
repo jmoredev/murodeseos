@@ -1,0 +1,1467 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Perfil · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero” · artboard «Perfil».
+     Fundamentos copiados tal cual de 04-ficha-grupo.html y de
+     02-personas-primero.html: paleta, reset, tipografía, botones,
+     píldoras, avatares, campos de formulario, marcos de móvil y
+     de navegador, cabecera del dueño y notas.
+     Lo específico de esta pantalla usa el prefijo «pr-».
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-danger{background:var(--danger);color:#fff;box-shadow:0 8px 18px rgba(180,35,24,.22)}
+  .btn-danger:hover{background:var(--danger-dark)}
+  .btn[disabled]{
+    background:#EEDFD3;color:#6B5A50;border-color:#E3CDBC;box-shadow:none;cursor:not-allowed;
+  }
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .tradeoff-tag{
+    background:var(--primary-soft);color:var(--primary-dark);
+    font-size:14px;font-weight:800;padding:3px 10px;border-radius:999px;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+  .dt-user-on{
+    display:inline-flex;align-items:center;gap:10px;padding:4px 14px 4px 6px;border-radius:999px;
+    background:var(--primary-soft);color:var(--primary-dark);text-decoration:none;
+  }
+  .dt-user-on .avatar{border-color:#F3CDB6}
+
+  /* ---------- notas del dueño ---------- */
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .pr-notas{width:1200px;padding-top:0}
+  .pr-notas ol{grid-template-columns:1fr 1fr;gap:16px 40px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     PERFIL · piezas nuevas (prefijo pr-)
+     ============================================================ */
+  .pr-h{font-size:29px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .pr-sub{margin-top:6px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .pr-blk{
+    font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em;
+    margin-top:18px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  }
+  .pr-blk-sub{font-size:16px;line-height:1.3;font-weight:600;color:var(--ink-2)}
+  .pr-new{
+    display:inline-flex;align-items:center;border-radius:999px;padding:1px 9px;
+    background:var(--accent-soft);color:#1F4A33;
+    font-size:15px;line-height:1.35;font-weight:800;white-space:nowrap;
+  }
+  .pr-card{
+    margin-top:10px;padding:14px;background:var(--surface);
+    border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1);
+  }
+  .pr-card + .pr-card{margin-top:10px}
+
+  /* cabecera: dibujo + nombre */
+  .pr-who{display:flex;align-items:flex-start;gap:14px}
+  .pr-avbtn{
+    position:relative;flex:0 0 auto;width:76px;height:76px;border-radius:50%;
+    display:grid;place-items:center;background:transparent;border:0;padding:0;
+  }
+  .pr-av-72{
+    width:72px;height:72px;border-radius:50%;display:grid;place-items:center;
+    font-size:36px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pr-avbtn:hover .pr-av-72{border-color:var(--primary)}
+  .pr-av-badge{
+    position:absolute;right:0;bottom:0;width:28px;height:28px;border-radius:50%;
+    display:grid;place-items:center;background:var(--primary);color:#fff;
+    border:2px solid var(--surface);
+  }
+  .pr-av-badge .ic{width:16px;height:16px}
+  .pr-who-txt{flex:1 1 auto;min-width:0}
+
+  /* campos */
+  .pr-field{display:block;min-width:0}
+  .pr-label{display:block;font-size:17px;line-height:1.25;font-weight:800;margin-bottom:6px}
+  .pr-input{
+    display:block;width:100%;height:56px;padding:0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);
+    background:var(--surface);border:2px solid var(--border-strong);border-radius:14px;
+  }
+  .pr-input:focus-visible{border-radius:14px}
+  .pr-input-err{border-color:var(--danger);background:#FFFBFB}
+  .pr-hint{margin-top:6px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+  .pr-err{
+    display:flex;align-items:flex-start;gap:6px;margin-top:6px;
+    font-size:16px;line-height:1.35;font-weight:700;color:var(--danger-dark);
+  }
+  .pr-err .ic{width:18px;height:18px;margin-top:1px;color:var(--danger)}
+  .pr-row2{display:grid;grid-template-columns:104px 1fr;gap:10px}
+  .pr-row2 + .pr-row2{margin-top:12px}
+  .pr-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pr-grid2 + .pr-grid2{margin-top:12px}
+  .pr-sel-wrap{position:relative;display:block}
+  .pr-select{
+    display:block;width:100%;height:56px;padding:0 40px 0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);background:var(--surface);
+    border:2px solid var(--border-strong);border-radius:14px;
+    appearance:none;-webkit-appearance:none;
+  }
+  .pr-select:hover{border-color:var(--ink-2)}
+  .pr-select:focus-visible{border-radius:14px}
+  .pr-sel-ic{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(90deg);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  .pr-color-wrap{position:relative;display:block}
+  .pr-color{padding-right:58px}
+  .pr-swatch{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    width:28px;height:28px;border-radius:9px;background:#1F3A5F;
+    border:1.5px solid rgba(43,26,18,.3);
+  }
+  .pr-fs{border:0;margin:14px 0 0;padding:0;min-width:0}
+  .pr-fs:first-of-type{margin-top:0}
+  .pr-legend{padding:0;margin-bottom:8px;font-size:18px;line-height:1.25;font-weight:800}
+  .pr-opt{font-size:16px;font-weight:600;color:var(--ink-2)}
+  .pr-sug{
+    display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:10px 12px;
+    border-radius:14px;background:var(--sand);border:1px solid var(--border-strong);
+    font-size:16px;line-height:1.35;color:var(--ink);
+  }
+  .pr-sug .ic{width:20px;height:20px;margin-top:1px;color:var(--primary-dark)}
+  .pr-sug b{font-weight:800}
+
+  /* aviso de guardado / error */
+  .pr-banner{
+    display:flex;align-items:center;gap:9px;margin-top:6px;padding:11px 14px;
+    border-radius:16px;background:var(--accent-soft);border:1.5px solid #B4D5C3;
+    font-size:17px;line-height:1.3;font-weight:800;color:#1F4A33;
+  }
+  .pr-banner .ic{width:22px;height:22px;color:var(--accent)}
+  .pr-banner-err{background:#FDECEA;border-color:#EFC9C5;color:var(--danger-dark)}
+  .pr-banner-err .ic{color:var(--danger)}
+
+  /* filas de cuenta y de app */
+  .pr-rows{display:grid;gap:8px;margin-top:10px}
+  .pr-row{
+    display:flex;align-items:center;gap:12px;width:100%;min-height:74px;
+    padding:10px 12px;border-radius:18px;background:var(--surface);
+    border:1.5px solid var(--border);text-align:left;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .pr-row:hover{background:#FFF3E9;border-color:var(--border-strong)}
+  .pr-row-static{cursor:default}
+  .pr-row-static:hover{background:var(--surface);border-color:var(--border)}
+  .pr-row-ic{
+    flex:0 0 auto;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+    background:var(--sand);color:#7A4A2A;
+  }
+  .pr-row-ic-accent{background:var(--accent-soft);color:var(--accent)}
+  .pr-row-body{flex:1 1 auto;min-width:0}
+  .pr-row-t{display:flex;align-items:center;gap:8px;font-size:17px;line-height:1.25;font-weight:800}
+  .pr-row-d{display:block;font-size:16px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .pr-chev{width:20px;height:20px;flex:0 0 auto;color:var(--primary-dark)}
+  .pr-mail{font-size:17px;font-weight:700;overflow-wrap:anywhere}
+
+  /* barra de guardado fija sobre el gesto del sistema */
+  .pr-save{
+    position:absolute;left:0;right:0;bottom:0;z-index:6;
+    padding:10px 16px 28px;
+    background:linear-gradient(180deg,rgba(255,248,241,0) 0%,var(--bg) 34%);
+  }
+  .pr-save-msg{
+    display:flex;align-items:center;gap:7px;margin-bottom:8px;
+    font-size:16px;line-height:1.3;font-weight:700;color:var(--ink-2);
+  }
+  .pr-save-msg .ic{width:18px;height:18px}
+  .pr-save-msg.is-err{color:var(--danger-dark)}
+  .pr-save-msg.is-err .ic{color:var(--danger)}
+  .pr-scroll-save{padding-bottom:132px}
+
+  /* ============================================================
+     PANTALLA 3 · hoja del dibujo
+     ============================================================ */
+  .pr-scrim{position:absolute;inset:0;background:rgba(43,26,18,.52);z-index:8}
+  .pr-sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:9;
+    background:var(--surface);border-radius:28px 28px 0 0;
+    padding:10px 18px 26px;box-shadow:0 -10px 30px rgba(43,26,18,.22);
+  }
+  .pr-grab{width:44px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 8px}
+  .pr-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .pr-sheet-h{font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.015em;padding-top:8px}
+  .pr-x{
+    width:48px;height:48px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
+    border:2px solid var(--border-strong);background:var(--surface);color:var(--ink);
+    font-size:26px;line-height:1;
+  }
+  .pr-x:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .pr-sheet-sub{margin-top:6px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .pr-faces{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .pr-face{
+    position:relative;display:grid;place-items:center;min-height:68px;
+    border:2px solid var(--border-strong);border-radius:16px;background:var(--surface);
+    font-size:30px;line-height:1;cursor:pointer;
+    transition:border-color .16s ease,background-color .16s ease;
+  }
+  .pr-face input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  .pr-face input:focus-visible{outline:none}
+  .pr-face:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:3px}
+  .pr-face:has(input:checked){border-color:var(--primary);background:#FFF3EB;box-shadow:0 0 0 3px var(--primary-soft)}
+  .pr-face-tick{
+    display:none;position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;
+    place-items:center;background:var(--primary);color:#fff;box-shadow:var(--sh-1);
+  }
+  .pr-face-tick .ic{width:16px;height:16px}
+  .pr-face:has(input:checked) .pr-face-tick{display:grid}
+  .pr-sheet-foot{margin-top:16px;padding-top:14px;border-top:2px solid var(--border)}
+  .pr-sheet-note{margin-top:8px;font-size:16px;line-height:1.35;color:var(--ink-2);text-align:center}
+
+  /* ============================================================
+     PANTALLA 4 · confirmación de cerrar sesión
+     ============================================================ */
+  .pr-dialog-wrap{position:absolute;inset:0;z-index:9;display:grid;place-items:center;padding:0 18px}
+  .pr-dialog{
+    width:100%;padding:20px;background:var(--surface);border-radius:24px;
+    box-shadow:0 20px 50px rgba(43,26,18,.32);
+  }
+  .pr-dialog-ic{
+    width:52px;height:52px;border-radius:16px;display:grid;place-items:center;
+    background:#FDECEA;color:var(--danger);margin-bottom:12px;
+  }
+  .pr-dialog-h{font-size:23px;line-height:1.2;font-weight:800;letter-spacing:-.02em}
+  .pr-dialog-p{margin-top:8px;font-size:17px;line-height:1.45;color:var(--ink-2)}
+  .pr-dialog-note{
+    margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--bg);
+    font-size:16px;line-height:1.35;font-weight:700;color:var(--ink-2);
+  }
+  .pr-dialog-btns{display:grid;gap:10px;margin-top:16px}
+
+  /* ============================================================
+     ESCRITORIO · perfil en dos columnas
+     ============================================================ */
+  .pr-dmain{
+    flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:14px 0;
+    display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:start;
+  }
+  .pr-dcol{min-width:0}
+  .pr-dtop{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .pr-dh{font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .pr-dsub{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:3px}
+  .pr-dstatus{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:999px;background:var(--accent-soft);
+    font-size:16px;font-weight:800;color:#1F4A33;white-space:nowrap;
+  }
+  .pr-dstatus .ic{width:17px;height:17px;color:var(--accent)}
+  .pr-dacts{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+  .pr-dacts .btn{padding:10px 18px;min-height:44px}
+  .pr-dcard{
+    padding:12px 14px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--r-card);box-shadow:var(--sh-1);
+  }
+  .pr-dcard + .pr-dcard{margin-top:12px}
+  .pr-dblk{font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .pr-dblk-sub{font-size:15.5px;font-weight:600;color:var(--ink-2);margin-top:1px}
+  .pr-dwho{display:flex;align-items:flex-start;gap:14px;margin-top:8px}
+  .pr-dfields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .pr-dfields4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
+  .pr-dcard .pr-input,.pr-dcard .pr-select{height:52px;font-size:16.5px}
+  .pr-dcard .pr-av-72{width:64px;height:64px;font-size:32px}
+  .pr-dcard .pr-avbtn{width:68px;height:68px}
+  .pr-dcard .pr-label{font-size:16px}
+  .pr-dcard .pr-hint{font-size:15.5px;margin-top:5px}
+  .pr-dsep{margin-top:14px;padding-top:12px;border-top:1.5px solid var(--border)}
+  .pr-drow{
+    display:flex;align-items:center;gap:11px;width:100%;min-height:64px;
+    padding:8px 10px;border-radius:16px;background:var(--surface);
+    border:1.5px solid var(--border);text-align:left;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .pr-drow:hover{background:#FFF3E9;border-color:var(--border-strong)}
+  .pr-drow-static{cursor:default}
+  .pr-drow-static:hover{background:var(--surface);border-color:var(--border)}
+  .pr-drow .pr-row-ic{width:40px;height:40px;border-radius:12px}
+  .pr-drow .pr-row-t{font-size:16.5px}
+  .pr-drow .pr-row-d{font-size:15.5px}
+  .pr-drows{display:grid;gap:8px;margin-top:10px}
+  .pr-dmail{font-size:16.5px;font-weight:700;overflow-wrap:anywhere}
+  .pr-dout{margin-top:10px}
+  .pr-dhint{font-size:15.5px;line-height:1.35;color:var(--ink-2);margin-top:8px}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.4 21 19.6H3Z"/><path d="M12 10.2v3.8"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.6" width="16" height="14.4" rx="2.4"/><path d="M4 10h16M8.4 3.6v3.6M15.6 3.6v3.6"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 19.8h4.1L19 9.1a2.9 2.9 0 0 0-4.1-4.1L4.2 15.7Z"/><path d="m14.2 5.7 4.1 4.1"/></g></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 4.6H6.2a1.8 1.8 0 0 0-1.8 1.8v11.2a1.8 1.8 0 0 0 1.8 1.8h8.2"/><path d="M10.6 12h9"/><path d="m16.6 8.6 3.4 3.4-3.4 3.4"/></g></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.4" y="5.6" width="17.2" height="12.8" rx="2.4"/><path d="m4.4 7.4 7.6 5.2 7.6-5.2"/></g></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="15.4" cy="8.6" r="4.6"/><path d="m11.9 12.1-7.5 7.5"/><path d="m6.6 15.4 2.2 2.2M4.8 17.2l2.2 2.2"/></g></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8v9.4"/><path d="m8.2 9.6 3.8 3.8 3.8-3.8"/><path d="M4.4 15.6v2.6a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2v-2.6"/></g></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M11 3.6 12.9 9l5.4 1.9-5.4 1.9L11 18.2 9.1 12.8 3.7 10.9 9.1 9Z"/><path d="M18 15.4l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/></g></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.4" cy="6.4" r="2.6"/><circle cx="17.6" cy="17.6" r="2.6"/><path d="M9 6.4h4.2a4 4 0 0 1 0 8H10a3.2 3.2 0 0 0 0 3.2h5"/></g></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 12a7.4 7.4 0 1 0 2.5-5.6"/><path d="M4.4 4.4v4.2h4.2"/></g></symbol>
+    <symbol id="i-sweater" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.6 4.2 4.3 6.6a1 1 0 0 0-.5.9l.9 4.2 2.6-.6v8.5h9.4v-8.5l2.6.6.9-4.2a1 1 0 0 0-.5-.9L15.4 4.2a2.6 2.6 0 0 1-3.4 0 2.6 2.6 0 0 1-3.4 0Z"/></g></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M11.4 3.8H19a1.2 1.2 0 0 1 1.2 1.2v7.6L12 20.8a1.4 1.4 0 0 1-2 0L3.2 14a1.4 1.4 0 0 1 0-2Z"/><circle cx="16" cy="8" r="1.4" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c3.4 4 5.4 6.9 5.4 9.4a5.4 5.4 0 0 1-10.8 0c0-2.5 2-5.4 5.4-9.4Z"/><path d="M9.4 13.6a2.6 2.6 0 0 0 2.6 2.6"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4.8" y="10.4" width="14.4" height="9.2" rx="2.4"/><path d="M8.4 10.4V8a3.6 3.6 0 0 1 7.2 0v2.4"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
+      <h1>Perfil</h1>
+      <p class="tradeoff">
+        <span class="tradeoff-tag">Compromiso</span>
+        Todo lo que la app sabe de ti en una sola pantalla con guardado explícito: se entiende sin menús, pero es larga y en el móvil hay que desplazar para llegar a «Cerrar sesión».
+      </p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Lo tuyo primero: nombre, dibujo, fechas y tallas. Lo de la app (instalar, novedades, tour) va después, porque se toca una vez.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>«Guardar cambios» dice siempre en qué punto estás: guardado en verde, o qué falta corregir en rojo y con texto.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>El dibujo es solo emoji: doce opciones en una hoja, sin subir ninguna foto y sin salir del perfil.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Cerrar sesión pide confirmación y dice que no se borra nada: nadie pierde sus listas por pulsar de más.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · La píldora «nuevo» marca lo que hoy no existe en la app</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA MÓVIL
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil</h2>
+      <p>El perfil, de arriba abajo: tus datos y tus fechas, las tallas y gustos, y la cuenta con la app. Sin barra de pestañas: se entra desde tu nombre y se sale con «Inicio».</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: PERFIL · TUS DATOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Perfil · tus datos (con un error a la vista)</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll pr-scroll-save">
+            <a class="back" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Inicio</a>
+
+            <h2 class="pr-h">Tu perfil</h2>
+            <p class="pr-sub">Así te ven tus grupos. Esto solo lo cambias tú.</p>
+
+            <section class="pr-card" aria-labelledby="p1-who-h">
+              <h3 class="sr-only" id="p1-who-h">Tu nombre y tu dibujo</h3>
+              <div class="pr-who">
+                <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                  <span class="pr-av-72" aria-hidden="true">🌻</span>
+                  <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                </button>
+                <div class="pr-who-txt">
+                  <label class="pr-label" for="p1-nombre">Tu nombre</label>
+                  <input class="pr-input pr-input-err" id="p1-nombre" name="nombre" type="text" value="Lu" autocomplete="nickname" aria-invalid="true" aria-describedby="p1-nombre-err">
+                  <p class="pr-err" id="p1-nombre-err">
+                    <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+                    <span>Escribe al menos 3 letras: es el nombre que verán tus grupos.</span>
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="p1-fechas-h">
+              <h3 class="pr-blk" id="p1-fechas-h">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+              <div class="pr-card">
+                <fieldset class="pr-fs">
+                  <legend class="pr-legend">Tu cumpleaños</legend>
+                  <div class="pr-row2">
+                    <div class="pr-field">
+                      <label class="pr-label" for="p1-dia">Día</label>
+                      <span class="pr-sel-wrap">
+                        <select class="pr-select" id="p1-dia" name="dia-cumple">
+                          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                        </select>
+                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                    <div class="pr-field">
+                      <label class="pr-label" for="p1-mes">Mes</label>
+                      <span class="pr-sel-wrap">
+                        <select class="pr-select" id="p1-mes" name="mes-cumple">
+                          <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                        </select>
+                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="pr-fs">
+                  <legend class="pr-legend">Tu santo <span class="pr-opt">(opcional)</span></legend>
+                  <div class="pr-row2">
+                    <div class="pr-field">
+                      <label class="pr-label" for="p1-santo-dia">Día</label>
+                      <span class="pr-sel-wrap">
+                        <select class="pr-select" id="p1-santo-dia" name="dia-santo">
+                          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                        </select>
+                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                    <div class="pr-field">
+                      <label class="pr-label" for="p1-santo-mes">Mes</label>
+                      <span class="pr-sel-wrap">
+                        <select class="pr-select" id="p1-santo-mes" name="mes-santo">
+                          <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                        </select>
+                        <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <p class="pr-sug">
+                    <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                    <span><b>Sugerido por tu nombre:</b> Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></span>
+                  </p>
+                </fieldset>
+              </div>
+            </section>
+
+            <section aria-labelledby="p1-tallas-h">
+              <h3 class="pr-blk" id="p1-tallas-h">Tallas y gustos <span class="pr-blk-sub">Para que acierten con el regalo</span></h3>
+              <div class="pr-card">
+                <div class="pr-grid2">
+                  <div class="pr-field">
+                    <label class="pr-label" for="p1-camiseta">Camiseta</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="p1-camiseta" name="talla-camiseta">
+                        <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="p1-pantalon">Pantalón</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="p1-pantalon" name="talla-pantalon">
+                        <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+                <p class="pr-hint">Elige de la lista, sin escribir: <span class="pr-new">nuevo</span></p>
+              </div>
+            </section>
+          </div>
+
+          <div class="pr-save">
+            <p class="pr-save-msg is-err">
+              <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+              <span id="p1-save-why">Corrige tu nombre para poder guardar.</span>
+            </p>
+            <button class="btn btn-primary btn-block" type="button" disabled aria-describedby="p1-save-why">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: TALLAS Y GUSTOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Perfil · tallas y gustos</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll pr-scroll-save">
+            <h2 class="pr-h">Tallas y gustos</h2>
+            <p class="pr-sub">Lo ven quienes miran tu lista, para acertar con el regalo.</p>
+
+            <div class="pr-card">
+              <div class="pr-grid2">
+                <div class="pr-field">
+                  <label class="pr-label" for="p2-camiseta">Camiseta</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p2-camiseta" name="talla-camiseta">
+                      <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+                <div class="pr-field">
+                  <label class="pr-label" for="p2-pantalon">Pantalón</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p2-pantalon" name="talla-pantalon">
+                      <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="p2-calzado">Calzado</label>
+                <span class="pr-sel-wrap">
+                  <select class="pr-select" id="p2-calzado" name="talla-calzado">
+                    <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
+                  </select>
+                  <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                </span>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="p2-color">Color favorito</label>
+                <span class="pr-color-wrap">
+                  <input class="pr-input pr-color" id="p2-color" name="color-favorito" type="text" value="azul marino">
+                  <span class="pr-swatch" aria-hidden="true"></span>
+                </span>
+              </div>
+              <div class="pr-field" style="margin-top:12px">
+                <label class="pr-label" for="p2-marcas">Marcas favoritas</label>
+                <input class="pr-input" id="p2-marcas" name="marcas" type="text" value="Levi's, Fender">
+              </div>
+              <p class="pr-hint">Elige la talla de la lista, sin escribir: <span class="pr-new">nuevo</span></p>
+            </div>
+
+            <h3 class="pr-blk">Tu cuenta</h3>
+            <div class="pr-rows">
+              <div class="pr-row pr-row-static">
+                <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tu correo</span>
+                  <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pr-save">
+            <p class="pr-save-msg">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span id="p2-save-msg">Tienes cambios sin guardar.</span>
+            </p>
+            <button class="btn btn-primary btn-block" type="button" aria-describedby="p2-save-msg">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: PERFIL · CUENTA Y APP ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Perfil · cuenta y app, ya guardado</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <p class="pr-banner" role="status">
+              <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+              <span>Cambios guardados</span>
+            </p>
+
+            <section aria-labelledby="p2-cuenta-h">
+              <h3 class="pr-blk" id="p2-cuenta-h">Tu cuenta</h3>
+              <div class="pr-rows">
+                <div class="pr-row pr-row-static">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Tu correo</span>
+                    <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
+                    <span class="pr-row-d">Con él entras en la app.</span>
+                  </span>
+                </div>
+                <button class="pr-row" type="button">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
+                    <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <section aria-labelledby="p2-app-h">
+              <h3 class="pr-blk" id="p2-app-h">La app <span class="pr-blk-sub">Se toca una vez</span></h3>
+              <div class="pr-rows">
+                <button class="pr-row" type="button">
+                  <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
+                    <span class="pr-row-d">Añádela a tu pantalla de inicio.</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+                <button class="pr-row" type="button">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
+                    <span class="pr-row-d">Lo que ha cambiado · 26 de octubre.</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+                <button class="pr-row" type="button">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
+                    <span class="pr-row-d">Dos minutos por todas las pantallas.</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+              </div>
+            </section>
+
+            <section aria-labelledby="p2-sesion-h">
+              <h3 class="pr-blk" id="p2-sesion-h">Sesión</h3>
+              <div class="pr-rows">
+                <button class="pr-row" type="button" aria-haspopup="dialog">
+                  <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+                  <span class="pr-row-body">
+                    <span class="pr-row-t">Cerrar sesión</span>
+                    <span class="pr-row-d">Tendrás que volver a entrar con tu correo.</span>
+                  </span>
+                  <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                </button>
+              </div>
+              <p class="pr-hint">Tus listas, tus grupos y tus reservas se quedan donde están.</p>
+            </section>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA MÓVIL · LO QUE NO ES EL CAMINO FELIZ
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil2-h">
+    <div class="row-head">
+      <h2 id="movil2-h">Móvil · el dibujo y lo que va mal</h2>
+      <p>La hoja del dibujo y los dos estados que no son el camino feliz: un guardado que no llega y una salida que pide permiso.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 3: HOJA DEL DIBUJO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 4</span>
+          <span class="cap-t">Elige tu dibujo · hoja con los doce emoji</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <!-- el perfil, atenuado detrás de la hoja -->
+          <div class="pf-scroll" aria-hidden="true">
+            <span class="back"><svg class="ic"><use href="#i-back"/></svg>Inicio</span>
+            <p class="pr-h">Tu perfil</p>
+            <p class="pr-sub">Así te ven tus grupos. Esto solo lo cambias tú.</p>
+            <div class="pr-card">
+              <div class="pr-who">
+                <span class="pr-avbtn"><span class="pr-av-72">🌻</span></span>
+                <div class="pr-who-txt">
+                  <span class="pr-label">Tu nombre</span>
+                  <span class="btn btn-secondary btn-block">Lucía</span>
+                  <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
+                </div>
+              </div>
+            </div>
+            <h3 class="pr-blk">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+            <div class="pr-card">
+              <span class="pr-legend">Tu cumpleaños</span>
+              <div class="pr-row2">
+                <span class="btn btn-secondary">14</span>
+                <span class="btn btn-secondary">marzo</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pr-scrim" aria-hidden="true"></div>
+
+          <div class="pr-sheet" role="dialog" aria-modal="true" aria-labelledby="p3-sheet-h" aria-describedby="p3-sheet-sub">
+            <div class="pr-grab" aria-hidden="true"></div>
+            <div class="pr-sheet-head">
+              <h3 class="pr-sheet-h" id="p3-sheet-h">Elige tu dibujo</h3>
+              <button class="pr-x" type="button" aria-label="Cerrar">×</button>
+            </div>
+            <p class="pr-sheet-sub" id="p3-sheet-sub">Es el dibujo que ven tus grupos. Se guarda al elegir.</p>
+
+            <div class="pr-faces">
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="girasol" checked>
+                <span aria-hidden="true">🌻</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Girasol · Elegido</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="guitarra">
+                <span aria-hidden="true">🎸</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Guitarra</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="abuela">
+                <span aria-hidden="true">👵</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Abuela</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="bicicleta">
+                <span aria-hidden="true">🚲</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Bicicleta</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="libros">
+                <span aria-hidden="true">📚</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Libros</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="balon">
+                <span aria-hidden="true">⚽</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Balón</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="gato">
+                <span aria-hidden="true">🐱</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Gato</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="luna">
+                <span aria-hidden="true">🌙</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Luna</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="paleta">
+                <span aria-hidden="true">🎨</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Paleta de pintor</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="auriculares">
+                <span aria-hidden="true">🎧</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Auriculares</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="flor">
+                <span aria-hidden="true">🌷</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Tulipán</span>
+              </label>
+              <label class="pr-face">
+                <input type="radio" name="p3-dibujo" value="tarta">
+                <span aria-hidden="true">🍰</span>
+                <span class="pr-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                <span class="sr-only">Tarta</span>
+              </label>
+            </div>
+
+            <div class="pr-sheet-foot">
+              <button class="btn btn-primary btn-block" type="button">Listo, ya está elegido</button>
+              <p class="pr-sheet-note">Solo emoji: no hay que subir ninguna foto.</p>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 4: NO SE HA PODIDO GUARDAR ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 5</span>
+          <span class="cap-t">No se ha podido guardar</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll pr-scroll-save">
+            <a class="back" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Inicio</a>
+
+            <p class="pr-banner pr-banner-err" role="alert">
+              <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+              <span>No se ha podido guardar. Lo que has escrito sigue aquí.</span>
+            </p>
+
+            <section class="pr-card" aria-labelledby="p4-who-h">
+              <h3 class="sr-only" id="p4-who-h">Tu nombre y tu dibujo</h3>
+              <div class="pr-who">
+                <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                  <span class="pr-av-72" aria-hidden="true">🌻</span>
+                  <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                </button>
+                <div class="pr-who-txt">
+                  <label class="pr-label" for="p4-nombre">Tu nombre</label>
+                  <input class="pr-input" id="p4-nombre" name="nombre-error" type="text" value="Lucía" autocomplete="nickname">
+                  <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
+                </div>
+              </div>
+            </section>
+
+            <h3 class="pr-blk">Tus fechas <span class="pr-blk-sub">Solo el día y el mes</span></h3>
+            <div class="pr-card">
+              <p class="pr-legend" id="p4-cumple-h">Tu cumpleaños</p>
+              <div class="pr-row2" role="group" aria-labelledby="p4-cumple-h">
+                <div class="pr-field">
+                  <label class="pr-label" for="p4-dia">Día</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p4-dia" name="dia-error">
+                      <option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+                <div class="pr-field">
+                  <label class="pr-label" for="p4-mes">Mes</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p4-mes" name="mes-error">
+                      <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="pr-blk">Tallas y gustos</h3>
+            <div class="pr-card">
+              <div class="pr-grid2">
+                <div class="pr-field">
+                  <label class="pr-label" for="p4-camiseta">Camiseta</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p4-camiseta" name="talla-camiseta-error">
+                      <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+                <div class="pr-field">
+                  <label class="pr-label" for="p4-pantalon">Pantalón</label>
+                  <span class="pr-sel-wrap">
+                    <select class="pr-select" id="p4-pantalon" name="talla-pantalon-error">
+                      <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
+                    </select>
+                    <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pr-save">
+            <p class="pr-save-msg is-err">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span id="p4-save-why">Sin conexión. Puedes reintentarlo sin volver a escribirlo.</span>
+            </p>
+            <button class="btn btn-primary btn-block" type="button" aria-describedby="p4-save-why">
+              <svg class="ic ic-20" aria-hidden="true"><use href="#i-redo"/></svg>Reintentar
+            </button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 5: CERRAR SESIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 6</span>
+          <span class="cap-t">Cerrar sesión · confirmación</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <!-- el perfil, atenuado detrás del diálogo -->
+          <div class="pf-scroll" aria-hidden="true">
+            <h3 class="pr-blk">Tu cuenta</h3>
+            <div class="pr-rows">
+              <div class="pr-row pr-row-static">
+                <span class="pr-row-ic"><svg class="ic"><use href="#i-mail"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Tu correo</span>
+                  <span class="pr-row-d pr-mail">lucia.martin@gmail.com</span>
+                </span>
+              </div>
+              <div class="pr-row">
+                <span class="pr-row-ic"><svg class="ic"><use href="#i-key"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Cambiar contraseña</span>
+                  <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
+                </span>
+                <svg class="pr-chev"><use href="#i-chev"/></svg>
+              </div>
+            </div>
+            <h3 class="pr-blk">Sesión</h3>
+            <div class="pr-rows">
+              <div class="pr-row">
+                <span class="pr-row-ic"><svg class="ic"><use href="#i-exit"/></svg></span>
+                <span class="pr-row-body">
+                  <span class="pr-row-t">Cerrar sesión</span>
+                  <span class="pr-row-d">Tendrás que volver a entrar con tu correo.</span>
+                </span>
+                <svg class="pr-chev"><use href="#i-chev"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="pr-scrim" aria-hidden="true"></div>
+
+          <div class="pr-dialog-wrap">
+            <div class="pr-dialog" role="dialog" aria-modal="true" aria-labelledby="p4-dlg-h" aria-describedby="p4-dlg-p">
+              <span class="pr-dialog-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+              <h3 class="pr-dialog-h" id="p4-dlg-h">¿Cerrar sesión?</h3>
+              <p class="pr-dialog-p" id="p4-dlg-p">Tendrás que volver a entrar con tu correo lucia.martin@gmail.com y tu contraseña.</p>
+              <p class="pr-dialog-note">No se borra nada: tus listas, tus grupos y tus reservas se quedan como están.</p>
+              <div class="pr-dialog-btns">
+                <button class="btn btn-secondary btn-block" type="button">Seguir dentro</button>
+                <button class="btn btn-danger btn-block" type="button">Sí, cerrar sesión</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>El mismo perfil en 1180 px: tus datos y tus fechas a la izquierda, la cuenta, la app y la sesión a la derecha. El nombre de arriba a la derecha es esta pantalla y también su puerta.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Tu perfil · sesión de Lucía</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Tu perfil</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <a class="dt-user-on" href="#perfil" aria-current="page">
+              <span class="avatar" aria-hidden="true">🌻</span>
+              <span>Lucía</span>
+            </a>
+          </header>
+
+          <div class="pr-dmain">
+            <div class="pr-dcol">
+              <div class="pr-dtop">
+                <div>
+                  <h2 class="pr-dh">Tu perfil</h2>
+                  <p class="pr-dsub">Así te ven tus grupos.</p>
+                </div>
+                <div class="pr-dacts">
+                  <p class="pr-dstatus" role="status"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Cambios guardados</p>
+                  <button class="btn btn-primary" type="button">Guardar cambios</button>
+                </div>
+              </div>
+
+              <section class="pr-dcard" aria-labelledby="d-datos-h">
+                <h3 class="pr-dblk" id="d-datos-h">Tus datos y tus fechas</h3>
+                <div class="pr-dwho">
+                  <button class="pr-avbtn" type="button" aria-haspopup="dialog" aria-label="Cambiar tu dibujo. Ahora es un girasol 🌻">
+                    <span class="pr-av-72" aria-hidden="true">🌻</span>
+                    <span class="pr-av-badge" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                  </button>
+                  <div class="pr-who-txt">
+                    <label class="pr-label" for="d-nombre">Tu nombre</label>
+                    <input class="pr-input" id="d-nombre" name="nombre-web" type="text" value="Lucía" autocomplete="nickname">
+                    <p class="pr-hint">Mínimo 3 letras. Es el nombre que verán tus grupos.</p>
+                  </div>
+                </div>
+
+                <div class="pr-dsep">
+                  <div class="pr-dfields">
+                    <div>
+                      <p class="pr-label" id="d-cumple-h">Tu cumpleaños</p>
+                      <div class="pr-row2" role="group" aria-labelledby="d-cumple-h">
+                        <div class="pr-field">
+                          <span class="pr-sel-wrap">
+                            <select class="pr-select" id="d-dia" name="dia-cumple-web" aria-label="Día de tu cumpleaños">
+                              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                            </select>
+                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                          </span>
+                        </div>
+                        <div class="pr-field">
+                          <span class="pr-sel-wrap">
+                            <select class="pr-select" id="d-mes" name="mes-cumple-web" aria-label="Mes de tu cumpleaños">
+                              <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                            </select>
+                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p class="pr-label" id="d-santo-h">Tu santo <span class="pr-opt">(opcional)</span></p>
+                      <div class="pr-row2" role="group" aria-labelledby="d-santo-h">
+                        <div class="pr-field">
+                          <span class="pr-sel-wrap">
+                            <select class="pr-select" id="d-santo-dia" name="dia-santo-web" aria-label="Día de tu santo">
+                              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option selected>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                            </select>
+                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                          </span>
+                        </div>
+                        <div class="pr-field">
+                          <span class="pr-sel-wrap">
+                            <select class="pr-select" id="d-santo-mes" name="mes-santo-web" aria-label="Mes de tu santo">
+                              <option>enero</option><option>febrero</option><option>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option selected>diciembre</option>
+                            </select>
+                            <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                          </span>
+                        </div>
+                      </div>
+                      <p class="pr-hint">Sugerido por tu nombre: Santa Lucía, el 13 de diciembre. <span class="pr-new">nuevo</span></p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="pr-dcard" aria-labelledby="d-tallas-h">
+                <h3 class="pr-dblk" id="d-tallas-h">Tallas y gustos</h3>
+                <p class="pr-dblk-sub">Lo ven quienes miran tu lista. Elige de la lista, sin escribir. <span class="pr-new">nuevo</span></p>
+                <div class="pr-dfields4">
+                  <div class="pr-field">
+                    <label class="pr-label" for="d-camiseta">Camiseta</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="d-camiseta" name="talla-camiseta-web">
+                        <option>XS</option><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>XXL</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="d-pantalon">Pantalón</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="d-pantalon" name="talla-pantalon-web">
+                        <option>36</option><option>38</option><option>40</option><option selected>42</option><option>44</option><option>46</option><option>48</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="d-calzado">Calzado</label>
+                    <span class="pr-sel-wrap">
+                      <select class="pr-select" id="d-calzado" name="talla-calzado-web">
+                        <option>36</option><option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option><option>43</option><option>44</option><option>45</option><option>46</option>
+                      </select>
+                      <svg class="ic pr-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="pr-field">
+                    <label class="pr-label" for="d-color">Color favorito</label>
+                    <span class="pr-color-wrap">
+                      <input class="pr-input pr-color" id="d-color" name="color-favorito" type="text" value="azul marino">
+                      <span class="pr-swatch" aria-hidden="true"></span>
+                    </span>
+                  </div>
+                </div>
+                <div class="pr-field" style="margin-top:12px">
+                  <label class="pr-label" for="d-marcas">Marcas favoritas</label>
+                  <input class="pr-input" id="d-marcas" name="marcas" type="text" value="Levi's, Fender">
+                </div>
+              </section>
+            </div>
+
+            <div class="pr-dcol">
+              <section class="pr-dcard" aria-labelledby="d-cuenta-h">
+                <h3 class="pr-dblk" id="d-cuenta-h">Tu cuenta</h3>
+                <div class="pr-drows">
+                  <div class="pr-drow pr-drow-static">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-mail"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Tu correo</span>
+                      <span class="pr-row-d pr-dmail">lucia.martin@gmail.com</span>
+                    </span>
+                  </div>
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-key"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Cambiar contraseña <span class="pr-new">nuevo</span></span>
+                      <span class="pr-row-d">Te enviamos un enlace a tu correo.</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                </div>
+                <div class="pr-dsep">
+                  <h4 class="pr-dblk">Sesión</h4>
+                  <button class="btn btn-secondary btn-block pr-dout" type="button" aria-haspopup="dialog">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-exit"/></svg>Cerrar sesión
+                  </button>
+                  <p class="pr-dhint">Se pide confirmación. No se borra nada.</p>
+                </div>
+              </section>
+
+              <section class="pr-dcard" aria-labelledby="d-app-h">
+                <h3 class="pr-dblk" id="d-app-h">La app</h3>
+                <p class="pr-dblk-sub">Se toca una vez.</p>
+                <div class="pr-drows">
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic pr-row-ic-accent" aria-hidden="true"><svg class="ic"><use href="#i-download"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Instalar la app <span class="pr-new">nuevo</span></span>
+                      <span class="pr-row-d">Añádela a tu pantalla de inicio.</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Novedades <span class="pr-new">nuevo</span></span>
+                      <span class="pr-row-d">Lo que ha cambiado · 26 de octubre.</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                  <button class="pr-drow" type="button">
+                    <span class="pr-row-ic" aria-hidden="true"><svg class="ic"><use href="#i-route"/></svg></span>
+                    <span class="pr-row-body">
+                      <span class="pr-row-t">Ver el tour otra vez <span class="pr-new">nuevo</span></span>
+                      <span class="pr-row-d">Dos minutos por todas las pantallas.</span>
+                    </span>
+                    <svg class="pr-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="notas-h">
+    <div class="row-head">
+      <h2 id="notas-h">Notas de la pantalla</h2>
+      <p>Seis reglas del perfil, incluidas las que dicen qué no se ha dibujado porque la app todavía no lo tiene.</p>
+    </div>
+
+    <div class="devices">
+      <div class="flow-notes pr-notas">
+        <h3>Qué hay, qué es nuevo y qué no</h3>
+        <p>El perfil es la pantalla con menos sorpresas de la app: lo de siempre, con nombres claros y sin esconder nada detrás de iconos. Ojo: no es una pestaña, y por dónde se entra (tu nombre en Inicio, tu ficha en Personas) se cierra cuando se dibuje «Personas».</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span><b>Lo que ya existe:</b> nombre, dibujo (emoji), cumpleaños, santo, talla de camiseta, pantalón y calzado, color favorito, marcas favoritas y cerrar sesión. Nada de eso cambia de sitio: cambia de forma.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span><b>Lo marcado «nuevo»:</b> instalar la app, volver a ver las novedades, repetir el tour, cambiar la contraseña desde aquí y la sugerencia de santo a partir del nombre. Son cinco cosas que hoy no están en la app; si el propietario no las quiere, se quitan y la pantalla sigue en pie.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span><b>Tallas de la lista, no escritas a mano:</b> camiseta, pantalón y calzado se eligen de una lista corta (hoy son campos de texto libre). Es la decisión que hace falta confirmar: se gana en aciertos, se pierde el «talla 42 larga».</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span><b>Un solo botón para guardar:</b> nombre, fechas, tallas y gustos se guardan juntos con «Guardar cambios», que dice qué falta si algo falta. Los emoji se guardan al elegirlos, porque son un toque y no un formulario.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span><b>Feedback con texto, no solo con color:</b> «Cambios guardados» en verde únicamente cuando el guardado ha ido bien. Si falla, el aviso rojo dice que no se ha guardado, que lo escrito sigue donde estaba y ofrece «Reintentar»: nunca se anuncia un éxito que no ha ocurrido.</span></li>
+          <li><span class="fn" aria-hidden="true">6</span><span><b>No dibujado a propósito:</b> borrar la cuenta y elegir moneda no existen en la app; las reservas del dueño tampoco se muestran aquí, porque la sorpresa se respeta. Si borrar la cuenta entra en el producto, va aquí abajo, en «Sesión», con confirmación escrita.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

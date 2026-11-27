@@ -43,6 +43,42 @@
       "tradeoff": "Pantalla de la dirección elegida: el enlace rellena casi todo y hay vista previa; el formulario es largo y en móvil requiere scroll.",
       "width": 1440,
       "height": 2730
+    },
+    {
+      "file": "07-personas.html",
+      "title": "Personas primero · Personas",
+      "tradeoff": "Cada persona una vez con sus grupos y su próxima celebración; los grupos pasan a ser una sección más y crear o unirse queda a un toque, a costa de una lista algo más larga.",
+      "width": 1440,
+      "height": 4835
+    },
+    {
+      "file": "08-detalle-deseo.html",
+      "title": "Personas primero · Detalle de un deseo",
+      "tradeoff": "El detalle concentra todo en reservar y protege la sorpresa al precio de una pantalla propia más larga que el modal actual, que obliga a volver para seguir mirando la lista.",
+      "width": 1440,
+      "height": 4702
+    },
+    {
+      "file": "09-avisos.html",
+      "title": "Personas primero · Avisos",
+      "tradeoff": "Un hilo por días con lo esencial arriba se lee de un vistazo, pero renuncia al icono de tipo como protagonista y nunca avisa de reservas del propio deseo.",
+      "width": 1440,
+      "height": 4427
+    },
+    {
+      "file": "10-perfil.html",
+      "title": "Personas primero · Perfil",
+      "tradeoff": "Todo tu perfil en una sola pantalla con guardado explícito: se entiende sin menús, pero es larga y en el móvil hay que desplazar para llegar a «Cerrar sesión».",
+      "width": 1440,
+      "height": 3837
+    },
+    {
+      "file": "11-acceso.html",
+      "title": "Personas primero · Iniciar sesión y contraseña",
+      "tradeoff": "Acceso sobrio y muy legible, una sola contraseña con «Mostrar» y el contexto del grupo siempre visible; renuncia a ilustraciones grandes y explica los fallos con palabras.",
+      "width": 1440,
+      "height": 5767
     }
-  ]
+  ],
+  "feature": "odd/tasks/rediseno-muro.md"
 }
