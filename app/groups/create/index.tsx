@@ -66,7 +66,7 @@ export default function CreateGroupPage() {
                             value={name}
                             onChangeText={setName}
                             placeholder="Ej: Amigos de la Uni, Familia..."
-                            placeholderTextColor="#4c212b88"
+                            placeholderTextColor="#5C4033"
                             className="bg-surface-container-highest p-4 rounded-full text-on-background font-sans"
                             style={{ fontSize: 16 }}
                         />
@@ -85,7 +85,7 @@ export default function CreateGroupPage() {
                         accessibilityLabel="Crear grupo"
                     >
                         {loading ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             'Crear grupo'
                         )}

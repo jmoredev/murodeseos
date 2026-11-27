@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
 
                         {checking ? (
                             <View testID="reset-checking" className="items-center py-10">
-                                <ActivityIndicator size="large" color="#aa2c32" />
+                                <ActivityIndicator size="large" color="#B93D12" />
                                 <Text className="mt-4 text-on-surface/70 font-sans-medium">Comprobando el enlace...</Text>
                             </View>
                         ) : !hasSession ? (
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                             style={{ fontSize: 16 }}
                                             placeholder="••••••••"
-                                            placeholderTextColor="#4c212b88"
+                                            placeholderTextColor="#5C4033"
                                             value={password}
                                             onChangeText={setPassword}
                                             accessibilityLabel="Contraseña nueva"
@@ -164,7 +164,7 @@ export default function ResetPasswordPage() {
                                             className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
                                             style={{ fontSize: 16 }}
                                             placeholder="••••••••"
-                                            placeholderTextColor="#4c212b88"
+                                            placeholderTextColor="#5C4033"
                                             value={confirmPassword}
                                             onChangeText={setConfirmPassword}
                                             accessibilityLabel="Repite la contraseña nueva"

@@ -21,12 +21,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#fff',
+        // Tokens canónicos (sistema-nuevo.md §1): --bg, --ink y --primary-dark.
+        backgroundColor: '#FFF8F1',
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#2B1A12',
     },
     link: {
         marginTop: 15,
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     },
     linkText: {
         fontSize: 14,
-        color: 'rgb(147, 51, 234)',
+        color: '#8F2E0C',
         fontWeight: '600',
     },
 });

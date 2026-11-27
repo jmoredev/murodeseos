@@ -3,20 +3,92 @@
 @tailwind utilities;
 
 @layer base {
+    /**
+     * Tokens canónicos «Personas primero» (`design/rediseno-muro/sistema-nuevo.md` §1, §2).
+     *
+     * Las mismas 32 parejas nombre → valor viven en `tailwind.config.cjs` (que es lo que consumen
+     * las `className`); aquí quedan como variables CSS para el CSS propio de esta hoja y como
+     * referencia única para el foco (§7) y el texto de la app (§2).
+     *
+     * Las cinco variables sueltas al final son los antiguos tripletes RGB
+     * (`--background: 255 244 244`) reasignados al valor canónico: se conservan porque son la
+     * entrada documentada de quien escriba CSS a mano, pero ya no se usan en ningún componente.
+     */
     :root {
-        --background: 255 244 244;
-        --foreground: 76 33 43;
-        --primary: 170 44 50;
-        --primary-container: 255 117 116;
-        --surface: 255 244 244;
-        --surface-container-low: 255 236 238;
+        /* Base (§1.1) */
+        --bg: #FFF8F1;
+        --surface: #FFFFFF;
+        --surface-sunken: #FFFCF8;
+        --ink: #2B1A12;
+        --ink-2: #5C4033;
+        --muted: #8A7A70;
+        --border: #F0DFD2;
+        --border-strong: #E3C8B6;
+        --border-control: #B67A50;
+        --sand: #FBEBDC;
+        --sand-2: #F6EBE2;
+        --sand-ink: #7A4A2A;
+        --unread: #FFF6EC;
+
+        /* Teja (§1.2) */
+        --primary: #B93D12;
+        --primary-dark: #8F2E0C;
+        --primary-soft: #FDE5D6;
+        --primary-line: #F3CDB6;
+        --primary-line-strong: #EEC4A8;
+        --hover-row: #FFF1E5;
+        --hover-control: #FFF3E9;
+        --selected: #FFF3EB;
+        --active-soft: #FBD9C4;
+
+        /* Verde (§1.3) */
+        --accent: #2F6F4E;
+        --accent-soft: #E1F0E7;
+        --accent-ink: #1F4A33;
+        --accent-line: #B4D5C3;
+
+        /* Estado (§1.4) */
+        --danger: #B42318;
+        --danger-dark: #7A1A12;
+        --danger-soft: #FDECEA;
+        --danger-line: #EFC9C5;
+
+        /* Sobre tinta (§1.5) */
+        --on-ink: #FFF3E8;
+        --on-ink-accent: #FFE9DA;
+
+        /* Tipografía (§2) */
+        --font-app: 'Nunito', 'Nunito Sans', ui-rounded, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+        /* Compatibilidad: nombres antiguos, ya con el valor canónico. */
+        --background: 255 248 241;
+        --foreground: 43 26 18;
+        --primary-container: 243 205 182;
+        --surface-container-low: 251 235 220;
         --surface-container-lowest: 255 255 255;
-        --on-surface: 76 33 43;
-        --outline-variant: 220 156 168;
+        --on-surface: 43 26 18;
+        --outline-variant: 227 200 182;
     }
 
     /**
-     * Foco visible (WCAG 2.4.7). Aplica en web; RN nativo usa su propio foco.
+     * Nunito es la única familia de la app (§2). `tailwind.config.cjs` la aplica a cada
+     * `font-sans*` / `font-display*`; esto cubre el texto que no lleva clase (y el `body` de la
+     * exportación web).
+     */
+    html,
+    body {
+        font-family: var(--font-app);
+    }
+
+    /**
+     * Foco visible (§7): un solo estilo en toda la app.
+     *
+     * Anillo de 3 px `--primary-dark` con 3 px de separación (6,77–8,19:1, se ve también sobre el
+     * panel de celebración). El `border-radius` de 8 px es el de la ficha y va en la capa base a
+     * propósito: los utilitarios `rounded-*` viven en la capa `utilities`, que gana, así que una
+     * píldora sigue siendo píldora al enfocarla y sólo los elementos sin radio propio toman 8 px.
+     *
      * No usar outline: none sin sustituto.
      */
     :where(
@@ -32,8 +104,9 @@
             [role="link"],
             [tabindex]:not([tabindex="-1"])
         ):focus-visible {
-        outline: 2px solid rgb(170 44 50);
-        outline-offset: 2px;
+        outline: 3px solid var(--primary-dark);
+        outline-offset: 3px;
+        border-radius: 8px;
     }
 
     /**
@@ -48,17 +121,17 @@
         border-radius: 9999px;
         font-size: 0.875rem;
         font-weight: 600;
-        background: #ffffff;
-        color: #aa2c32;
-        box-shadow: 0 4px 20px rgba(76, 33, 43, 0.12);
+        background: var(--surface);
+        color: var(--primary-dark);
+        box-shadow: 0 4px 20px rgba(43, 26, 18, 0.12);
         transform: translateY(-200%);
         transition: transform 0.15s ease-out;
     }
 
     .skip-to-main:focus {
         transform: translateY(0);
-        outline: 2px solid rgb(170 44 50);
-        outline-offset: 2px;
+        outline: 3px solid var(--primary-dark);
+        outline-offset: 3px;
     }
 
     #muro-main-content {

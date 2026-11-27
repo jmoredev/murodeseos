@@ -1,9 +1,17 @@
 import React from 'react';
 import { Pressable, Text, View, ViewStyle, StyleProp, Platform, TextStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { circleGlyphTextBase } from '@/lib/circle-glyph-styles';
 
-const GRADIENT = ['#aa2c32', '#ff7574'] as const;
+/**
+ * Botón primario: fondo `--primary` **plano**, sin degradado
+ * (`design/rediseno-muro/sistema-nuevo.md` §10.1 y §11: el degradado
+ * `primary → primary-container` restaba legibilidad al texto blanco en el tramo
+ * claro; el plano garantiza 5,62:1 constante).
+ *
+ * El color va por clase (`bg-primary`, token #B93D12) y no por degradado porque
+ * `expo-linear-gradient` no acepta un color plano; `View` sí pasa por
+ * `cssInterop` de NativeWind.
+ */
 
 function isPlusOnlyChild(children: React.ReactNode): boolean {
     if (typeof children === 'string') return children.trim() === '+';
@@ -16,7 +24,7 @@ function isPlusOnlyChild(children: React.ReactNode): boolean {
 
 const iconPlusCharStyle: TextStyle = {
     ...circleGlyphTextBase,
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 22,
     lineHeight: 24,
     fontWeight: '700',
@@ -80,10 +88,8 @@ export function PrimaryButton({
         >
             {isIcon ? (
                 <View style={{ flex: 1, alignSelf: 'stretch', width: '100%' }}>
-                    <LinearGradient
-                        colors={[...GRADIENT]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
+                    <View
+                        className="bg-primary"
                         style={iconFillGradientStyle}
                     >
                         {isPlusIcon ? (
@@ -109,13 +115,11 @@ export function PrimaryButton({
                         ) : (
                             children
                         )}
-                    </LinearGradient>
+                    </View>
                 </View>
             ) : (
-                <LinearGradient
-                    colors={[...GRADIENT]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                <View
+                    className="bg-primary"
                     style={defaultGradientStyle}
                 >
                     {typeof children === 'string' ? (
@@ -123,7 +127,7 @@ export function PrimaryButton({
                     ) : (
                         children
                     )}
-                </LinearGradient>
+                </View>
             )}
         </Pressable>
     );

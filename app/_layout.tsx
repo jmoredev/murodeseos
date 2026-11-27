@@ -3,13 +3,7 @@ import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { useFonts, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
-import {
-    BeVietnamPro_400Regular,
-    BeVietnamPro_500Medium,
-    BeVietnamPro_600SemiBold,
-    BeVietnamPro_700Bold,
-} from '@expo-google-fonts/be-vietnam-pro';
+import { useFonts, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { getGithubPagesBasePath } from '@/lib/site-url';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { TourTargetProvider } from '@/components/tour/TourTargetProvider';
@@ -18,8 +12,11 @@ import './global.css';
 
 SplashScreen.preventAutoHideAsync();
 
-const SURFACE_BG = '#fff4f4';
-const THEME_COLOR = '#aa2c32';
+// Colores del chrome: salen de los tokens canónicos de `tailwind.config.cjs`
+// (`surface` empieza en #FFF8F1, --bg; `primary` en #B93D12, --primary) y los ata
+// `__tests__/chrome-colors.test.ts`, porque esto no pasa por NativeWind.
+const SURFACE_BG = '#FFF8F1';
+const THEME_COLOR = '#B93D12';
 
 function ensureWebHead() {
     if (typeof document === 'undefined') return;
@@ -78,12 +75,10 @@ const FONT_LOAD_MAX_MS = 10_000;
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
-        PlusJakartaSans_700Bold,
-        PlusJakartaSans_800ExtraBold,
-        BeVietnamPro_400Regular,
-        BeVietnamPro_500Medium,
-        BeVietnamPro_600SemiBold,
-        BeVietnamPro_700Bold,
+        // Nunito, una sola familia (§2): cuerpo 600, etiqueta 700, título 800.
+        Nunito_600SemiBold,
+        Nunito_700Bold,
+        Nunito_800ExtraBold,
     });
     const [fontWaitTimedOut, setFontWaitTimedOut] = useState(false);
 

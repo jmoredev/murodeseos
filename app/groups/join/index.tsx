@@ -72,7 +72,7 @@ export default function JoinGroupPage() {
                             value={code}
                             onChangeText={(val) => setCode(val.toUpperCase())}
                             placeholder="Ej: AB12C3"
-                            placeholderTextColor="#4c212b88"
+                            placeholderTextColor="#5C4033"
                             maxLength={8}
                             autoCapitalize="characters"
                             className="bg-surface-container-highest p-4 rounded-2xl text-center text-2xl font-sans-bold text-primary tracking-widest"
@@ -92,7 +92,7 @@ export default function JoinGroupPage() {
                         accessibilityLabel="Unirse al grupo"
                     >
                         {loading ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             'Unirse al grupo'
                         )}

@@ -20,7 +20,9 @@ import { Pressable, Text, View } from 'react-native';
  *    completa, porque hay fallos de los que no se sale re-montando.
  *
  * Estilos en línea a propósito: esto tiene que poder pintarse aunque el resto
- * del sistema de estilos haya fallado.
+ * del sistema de estilos haya fallado. Por eso los colores van aquí escritos y
+ * no como `className`: son los tokens canónicos de `design/rediseno-muro/sistema-nuevo.md`
+ * §1 (`--bg` #FFF8F1, `--ink` #2B1A12, `--primary` #B93D12, `--border-control` #B67A50).
  */
 const FUENTE_SISTEMA = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
@@ -49,7 +51,7 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: 24,
-                backgroundColor: '#fff4f4',
+                backgroundColor: '#FFF8F1',
             }}
         >
             <Text
@@ -57,7 +59,7 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                     fontFamily: FUENTE_SISTEMA,
                     fontSize: 20,
                     fontWeight: '700',
-                    color: '#4c212b',
+                    color: '#2B1A12',
                     textAlign: 'center',
                     marginBottom: 10,
                 }}
@@ -69,7 +71,7 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                     fontFamily: FUENTE_SISTEMA,
                     fontSize: 15,
                     lineHeight: 22,
-                    color: '#4c212b',
+                    color: '#2B1A12',
                     textAlign: 'center',
                     marginBottom: 24,
                 }}
@@ -86,11 +88,11 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                     paddingVertical: 12,
                     paddingHorizontal: 28,
                     borderRadius: 9999,
-                    backgroundColor: '#aa2c32',
+                    backgroundColor: '#B93D12',
                     marginBottom: 12,
                 }}
             >
-                <Text style={{ fontFamily: FUENTE_SISTEMA, fontSize: 16, fontWeight: '700', color: '#fff4f4' }}>
+                <Text style={{ fontFamily: FUENTE_SISTEMA, fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>
                     Reintentar
                 </Text>
             </Pressable>
@@ -105,10 +107,10 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                     paddingHorizontal: 28,
                     borderRadius: 9999,
                     borderWidth: 1,
-                    borderColor: '#4c212b',
+                    borderColor: '#B67A50',
                 }}
             >
-                <Text style={{ fontFamily: FUENTE_SISTEMA, fontSize: 16, fontWeight: '700', color: '#4c212b' }}>
+                <Text style={{ fontFamily: FUENTE_SISTEMA, fontSize: 16, fontWeight: '700', color: '#2B1A12' }}>
                     Recargar
                 </Text>
             </Pressable>
@@ -120,7 +122,7 @@ export function AppErrorBoundary({ error, retry, onReload }: AppErrorBoundaryPro
                     style={{
                         fontFamily: FUENTE_SISTEMA,
                         fontSize: 12,
-                        color: '#4c212b',
+                        color: '#2B1A12',
                         textAlign: 'center',
                         marginTop: 20,
                         opacity: 0.7,

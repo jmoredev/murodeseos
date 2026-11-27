@@ -84,10 +84,10 @@ function comoElementoDom(nodo: unknown): HTMLElement | null {
  * L2). Los nodos que no son animados (`View`, `Text`, `Pressable`) siguen con clases: ésas sí
  * llegan.
  */
-const TONO_VELO = 'rgba(76, 33, 43, 0.75)'; // `on-surface` al 75 %
-const TONO_TARJETA = '#fff4f4'; // `surface`
-const TONO_ANILLO = '#ff7574'; // `primary-container`
-const TONO_SOMBRA = '#4c212b'; // `on-surface`
+const TONO_VELO = 'rgba(43, 26, 18, 0.75)'; // `on-surface` (--ink) al 75 %
+const TONO_TARJETA = '#FFF8F1'; // `surface` (--bg)
+const TONO_ANILLO = '#B93D12'; // `primary`
+const TONO_SOMBRA = '#2B1A12'; // `on-surface` (--ink)
 
 const ESTILOS = StyleSheet.create({
     elemento: { position: 'absolute' },
@@ -126,7 +126,7 @@ const ESTILOS = StyleSheet.create({
         // Un filo tenue separa la tarjeta del contenido de detrás cuando el velo se aclara. Cuenta
         // para el alto: `cardHeightForContent` lo suma en los dos lados.
         borderWidth: CARD_BORDER,
-        borderColor: 'rgba(76, 33, 43, 0.10)',
+        borderColor: 'rgba(43, 26, 18, 0.10)',
         shadowColor: TONO_SOMBRA,
         shadowOpacity: 0.18,
         shadowRadius: 24,

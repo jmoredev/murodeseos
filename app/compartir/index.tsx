@@ -46,7 +46,7 @@ export default function CompartirPage() {
 
     return (
         <View className="flex-1 items-center justify-center bg-surface">
-            <ActivityIndicator size="large" color="#aa2c32" />
+            <ActivityIndicator size="large" color="#B93D12" />
             <Text className="mt-4 text-primary font-sans-medium">Preparando el deseo…</Text>
         </View>
     );

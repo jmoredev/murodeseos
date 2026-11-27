@@ -166,10 +166,7 @@ importers:
 
   .:
     dependencies:
-      '@expo-google-fonts/be-vietnam-pro':
-        specifier: ^0.4.1
-        version: 0.4.1
-      '@expo-google-fonts/plus-jakarta-sans':
+      '@expo-google-fonts/nunito':
         specifier: ^0.4.2
         version: 0.4.2
       '@expo/vector-icons':
@@ -1105,11 +1102,8 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@expo-google-fonts/be-vietnam-pro@0.4.1':
-    resolution: {integrity: sha512-4o2bsqU1zcC6NZf5FRYB+7gE49waNWYOGc5c5qLfPgrSqqr61hS2Bz4TVPgxudO038tLydSyPxV8e79g8j5DpQ==}
-
-  '@expo-google-fonts/plus-jakarta-sans@0.4.2':
-    resolution: {integrity: sha512-6LYVmVGwjQvH+uzzWlVc9+oMj4lkNQ41aymVDjO+x8aFk8kCye20wOyLomYMZaMezA++Uf1mZRCw3W3Fy/hxEA==}
+  '@expo-google-fonts/nunito@0.4.2':
+    resolution: {integrity: sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q==}
 
   '@expo/cli@54.0.27':
     resolution: {integrity: sha512-BxKOr6e8wmUwhGSyEVKY+CHWgS3Cre9ibgx1QWcdCenKTVKAz62qGmYL51q0lCcKg6vQY+4Usw9RK5Il4ZFaIA==}
@@ -6604,9 +6598,7 @@ snapshots:
     optionalDependencies:
       '@noble/hashes': 1.8.0
 
-  '@expo-google-fonts/be-vietnam-pro@0.4.1': {}
-
-  '@expo-google-fonts/plus-jakarta-sans@0.4.2': {}
+  '@expo-google-fonts/nunito@0.4.2': {}
 
   '@expo/cli@54.0.27(expo-router@6.0.24)(expo@54.0.37)(react-native@0.81.5(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.1.17)(react@19.1.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)':
     dependencies:
