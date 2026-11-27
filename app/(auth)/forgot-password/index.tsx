@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { getSiteBaseUrl } from '@/lib/site-url';
@@ -9,6 +9,7 @@ import { AuthBackLink } from '@/components/auth/AuthBackLink';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthColumn, AuthScreen } from '@/components/auth/AuthScreen';
 import { AuthTextField } from '@/components/auth/AuthTextField';
+import { isOfflineError } from '@/components/auth/errors';
 import { SCREEN_SUBTITLE, SCREEN_TITLE } from '@/components/auth/styles';
 
 /**
@@ -46,6 +47,17 @@ export default function ForgotPasswordPage() {
     // 429: el servidor ya no acepta más enlaces por ahora, así que el botón deja
     // de tener efecto hasta que se vuelva a entrar en la pantalla.
     const [limited, setLimited] = useState(false);
+    // La pantalla puede desaparecer mientras el envío está en vuelo (se vuelve al
+    // acceso, se cierra la pestaña): lo que llegue después no navega ni escribe
+    // estado en una pantalla que ya no existe.
+    const mountedRef = useRef(true);
+
+    useEffect(
+        () => () => {
+            mountedRef.current = false;
+        },
+        [],
+    );
 
     const handleSubmit = async () => {
         if (limited || sending) return;
@@ -69,6 +81,8 @@ export default function ForgotPasswordPage() {
                 redirectTo: `${getSiteBaseUrl()}/reset-password`,
             });
 
+            if (!mountedRef.current) return;
+
             // Supabase responde correctamente aunque la cuenta no exista, así que un
             // error devuelto es un fallo real y se puede contar sin revelar nada; el
             // mensaje neutro se reserva para la respuesta correcta.
@@ -86,23 +100,46 @@ export default function ForgotPasswordPage() {
             }
 
             router.replace({ pathname: '/recovery-sent', params: { email } });
-        } catch {
+        } catch (thrown) {
             // Un fallo lanzado (la red caída, por ejemplo) no puede dejar el botón
-            // bloqueado: el estado se libera siempre, pase lo que pase.
-            setNotice(FALLO_SIN_CONEXION);
+            // bloqueado; y solo el fallo de red habla de la conexión: cualquier otro
+            // se cuenta con el aviso genérico, que es lo que se sabe (`R3-002`).
+            if (!mountedRef.current) return;
+            setNotice(isOfflineError(thrown) ? FALLO_SIN_CONEXION : FALLO_AL_ENVIAR);
         } finally {
-            setSending(false);
+            if (mountedRef.current) setSending(false);
         }
     };
+
+    // Mientras el envío está en vuelo, «Iniciar sesión» queda apagado, como el
+    // `.ac-back-off` de P3 en el artboard: si se pudiera tocar, la respuesta que
+    // llega después cambiaría la pantalla a la que el usuario acaba de irse
+    // (`R3-001`). `inert` es de web, como en el velo del tour; en nativo basta con
+    // el guardia del manejador y `pointerEvents`.
+    const backProps =
+        sending && Platform.OS === 'web'
+            ? ({ inert: true } as unknown as Record<string, unknown>)
+            : {};
 
     return (
         <AuthScreen>
             <AuthColumn>
-                <AuthBackLink
-                    label="Iniciar sesión"
-                    onPress={() => router.replace('/login')}
-                    testID="back-to-login-link"
-                />
+                <View
+                    testID="back-to-login-guard"
+                    aria-hidden={sending || undefined}
+                    pointerEvents={sending ? 'none' : 'auto'}
+                    className={sending ? 'opacity-45' : ''}
+                    {...backProps}
+                >
+                    <AuthBackLink
+                        label="Iniciar sesión"
+                        onPress={() => {
+                            if (sending) return;
+                            router.replace('/login');
+                        }}
+                        testID="back-to-login-link"
+                    />
+                </View>
 
                 <Text className={`${SCREEN_TITLE} mt-2`}>Recuperar contraseña</Text>
                 <Text className={SCREEN_SUBTITLE}>

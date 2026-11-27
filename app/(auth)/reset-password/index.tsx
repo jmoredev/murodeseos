@@ -34,6 +34,11 @@ export default function ResetPasswordPage() {
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
     const [changed, setChanged] = useState(false);
+    // Cerrar sesión puede fallar (la red se cayó entre el cambio y la salida): el
+    // botón cuenta que trabaja y, si falla, se dice aquí sin dejar la pantalla
+    // bloqueada (`R3-004`).
+    const [signingOut, setSigningOut] = useState(false);
+    const [signOutError, setSignOutError] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -105,8 +110,23 @@ export default function ResetPasswordPage() {
     };
 
     const handleSignOut = async () => {
-        await signOut();
-        router.replace('/login');
+        if (signingOut) return;
+
+        setSignOutError('');
+        setSigningOut(true);
+
+        try {
+            await signOut();
+            router.replace('/login');
+        } catch (thrown) {
+            setSignOutError(
+                isOfflineError(thrown)
+                    ? 'No pudimos cerrar la sesión. Comprueba tu conexión e inténtalo otra vez.'
+                    : 'No pudimos cerrar la sesión. Inténtalo otra vez.',
+            );
+        } finally {
+            setSigningOut(false);
+        }
     };
 
     if (checking) {
@@ -201,10 +221,17 @@ export default function ResetPasswordPage() {
                         <AuthButton
                             variant="secondary"
                             label="Cerrar sesión"
+                            loadingLabel="Cerrando sesión…"
+                            loading={signingOut}
                             onPress={handleSignOut}
                             testID="sign-out-button"
+                            spinnerTestID="sign-out-spinner"
                         />
                     </View>
+
+                    {signOutError ? (
+                        <AuthAlert title={signOutError} testID="sign-out-error" />
+                    ) : null}
 
                     <AuthAlert
                         variant="ok"

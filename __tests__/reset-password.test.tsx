@@ -187,6 +187,95 @@ describe('ResetPasswordPage · contraseña cambiada (11 · P11)', () => {
         await waitFor(() => expect(signOut).toHaveBeenCalled());
         expect(routerMocks.replace).toHaveBeenCalledWith('/login');
     });
+
+    it('«Cerrar sesión» cuenta lo que está pasando mientras cierra (R3-004)', async () => {
+        let liberar: () => void = () => {};
+        vi.mocked(signOut).mockReturnValue(
+            new Promise<void>((resolve) => {
+                liberar = resolve;
+            }),
+        );
+
+        render(<ResetPasswordPage />);
+
+        fireEvent.change(await screen.findByTestId('new-password-input'), {
+            target: { value: 'nueva1234' },
+        });
+        fireEvent.click(screen.getByTestId('save-password-button'));
+
+        fireEvent.click(await screen.findByTestId('sign-out-button'));
+
+        expect(await screen.findByText('Cerrando sesión…')).toBeInTheDocument();
+        expect(screen.getByTestId('sign-out-button')).toHaveAttribute('aria-disabled', 'true');
+        expect(screen.getByTestId('sign-out-spinner')).toBeInTheDocument();
+
+        // Mientras cierra, volver a pulsar no cierra dos veces.
+        fireEvent.click(screen.getByTestId('sign-out-button'));
+        expect(signOut).toHaveBeenCalledTimes(1);
+
+        liberar();
+        await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith('/login'));
+    });
+});
+
+describe('ResetPasswordPage · fallo al cerrar sesión (11 · P11, R3-004)', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        setViewportWidth(390);
+        conSesion();
+        vi.mocked(supabase.auth.updateUser).mockResolvedValue({
+            data: { user: null },
+            error: null,
+        } as any);
+        vi.mocked(signOut).mockResolvedValue(undefined);
+    });
+
+    async function cambiarContrasena() {
+        render(<ResetPasswordPage />);
+
+        fireEvent.change(await screen.findByTestId('new-password-input'), {
+            target: { value: 'nueva1234' },
+        });
+        fireEvent.click(screen.getByTestId('save-password-button'));
+
+        await screen.findByTestId('sign-out-button');
+    }
+
+    it('avisa del fallo, se queda en la pantalla y deja reintentar', async () => {
+        vi.mocked(signOut).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+        await cambiarContrasena();
+
+        fireEvent.click(screen.getByTestId('sign-out-button'));
+
+        const alerta = await screen.findByTestId('sign-out-error');
+        expect(alerta).toHaveTextContent('No pudimos cerrar la sesión');
+        expect(alerta).toHaveTextContent('Comprueba tu conexión e inténtalo otra vez.');
+        expect(routerMocks.replace).not.toHaveBeenCalledWith('/login');
+        expect(screen.getByTestId('password-changed')).toBeInTheDocument();
+
+        // El fallo no deja la pantalla bloqueada: el botón vuelve y el reintento entra.
+        await waitFor(() =>
+            expect(screen.getByTestId('sign-out-button')).toHaveTextContent('Cerrar sesión'),
+        );
+        fireEvent.click(screen.getByTestId('sign-out-button'));
+
+        await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith('/login'));
+        expect(signOut).toHaveBeenCalledTimes(2);
+    });
+
+    it('un fallo lanzado que no es de red usa el aviso genérico', async () => {
+        vi.mocked(signOut).mockRejectedValueOnce(new Error('boom'));
+
+        await cambiarContrasena();
+
+        fireEvent.click(screen.getByTestId('sign-out-button'));
+
+        const alerta = await screen.findByTestId('sign-out-error');
+        expect(alerta).toHaveTextContent('No pudimos cerrar la sesión. Inténtalo otra vez.');
+        expect(alerta).not.toHaveTextContent('conexión');
+        expect(routerMocks.replace).not.toHaveBeenCalledWith('/login');
+    });
 });
 
 describe('ResetPasswordPage · fallos al guardar', () => {

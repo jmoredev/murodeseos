@@ -194,3 +194,96 @@ describe('recuperar contraseña · fallos que no son el límite', () => {
         );
     });
 });
+
+describe('recuperar contraseña · fallos lanzados (11 · P7, R3-002)', () => {
+    it('solo un fallo de red habla de la conexión', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(
+            new TypeError('Failed to fetch'),
+        );
+
+        render(<ForgotPasswordPage />);
+
+        pedirEnlace();
+
+        const alerta = await screen.findByTestId('forgot-alert');
+        expect(alerta).toHaveTextContent('No pudimos enviar el enlace');
+        expect(alerta).toHaveTextContent('Comprueba tu conexión e inténtalo otra vez.');
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+    });
+
+    it('un fallo lanzado que no es de red usa el aviso genérico, sin hablar de la conexión', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(
+            new Error('boom'),
+        );
+
+        render(<ForgotPasswordPage />);
+
+        pedirEnlace();
+
+        const alerta = await screen.findByTestId('forgot-alert');
+        expect(alerta).toHaveTextContent('No pudimos enviar el enlace');
+        expect(alerta).toHaveTextContent('Inténtalo otra vez en unos minutos.');
+        expect(alerta).not.toHaveTextContent('conexión');
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+    });
+});
+
+describe('recuperar contraseña · salir mientras envía (11 · P7, R3-001)', () => {
+    function envioEnVuelo() {
+        let resolver: (valor: unknown) => void = () => {};
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockReturnValue(
+            new Promise((resolve) => {
+                resolver = resolve;
+            }) as any,
+        );
+        return { resolver: (valor: unknown) => resolver(valor) };
+    }
+
+    it('mientras envía, «Iniciar sesión» está apagado y no se lleva de la pantalla', async () => {
+        const envio = envioEnVuelo();
+
+        render(<ForgotPasswordPage />);
+
+        pedirEnlace();
+        await screen.findByText('Enviando…');
+
+        expect(screen.getByTestId('back-to-login-guard')).toHaveAttribute('aria-hidden', 'true');
+        fireEvent.click(screen.getByTestId('back-to-login-link'));
+        expect(routerMocks.replace).not.toHaveBeenCalledWith('/login');
+
+        envio.resolver({ data: {}, error: null });
+        await waitFor(() =>
+            expect(routerMocks.replace).toHaveBeenCalledWith({
+                pathname: '/recovery-sent',
+                params: { email: 'lucia.martin@gmail.com' },
+            }),
+        );
+        expect(routerMocks.replace).not.toHaveBeenCalledWith('/login');
+    });
+
+    it('en reposo «Iniciar sesión» sigue llevando al acceso', () => {
+        render(<ForgotPasswordPage />);
+
+        expect(screen.getByTestId('back-to-login-guard')).not.toHaveAttribute(
+            'aria-hidden',
+            'true',
+        );
+        fireEvent.click(screen.getByTestId('back-to-login-link'));
+        expect(routerMocks.replace).toHaveBeenCalledWith('/login');
+    });
+
+    it('si se sale de la pantalla mientras envía, el resultado que llega después no navega', async () => {
+        const envio = envioEnVuelo();
+
+        const { unmount } = render(<ForgotPasswordPage />);
+
+        pedirEnlace();
+        await screen.findByText('Enviando…');
+
+        unmount();
+        envio.resolver({ data: {}, error: null });
+        await new Promise((listo) => setTimeout(listo, 0));
+
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+    });
+});

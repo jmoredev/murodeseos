@@ -8,6 +8,7 @@ import { AuthAlert } from '@/components/auth/AuthAlert';
 import { AuthBackLink } from '@/components/auth/AuthBackLink';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthColumn, AuthScreen } from '@/components/auth/AuthScreen';
+import { isOfflineError } from '@/components/auth/errors';
 import { SCREEN_SUBTITLE, SCREEN_TITLE } from '@/components/auth/styles';
 
 /**
@@ -68,9 +69,15 @@ export default function RecoverySentPage() {
             }
 
             setResendState('sent');
-        } catch {
+        } catch (thrown) {
+            // Solo el fallo de red habla de la conexión; cualquier otro se cuenta con
+            // el mismo aviso genérico que un error devuelto (`R3-003`).
             setResendState('idle');
-            setResendError('No pudimos enviar el enlace. Comprueba tu conexión e inténtalo otra vez.');
+            setResendError(
+                isOfflineError(thrown)
+                    ? 'No pudimos enviar el enlace. Comprueba tu conexión e inténtalo otra vez.'
+                    : 'No pudimos enviar el enlace. Inténtalo otra vez en unos minutos.',
+            );
         }
     };
 

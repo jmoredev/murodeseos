@@ -140,3 +140,44 @@ describe('te hemos enviado un correo (11 · P8)', () => {
         expect(supabase.auth.resetPasswordForEmail).not.toHaveBeenCalled();
     });
 });
+
+describe('te hemos enviado un correo · fallos lanzados (11 · P8, R3-003)', () => {
+    it('solo un fallo de red habla de la conexión', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(
+            new TypeError('Failed to fetch'),
+        );
+
+        render(<RecoverySentPage />);
+
+        fireEvent.click(screen.getByTestId('resend-button'));
+
+        const alerta = await screen.findByTestId('resend-error');
+        expect(alerta).toHaveTextContent(
+            'No pudimos enviar el enlace. Comprueba tu conexión e inténtalo otra vez.',
+        );
+        expect(screen.queryByTestId('resend-confirmation')).not.toBeInTheDocument();
+
+        // El botón vuelve a responder: un fallo lanzado no lo deja bloqueado.
+        await waitFor(() =>
+            expect(screen.getByTestId('resend-button')).not.toHaveAttribute(
+                'aria-disabled',
+                'true',
+            ),
+        );
+    });
+
+    it('un fallo lanzado que no es de red usa el aviso genérico, sin hablar de la conexión', async () => {
+        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(new Error('boom'));
+
+        render(<RecoverySentPage />);
+
+        fireEvent.click(screen.getByTestId('resend-button'));
+
+        const alerta = await screen.findByTestId('resend-error');
+        expect(alerta).toHaveTextContent(
+            'No pudimos enviar el enlace. Inténtalo otra vez en unos minutos.',
+        );
+        expect(alerta).not.toHaveTextContent('conexión');
+        expect(screen.queryByTestId('resend-confirmation')).not.toBeInTheDocument();
+    });
+});
