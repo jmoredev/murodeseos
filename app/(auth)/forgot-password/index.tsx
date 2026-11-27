@@ -52,12 +52,14 @@ export default function ForgotPasswordPage() {
     // estado en una pantalla que ya no existe.
     const mountedRef = useRef(true);
 
-    useEffect(
-        () => () => {
+    useEffect(() => {
+        // Se vuelve a marcar al montar: StrictMode desmonta y monta otra vez en
+        // desarrollo, y sin esto la bandera se quedaría en `false` para siempre.
+        mountedRef.current = true;
+        return () => {
             mountedRef.current = false;
-        },
-        [],
-    );
+        };
+    }, []);
 
     const handleSubmit = async () => {
         if (limited || sending) return;

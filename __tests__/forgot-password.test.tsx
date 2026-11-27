@@ -102,6 +102,23 @@ describe('recuperar contraseña (11 · P7)', () => {
         });
     });
 
+    it('bajo React.StrictMode también termina el envío y navega (el doble montaje no lo deja colgado)', async () => {
+        render(
+            <React.StrictMode>
+                <ForgotPasswordPage />
+            </React.StrictMode>,
+        );
+
+        pedirEnlace();
+
+        await waitFor(() =>
+            expect(routerMocks.replace).toHaveBeenCalledWith({
+                pathname: '/recovery-sent',
+                params: { email: 'lucia.martin@gmail.com' },
+            }),
+        );
+    });
+
     it('«Enviar enlace» cuenta lo que está pasando mientras trabaja', async () => {
         let resolver: (valor: unknown) => void = () => {};
         vi.mocked(supabase.auth.resetPasswordForEmail).mockReturnValue(
