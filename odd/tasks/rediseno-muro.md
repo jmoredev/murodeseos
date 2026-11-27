@@ -4,7 +4,7 @@ Maquetas HTML del rediseño completo (móvil primero + navegador) en `design/red
 cubre sólo el **diseño**; la implementación en la app se abrirá como frente propio cuando el
 propietario cierre el diseño con sus comentarios.
 
-**Rama:** `design/rediseno-muro` · **Estado:** 01–11 dibujadas; faltan las
+**Rama:** `design/rediseno-muro` · **Estado:** 01–15 dibujadas + `sistema-nuevo.md`; en curso los comentarios del propietario sobre las
 pantallas de T1–T9.
 
 ## Specs
@@ -59,11 +59,11 @@ versión de escritorio, como 04–06. El manifiesto `design.json` lo actualiza s
   app, novedades, repetir el tour, cerrar sesión). S2–S4 · worker · commit —
 - [x] T5 — `11-acceso.html`: iniciar sesión, recuperar y restablecer contraseña, errores. S2–S4 ·
   worker · commit —
-- [ ] T6 — `12-estados-globales.html`: cargando, sin conexión, error, avisos tipo toast, diálogos de
+- [x] T6 — `12-estados-globales.html`: cargando, sin conexión, error, avisos tipo toast, diálogos de
   confirmación, página no encontrada. S2–S4 · pendiente · commit —
-- [ ] T7 — `13-tablet.html`: punto de corte de tablet. S2, S4 · pendiente · commit —
-- [ ] T8 — `14-tour.html`: tour de primer inicio con la nueva estética. S2–S4 · pendiente · commit —
-- [ ] T9 — Especificación del nuevo sistema de diseño (tokens, tipografía, componentes) sin pisar
+- [x] T7 — `13-tablet.html`: punto de corte de tablet. S2, S4 · pendiente · commit —
+- [x] T8 — `14-tour.html`: tour de primer inicio con la nueva estética. S2–S4 · pendiente · commit —
+- [x] T9 — Especificación del nuevo sistema de diseño (tokens, tipografía, componentes) sin pisar
   `design/system.md` (que es la foto del sistema actual). S2 · pendiente · commit —
 
 ## Log
@@ -89,3 +89,24 @@ propietario: disparador del alias de persona (07); reservar con confirmación o 
 «Deshacer» (08); el aviso «reserva retirada» no existe en el código, «Novedades» como fila del hilo,
 alcance del permiso push y ocultar `draw_performed` en los ajustes por grupo (09); tallas por lista o
 texto libre (10); nueva contraseña con un solo campo frente a la repetición actual (11).
+
+L5 — 2026-11-27: T6–T9 dibujadas (12 estados globales, 13 tablet a 2560 de ancho, 14 tour con 9
+paradas, 15 sistema de diseño + `sistema-nuevo.md`). Preguntas abiertas nuevas: cartel de instalar la
+app, error a pantalla completa sin pestañas, bloquear escrituras sin conexión (12); 2 o 3 columnas de
+«Mi lista» a 1280, Perfil como quinto destino del raíl, escritorio a 1024 o 1280 (13); parada propia
+para el grupo de ejemplo, «Atrás»/«Saltar el recorrido», actualizar los datos de demostración (14);
+contorno de controles más oscuro `#B67A50` para pasar 3:1 (15).
+
+L6 — 2026-11-27: comentarios del propietario en el canvas (verbatim):
+- 06 «Nuevo deseo»: «A la hora de añadir un nuevo deseo entiendo que debajo d Notas van también las
+  opciones de ¿Quien puede verlo? y el/los enlaces a la tienda. Al final la vista de de la pantalla 2
+  de añadir un deseo y la pantalla 3 de editarlo tienen que ser casi idénticas»
+- 07 avatar «🎸»: «Cuidado con que se compriman los iconos, se ve muy mal»
+- 07 «🎸 Familia Martín»: «Estos grupos deberían de ser clickeables para que te lleve a su vista»
+- 07 pantalla «Personas»: «No me gusta nada esta pantalla, porque mezcla personas y grupos y si tienes
+  muchas personas tienes que bajar hasta abajo del todo para encontrar los grupos. Hay que
+  rediseñarla, hay que tener acceso rápido tanto a los grupos como a la spersonas»
+- 10 «Perfil»: «No entiendo bien en esta pantalla como editar tu perfil. Entiendo que desde la
+  pantalla 3 deberías de llegar a las pantallas 1 y 2»
+- 02 selector de grupo: «Entiendo que no hace falta pulsar unicamente sobre el radio button sino que
+  al pulsar sobre toda la tarjeta se selecciona»

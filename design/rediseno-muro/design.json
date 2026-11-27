@@ -78,6 +78,34 @@
       "tradeoff": "Acceso sobrio y muy legible, una sola contraseña con «Mostrar» y el contexto del grupo siempre visible; renuncia a ilustraciones grandes y explica los fallos con palabras.",
       "width": 1440,
       "height": 5767
+    },
+    {
+      "file": "12-estados-globales.html",
+      "title": "Personas primero · Estados globales",
+      "tradeoff": "Los estados dicen siempre qué pasa, si lo tuyo sigue guardado y qué puedes hacer; a cambio, la app pasa a tener cinco piezas que mantener en vez de avisos improvisados.",
+      "width": 1440,
+      "height": 8881
+    },
+    {
+      "file": "13-tablet.html",
+      "title": "Personas primero · Punto de corte de tablet",
+      "tradeoff": "El raíl lateral y el panel maestro-detalle aprovechan la tablet sin inventar una cuarta interfaz; a cambio hay tres disposiciones de navegación que mantener y 768 px deja de ser escritorio.",
+      "width": 2560,
+      "height": 5344
+    },
+    {
+      "file": "14-tour.html",
+      "title": "Personas primero · Tour de primer inicio",
+      "tradeoff": "Nueve paradas en vez de trece, con los grupos dentro de Personas: el recorrido enseña menos pantallas, pero cada una se entiende sola.",
+      "width": 1440,
+      "height": 7571
+    },
+    {
+      "file": "15-sistema-diseno.html",
+      "title": "Personas primero · Sistema de diseño nuevo",
+      "tradeoff": "Sistema corto y cálido que hace obvio qué se pulsa y qué se puede deshacer; a cambio oscurece el contorno de los controles respecto a lo dibujado.",
+      "width": 1440,
+      "height": 11148
     }
   ],
   "feature": "odd/tasks/rediseno-muro.md"

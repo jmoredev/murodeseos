@@ -1,0 +1,1795 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Estados globales · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero” · artboard «Estados globales».
+     Fundamentos copiados tal cual de 04-ficha-grupo.html:
+     paleta, reset, tipografía, botones, píldoras, avatares, marco
+     de móvil, marco de navegador y cabecera del dueño.
+     Los estados compartidos usan el prefijo «gs-» y son los mismos
+     que ya dibujan 05 (brindis), 08 y 10 (hojas y ventanas),
+     10 (guardado y error) y 11 (banda de sin conexión): aquí se
+     unifican en una sola pieza por patrón.
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+  .sb-sig{width:17px;height:11px}
+  .sb-wifi{width:15px;height:11px}
+  .sb-batt{width:24px;height:11px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .btn-danger{background:var(--danger);color:#fff;box-shadow:0 8px 18px rgba(180,35,24,.22)}
+  .btn-danger:hover{background:var(--danger-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .pill-count{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .pf-nav{
+    position:absolute;left:0;right:0;bottom:0;height:72px;z-index:5;
+    padding:4px 8px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:rgba(255,248,241,.97);border-top:1px solid var(--border);
+  }
+  .nav-i{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    min-height:48px;border-radius:14px;text-decoration:none;
+    color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.1;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .nav-i .ic{width:23px;height:23px}
+  .nav-i:hover{background:#FFF1E5}
+  .nav-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .nav-ic-wrap{position:relative;display:block}
+  .nav-badge{
+    position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;
+    border-radius:99px;background:var(--primary);color:#fff;
+    font-size:12.5px;font-weight:800;line-height:19px;text-align:center;
+  }
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  /* ---------- notas del dueño ---------- */
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .gs-notas{width:1200px;padding-top:0}
+  .gs-notas ol{grid-template-columns:1fr 1fr;gap:16px 40px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     ESTADOS GLOBALES · piezas nuevas (prefijo gs-)
+     ============================================================ */
+
+  /* ---------- 1 · carga a pantalla completa ---------- */
+  .gs-boot{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 34px 30px;text-align:center;
+  }
+  .gs-boot-mark{
+    width:78px;height:78px;border-radius:24px;display:grid;place-items:center;
+    background:var(--surface);border:2px solid var(--border-strong);color:var(--primary-dark);
+    box-shadow:var(--sh-2);
+  }
+  .gs-boot-mark .ic{width:40px;height:40px}
+  .gs-boot-t{font-size:27px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-top:20px}
+  .gs-boot-s{margin-top:6px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .gs-spin{
+    width:54px;height:54px;margin-top:26px;border-radius:50%;
+    border:6px solid var(--primary-soft);border-top-color:var(--primary);
+    animation:gs-turn 1.05s linear infinite;
+  }
+  @keyframes gs-turn{to{transform:rotate(360deg)}}
+  .gs-boot-note{
+    margin-top:26px;padding-top:16px;border-top:1px solid var(--border-strong);
+    max-width:296px;font-size:16px;line-height:1.4;color:var(--ink-2);
+  }
+
+  /* ---------- 2 · esqueletos ---------- */
+  .gs-sk{background:var(--border);border-radius:12px;animation:gs-breathe 1.7s ease-in-out infinite}
+  @keyframes gs-breathe{0%,100%{opacity:1}50%{opacity:.6}}
+  .gs-sk-av{width:48px;height:48px;border-radius:50%;flex:0 0 auto}
+  .gs-sk-tile{width:56px;height:56px;border-radius:16px;flex:0 0 auto}
+  .gs-sk-line{height:15px}
+  .gs-sk-pill{height:28px;border-radius:999px}
+  .gs-sk-h20{height:20px}
+  .gs-sk-h26{height:26px}
+  .gs-sk-hero{height:186px;border-radius:var(--r-card)}
+  .gs-sk-w80{width:80%}
+  .gs-sk-w65{width:65%}
+  .gs-sk-w50{width:50%}
+  .gs-sk-w35{width:35%}
+  .gs-sk-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:14px;box-shadow:var(--sh-1);
+  }
+  .gs-sk-card + .gs-sk-card{margin-top:10px}
+  .gs-sk-row{display:flex;align-items:center;gap:12px}
+  .gs-sk-row + .gs-sk-row{margin-top:14px}
+  .gs-sk-body{flex:1 1 auto;min-width:0;display:grid;gap:8px}
+  .gs-sk-strip{display:flex;gap:14px;margin-top:10px;padding:2px 2px 4px}
+  .gs-sk-strip li{display:grid;justify-items:center;gap:6px}
+  .gs-hi{font-size:27px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .gs-blk{
+    font-size:21px;line-height:1.25;font-weight:800;letter-spacing:-.01em;
+    margin-top:18px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  }
+  .gs-blk-sub{font-size:15px;font-weight:700;color:var(--ink-2)}
+
+  /* ---------- 3 · banda de estado (sin conexión, datos sin guardar) ---------- */
+  .gs-banner{
+    display:flex;gap:11px;align-items:flex-start;margin-top:12px;
+    padding:12px 13px;border-radius:16px;
+    background:var(--sand);border:1.5px solid var(--border-strong);
+  }
+  .gs-banner > .ic{width:24px;height:24px;flex:0 0 auto;margin-top:1px;color:#7A4A2A}
+  .gs-banner-b{flex:1 1 auto;min-width:0}
+  .gs-banner-t{display:block;font-size:17px;line-height:1.3;font-weight:800;color:var(--ink)}
+  .gs-banner-d{display:block;font-size:16px;line-height:1.38;color:var(--ink-2);margin-top:2px}
+  .gs-banner-btn{
+    display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+    min-height:48px;margin-top:10px;border-radius:999px;
+    background:var(--surface);border:2px solid var(--border-strong);
+    font-size:17px;font-weight:800;color:var(--ink);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .gs-banner-btn:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .gs-banner-btn .ic{width:20px;height:20px}
+
+  /* ---------- 4 · pantalla completa de error / no encontrada ---------- */
+  .gs-fs{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 26px 30px;text-align:center;
+  }
+  .gs-fs.has-nav{bottom:72px}
+  .gs-fs-ic{
+    width:76px;height:76px;border-radius:24px;display:grid;place-items:center;
+    background:#FDECEA;color:var(--danger);box-shadow:var(--sh-1);
+  }
+  .gs-fs-ic .ic{width:38px;height:38px}
+  .gs-fs-ic-neutral{background:var(--sand);color:#7A4A2A}
+  .gs-fs-t{font-size:27px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-top:18px}
+  .gs-fs-s{margin-top:8px;max-width:306px;font-size:17px;line-height:1.45;color:var(--ink-2)}
+  .gs-fs-btns{width:100%;display:grid;gap:10px;margin-top:22px}
+  .gs-fs-note{
+    margin-top:18px;max-width:306px;font-size:16px;line-height:1.42;color:var(--ink-2);
+  }
+
+  /* ---------- 5 · brindis (toast) ---------- */
+  .gs-toast{
+    position:absolute;left:14px;right:14px;bottom:84px;z-index:10;
+    display:flex;align-items:center;gap:10px;padding:9px 8px 9px 13px;
+    background:var(--ink);color:#FFF3E8;border-radius:16px;
+    box-shadow:0 14px 30px rgba(43,26,18,.3);
+  }
+  .gs-toast-ic{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;
+    display:grid;place-items:center;
+  }
+  .gs-toast-ic .ic{width:18px;height:18px}
+  .gs-toast-ok .gs-toast-ic{background:rgba(225,240,231,.14);color:var(--accent-soft)}
+  .gs-toast-err .gs-toast-ic{background:rgba(253,236,234,.14);color:#FDECEA}
+  /* en 390 px, el brindis con acción pasa a dos líneas: mensaje arriba, acción abajo a la derecha */
+  .gs-toast-2l{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:start}
+  .gs-toast-2l .gs-toast-ic{margin-top:3px}
+  .gs-toast-2l .gs-toast-act{grid-column:1 / -1;justify-self:end}
+  .gs-toast-txt{flex:1 1 auto;font-size:17px;line-height:1.3;color:#FFF3E8}
+  .gs-toast-act{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:12px;
+    font-size:17px;font-weight:800;color:#FFE9DA;
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .gs-toast-act:hover{background:rgba(255,243,232,.16);color:#fff}
+  .gs-toast-act .ic{width:19px;height:19px}
+  .gs-toast-x{
+    flex:0 0 auto;width:48px;height:48px;display:grid;place-items:center;
+    border-radius:12px;color:#FFF3E8;
+  }
+  .gs-toast-x:hover{background:rgba(255,243,232,.16)}
+  .gs-toast-x .ic{width:20px;height:20px}
+  .gs-toast :focus-visible{outline-color:#FFE9DA}
+
+  /* ---------- 6 · hoja de confirmación (móvil) ---------- */
+  .gs-scrim{position:absolute;inset:0;background:rgba(43,26,18,.52);z-index:8}
+  .gs-sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:9;
+    background:var(--surface);border-radius:28px 28px 0 0;
+    padding:10px 18px 26px;box-shadow:0 -10px 30px rgba(43,26,18,.22);
+  }
+  .gs-grab{width:44px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 10px}
+  .gs-sheet-ic{
+    width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin-top:4px;
+  }
+  .gs-sheet-ic .ic{width:28px;height:28px}
+  .gs-ic-danger{background:#FDECEA;color:var(--danger)}
+  .gs-ic-neutral{background:var(--sand);color:#7A4A2A}
+  .gs-sheet-h{font-size:23px;line-height:1.2;font-weight:800;letter-spacing:-.015em;margin-top:12px}
+  .gs-sheet-wish{
+    margin-top:10px;padding:9px 12px;border-radius:14px;background:var(--bg);
+    border:1px solid var(--border);font-size:17px;line-height:1.3;font-weight:800;
+  }
+  .gs-sheet-wish-p{display:block;font-weight:700;color:var(--ink-2);margin-top:1px}
+  .gs-sheet-sub{margin-top:10px;font-size:17px;line-height:1.45;color:var(--ink-2)}
+  .gs-sheet-note{
+    margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--bg);
+    font-size:16px;line-height:1.35;font-weight:700;color:var(--ink-2);
+  }
+  .gs-sheet-btns{display:grid;gap:9px;margin-top:16px}
+
+  /* ---------- 7 · ventana centrada (escritorio y Novedades) ---------- */
+  .gs-dialog-wrap{position:absolute;inset:0;z-index:9;display:grid;place-items:center;padding:0 24px}
+  .gs-dialog{
+    width:520px;padding:24px;background:var(--surface);border-radius:24px;
+    box-shadow:0 26px 60px rgba(43,26,18,.34);
+  }
+  .gs-dialog-h{font-size:25px;line-height:1.2;font-weight:800;letter-spacing:-.02em;margin-top:14px}
+  .gs-dialog-p{margin-top:8px;font-size:17px;line-height:1.45;color:var(--ink-2)}
+  .gs-dialog-note{
+    margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--bg);
+    font-size:16px;line-height:1.35;font-weight:700;color:var(--ink-2);
+  }
+  .gs-dialog-btns{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+  /* ---------- 8 · Novedades ---------- */
+  .gs-news-wrap{position:absolute;inset:0;z-index:9;display:grid;place-items:center;padding:50px 14px 18px}
+  .gs-news{
+    width:100%;max-height:100%;display:flex;flex-direction:column;
+    background:var(--surface);border-radius:24px;overflow:hidden;
+    box-shadow:0 24px 60px rgba(43,26,18,.34);
+  }
+  .gs-news-head{flex:0 0 auto;padding:16px 18px 14px;background:var(--primary-soft);border-bottom:1px solid #F3CDB6}
+  .gs-news-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .gs-news-ic{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    background:var(--surface);color:var(--primary-dark);box-shadow:var(--sh-1);
+  }
+  .gs-news-ic .ic{width:24px;height:24px}
+  .gs-news-ver{
+    border-radius:999px;padding:4px 11px;background:var(--surface);color:var(--primary-dark);
+    font-size:15px;font-weight:800;
+  }
+  .gs-news-h{font-size:25px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-top:12px}
+  .gs-news-sub{margin-top:4px;font-size:16px;line-height:1.35;color:#7A4A2A}
+  .gs-news-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 18px;scrollbar-width:none}
+  .gs-news-body::-webkit-scrollbar{display:none}
+  .gs-news-lbl{font-size:14.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+  .gs-news-list{margin-top:10px;display:grid;gap:11px}
+  .gs-news-list li{display:flex;gap:10px;font-size:17px;line-height:1.4}
+  .gs-news-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--primary);margin-top:7px}
+  .gs-news-foot{flex:0 0 auto;padding:12px 18px 16px;border-top:1px solid var(--border);background:var(--bg)}
+  .gs-news-foot .link-btn{width:100%;margin-top:4px}
+
+  /* ---------- 9 · instalar la app ---------- */
+  .gs-inst-ic{
+    width:64px;height:64px;border-radius:20px;display:grid;place-items:center;
+    background:var(--primary-soft);color:var(--primary-dark);margin:4px auto 0;
+    box-shadow:var(--sh-1);
+  }
+  .gs-inst-ic .ic{width:32px;height:32px}
+  .gs-inst-h{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.02em;text-align:center;margin-top:12px}
+  .gs-inst-s{margin-top:6px;font-size:17px;line-height:1.42;color:var(--ink-2);text-align:center}
+  .gs-inst-steps{display:grid;gap:8px;margin-top:14px}
+  .gs-inst-step{padding:10px 12px;border-radius:16px;background:var(--bg);border:1px solid var(--border)}
+  .gs-inst-p{display:block;font-size:16px;line-height:1.3;font-weight:800}
+  .gs-inst-d{display:block;font-size:16px;line-height:1.35;color:var(--ink-2);margin-top:1px}
+  .gs-inst-note{margin-top:10px;font-size:16px;line-height:1.4;color:var(--ink-2);text-align:center}
+
+  /* ============================================================
+     ESCRITORIO · piezas de los estados
+     ============================================================ */
+  .gs-dmain{
+    flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:18px 0;
+    display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;
+  }
+  .gs-dcol{min-width:0}
+  .gs-dh1{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .gs-dsub{margin-top:4px;font-size:17px;line-height:1.35;color:var(--ink-2)}
+  .gs-dblk{font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-.015em;margin-top:18px}
+  .gs-dcard{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:16px;box-shadow:var(--sh-1);
+  }
+  .gs-dcard + .gs-dcard{margin-top:14px}
+  .gs-dcard-h{font-size:21px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .gs-drows{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-1);padding:2px 14px}
+  .gs-drows + .gs-drows{margin-top:12px}
+  .gs-drows > li + li{border-top:1px solid var(--border)}
+  .gs-drow{display:flex;align-items:center;gap:12px;padding:12px 0}
+  .gs-drow-tile{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:0 0 auto}
+  .gs-drow-b{flex:1 1 auto;min-width:0}
+  .gs-drow-t{display:block;font-size:18px;line-height:1.25;font-weight:800}
+  .gs-drow-m{display:block;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .gs-drow-p{flex:0 0 auto;font-size:17px;font-weight:800;white-space:nowrap}
+  /* la banda en escritorio: el botón cabe a la derecha y no ocupa el ancho */
+  .gs-banner-desk{align-items:center}
+  .gs-banner-desk .gs-banner-btn{width:auto;min-height:44px;margin:0 0 0 auto;padding:0 18px;flex:0 0 auto}
+  .gs-dsk-hero{height:132px;border-radius:var(--r-card);margin-top:10px}
+  /* brindis del escritorio: abajo al centro, a 24 px del borde */
+  .gs-toast-d{left:50%;right:auto;bottom:24px;width:470px;transform:translateX(-50%)}
+  /* lo de debajo de una ventana se ve, pero no se lee como accionable */
+  .gs-under{position:absolute;inset:0;filter:blur(2px)}
+  .gs-under-body{padding:18px 40px}
+  .gs-under-in{width:1000px;margin:0 auto}
+  .gs-scrim2{position:absolute;inset:0;background:rgba(43,26,18,.34);z-index:8}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 6.8h14.8"/><path d="M9.4 6.8V4.9h5.2v1.9"/><path d="m6.6 6.8.9 12.1a1.8 1.8 0 0 0 1.8 1.6h5.4a1.8 1.8 0 0 0 1.8-1.6l.9-12.1"/><path d="M10.2 10.6v6.4M13.8 10.6v6.4"/></g></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 4.6H6.2a1.8 1.8 0 0 0-1.8 1.8v11.2a1.8 1.8 0 0 0 1.8 1.8h8.2"/><path d="M10.6 12h9"/><path d="m16.6 8.6 3.4 3.4-3.4 3.4"/></g></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.6 15.2v-2.8a7.4 7.4 0 0 1 14.8 0v2.8"/><rect x="3.2" y="13.8" width="4.6" height="7" rx="2.3"/><rect x="16.2" y="13.8" width="4.6" height="7" rx="2.3"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.8 5.4h5.6A2.2 2.2 0 0 1 11.6 7.6V20a2 2 0 0 0-2-1.8H3.8Z"/><path d="M20.2 5.4h-5.6A2.2 2.2 0 0 0 12.4 7.6V20a2 2 0 0 1 2-1.8h5.8Z"/></g></symbol>
+    <symbol id="i-mug" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M5.6 6.8h10.2v9.4a3.8 3.8 0 0 1-3.8 3.8h-2.6a3.8 3.8 0 0 1-3.8-3.8Z"/><path d="M15.8 9.6h1.9a2.8 2.8 0 0 1 0 5.6h-1.9"/><path d="M8.4 3.6v1.7M12 3.6v1.7"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 6.4 4.6 11l4.6 4.6"/><path d="M4.6 11h8.4a5.6 5.6 0 0 1 0 11.2H9"/></g></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.3"/><path d="M19.6 4.4v4.2h-4.2"/></g></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.4 8.8a13.4 13.4 0 0 1 5.8-3"/><path d="M17.6 8.5a13.4 13.4 0 0 1 3 2.3"/><path d="M6.8 12.1a8.6 8.6 0 0 1 3-1.5"/><path d="M14.9 11.8a8.6 8.6 0 0 1 2.3 1.9"/><path d="M9.9 15.5a3.7 3.7 0 0 1 4.4.2"/><circle cx="12" cy="18.6" r="1.2" fill="currentColor" stroke="none"/><path d="M3.2 3.8 20.8 21"/></g></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 9.6v4.4"/><circle cx="12" cy="16.9" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.2 2.7c-.6.2-.8.7-.8 1.3v.6"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"/></g></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.4 13.8 9 19.4 10.8 13.8 12.6 12 18.2 10.2 12.6 4.6 10.8 10.2 9Z"/><path d="M18.4 16.2 19 18.2 21 18.8 19 19.4 18.4 21.4 17.8 19.4 15.8 18.8 17.8 18.2Z"/></g></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.4" y="2.8" width="13.2" height="18.4" rx="3"/><path d="M12 6.8v6.4"/><path d="m9.2 10.6 2.8 2.8 2.8-2.8"/><path d="M10 17.2h4"/></g></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="5.4" width="17.6" height="13.2" rx="2.6"/><path d="m3.8 7.2 8.2 6.2 8.2-6.2"/></g></symbol>
+    <!-- iconos de la barra de estado, una sola vez -->
+    <symbol id="i-sb-sig" viewBox="0 0 18 12"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></g></symbol>
+    <symbol id="i-sb-wifi" viewBox="0 0 16 12"><g fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/></g><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0"/></g></symbol>
+    <symbol id="i-sb-wifi-off" viewBox="0 0 16 12"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.4 3.2a9.8 9.8 0 0 1 9.2 0"/><path d="M5.4 6a6.3 6.3 0 0 1 5.2 0"/><path d="M2.2 0.8 13.8 11.2"/></g><circle cx="8" cy="9.4" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-sb-batt" viewBox="0 0 26 12"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
+      <h1>Estados globales</h1>
+      <p class="tradeoff">Los estados compartidos dicen siempre qué pasa, si lo tuyo sigue guardado y qué puedes hacer, con el hueco del contenido ya reservado mientras carga; a cambio, la app pasa a tener cinco piezas que mantener en vez de avisos improvisados.</p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Ningún estado se queda en la palabra «error»: dice qué ha fallado, si hay datos guardados y qué botón lo arregla.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Una pieza por patrón: esqueleto, banda, brindis, hoja y ventana. Cambian el color y el texto, nunca la forma.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Mientras carga se ve el hueco donde irá el contenido, así la pantalla no salta ni parece rota.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>El brindis es solo para lo que se deshace en un toque; si hay que decidir, se pregunta en una hoja que se puede cancelar.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA 1 · CARGA
+       ========================================================== -->
+  <section class="row" aria-labelledby="carga-h">
+    <div class="row-head">
+      <h2 id="carga-h">Mientras carga</h2>
+      <p>El primer arranque a pantalla completa y los dos esqueletos con más peso: Inicio y Mi lista. Los títulos son reales; solo falta el contenido.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: PRIMER ARRANQUE ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Primera apertura · carga completa</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="gs-boot">
+            <span class="gs-boot-mark" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+            <p class="gs-boot-t">Muro de Deseos</p>
+            <p class="gs-boot-s">Listas de deseos compartidas</p>
+            <span class="gs-spin" aria-hidden="true"></span>
+            <p class="gs-boot-note">Preparando tu muro. La primera vez suele tardar unos segundos.</p>
+            <p class="sr-only" role="status">Cargando la aplicación. Preparando tu muro de deseos.</p>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: INICIO CON ESQUELETO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Inicio · esqueleto</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-busy="true" aria-describedby="p2-cargando">
+            <h2 class="gs-hi">Hola, Lucía 🌻</h2>
+
+            <p class="sr-only" role="status" id="p2-cargando">Cargando tu inicio: la próxima celebración, tus personas y tu lista de deseos.</p>
+
+            <div class="gs-sk gs-sk-hero" aria-hidden="true"></div>
+
+            <h3 class="gs-blk">Tus personas <span class="gs-blk-sub">Cargando</span></h3>
+            <ul class="gs-sk-strip" aria-hidden="true">
+              <li><span class="gs-sk gs-sk-av"></span><span class="gs-sk gs-sk-line" style="width:46px"></span></li>
+              <li><span class="gs-sk gs-sk-av"></span><span class="gs-sk gs-sk-line" style="width:46px"></span></li>
+              <li><span class="gs-sk gs-sk-av"></span><span class="gs-sk gs-sk-line" style="width:46px"></span></li>
+              <li><span class="gs-sk gs-sk-av"></span><span class="gs-sk gs-sk-line" style="width:46px"></span></li>
+              <li><span class="gs-sk gs-sk-av"></span><span class="gs-sk gs-sk-line" style="width:46px"></span></li>
+            </ul>
+
+            <h3 class="gs-blk">Tu lista de deseos</h3>
+            <div class="gs-sk-card" aria-hidden="true">
+              <div class="gs-sk-row">
+                <span class="gs-sk gs-sk-tile"></span>
+                <span class="gs-sk gs-sk-tile"></span>
+                <span class="gs-sk gs-sk-tile"></span>
+              </div>
+              <div class="gs-sk-row"><span class="gs-sk gs-sk-h20" style="width:100%"></span></div>
+            </div>
+
+            <h3 class="gs-blk">Tus grupos</h3>
+            <div class="gs-sk-card" aria-hidden="true">
+              <div class="gs-sk-row">
+                <span class="gs-sk gs-sk-av"></span>
+                <span class="gs-sk-body">
+                  <span class="gs-sk gs-sk-line gs-sk-w65"></span>
+                  <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                </span>
+              </div>
+              <div class="gs-sk-row">
+                <span class="gs-sk gs-sk-av"></span>
+                <span class="gs-sk-body">
+                  <span class="gs-sk gs-sk-line gs-sk-w50"></span>
+                  <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: MI LISTA CON ESQUELETO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Mi lista · esqueleto</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:42</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-busy="true">
+            <h2 class="gs-hi">Mi lista</h2>
+            <p class="sr-only" role="status">Cargando tus deseos.</p>
+            <div style="margin-top:10px" aria-hidden="true"><span class="gs-sk gs-sk-line gs-sk-w80" style="display:block"></span></div>
+
+            <div style="margin-top:14px" aria-hidden="true">
+              <span class="gs-sk gs-sk-pill" style="width:60%"></span>
+            </div>
+
+            <ul style="margin-top:14px">
+              <li class="gs-sk-card" aria-hidden="true">
+                <div class="gs-sk-row">
+                  <span class="gs-sk gs-sk-tile"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w80"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w50"></span>
+                  </span>
+                  <span class="gs-sk gs-sk-line" style="width:56px"></span>
+                </div>
+                <div class="gs-sk-row">
+                  <span class="gs-sk gs-sk-h26" style="width:46%"></span>
+                  <span class="gs-sk gs-sk-h26" style="width:32%"></span>
+                </div>
+              </li>
+              <li class="gs-sk-card" aria-hidden="true">
+                <div class="gs-sk-row">
+                  <span class="gs-sk gs-sk-tile"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w65"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                  <span class="gs-sk gs-sk-line" style="width:56px"></span>
+                </div>
+                <div class="gs-sk-row">
+                  <span class="gs-sk gs-sk-h26" style="width:46%"></span>
+                  <span class="gs-sk gs-sk-h26" style="width:32%"></span>
+                </div>
+              </li>
+              <li class="gs-sk-card" aria-hidden="true">
+                <div class="gs-sk-row">
+                  <span class="gs-sk gs-sk-tile"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w80"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                  <span class="gs-sk gs-sk-line" style="width:56px"></span>
+                </div>
+              </li>
+            </ul>
+            <p class="sr-only">Los deseos aparecerán aquí en cuanto terminen de cargarse.</p>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 2 · SIN CONEXIÓN Y ERRORES
+       ========================================================== -->
+  <section class="row" aria-labelledby="fallos-h">
+    <div class="row-head">
+      <h2 id="fallos-h">Cuando la red no está</h2>
+      <p>Tres salidas distintas: la banda que deja seguir leyendo lo guardado, la pantalla de error con dos escapes y la dirección que no existe.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 4: SIN CONEXIÓN CON LO GUARDADO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 4</span>
+          <span class="cap-t">Sin conexión · lo guardado sigue aquí</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:44</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true" style="color:var(--ink-2)"><use href="#i-sb-wifi-off"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <h2 class="gs-hi">Hola, Lucía 🌻</h2>
+
+            <div class="gs-banner" role="alert" aria-labelledby="p4-alert-t" aria-describedby="p4-alert-d">
+              <svg class="ic" aria-hidden="true"><use href="#i-wifi-off"/></svg>
+              <div class="gs-banner-b">
+                <p class="gs-banner-t" id="p4-alert-t">Sin conexión</p>
+                <p class="gs-banner-d" id="p4-alert-d">Ves lo que se guardó el 26 de noviembre a las 8:42: puede faltar algún cambio. No podrás añadir ni reservar hasta que vuelvas a conectar.</p>
+                <button class="gs-banner-btn" type="button">
+                  <svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Reintentar
+                </button>
+              </div>
+            </div>
+
+            <section aria-labelledby="p4-hero-h" style="margin-top:16px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px">
+                <h3 id="p4-hero-h" style="font-size:17px;font-weight:800;color:var(--ink-2)">Próxima celebración</h3>
+                <span class="pill pill-days">Faltan 7 días</span>
+              </div>
+              <div class="gs-dcard" style="padding:14px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span class="avatar" aria-hidden="true">🎸</span>
+                  <span style="flex:1 1 auto;min-width:0">
+                    <span style="display:block;font-size:19px;line-height:1.25;font-weight:800">Javier celebra su santo</span>
+                    <span style="display:block;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:2px">El 3 de diciembre · Familia Martín</span>
+                  </span>
+                </div>
+                <button class="btn btn-secondary btn-block" type="button" style="margin-top:12px" aria-describedby="p4-alert-d">Ver qué le gustaría</button>
+              </div>
+            </section>
+
+            <h3 class="gs-blk">Tus personas</h3>
+            <ul class="gs-sk-strip" aria-hidden="true">
+              <li><span class="avatar">🎸</span><span style="font-size:15px;font-weight:700;color:var(--ink-2)">Javier</span></li>
+              <li><span class="avatar">👵</span><span style="font-size:15px;font-weight:700;color:var(--ink-2)">Carmen</span></li>
+              <li><span class="avatar">🚲</span><span style="font-size:15px;font-weight:700;color:var(--ink-2)">Pablo</span></li>
+              <li><span class="avatar">📚</span><span style="font-size:15px;font-weight:700;color:var(--ink-2)">Marta</span></li>
+              <li><span class="avatar">⚽</span><span style="font-size:15px;font-weight:700;color:var(--ink-2)">Andrés</span></li>
+            </ul>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 5: ALGO HA IDO MAL ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 5</span>
+          <span class="cap-t">Algo ha ido mal · pantalla completa</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:45</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="gs-fs" role="alert">
+            <span class="gs-fs-ic" aria-hidden="true"><svg class="ic"><use href="#i-alert"/></svg></span>
+            <h2 class="gs-fs-t">Algo ha ido mal</h2>
+            <p class="gs-fs-s">Esta pantalla no se ha podido mostrar. Tus listas, tus reservas y tus grupos siguen guardados: no se ha perdido nada.</p>
+            <div class="gs-fs-btns">
+              <button class="btn btn-primary btn-block" type="button">
+                <svg class="ic ic-20" aria-hidden="true"><use href="#i-refresh"/></svg>Reintentar
+              </button>
+              <button class="btn btn-secondary btn-block" type="button">Recargar la página</button>
+            </div>
+            <p class="gs-fs-note">Si vuelve a pasar, cierra la app del todo y ábrela otra vez.</p>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 6: PÁGINA NO ENCONTRADA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 6</span>
+          <span class="cap-t">Página no encontrada</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:46</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="gs-fs has-nav">
+            <span class="gs-fs-ic gs-fs-ic-neutral" aria-hidden="true"><svg class="ic"><use href="#i-help"/></svg></span>
+            <h2 class="gs-fs-t">Página no encontrada</h2>
+            <p class="gs-fs-s">Esta dirección no existe o ha dejado de existir. Si vienes de un enlace, puede que esté mal copiado.</p>
+            <div class="gs-fs-btns">
+              <button class="btn btn-primary btn-block" type="button">Ir a Inicio</button>
+              <button class="btn btn-secondary btn-block" type="button">Abrir Mi lista</button>
+            </div>
+            <p class="gs-fs-note">Los enlaces de invitación abren un grupo concreto. Si esperabas uno, pídelo otra vez a quien te invitó.</p>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 3 · BRINDIS
+       ========================================================== -->
+  <section class="row" aria-labelledby="toast-h">
+    <div class="row-head">
+      <h2 id="toast-h">Avisos breves (brindis)</h2>
+      <p>Una sola pieza para confirmar en el sitio: dura tres segundos, no roba el foco y solo lleva acción cuando esa acción es deshacer o reintentar.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 7: CONFIRMACIÓN SIN ACCIÓN ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 7</span>
+          <span class="cap-t">Hecho · sin acción</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:47</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <h2 class="gs-hi">Avisos</h2>
+            <p style="margin-top:4px;font-size:17px;color:var(--ink-2)">2 sin leer</p>
+
+            <ul class="gs-drows" style="margin-top:14px">
+              <li>
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Javier añadió un deseo</span>
+                    <span class="gs-drow-m">Cafetera italiana Bialetti · Familia Martín</span>
+                  </span>
+                </div>
+              </li>
+              <li>
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Novedades de la app</span>
+                    <span class="gs-drow-m">v2026.11.26 · leído</span>
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <p class="gs-toast gs-toast-ok" role="status" aria-live="polite">
+            <span class="gs-toast-ic" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="gs-toast-txt">Aviso marcado como leído</span>
+            <button class="gs-toast-x" type="button" aria-label="Cerrar el aviso"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </p>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">1</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">1 aviso sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 8: CON DESHACER ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 8</span>
+          <span class="cap-t">Con «Deshacer» · se puede volver</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:48</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <h2 class="gs-hi">Mi lista</h2>
+            <p style="margin-top:4px;font-size:17px;color:var(--ink-2)">4 deseos pendientes · 3 en Recibidos</p>
+
+            <ul style="margin-top:14px">
+              <li class="gs-dcard" style="padding:12px">
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Auriculares inalámbricos Sony WH-1000XM5</span>
+                    <span class="gs-drow-m">Hace mucha ilusión</span>
+                  </span>
+                  <span class="gs-drow-p">349,00 €</span>
+                </div>
+              </li>
+              <li class="gs-dcard" style="padding:12px;margin-top:10px">
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-mug"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Taza de cerámica artesanal</span>
+                    <span class="gs-drow-m">Un detalle</span>
+                  </span>
+                  <span class="gs-drow-p">18,50 €</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <p class="gs-toast gs-toast-ok gs-toast-2l" role="status" aria-live="polite">
+            <span class="gs-toast-ic" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="gs-toast-txt">«Cafetera italiana Bialetti» se ha movido a Recibidos</span>
+            <button class="gs-toast-act" type="button"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Deshacer</button>
+          </p>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 9: ERROR CON REINTENTAR ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 9</span>
+          <span class="cap-t">No ha funcionado · «Reintentar»</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:49</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <h2 class="gs-hi">Avisos</h2>
+            <p style="margin-top:4px;font-size:17px;color:var(--ink-2)">2 sin leer</p>
+
+            <ul class="gs-drows" style="margin-top:14px">
+              <li>
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Javier añadió un deseo</span>
+                    <span class="gs-drow-m">Cafetera italiana Bialetti · Familia Martín</span>
+                  </span>
+                  <span style="flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--primary)" aria-hidden="true"></span>
+                </div>
+              </li>
+              <li>
+                <div class="gs-drow">
+                  <span class="gs-drow-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Novedades de la app</span>
+                    <span class="gs-drow-m">v2026.11.26 · sin leer</span>
+                  </span>
+                  <span style="flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--primary)" aria-hidden="true"></span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <p class="gs-toast gs-toast-err" role="alert">
+            <span class="gs-toast-ic" aria-hidden="true"><svg class="ic"><use href="#i-alert"/></svg></span>
+            <span class="gs-toast-txt">No se ha podido marcar como leído</span>
+            <button class="gs-toast-act" type="button"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Reintentar</button>
+          </p>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos" aria-current="page">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 4 · CONFIRMACIONES
+       ========================================================== -->
+  <section class="row" aria-labelledby="conf-h">
+    <div class="row-head">
+      <h2 id="conf-h">Confirmaciones</h2>
+      <p>Una sola hoja con dos tonos. La destructiva se lee en rojo y dice que no se puede deshacer; la que no destruye nada explica qué deja de verse y cómo se vuelve.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 10: CONFIRMACIÓN DESTRUCTIVA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 10</span>
+          <span class="cap-t">Destructiva · borrar un deseo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:50</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-hidden="true">
+            <h2 class="gs-hi">Mi lista</h2>
+            <p style="margin-top:4px;font-size:17px;color:var(--ink-2)">5 deseos · los ven Familia Martín y Amigos de la Uni</p>
+            <div class="gs-dcard" style="padding:12px;margin-top:14px">
+              <div class="gs-drow">
+                <span class="gs-drow-tile tile-a"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                <span class="gs-drow-b">
+                  <span class="gs-drow-t">Auriculares inalámbricos Sony WH-1000XM5</span>
+                  <span class="gs-drow-m">Me hace mucha ilusión</span>
+                </span>
+                <span class="gs-drow-p">349,00 €</span>
+              </div>
+            </div>
+            <div class="gs-dcard" style="padding:12px;margin-top:10px">
+              <div class="gs-drow">
+                <span class="gs-drow-tile tile-b"><svg class="ic"><use href="#i-mug"/></svg></span>
+                <span class="gs-drow-b">
+                  <span class="gs-drow-t">Taza de cerámica artesanal</span>
+                  <span class="gs-drow-m">Un detalle</span>
+                </span>
+                <span class="gs-drow-p">18,50 €</span>
+              </div>
+            </div>
+          </div>
+          <nav class="pf-nav" aria-label="Navegación principal (atenuada)" aria-hidden="true">
+            <span class="nav-i"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></span>
+            <span class="nav-i" aria-current="page"><svg class="ic"><use href="#i-heart"/></svg><span>Mi lista</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-people"/></svg><span>Personas</span></span>
+            <span class="nav-i"><span class="nav-ic-wrap"><svg class="ic"><use href="#i-bell"/></svg><span class="nav-badge">2</span></span><span>Avisos</span></span>
+          </nav>
+
+          <div class="gs-scrim" aria-hidden="true"></div>
+
+          <div class="gs-sheet" role="dialog" aria-modal="true" aria-labelledby="p10-h" aria-describedby="p10-d">
+            <div class="gs-grab" aria-hidden="true"></div>
+            <span class="gs-sheet-ic gs-ic-danger" aria-hidden="true"><svg class="ic"><use href="#i-trash"/></svg></span>
+            <h3 class="gs-sheet-h" id="p10-h">¿Borrar «Auriculares Sony WH-1000XM5»?</h3>
+            <p class="gs-sheet-wish">349,00 € · Tecnología<span class="gs-sheet-wish-p">Tu deseo, en Mi lista</span></p>
+            <p class="gs-sheet-sub" id="p10-d">Desaparece de tu lista y del grupo deja de verlo. No se puede deshacer.</p>
+            <div class="gs-sheet-btns">
+              <button class="btn btn-secondary btn-block" type="button">Cancelar</button>
+              <button class="btn btn-danger btn-block" type="button">Sí, borrarlo</button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 11: CONFIRMACIÓN NO DESTRUCTIVA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 11</span>
+          <span class="cap-t">No destructiva · salir de un grupo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:51</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-hidden="true">
+            <a class="back"><svg class="ic"><use href="#i-back"/></svg>Personas</a>
+            <h2 style="font-size:27px;line-height:1.12;font-weight:800;letter-spacing:-.02em">Familia Martín</h2>
+            <p style="margin-top:4px;font-size:17px;color:var(--ink-2)">6 participantes · Tú lo administras</p>
+            <div style="display:flex;gap:10px;margin-top:12px">
+              <span class="btn btn-primary" style="flex:1 1 auto">Invitar a alguien</span>
+            </div>
+            <h3 class="gs-blk">Próximas celebraciones</h3>
+            <div class="gs-dcard" style="padding:12px">
+              <div class="gs-drow">
+                <span class="avatar" style="width:48px;height:48px;font-size:24px">🎸</span>
+                <span class="gs-drow-b">
+                  <span class="gs-drow-t">Javier · Su santo</span>
+                  <span class="gs-drow-m">3 de diciembre · faltan 7 días</span>
+                </span>
+              </div>
+            </div>
+            <ul class="gs-drows" style="margin-top:10px">
+              <li>
+                <div class="gs-drow">
+                  <span class="avatar" style="width:48px;height:48px;font-size:24px">👵</span>
+                  <span class="gs-drow-b">
+                    <span class="gs-drow-t">Abuela Carmen</span>
+                    <span class="gs-drow-m">3 deseos</span>
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <nav class="pf-nav" aria-label="Navegación principal (atenuada)" aria-hidden="true">
+            <span class="nav-i"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-heart"/></svg><span>Mi lista</span></span>
+            <span class="nav-i" aria-current="page"><svg class="ic"><use href="#i-people"/></svg><span>Personas</span></span>
+            <span class="nav-i"><span class="nav-ic-wrap"><svg class="ic"><use href="#i-bell"/></svg><span class="nav-badge">2</span></span><span>Avisos</span></span>
+          </nav>
+
+          <div class="gs-scrim" aria-hidden="true"></div>
+
+          <div class="gs-sheet" role="dialog" aria-modal="true" aria-labelledby="p11-h" aria-describedby="p11-d">
+            <div class="gs-grab" aria-hidden="true"></div>
+            <span class="gs-sheet-ic gs-ic-neutral" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+            <h3 class="gs-sheet-h" id="p11-h">¿Salir de «Familia Martín»?</h3>
+            <p class="gs-sheet-sub" id="p11-d">Dejarás de ver las listas de este grupo. Volverás a entrar con el código K7P2QX cuando quieras.</p>
+            <p class="gs-sheet-note">Nada se borra: tus deseos, tus reservas y el grupo siguen donde están.</p>
+            <div class="gs-sheet-btns">
+              <button class="btn btn-secondary btn-block" type="button">Cancelar</button>
+              <button class="btn btn-primary btn-block" type="button">Salir del grupo</button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 5 · VENTANAS DE LA APP
+       ========================================================== -->
+  <section class="row" aria-labelledby="vent-h">
+    <div class="row-head">
+      <h2 id="vent-h">Dos ventanas que se abren solas</h2>
+      <p>«Novedades» al estrenar una versión y la invitación a instalar la app. Las dos se cierran sin dejar nada a medias y explican para qué sirven.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 12: NOVEDADES ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 12</span>
+          <span class="cap-t">Novedades de la versión</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:52</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-hidden="true">
+            <h2 class="gs-hi">Hola, Lucía 🌻</h2>
+            <div class="gs-dcard" style="padding:14px;margin-top:12px">
+              <div class="gs-drow">
+                <span class="avatar">🎸</span>
+                <span class="gs-drow-b">
+                  <span class="gs-drow-t">Javier celebra su santo</span>
+                  <span class="gs-drow-m">El 3 de diciembre · faltan 7 días</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <nav class="pf-nav" aria-label="Navegación principal (atenuada)" aria-hidden="true">
+            <span class="nav-i" aria-current="page"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-heart"/></svg><span>Mi lista</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-people"/></svg><span>Personas</span></span>
+            <span class="nav-i"><span class="nav-ic-wrap"><svg class="ic"><use href="#i-bell"/></svg><span class="nav-badge">2</span></span><span>Avisos</span></span>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+
+          <div class="gs-scrim" aria-hidden="true"></div>
+
+          <div class="gs-news-wrap">
+            <div class="gs-news" role="dialog" aria-modal="true" aria-labelledby="p12-h" aria-describedby="p12-d">
+              <div class="gs-news-head">
+                <div class="gs-news-top">
+                  <span class="gs-news-ic" aria-hidden="true"><svg class="ic"><use href="#i-sparkle"/></svg></span>
+                  <span class="gs-news-ver">v2026.11.26</span>
+                </div>
+                <h2 class="gs-news-h" id="p12-h">Novedades</h2>
+                <p class="gs-news-sub" id="p12-d">Lo que ha cambiado desde la última vez que entraste.</p>
+              </div>
+
+              <div class="gs-news-body">
+                <p class="gs-news-lbl">En esta versión</p>
+                <ul class="gs-news-list">
+                  <li><span class="gs-news-dot" aria-hidden="true"></span><span>Ya eliges qué avisos te llegan de cada grupo, uno por uno.</span></li>
+                  <li><span class="gs-news-dot" aria-hidden="true"></span><span>El detalle de un deseo dice si está reservado, sin decir por quién.</span></li>
+                  <li><span class="gs-news-dot" aria-hidden="true"></span><span>Puedes volver a ver el tour y estas novedades desde tu perfil.</span></li>
+                </ul>
+              </div>
+
+              <div class="gs-news-foot">
+                <button class="btn btn-primary btn-block" type="button">¡Entendido!</button>
+                <button class="link-btn" type="button">Ver todo el historial en Avisos</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 13: INSTALAR LA APP ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 13</span>
+          <span class="cap-t">Instalar la app · invitación</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:53</span>
+            <span class="sb-right">
+              <svg class="sb-sig" aria-hidden="true"><use href="#i-sb-sig"/></svg>
+              <svg class="sb-wifi" aria-hidden="true"><use href="#i-sb-wifi"/></svg>
+              <svg class="sb-batt" aria-hidden="true"><use href="#i-sb-batt"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav" aria-hidden="true">
+            <h2 class="gs-hi">Hola, Lucía 🌻</h2>
+            <div class="gs-dcard" style="padding:14px;margin-top:12px">
+              <div class="gs-drow">
+                <span class="avatar">👵</span>
+                <span class="gs-drow-b">
+                  <span class="gs-drow-t">Carmen celebra su onomástica</span>
+                  <span class="gs-drow-m">El 16 de julio · Amigos de la Uni</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <nav class="pf-nav" aria-label="Navegación principal (atenuada)" aria-hidden="true">
+            <span class="nav-i" aria-current="page"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-heart"/></svg><span>Mi lista</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-people"/></svg><span>Personas</span></span>
+            <span class="nav-i"><span class="nav-ic-wrap"><svg class="ic"><use href="#i-bell"/></svg><span class="nav-badge">2</span></span><span>Avisos</span></span>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+
+          <div class="gs-scrim" aria-hidden="true"></div>
+
+          <div class="gs-sheet" role="dialog" aria-modal="true" aria-labelledby="p13-h" aria-describedby="p13-d">
+            <div class="gs-grab" aria-hidden="true"></div>
+            <span class="gs-inst-ic" aria-hidden="true"><svg class="ic"><use href="#i-install"/></svg></span>
+            <h3 class="gs-inst-h" id="p13-h">Ten el muro a mano</h3>
+            <p class="gs-inst-s" id="p13-d">Añádela a tu pantalla de inicio: se abre a pantalla completa, sin la barra del navegador.</p>
+            <div class="gs-inst-steps">
+              <div class="gs-inst-step">
+                <span class="gs-inst-p">En iPhone o iPad</span>
+                <span class="gs-inst-d">Toca «Compartir» y luego «Añadir a pantalla de inicio».</span>
+              </div>
+              <div class="gs-inst-step">
+                <span class="gs-inst-p">En Android</span>
+                <span class="gs-inst-d">Abre el menú ⋮ y toca «Instalar aplicación».</span>
+              </div>
+            </div>
+            <p class="gs-inst-note">Es gratis y se quita cuando quieras, como cualquier app.</p>
+            <div class="gs-sheet-btns">
+              <button class="btn btn-primary btn-block" type="button">Entendido</button>
+              <button class="btn btn-secondary btn-block" type="button">Ahora no</button>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA 6 · ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>Tres diferencias reales: el esqueleto ocupa dos columnas con la banda de ancho completo, el brindis baja al centro del pie y la confirmación deja de ser hoja para ser ventana centrada.</p>
+    </div>
+
+    <!-- ---------- ESCRITORIO 1: INICIO CARGANDO + SIN CONEXIÓN ---------- -->
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio 1</span>
+        <span class="cap-t">Inicio cargando · sin conexión</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Inicio</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="gs-dmain" aria-busy="true">
+            <div class="gs-dcol">
+              <h1 class="gs-dh1">Hola, Lucía 🌻</h1>
+              <p class="sr-only" role="status">Cargando tu inicio. Sin conexión: se muestra lo guardado el 26 de noviembre a las 8:42.</p>
+
+              <div class="gs-banner gs-banner-desk" role="alert" aria-labelledby="d1-alert-t">
+                <svg class="ic" aria-hidden="true"><use href="#i-wifi-off"/></svg>
+                <div class="gs-banner-b">
+                  <p class="gs-banner-t" id="d1-alert-t">Sin conexión</p>
+                  <p class="gs-banner-d">Ves lo que se guardó el 26 de noviembre a las 8:42: puede faltar algún cambio. No podrás añadir ni reservar hasta que vuelvas a conectar.</p>
+                </div>
+                <button class="gs-banner-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Reintentar</button>
+              </div>
+
+              <h2 class="gs-dblk">Próxima celebración</h2>
+              <div class="gs-sk gs-dsk-hero" aria-hidden="true"></div>
+
+              <h2 class="gs-dblk">Tus personas</h2>
+              <div class="gs-dcard" aria-hidden="true">
+                <div class="gs-sk-strip" style="margin-top:0">
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk gs-sk-av"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="gs-dcol">
+              <section class="gs-dcard" aria-labelledby="d1-list-h">
+                <h2 class="gs-dcard-h" id="d1-list-h">Tu lista de deseos</h2>
+                <div class="gs-sk-row" style="margin-top:12px" aria-hidden="true">
+                  <span class="gs-sk gs-sk-tile"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w80"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                </div>
+                <div class="gs-sk-row" style="margin-top:14px" aria-hidden="true">
+                  <span class="gs-sk gs-sk-tile"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w65"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                </div>
+              </section>
+
+              <section class="gs-dcard" aria-labelledby="d1-grp-h">
+                <h2 class="gs-dcard-h" id="d1-grp-h">Tus grupos</h2>
+                <div class="gs-sk-row" style="margin-top:12px" aria-hidden="true">
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w65"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                </div>
+                <div class="gs-sk-row" style="margin-top:14px" aria-hidden="true">
+                  <span class="gs-sk gs-sk-av"></span>
+                  <span class="gs-sk-body">
+                    <span class="gs-sk gs-sk-line gs-sk-w50"></span>
+                    <span class="gs-sk gs-sk-line gs-sk-w35"></span>
+                  </span>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ---------- ESCRITORIO 2: MI LISTA CON BRINDIS ---------- -->
+    <figure class="browser" style="margin-top:34px">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio 2</span>
+        <span class="cap-t">Mi lista · brindis abajo al centro</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Mi lista</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="gs-dmain">
+            <div class="gs-dcol">
+              <h1 class="gs-dh1">Mi lista</h1>
+              <p class="gs-dsub">4 deseos pendientes · 3 en Recibidos · los ven Familia Martín y Amigos de la Uni</p>
+              <div style="display:flex;gap:10px;margin-top:14px">
+                <button class="btn btn-primary" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir un deseo</button>
+                <button class="btn btn-secondary" type="button">Recibidos · 3</button>
+              </div>
+
+              <ul class="gs-drows" style="margin-top:16px" aria-label="Deseos pendientes">
+                <li>
+                  <div class="gs-drow">
+                    <span class="gs-drow-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                    <span class="gs-drow-b">
+                      <span class="gs-drow-t">Auriculares inalámbricos Sony WH-1000XM5</span>
+                      <span class="gs-drow-m">Tecnología · Me hace mucha ilusión</span>
+                    </span>
+                    <span class="gs-drow-p">349,00 €</span>
+                  </div>
+                </li>
+                <li>
+                  <div class="gs-drow">
+                    <span class="gs-drow-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-mug"/></svg></span>
+                    <span class="gs-drow-b">
+                      <span class="gs-drow-t">Taza de cerámica artesanal</span>
+                      <span class="gs-drow-m">Hogar y cocina · Un detalle</span>
+                    </span>
+                    <span class="gs-drow-p">18,50 €</span>
+                  </div>
+                </li>
+                <li>
+                  <div class="gs-drow">
+                    <span class="gs-drow-tile tile-c" aria-hidden="true"><svg class="ic"><use href="#i-book"/></svg></span>
+                    <span class="gs-drow-b">
+                      <span class="gs-drow-t">El infinito en un junco</span>
+                      <span class="gs-drow-m">Libros · Me haría ilusión</span>
+                    </span>
+                    <span class="gs-drow-p">21,90 €</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="gs-dcol">
+              <section class="gs-dcard" aria-labelledby="d2-rec-h">
+                <h2 class="gs-dcard-h" id="d2-rec-h">Recibidos</h2>
+                <p class="gs-dsub">Lo que ya tienes, sin borrar nada.</p>
+                <ul style="margin-top:12px">
+                  <li>
+                    <div class="gs-drow">
+                      <span class="gs-drow-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-mug"/></svg></span>
+                      <span class="gs-drow-b">
+                        <span class="gs-drow-t">Cafetera italiana Bialetti</span>
+                        <span class="gs-drow-m">Hogar y cocina · hace un momento</span>
+                      </span>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+
+              <section class="gs-dcard" aria-labelledby="d2-hint-h">
+                <h2 class="gs-dcard-h" id="d2-hint-h">Lo que no ves</h2>
+                <p class="gs-dsub">Las reservas de tus deseos son sorpresa: no aparecen aquí ni en Avisos.</p>
+              </section>
+            </div>
+          </div>
+
+          <p class="gs-toast gs-toast-ok gs-toast-d" role="status" aria-live="polite">
+            <span class="gs-toast-ic" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+            <span class="gs-toast-txt">«Cafetera italiana Bialetti» se ha movido a Recibidos</span>
+            <button class="gs-toast-act" type="button"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Deshacer</button>
+          </p>
+        </div>
+      </div>
+    </figure>
+
+    <!-- ---------- ESCRITORIO 3: CONFIRMACIÓN COMO VENTANA ---------- -->
+    <figure class="browser" style="margin-top:34px">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio 3</span>
+        <span class="cap-t">Confirmación destructiva · ventana centrada</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Mi lista</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <div class="gs-under" aria-hidden="true">
+            <header class="dt-head">
+              <p class="wordmark"><span class="wm-ic"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+              <nav class="dt-nav" aria-label="Navegación principal atenuada">
+                <a href="#inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
+                <a href="#mi-lista" aria-current="page"><svg class="ic"><use href="#i-heart"/></svg>Mi lista</a>
+                <a href="#personas"><svg class="ic"><use href="#i-people"/></svg>Personas</a>
+                <a href="#avisos"><svg class="ic"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge">2</span></a>
+              </nav>
+              <p class="dt-user"><span class="avatar">🌻</span>Lucía</p>
+            </header>
+            <div class="gs-under-body">
+              <div class="gs-under-in">
+                <p class="gs-dh1">Mi lista</p>
+                <p class="gs-dsub">5 deseos pendientes · 2 en Recibidos · los ven Familia Martín y Amigos de la Uni</p>
+                <div style="display:flex;gap:10px;margin-top:14px">
+                  <span class="btn btn-primary">Añadir un deseo</span>
+                  <span class="btn btn-secondary">Recibidos · 2</span>
+                </div>
+                <div class="gs-drows" style="margin-top:16px">
+                  <div class="gs-drow">
+                    <span class="gs-drow-tile tile-a"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                    <span class="gs-drow-b">
+                      <span class="gs-drow-t">Auriculares inalámbricos Sony WH-1000XM5</span>
+                      <span class="gs-drow-m">Tecnología · Me hace mucha ilusión</span>
+                    </span>
+                    <span class="gs-drow-p">349,00 €</span>
+                  </div>
+                  <div class="gs-drow" style="border-top:1px solid var(--border)">
+                    <span class="gs-drow-tile tile-b"><svg class="ic"><use href="#i-mug"/></svg></span>
+                    <span class="gs-drow-b">
+                      <span class="gs-drow-t">Taza de cerámica artesanal</span>
+                      <span class="gs-drow-m">Hogar y cocina · Un detalle</span>
+                    </span>
+                    <span class="gs-drow-p">18,50 €</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gs-scrim2" aria-hidden="true"></div>
+
+          <div class="gs-dialog-wrap">
+            <div class="gs-dialog" role="dialog" aria-modal="true" aria-labelledby="d3-h" aria-describedby="d3-d">
+              <span class="gs-sheet-ic gs-ic-danger" aria-hidden="true"><svg class="ic"><use href="#i-trash"/></svg></span>
+              <h2 class="gs-dialog-h" id="d3-h">¿Borrar «Auriculares Sony WH-1000XM5»?</h2>
+              <p class="gs-dialog-p" id="d3-d">Desaparece de tu lista y el grupo deja de verlo. Si aún lo quieres, cancela y edítalo en vez de borrarlo.</p>
+              <p class="gs-dialog-note">No se puede deshacer.</p>
+              <div class="gs-dialog-btns">
+                <button class="btn btn-secondary" type="button">Cancelar</button>
+                <button class="btn btn-danger" type="button">Sí, borrarlo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="notas-h">
+    <div class="row-head">
+      <h2 id="notas-h">Notas de la pantalla</h2>
+      <p>Cómo se comportan estas piezas y qué choca con el código de hoy.</p>
+    </div>
+
+    <div class="devices">
+      <div class="flow-notes gs-notas">
+        <h3>Una pieza por patrón</h3>
+        <p>Los cinco estados que se repiten en toda la app, y qué NO se hace con cada uno.</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span><b>Esqueleto</b> mientras carga (Inicio, Mi lista, Personas). Los títulos y las pestañas son reales; solo el contenido es un hueco. El latido se apaga con <em>movimiento reducido</em> y entonces quedan bloques quietos: el estado se sigue entendiendo sin animación. Hoy la app muestra un círculo girando con «Cargando…».</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span><b>Banda</b> para lo que dura y no debe irse solo: sin conexión, guardado fallido, dato sin actualizar. No roba el foco, se anuncia como alerta y lleva siempre su botón. El brindis nunca se usa para un error que deja algo a medias.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span><b>Brindis</b> solo para lo momentáneo: 3 segundos, abajo, sin tapar la barra de pestañas. Cuando lleva acción («Deshacer» o «Reintentar») esa acción es la salida y no se añade además una ×, para no dejar dos botones compitiendo; cuando no lleva acción sí tiene × para cerrarlo antes. En 390 px el que lleva acción pasa a dos líneas (mensaje arriba, acción abajo a la derecha) y en escritorio vuelve a una sola línea. Hoy el brindis ya existe con estos colores; lo que se añade es la acción y el texto que dice qué ha pasado, y que el de error no se va solo: espera a que reintentes, porque irse sin más dejaría el aviso sin leer y sin decir por qué.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span><b>Hoja y ventana</b> para decidir: en el móvil sube una hoja con asa, en el escritorio aparece centrada. Primero «Cancelar», después la acción. La destructiva va en rojo y dice «No se puede deshacer»; la que no destruye nada dice qué deja de verse y cómo se vuelve.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span><b>Errores que dicen la verdad</b>: «Algo ha ido mal» avisa de que lo guardado sigue guardado y ofrece reintentar y recargar, porque hay fallos que no se arreglan re-montando. Página no encontrada conserva la barra de pestañas para poder salir sin usar el botón de atrás.</span></li>
+          <li><span class="fn" aria-hidden="true">6</span><span><b>Lo que no está en el código</b>: el esqueleto, la banda de sin conexión y el cartel de instalar la app son nuevos (hoy solo hay «Instalar la app» como fila del perfil). «Novedades» sí existe, con cabecera fija y lista con scroll: esta pantalla solo le pone la estética. Si el propietario no quiere cartel de instalación, se quita y el resto del artboard sigue en pie.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

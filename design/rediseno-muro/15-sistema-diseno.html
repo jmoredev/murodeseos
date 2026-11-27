@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema de diseño nuevo · Personas primero · 15</title>
+<style>
+  /* ============================================================
+     TOKENS CANÓNICOS — espejo de sistema-nuevo.md
+     ============================================================ */
+  :root{
+    /* base */
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --surface-sunken:#FFFCF8;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;
+    --muted:#8A7A70;              /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --border-control:#B67A50;     /* 3,57:1 sobre blanco */
+    --sand:#FBEBDC;
+    --sand-2:#F6EBE2;
+    --sand-ink:#7A4A2A;
+    --unread:#FFF6EC;
+    /* teja */
+    --primary:#B93D12;
+    --primary-dark:#8F2E0C;
+    --primary-soft:#FDE5D6;
+    --primary-line:#F3CDB6;
+    --primary-line-strong:#EEC4A8;
+    --hover-row:#FFF1E5;
+    --hover-control:#FFF3E9;
+    --selected:#FFF3EB;
+    --active-soft:#FBD9C4;
+    /* verde */
+    --accent:#2F6F4E;
+    --accent-soft:#E1F0E7;
+    --accent-ink:#1F4A33;
+    --accent-line:#B4D5C3;
+    /* estado */
+    --danger:#B42318;
+    --danger-dark:#7A1A12;
+    --danger-soft:#FDECEA;
+    --danger-line:#EFC9C5;
+    /* sobre tinta */
+    --on-ink:#FFF3E8;
+    --on-ink-accent:#FFE9DA;
+
+    /* tipografía (la app usará Nunito; la maqueta, fuentes del sistema) */
+    --font-app:"Nunito","Nunito Sans",ui-rounded,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-mock:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    --text-badge:13px; --text-tab:14px; --text-meta:15px; --text-small:16px;
+    --text-body:17px; --text-row:18px; --text-sub:20px; --text-sheet:22px;
+    --text-section:24px; --text-screen:26px; --text-page:30px;
+    --weight-body:600; --weight-label:700; --weight-title:800;
+    --track-title:-.02em; --track-section:-.015em; --track-row:-.01em; --track-code:.08em;
+
+    /* espaciado */
+    --sp-0:2px; --sp-1:4px; --sp-2:6px; --sp-3:8px; --sp-4:10px; --sp-5:12px; --sp-6:14px;
+    --sp-7:16px; --sp-8:18px; --sp-9:20px; --sp-10:24px; --sp-11:28px; --sp-12:32px; --sp-13:40px;
+
+    /* radios */
+    --r-pill:999px; --r-sheet:28px; --r-dialog:24px; --r-card:20px; --r-lg:18px;
+    --r-md:16px; --r-sm:14px; --r-xs:12px; --r-badge:9px;
+
+    /* sombras */
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --sh-cta:0 8px 18px rgba(185,61,18,.22);
+    --sh-glow:0 12px 30px rgba(185,61,18,.10);
+    --sh-toast:0 14px 30px rgba(43,26,18,.30);
+    --sh-sheet:0 -10px 30px rgba(43,26,18,.22);
+    --sh-dialog:0 30px 70px rgba(43,26,18,.34);
+    --sh-bar:0 -6px 18px rgba(43,26,18,.06);
+    --sh-danger:0 8px 18px rgba(180,35,24,.22);
+    --ring-selected:0 0 0 3px var(--primary-soft);
+
+    /* tamaños */
+    --touch:48px; --touch-inline:32px; --field-h:56px; --cta-h:52px;
+    --tabbar-h:72px; --icon:24px; --icon-sm:20px; --icon-tab:23px;
+
+    /* movimiento */
+    --dur-state:.16s; --ease-state:ease; --dur-spin:.9s;
+
+    /* presentación del artboard (no son tokens de la app) */
+    --pf-frame:#241610; --pf-frame-2:#4B332A;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font-mock);font-size:var(--text-body);line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,dl,figure,table{margin:0;padding:0}
+  ul,ol{list-style:none}
+  svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:var(--primary-soft)}
+
+  .ic{width:var(--icon);height:var(--icon);flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-24{width:24px;height:24px}
+  .ic-30{width:30px;height:30px}
+  .ic-36{width:36px;height:36px}
+
+  /* ============================================================
+     CABECERA DEL ARTBOARD (presentación)
+     ============================================================ */
+  .strip{background:var(--ink);color:var(--on-ink);padding:26px 0 18px}
+  .strip-in{width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 620px;gap:48px;align-items:start}
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5}
+  .tradeoff-tag{background:var(--primary-soft);color:var(--primary-dark);font-size:14px;font-weight:800;padding:3px 10px;border-radius:var(--r-pill)}
+  .keys h2{font-size:18px;font-weight:800;color:var(--on-ink);margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;font-size:15.5px;line-height:1.4;color:#F7E3D5}
+  .keys .kn{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;margin-top:2px}
+  .strip-note{width:1200px;margin:18px auto 0;padding-top:12px;border-top:1px solid rgba(255,243,232,.16);font-size:14px;color:#D9B6A0}
+  .strip-note code{font-family:var(--font-mono);color:var(--on-ink-accent)}
+
+  /* ============================================================
+     ESTRUCTURA
+     ============================================================ */
+  main{padding-bottom:20px}
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:20px}
+  .row-head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong)}
+  .row-head h2{font-size:var(--text-section);font-weight:800;letter-spacing:var(--track-section)}
+  .row-head h2 .n{color:var(--primary-dark)}
+  .row-head p{font-size:var(--text-small);color:var(--ink-2)}
+  .blk-h{font-size:var(--text-sub);line-height:1.2;font-weight:800;letter-spacing:var(--track-row);margin:18px 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .blk-h span{font-size:var(--text-small);font-weight:600;color:var(--ink-2);letter-spacing:0}
+  .note{font-size:var(--text-small);line-height:1.45;color:var(--ink-2);max-width:960px;margin-top:10px}
+  .note b{color:var(--ink);font-weight:800}
+  .mono{font-family:var(--font-mono)}
+
+  /* ---------- 1 color ---------- */
+  .sw-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .sw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;box-shadow:var(--sh-1);display:flex;flex-direction:column;gap:6px}
+  .sw-chip{height:44px;border-radius:var(--r-xs);background:var(--c);border:1px solid rgba(43,26,18,.12);display:block}
+  .sw-name{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--ink)}
+  .sw-hex{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--ink-2);text-transform:uppercase}
+  .sw-use{font-size:13.5px;line-height:1.35;color:var(--ink-2)}
+  .sw-src{font-size:12.5px;line-height:1.3;font-weight:700;color:var(--primary-dark)}
+  .ok{color:var(--accent-ink)}
+  .bad{color:var(--danger-dark)}
+
+  .ct-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--sh-1);font-size:14.5px}
+  .ct-table th{text-align:left;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);background:var(--sand);padding:8px 14px;border-bottom:1px solid var(--border-strong)}
+  .ct-table td{padding:7px 14px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle}
+  .ct-table tr:last-child td{border-bottom:0}
+  .ct-table .r{font-family:var(--font-mono);font-weight:700;text-align:right;white-space:nowrap}
+  .ct-table .pair{display:flex;align-items:center;gap:8px}
+  .ct-table .dot{width:18px;height:18px;border-radius:6px;background:var(--c);border:1px solid rgba(43,26,18,.16);flex:0 0 auto}
+  .tag{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-pill);padding:1px 10px;font-size:12.5px;font-weight:800;line-height:1.5;white-space:nowrap}
+  .tag-ok{background:var(--accent-soft);color:var(--accent-ink)}
+  .tag-no{background:var(--danger-soft);color:var(--danger-dark)}
+  .tag-soft{background:var(--sand-2);color:var(--ink-2)}
+
+  /* ---------- 2 tipografía ---------- */
+  .type-wrap{display:grid;grid-template-columns:392px 1fr;gap:24px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:18px;box-shadow:var(--sh-1)}
+  .panel + .panel{margin-top:16px}
+  .panel h3{font-size:var(--text-sub);font-weight:800;letter-spacing:var(--track-row);margin-bottom:8px}
+  .panel p{font-size:var(--text-small);line-height:1.45;color:var(--ink-2)}
+  .panel p + p{margin-top:8px}
+  .panel code{font-family:var(--font-mono);font-size:13.5px;background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:1px 5px;color:var(--ink)}
+  .fam{font-size:34px;line-height:1.15;font-weight:800;letter-spacing:var(--track-title);margin:6px 0 2px}
+  .fam-sub{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--primary-dark)}
+  .weight-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .weight{flex:1 1 0;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+  .weight span{display:block}
+  .weight .w-tok{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--primary-dark)}
+  .weight .w-val{font-size:22px;line-height:1.2;color:var(--ink)}
+  .scale{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--sh-1)}
+  .scale-row{display:grid;grid-template-columns:64px 1fr 214px 176px;gap:16px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border)}
+  .scale-row:last-child{border-bottom:0}
+  .scale-row.head{background:var(--sand);border-bottom:1px solid var(--border-strong)}
+  .scale-row.head span{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+  .scale-px{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--primary-dark);text-align:right}
+  .scale-sample{line-height:1.15;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .scale-tok{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--ink)}
+  .scale-tok em{display:block;font-style:normal;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:1px}
+  .scale-use{font-size:13.5px;line-height:1.3;color:var(--ink-2)}
+  .track-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .track{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+  .track span{display:block}
+  .track .t-tok{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--primary-dark)}
+  .track .t-val{font-size:20px;font-weight:800;color:var(--ink);margin-top:4px}
+
+  /* ---------- 3 espaciado ---------- */
+  .sp-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:8px 16px;box-shadow:var(--sh-1)}
+  .sp-row{display:grid;grid-template-columns:96px 92px 232px 1fr;gap:16px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+  .sp-row:last-child{border-bottom:0}
+  .sp-tok{font-family:var(--font-mono);font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .sp-val{font-family:var(--font-mono);font-size:13.5px;font-weight:700;color:var(--ink)}
+  .sp-bar{height:14px;border-radius:3px;background:var(--primary-soft);border:1px solid var(--primary-line);border-left:3px solid var(--primary);width:var(--w)}
+  .sp-use{font-size:13.5px;line-height:1.3;color:var(--ink-2)}
+
+  /* ---------- 4 radios ---------- */
+  .r-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .r-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:12px;box-shadow:var(--sh-1);display:flex;align-items:center;gap:12px}
+  .r-shape{width:64px;height:64px;flex:0 0 auto;background:var(--sand);border:2px solid var(--border-control);border-radius:var(--rr)}
+  .r-shape.pill{border-radius:var(--r-pill)}
+  .r-shape.sheet{border-radius:var(--r-sheet) var(--r-sheet) 0 0;border-color:var(--border-strong);width:96px;background:var(--primary-soft);border-color:var(--primary-line)}
+  .r-txt{min-width:0}
+  .r-txt > span{display:block}
+  .r-tok{font-family:var(--font-mono);font-size:13.5px;font-weight:700;color:var(--ink)}
+  .r-val{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--primary-dark)}
+  .r-use{font-size:13px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+
+  /* ---------- 5 sombras ---------- */
+  .sh-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .sh-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;min-height:112px;display:flex;flex-direction:column;gap:6px}
+  .sh-card .b{height:44px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--border);box-shadow:var(--s)}
+  .sh-card .b.cta{background:var(--primary);border-color:var(--primary);box-shadow:var(--s)}
+  .sh-card .b.toast{background:var(--ink);border-color:var(--ink)}
+  .sh-tok{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--ink)}
+  .sh-val{font-family:var(--font-mono);font-size:12px;line-height:1.35;color:var(--ink-2);word-break:break-word}
+
+  /* ---------- 6 categorías ---------- */
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .cat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;box-shadow:var(--sh-1);display:flex;gap:12px;align-items:center}
+  .cat-t{width:56px;height:56px;border-radius:var(--r-md);display:grid;place-items:center;flex:0 0 auto}
+  .cat-b{min-width:0}
+  .cat-n{display:block;font-size:var(--text-small);line-height:1.2;font-weight:800;color:var(--ink)}
+  .cat-f{display:block;font-size:13px;line-height:1.3;font-weight:700;color:var(--ink-2);margin-top:2px}
+  .cat-i{display:block;font-family:var(--font-mono);font-size:12px;color:var(--ink-2);margin-top:2px}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:var(--sand-ink)}
+  .tile-n{background:var(--sand-2);color:var(--ink-2)}
+  .fam-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .fam-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:center;gap:10px}
+  .fam-chip{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;font-size:13px;font-weight:800}
+  .fam-t{font-size:13.5px;line-height:1.3;color:var(--ink)}
+  .fam-t b{display:block;font-weight:800}
+  .fam-t span{color:var(--ink-2)}
+
+  /* ---------- 7 componentes ---------- */
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .comp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px;box-shadow:var(--sh-1)}
+  .comp.wide{grid-column:1 / -1}
+  .comp-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .comp-h h3{font-size:var(--text-row);font-weight:800;letter-spacing:var(--track-row)}
+  .comp-h .src{font-size:12.5px;font-weight:700;color:var(--primary-dark)}
+  .spec{font-size:13px;line-height:1.4;color:var(--ink-2);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+  .spec b{color:var(--ink);font-weight:800}
+  .spec code{font-family:var(--font-mono);font-size:12.5px;background:var(--sand);border-radius:5px;padding:0 4px;color:var(--ink)}
+  .row-lbl{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin:14px 0 6px}
+  .row-lbl:first-of-type{margin-top:0}
+  .demo{background:var(--bg);border:1px dashed var(--border-strong);border-radius:var(--r-md);padding:14px}
+
+  /* botones */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-3);min-height:var(--touch);padding:10px 20px;border-radius:var(--r-pill);border:2px solid transparent;font-size:var(--text-body);font-weight:700;line-height:1.25;text-align:center;transition:background-color var(--dur-state) var(--ease-state),border-color var(--dur-state) var(--ease-state),color var(--dur-state) var(--ease-state)}
+  .btn .ic{width:var(--icon-sm);height:var(--icon-sm)}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:var(--sh-cta)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-primary.is-hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:var(--hover-control);border-color:var(--ink-2)}
+  .btn-secondary.is-hover{background:var(--hover-control);border-color:var(--ink-2)}
+  .btn-danger{background:var(--danger);color:#fff;box-shadow:var(--sh-danger)}
+  .btn-danger:hover{background:var(--danger-dark)}
+  .btn-danger.is-hover{background:var(--danger-dark)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary-line-strong)}
+  .btn-soft:hover{background:var(--active-soft);border-color:var(--primary-dark)}
+  .btn-soft.is-hover{background:var(--active-soft);border-color:var(--primary-dark)}
+  .btn[disabled],.btn.is-off{background:var(--sand-2);color:var(--ink-2);border-color:var(--sand-2);box-shadow:none;cursor:not-allowed}
+  .btn-link{display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);min-height:var(--touch);padding:8px 12px;border-radius:var(--r-sm);font-size:var(--text-body);font-weight:700;color:var(--primary-dark);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+  .btn-link:hover{background:var(--primary-soft)}
+  .btn-icon{width:var(--touch);height:var(--touch);border-radius:50%;display:grid;place-items:center;border:2px solid var(--border-strong);background:var(--surface);color:var(--ink)}
+  .btn-icon:hover{background:var(--hover-control);border-color:var(--ink-2)}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .st-lbl{display:block;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-bottom:5px}
+  .st{display:flex;flex-direction:column;align-items:flex-start}
+  .focus-demo{outline:3px solid var(--primary-dark);outline-offset:3px}
+
+  /* tarjeta de deseo */
+  .frame{width:390px;background:var(--bg);border:1px solid var(--border-strong);border-radius:26px;padding:16px;box-shadow:var(--sh-1)}
+  .frame.dark{background:var(--bg)}
+  .wish{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:12px;box-shadow:var(--sh-1)}
+  .wish + .wish{margin-top:12px}
+  .wish.is-mine{border-color:var(--accent-line)}
+  .wish-media{display:flex;align-items:center;justify-content:space-between;gap:10px;height:64px;border-radius:var(--r-sm);padding:0 12px}
+  .wish-media .ic{width:36px;height:36px}
+  .wish-media > svg{width:36px;height:36px;flex:0 0 auto}
+  .w-media-end{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2}
+  .w-price{font-size:var(--text-row);font-weight:800;letter-spacing:var(--track-row)}
+  .w-cat{font-size:var(--text-small);font-weight:600;color:var(--ink-2);margin-top:3px}
+  .w-head{display:flex;align-items:flex-start;gap:8px;margin-top:9px}
+  .w-title{margin:0;font-size:var(--text-row);line-height:1.24;font-weight:800;letter-spacing:-.005em;flex:1 1 auto;padding-top:3px}
+  .w-link{flex:0 0 auto;width:var(--touch);height:var(--touch);margin:-4px -6px -6px 0;border-radius:50%;display:grid;place-items:center;color:var(--primary-dark);background:var(--surface);border:1.5px solid var(--border-strong);text-decoration:none}
+  .w-link:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .w-note{margin-top:8px;padding:8px 12px;border-radius:var(--r-xs);background:var(--bg);border-left:3px solid var(--border-strong);font-size:var(--text-body);line-height:1.4;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .w-note-l{font-weight:800;color:var(--ink);margin-right:6px}
+  .w-prio{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:var(--text-body);color:var(--ink-2)}
+  .hearts{display:inline-flex;gap:1px;color:var(--primary)}
+  .hearts .ic{width:17px;height:17px}
+  .hearts .off{color:var(--muted)}
+  .state{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-pill);padding:3px 11px;font-size:var(--text-small);font-weight:800;margin-bottom:9px}
+  .state-mine{background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid var(--accent-line)}
+  .state-other{background:var(--sand-2);color:var(--ink-2);border:1.5px dashed var(--border-strong)}
+  .state .ic{width:17px;height:17px}
+  .wish .btn{margin-top:10px}
+
+  /* pestañas */
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:4px 8px 12px;background:rgba(255,248,241,.97);border-top:1px solid var(--border);height:var(--tabbar-h);align-content:start}
+  .tab-i{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:var(--touch);border-radius:var(--r-sm);color:var(--ink-2);font-size:var(--text-tab);font-weight:600;line-height:1.1;text-decoration:none}
+  .tab-i .ic{width:var(--icon-tab);height:var(--icon-tab)}
+  .tab-i:hover{background:var(--hover-row)}
+  .tab-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .tab-ic-wrap{position:relative;display:block}
+  .tab-badge{position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;border-radius:var(--r-pill);background:var(--primary);color:#fff;font-size:var(--text-badge);font-weight:800;line-height:19px;text-align:center}
+  .dt-nav{display:flex;gap:4px;align-items:center}
+  .dt-nav a{display:inline-flex;align-items:center;gap:8px;min-height:var(--touch);padding:0 15px;border-radius:var(--r-pill);text-decoration:none;font-size:var(--text-body);font-weight:600;color:var(--ink-2)}
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:var(--hover-row);color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+
+  /* avatares */
+  .av-row{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  .av-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .av-c{width:var(--s);height:var(--s);border-radius:50%;display:grid;place-items:center;font-size:calc(var(--s) * .48);line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);border:2px solid var(--border-strong)}
+  .av-c.big{box-shadow:var(--sh-1)}
+  .av-c.sel{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .av-c.all{border-style:dashed;color:var(--ink-2);font-size:20px}
+  .av-cap{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--ink-2)}
+
+  /* filas */
+  .list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:2px 10px;box-shadow:var(--sh-1)}
+  .list > li + li{border-top:1px solid var(--border)}
+  .p-row{display:flex;align-items:flex-start;gap:12px;padding:8px 6px;border-radius:var(--r-sm);text-decoration:none;color:inherit}
+  .p-row:hover{background:var(--hover-row)}
+  .p-row .av-c{width:48px;height:48px;font-size:24px;flex:0 0 auto}
+  .p-b{flex:1 1 auto;min-width:0}
+  .p-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .p-name{font-size:var(--text-row);line-height:1.25;font-weight:800}
+  .p-count{font-size:var(--text-small);font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .p-celeb{display:flex;align-items:flex-start;gap:6px;font-size:var(--text-small);line-height:1.35;font-weight:600;color:var(--ink-2);margin-top:2px}
+  .p-celeb .ic{width:17px;height:17px;margin-top:2px;color:var(--ink-2)}
+  .p-celeb b{font-weight:800;color:var(--ink)}
+  .p-celeb.is-next{color:var(--primary-dark)}
+  .p-celeb.is-next .ic,.p-celeb.is-next b{color:var(--primary-dark)}
+  .p-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .p-tag{display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-pill);padding:2px 10px;background:var(--sand);border:1px solid var(--border);font-size:var(--text-small);line-height:1.35;font-weight:700;color:var(--ink)}
+  .chev{width:20px;height:20px;flex:0 0 auto;color:var(--primary-dark);margin-top:14px}
+  .g-row{display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 6px;border-radius:var(--r-sm);text-decoration:none;color:inherit}
+  .g-row:hover{background:var(--hover-row)}
+  .g-ic{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--sand);border:1.5px solid var(--border-strong);font-size:23px;line-height:1}
+  .g-b{flex:1 1 auto;min-width:0}
+  .g-name{display:block;font-size:var(--text-row);line-height:1.25;font-weight:800}
+  .g-meta{display:block;font-size:var(--text-small);line-height:1.3;color:var(--ink-2)}
+
+  /* campos */
+  .field{display:block;min-width:0}
+  .field + .field{margin-top:14px}
+  .field-l{display:block;font-size:var(--text-body);line-height:1.25;font-weight:800;margin-bottom:6px}
+  .field-wrap{position:relative;display:block}
+  .input{display:block;width:100%;height:var(--field-h);padding:0 14px;font-size:var(--text-body);font-weight:600;color:var(--ink);background:var(--surface);border:2px solid var(--border-control);border-radius:var(--r-sm);font-family:inherit}
+  .input::placeholder{color:var(--ink-2);opacity:1;font-weight:600}
+  .input.is-focus{outline:3px solid var(--primary-dark);outline-offset:3px}
+  .input.is-err{border-color:var(--danger);background:var(--danger-soft)}
+  .input.is-off{background:var(--sand-2);color:var(--ink-2);border-color:var(--border-strong);border-width:1.5px}
+  .input-pw{padding-right:104px}
+  .show{position:absolute;right:5px;top:50%;transform:translateY(-50%);min-height:var(--touch);padding:0 12px;border-radius:var(--r-xs);font-size:var(--text-body);font-weight:800;color:var(--primary-dark);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .show:hover{background:var(--primary-soft)}
+  .field-hint{margin-top:6px;font-size:var(--text-small);line-height:1.35;color:var(--ink-2)}
+  .field-err{display:flex;gap:6px;align-items:flex-start;margin-top:6px;font-size:var(--text-small);line-height:1.35;font-weight:700;color:var(--danger-dark)}
+  .field-err .ic{width:19px;height:19px;margin-top:1px;color:var(--danger);flex:0 0 auto}
+
+  /* avisos */
+  .alert{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:var(--r-md);border:2px solid var(--danger-line);background:var(--danger-soft)}
+  .alert > .ic{width:24px;height:24px;flex:0 0 auto;margin-top:1px;color:var(--danger)}
+  .alert-t{display:block;font-size:var(--text-body);line-height:1.3;font-weight:800;color:var(--danger-dark)}
+  .alert-d{display:block;font-size:var(--text-body);line-height:1.35;font-weight:600;color:var(--danger-dark);margin-top:2px}
+  .alert.ok{background:var(--accent-soft);border-color:var(--accent-line)}
+  .alert.ok > .ic{color:var(--accent)}
+  .alert.ok .alert-t,.alert.ok .alert-d{color:var(--accent-ink)}
+  .alert.info{background:var(--primary-soft);border-color:var(--primary-line)}
+  .alert.info > .ic{color:var(--primary-dark)}
+  .alert.info .alert-t,.alert.info .alert-d{color:var(--ink)}
+  .alert + .alert{margin-top:12px}
+  .banner{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:var(--r-md);background:var(--accent-soft);border:2px solid var(--accent-line);font-size:var(--text-body);line-height:1.3;font-weight:800;color:var(--accent-ink)}
+  .banner .ic{width:22px;height:22px;color:var(--accent)}
+  .banner.err{background:var(--danger-soft);border-color:var(--danger-line);color:var(--danger-dark)}
+  .banner.err .ic{color:var(--danger)}
+
+  /* toast */
+  .toast{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;background:var(--ink);color:var(--on-ink);border-radius:var(--r-md);box-shadow:var(--sh-toast);width:342px}
+  .toast-t{flex:1 1 auto;font-size:var(--text-body);line-height:1.3;color:var(--on-ink)}
+  .toast-undo{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--touch);padding:8px 12px;border-radius:var(--r-xs);font-size:var(--text-body);font-weight:800;color:var(--on-ink-accent);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+  .toast-undo:hover{background:rgba(255,243,232,.16)}
+  .toast-undo .ic{width:20px;height:20px}
+
+  /* hoja inferior y diálogo */
+  .sheet-demo{width:390px;height:540px;background:var(--bg);border:1px solid var(--border-strong);border-radius:26px;overflow:hidden;position:relative;padding:0}
+  .sheet-under{padding:14px 16px 0;filter:saturate(.7);opacity:.5}
+  .sheet-under .wish{box-shadow:none}
+  .scrim{position:absolute;inset:0;background:rgba(43,26,18,.52);z-index:2}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:3;background:var(--surface);border-radius:var(--r-sheet) var(--r-sheet) 0 0;padding:10px 20px 28px;box-shadow:var(--sh-sheet)}
+  .grab{width:44px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 8px}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .sheet-h{font-size:var(--text-sheet);line-height:1.2;font-weight:800;letter-spacing:var(--track-row)}
+  .x-btn{width:var(--touch);height:var(--touch);border-radius:50%;flex:0 0 auto;display:grid;place-items:center;border:2px solid var(--border-strong);background:var(--surface);color:var(--ink);font-size:26px;line-height:1}
+  .x-btn:hover{background:var(--hover-control);border-color:var(--ink-2)}
+  .sheet-p{margin-top:8px;font-size:var(--text-body);line-height:1.45;color:var(--ink-2)}
+  .sheet-wish{margin-top:10px;padding:9px 12px;border-radius:var(--r-sm);background:var(--bg);border:1px solid var(--border);font-size:var(--text-body);line-height:1.3;font-weight:800}
+  .sheet-wish span{display:block;font-weight:700;color:var(--ink-2);margin-top:1px}
+  .sheet-btns{display:grid;gap:8px;margin-top:16px}
+  .dialog{width:640px;background:var(--surface);border-radius:var(--r-dialog);overflow:hidden;box-shadow:var(--sh-dialog)}
+  .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;border-bottom:1px solid var(--border)}
+  .dlg-head h4{font-size:var(--text-screen);line-height:1.15;font-weight:800;letter-spacing:var(--track-title)}
+  .dlg-body{padding:16px 24px}
+  .dlg-body p{font-size:var(--text-body);line-height:1.45;color:var(--ink-2)}
+  .dlg-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:12px 24px;border-top:1px solid var(--border);background:var(--surface)}
+
+  /* ---------- 8 foco y movimiento ---------- */
+  .focus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .focus-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-1)}
+  .focus-card .demo{padding:12px;display:flex;align-items:center;gap:12px;background:var(--surface);border-style:solid;border-color:var(--border)}
+  .focus-card.on-soft{background:var(--primary-soft);border-color:var(--primary-line)}
+  .focus-card.on-ink{background:var(--ink);border-color:var(--ink)}
+  .focus-card.on-ink .f-t{color:var(--on-ink)}
+  .mock-focus{display:inline-flex;align-items:center;gap:8px;min-height:var(--touch);padding:8px 16px;border-radius:var(--r-pill);font-size:var(--text-body);font-weight:700;background:var(--surface);border:2px solid var(--border-control);outline:3px solid var(--primary-dark);outline-offset:3px;color:var(--ink)}
+  .mock-focus.on-ink{background:var(--ink);color:var(--on-ink);border-color:var(--border-strong);outline-color:var(--on-ink-accent)}
+  .f-t{font-size:13.5px;line-height:1.4;color:var(--ink-2);margin-top:10px}
+  .f-t b{color:var(--ink);font-weight:800}
+  .motion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .motion{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-1)}
+  .motion span{display:block}
+  .m-tok{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--primary-dark)}
+  .m-val{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--ink);margin-top:2px}
+  .m-use{font-size:13.5px;line-height:1.4;color:var(--ink-2);margin-top:6px}
+  .spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--primary-line);border-top-color:var(--primary);animation:turn var(--dur-spin) linear infinite;margin-top:10px}
+  @keyframes turn{to{transform:rotate(360deg)}}
+
+  /* ---------- 9 diferencias ---------- */
+  .diff{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--sh-1);font-size:14px}
+  .diff th{text-align:left;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);background:var(--sand);padding:9px 14px;border-bottom:1px solid var(--border-strong)}
+  .diff td{padding:8px 14px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:top;line-height:1.42}
+  .diff tr:last-child td{border-bottom:0}
+  .diff .now{color:var(--ink-2)}
+  .diff .new{font-weight:700}
+
+  footer{width:1300px;margin:24px auto 0;padding:12px 0 26px;border-top:2px solid var(--border-strong);font-size:13.5px;color:var(--ink-2)}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+    .spin{animation:none!important;border-top-color:var(--primary-line)}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="currentColor"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 6.4h11M9 12h11M9 17.6h11"/><circle cx="4.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.6" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.6" cy="17.6" r="1.3" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2 21.2 20H2.8Z"/><path d="M12 9.9v4.7"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.6" width="16" height="14.4" rx="2.4"/><path d="M4 10h16M8.4 3.6v3.6M15.6 3.6v3.6"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4.8" y="10.4" width="14.4" height="9.2" rx="2.4"/><path d="M8.4 10.4V8a3.6 3.6 0 0 1 7.2 0v2.4"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 6.4 4.6 11l4.6 4.6"/><path d="M4.6 11h8.4a5.6 5.6 0 0 1 0 11.2H9"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.6 15.2v-2.8a7.4 7.4 0 0 1 14.8 0v2.8"/><rect x="3.2" y="13.8" width="4.6" height="7" rx="2.3"/><rect x="16.2" y="13.8" width="4.6" height="7" rx="2.3"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.8 5.4h5.6A2.2 2.2 0 0 1 11.6 7.6V20a2 2 0 0 0-2-1.8H3.8Z"/><path d="M20.2 5.4h-5.6A2.2 2.2 0 0 0 12.4 7.6V20a2 2 0 0 1 2-1.8h5.8Z"/></g></symbol>
+    <symbol id="i-shoe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3.4 16.6h11.9c1.7 0 3.2-.7 4.3-2l.6-.7c.6-.7.2-1.8-.7-2l-4.3-.9-3-2.4a2 2 0 0 0-1.3-.5H6.6L3.4 12.2Z"/><path d="M3.4 16.6v2.2h17.2"/></g></symbol>
+    <symbol id="i-vase" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M9.2 3.6h5.6l-.9 3.1a7 7 0 0 1 3.9 6.2c0 4.1-2.5 7.5-5.8 7.5s-5.8-3.4-5.8-7.5a7 7 0 0 1 3.9-6.2Z"/><path d="M8.6 12.4h6.8"/></g></symbol>
+    <symbol id="i-moka" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7.4 20h9.2l-1.2-6.2H8.6Z"/><path d="M8.6 13.8 10 7.6h4l1.4 6.2"/><path d="M9.8 7.6 8.6 4.4h6.8l-1.2 3.2"/><path d="M14.8 9.4h2.1a2.4 2.4 0 0 1 0 4.8h-1.5"/><path d="M6.4 10.6 9 8.8"/></g></symbol>
+    <symbol id="i-sweater" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.6 4.2 4.3 6.6a1 1 0 0 0-.5.9l.9 4.2 2.6-.6v8.5h9.4v-8.5l2.6.6.9-4.2a1 1 0 0 0-.5-.9L15.4 4.2a2.6 2.6 0 0 1-3.4 0 2.6 2.6 0 0 1-3.4 0Z"/></g></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8.4h16v2.4a2.2 2.2 0 0 0 0 4.4v2.4H4v-2.4a2.2 2.2 0 0 0 0-4.4Z"/><path d="M13.4 9.4v5.2" stroke-dasharray="1.4 2.4"/></g></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.6"/><circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-ball" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6c-1.9 2.6-2.9 5.4-2.9 8.4s1 5.8 2.9 8.4"/><path d="M12 3.6c1.9 2.6 2.9 5.4 2.9 8.4s-1 5.8-2.9 8.4"/><path d="M3.9 9.4c2.5 1.3 5.4 1.9 8.1 1.9s5.6-.6 8.1-1.9"/></g></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c3.4 4 5.4 6.9 5.4 9.4a5.4 5.4 0 0 1-10.8 0c0-2.5 2-5.4 5.4-9.4Z"/><path d="M9.4 13.6a2.6 2.6 0 0 0 2.6 2.6"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div>
+      <p class="kicker">Rediseño del Muro · Sistema de diseño de la dirección 02</p>
+      <h1>Sistema «Personas primero»</h1>
+      <p class="tradeoff">
+        <span class="tradeoff-tag">Compromiso</span>
+        Todo lo que hace falta para construir la app sin volver a decidir color, tamaño ni estado; a
+        cambio, el sistema es más largo de leer que una pantalla y exige aplicar los valores canónicos
+        aunque una maqueta se haya desviado.
+      </p>
+    </div>
+    <div class="keys">
+      <h2>Claves de este sistema</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Cálido y legible a cualquier edad: crema de lienzo, tinta marrón, cuerpo de 17 px y controles de 48 px.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Cuatro familias de color para doce categorías; el icono y el nombre dicen cuál es, el color sólo acompaña.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Un solo botón principal por pantalla y un contorno visible en todo lo que se pulsa.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Nada se comunica sólo con color: estado con icono, texto y píldora; foco con anillo de 3 px.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">
+    Los tokens de esta maqueta son los de <code>sistema-nuevo.md</code>. La maqueta usa fuentes del
+    sistema; la app usará <b>Nunito</b> con esta misma escala (13–30 px, pesos 600/700/800). Cada
+    muestra cita el artboard donde el token se usa.
+  </p>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       1 · COLOR
+       ============================================================ -->
+  <section class="row" id="color">
+    <div class="row-head">
+      <h2><span class="n">1</span> Color · 32 tokens</h2>
+      <p>Cinco grupos: base, teja, verde, estado y sobre tinta. Ningún texto por debajo de 4,5:1.</p>
+    </div>
+
+    <h3 class="blk-h">1.1 Base <span>superficies, tinta y contornos · 13 tokens</span></h3>
+    <ul class="sw-grid">
+      <li class="sw"><span class="sw-chip" style="--c:#FFF8F1"></span><span class="sw-name">--bg</span><span class="sw-hex">#FFF8F1</span><span class="sw-use">Lienzo y nota del deseo</span><span class="sw-src">02 · body</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFFFFF"></span><span class="sw-name">--surface</span><span class="sw-hex">#FFFFFF</span><span class="sw-use">Tarjetas, campos, hojas</span><span class="sw-src">02 · .wish</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFFCF8"></span><span class="sw-name">--surface-sunken</span><span class="sw-hex">#FFFCF8</span><span class="sw-use">Fila leída, tarjeta recibida</span><span class="sw-src">09 · .av-item-read</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#2B1A12"></span><span class="sw-name">--ink</span><span class="sw-hex">#2B1A12</span><span class="sw-use">Texto principal, toast</span><span class="sw-src">todos</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#5C4033"></span><span class="sw-name">--ink-2</span><span class="sw-hex">#5C4033</span><span class="sw-use">Texto secundario, 8,92:1</span><span class="sw-src">todos</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#8A7A70"></span><span class="sw-name">--muted</span><span class="sw-hex">#8A7A70</span><span class="sw-use">Corazón vacío, deshabilitado. Nunca texto</span><span class="sw-src">02 · .hearts .off</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#F0DFD2"></span><span class="sw-name">--border</span><span class="sw-hex">#F0DFD2</span><span class="sw-use">Separador y contorno estático (1 px)</span><span class="sw-src">07 · .psn-people</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#E3C8B6"></span><span class="sw-name">--border-strong</span><span class="sw-hex">#E3C8B6</span><span class="sw-use">Chips y filas (1,5 px). No controles</span><span class="sw-src">02 · .celebs li</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#B67A50"></span><span class="sw-name">--border-control</span><span class="sw-hex">#B67A50</span><span class="sw-use">Contorno de 2 px de todo control · 3,57:1</span><span class="sw-src">tabular</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FBEBDC"></span><span class="sw-name">--sand</span><span class="sw-hex">#FBEBDC</span><span class="sw-use">Etiqueta y tile de grupo, sugerencia</span><span class="sw-src">07 · .psn-gtag</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#F6EBE2"></span><span class="sw-name">--sand-2</span><span class="sw-hex">#F6EBE2</span><span class="sw-use">Tile neutro, pista, deshabilitado</span><span class="sw-src">02 · .tile-n</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#7A4A2A"></span><span class="sw-name">--sand-ink</span><span class="sw-hex">#7A4A2A</span><span class="sw-use">Texto e icono sobre arena · 6,34:1</span><span class="sw-src">02 · .tile-c</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFF6EC"></span><span class="sw-name">--unread</span><span class="sw-hex">#FFF6EC</span><span class="sw-use">Fondo del aviso no leído</span><span class="sw-src">09 · .av-item-unread</span></li>
+    </ul>
+
+    <h3 class="blk-h">1.2 Teja <span>primario y sus estados · 9 tokens</span></h3>
+    <ul class="sw-grid">
+      <li class="sw"><span class="sw-chip" style="--c:#B93D12"></span><span class="sw-name">--primary</span><span class="sw-hex">#B93D12</span><span class="sw-use">Acción principal · blanco encima 5,62:1</span><span class="sw-src">02 · .btn-primary</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#8F2E0C"></span><span class="sw-name">--primary-dark</span><span class="sw-hex">#8F2E0C</span><span class="sw-use">Texto de acción y anillo de foco · 8,19:1</span><span class="sw-src">02 · .eyebrow</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FDE5D6"></span><span class="sw-name">--primary-soft</span><span class="sw-hex">#FDE5D6</span><span class="sw-use">Panel de celebración, pestaña activa</span><span class="sw-src">02 · .hero</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#F3CDB6"></span><span class="sw-name">--primary-line</span><span class="sw-hex">#F3CDB6</span><span class="sw-use">Contorno de 1,5 px sobre teja suave</span><span class="sw-src">09 · .av-perm</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#EEC4A8"></span><span class="sw-name">--primary-line-strong</span><span class="sw-hex">#EEC4A8</span><span class="sw-use">Contorno de 2 px del botón suave</span><span class="sw-src">02 · .btn-soft</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFF1E5"></span><span class="sw-name">--hover-row</span><span class="sw-hex">#FFF1E5</span><span class="sw-use">Hover de fila completa</span><span class="sw-src">02 · .g-link:hover</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFF3E9"></span><span class="sw-name">--hover-control</span><span class="sw-hex">#FFF3E9</span><span class="sw-use">Hover de botón y chip</span><span class="sw-src">02 · .btn-secondary:hover</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFF3EB"></span><span class="sw-name">--selected</span><span class="sw-hex">#FFF3EB</span><span class="sw-use">Fondo de lo marcado · 5,15:1 con teja oscura</span><span class="sw-src">06 · .fd-prio-card</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FBD9C4"></span><span class="sw-name">--active-soft</span><span class="sw-hex">#FBD9C4</span><span class="sw-use">Hover del botón suave</span><span class="sw-src">02 · .btn-soft:hover</span></li>
+    </ul>
+
+    <h3 class="blk-h">1.3 Verde <span>acento y éxito · 4 tokens</span></h3>
+    <div class="comp-grid" style="grid-template-columns:2fr 1fr">
+      <ul class="sw-grid" style="grid-template-columns:repeat(4,1fr);align-items:start">
+        <li class="sw"><span class="sw-chip" style="--c:#2F6F4E"></span><span class="sw-name">--accent</span><span class="sw-hex">#2F6F4E</span><span class="sw-use">Éxito e interruptor · 5,99:1</span><span class="sw-src">02 · .tile-b</span></li>
+        <li class="sw"><span class="sw-chip" style="--c:#E1F0E7"></span><span class="sw-name">--accent-soft</span><span class="sw-hex">#E1F0E7</span><span class="sw-use">Fondo de éxito y ayuda</span><span class="sw-src">02 · .helper</span></li>
+        <li class="sw"><span class="sw-chip" style="--c:#1F4A33"></span><span class="sw-name">--accent-ink</span><span class="sw-hex">#1F4A33</span><span class="sw-use">Texto sobre verde suave · 8,54:1</span><span class="sw-src">02 · .state-mine</span></li>
+        <li class="sw"><span class="sw-chip" style="--c:#B4D5C3"></span><span class="sw-name">--accent-line</span><span class="sw-hex">#B4D5C3</span><span class="sw-use">Contorno de lo correcto</span><span class="sw-src">04 · .gx-sw</span></li>
+      </ul>
+      <div class="panel" style="margin:0">
+        <h3>Por qué cuatro familias</h3>
+        <p>El verde no compite con la teja: nunca es acción. La teja pide, el verde confirma, la arena
+          agrupa y el neutro deja sitio. Un deseo reservado por otra persona <b>conserva</b> el color de
+          su categoría: el estado se lee en la píldora (02 · <code>.wish.is-other</code>).</p>
+      </div>
+    </div>
+
+    <h3 class="blk-h">1.4 Estado <span>error y confirmación destructiva · 4 tokens</span></h3>
+    <ul class="sw-grid">
+      <li class="sw"><span class="sw-chip" style="--c:#B42318"></span><span class="sw-name">--danger</span><span class="sw-hex">#B42318</span><span class="sw-use">Error y acción destructiva · 6,57:1</span><span class="sw-src">11 · .ac-alert</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#7A1A12"></span><span class="sw-name">--danger-dark</span><span class="sw-hex">#7A1A12</span><span class="sw-use">Texto del error · 9,26:1</span><span class="sw-src">11 · .ac-alert-t</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FDECEA"></span><span class="sw-name">--danger-soft</span><span class="sw-hex">#FDECEA</span><span class="sw-use">Fondo del aviso y campo inválido</span><span class="sw-src">11 · .ac-alert</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#EFC9C5"></span><span class="sw-name">--danger-line</span><span class="sw-hex">#EFC9C5</span><span class="sw-use">Contorno de 2 px del aviso</span><span class="sw-src">10 · .pr-banner-err</span></li>
+    </ul>
+
+    <h3 class="blk-h">1.5 Sobre tinta <span>sólo el toast · 2 tokens</span></h3>
+    <ul class="sw-grid" style="grid-template-columns:repeat(2,1fr)">
+      <li class="sw"><span class="sw-chip" style="--c:#FFF3E8"></span><span class="sw-name">--on-ink</span><span class="sw-hex">#FFF3E8</span><span class="sw-use">Texto del toast · 15,28:1 sobre tinta</span><span class="sw-src">05 · .ml-toast</span></li>
+      <li class="sw"><span class="sw-chip" style="--c:#FFE9DA"></span><span class="sw-name">--on-ink-accent</span><span class="sw-hex">#FFE9DA</span><span class="sw-use">«Deshacer» y anillo de foco · 14,23:1</span><span class="sw-src">05 · .ml-undo</span></li>
+    </ul>
+
+    <h3 class="blk-h">1.6 Pares de contraste verificados <span>calculados sobre estos valores</span></h3>
+    <table class="ct-table">
+      <thead>
+        <tr><th>Par</th><th>Ratio</th><th>Exigencia</th><th>Resultado</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="pair"><i class="dot" style="--c:#2B1A12"></i>--ink sobre --bg</span></td><td class="r">15,84:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#2B1A12"></i>--ink sobre --surface</span></td><td class="r">16,68:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#5C4033"></i>--ink-2 sobre --surface</span></td><td class="r">9,39:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#5C4033"></i>--ink-2 sobre --sand-2</span></td><td class="r">8,00:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#B93D12"></i>blanco sobre --primary</span></td><td class="r">5,62:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#8F2E0C"></i>--primary-dark sobre --primary-soft</span></td><td class="r">6,77:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#8F2E0C"></i>--primary-dark sobre --selected</span></td><td class="r">5,15:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#2F6F4E"></i>--accent sobre --surface</span></td><td class="r">5,99:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#2F6F4E"></i>--accent sobre --accent-soft</span></td><td class="r">5,08:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#1F4A33"></i>--accent-ink sobre --accent-soft</span></td><td class="r">8,54:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#7A4A2A"></i>--sand-ink sobre --sand</span></td><td class="r">6,34:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#B42318"></i>--danger sobre --surface</span></td><td class="r">6,57:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#7A1A12"></i>--danger-dark sobre --danger-soft</span></td><td class="r">9,26:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#FFF3E8"></i>--on-ink sobre --ink</span></td><td class="r">15,28:1</td><td>texto 4,5:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#B67A50"></i>--border-control sobre --surface</span></td><td class="r">3,57:1</td><td>contorno 3:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#B93D12"></i>--primary sobre --selected</span></td><td class="r">5,15:1</td><td>contorno 3:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#8F2E0C"></i>foco --primary-dark sobre --bg</span></td><td class="r">7,78:1</td><td>foco 3:1</td><td><span class="tag tag-ok">AA</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#8A7A70"></i>--muted sobre --bg</span></td><td class="r">3,91:1</td><td>texto 4,5:1</td><td><span class="tag tag-no">sólo decoración</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#E3C8B6"></i>--border-strong sobre --surface</span></td><td class="r">1,59:1</td><td>contorno 3:1</td><td><span class="tag tag-no">no para controles</span></td></tr>
+        <tr><td><span class="pair"><i class="dot" style="--c:#F0DFD2"></i>--border sobre --surface</span></td><td class="r">1,30:1</td><td>—</td><td><span class="tag tag-soft">separador</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note">Las dos últimas filas explican la corrección más visible de esta ficha: los campos de
+      las maquetas se dibujan con <b>--border-strong</b> y pasan a <b>--border-control</b> (#B67A50),
+      porque el contorno que define un control necesita 3:1. Los separadores y las filas que se abren
+      con su título completo no lo necesitan.</p>
+  </section>
+
+  <!-- ============================================================
+       2 · TIPOGRAFÍA
+       ============================================================ -->
+  <section class="row" id="tipografia">
+    <div class="row-head">
+      <h2><span class="n">2</span> Tipografía · 11 tamaños, 3 pesos, 4 interletrados</h2>
+      <p>Una sola familia redondeada en la app (Nunito); las maquetas y este tablero usan fuentes del sistema.</p>
+    </div>
+
+    <div class="type-wrap">
+      <div>
+        <div class="panel">
+          <h3>Familia</h3>
+          <p class="fam">Aa Bb Cc · 17</p>
+          <p class="fam-sub">--font-app</p>
+          <p style="margin-top:10px"><code>"Nunito", "Nunito Sans", ui-rounded, system-ui, …</code></p>
+          <p>Redondeada y de contraformas abiertas; encaja con el objetivo «fácil de usar para todo tipo
+            de edades» (S1). Pesa 200–1000, así que 600/700/800 no exigen sintetizar nada.</p>
+          <p><b>Código:</b> <code>--font-mono</code> para el código de invitación (<code>--track-code</code> 0,08em).</p>
+        </div>
+        <div class="panel">
+          <h3>Pesos</h3>
+          <div class="weight-row">
+            <div class="weight"><span class="w-tok">--weight-body</span><span class="w-val" style="font-weight:600">600</span></div>
+            <div class="weight"><span class="w-tok">--weight-label</span><span class="w-val" style="font-weight:700">700</span></div>
+            <div class="weight"><span class="w-tok">--weight-title</span><span class="w-val" style="font-weight:800">800</span></div>
+          </div>
+          <p style="margin-top:12px">Cuerpo 600, etiquetas y botones 700, títulos y énfasis 800. Nunca
+            hay cursiva ni texto por debajo de 13 px.</p>
+        </div>
+        <div class="panel">
+          <h3>Interletrado</h3>
+          <div class="track-row" style="grid-template-columns:1fr 1fr">
+            <div class="track"><span class="t-tok">--track-title</span><span class="t-val" style="letter-spacing:-.02em">-0,02em</span></div>
+            <div class="track"><span class="t-tok">--track-section</span><span class="t-val" style="letter-spacing:-.015em">-0,015em</span></div>
+            <div class="track"><span class="t-tok">--track-row</span><span class="t-val" style="letter-spacing:-.01em">-0,01em</span></div>
+            <div class="track"><span class="t-tok">--track-code</span><span class="t-val mono" style="letter-spacing:.08em">0,08em</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scale">
+        <div class="scale-row head"><span>px</span><span>Muestra</span><span>Token · línea · peso</span><span>Uso y origen</span></div>
+        <div class="scale-row">
+          <span class="scale-px">13</span>
+          <span class="scale-sample" style="font-size:13px;line-height:1.45;font-weight:800">9+</span>
+          <span class="scale-tok">--text-badge<em>1,45 · 800</em></span>
+          <span class="scale-use">Bandera de no leído · 02 .nav-badge, 09 .av-unread-flag</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">14</span>
+          <span class="scale-sample" style="font-size:14px;line-height:1.1;font-weight:600">Avisos</span>
+          <span class="scale-tok">--text-tab<em>1,1 · 600 / 800</em></span>
+          <span class="scale-use">Etiqueta de pestaña inferior · 02 .nav-i</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">15</span>
+          <span class="scale-sample" style="font-size:15px;line-height:1.3;font-weight:600">3 de diciembre · Nuevo</span>
+          <span class="scale-tok">--text-meta<em>1,3 · 600</em></span>
+          <span class="scale-use">Metadatos densos · 09 .av-meta, 07 .psn-gtag-e</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">16</span>
+          <span class="scale-sample" style="font-size:16px;line-height:1.35;font-weight:600">Hogar y cocina · 16 px</span>
+          <span class="scale-tok">--text-small<em>1,35 · 600</em></span>
+          <span class="scale-use">Secundario de tarjeta, ayuda · 02 .w-cat, 11 .ac-hint</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">17</span>
+          <span class="scale-sample" style="font-size:17px;line-height:1.4;font-weight:600">Cuerpo, etiquetas y botones de la app</span>
+          <span class="scale-tok">--text-body<em>1,4 / 1,5 · 600</em></span>
+          <span class="scale-use">Base (216 declaraciones) · 02 .btn, .alta-input</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">18</span>
+          <span class="scale-sample" style="font-size:18px;line-height:1.25;font-weight:800">Cafetera italiana Bialetti</span>
+          <span class="scale-tok">--text-row<em>1,25 · 800</em></span>
+          <span class="scale-use">Título de fila y de deseo · 02 .w-title, 07 .psn-name</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">20</span>
+          <span class="scale-sample" style="font-size:20px;line-height:1.2;font-weight:800">Dónde comprarlo</span>
+          <span class="scale-tok">--text-sub<em>1,2 · 800</em></span>
+          <span class="scale-use">Subtítulo de bloque · 08 .dd-blk, 09 .av-blk</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">22</span>
+          <span class="scale-sample" style="font-size:22px;line-height:1.2;font-weight:800">¿Lo regalas tú?</span>
+          <span class="scale-tok">--text-sheet<em>1,2 · 800</em></span>
+          <span class="scale-use">Título de hoja inferior · 10 .pr-sheet-h, 08 .dd-sheet-h</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">24</span>
+          <span class="scale-sample" style="font-size:24px;line-height:1.2;font-weight:800">Próximas celebraciones</span>
+          <span class="scale-tok">--text-section<em>1,2 · 800</em></span>
+          <span class="scale-use">Título de sección · 02 .blk, 07 .psn-blk, 10 .pr-blk</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">26</span>
+          <span class="scale-sample" style="font-size:26px;line-height:1.15;font-weight:800">Javier Martín</span>
+          <span class="scale-tok">--text-screen<em>1,15 · 800</em></span>
+          <span class="scale-use">Cabecera de pantalla · 02 .person-head h2, 04 .gx-name</span>
+        </div>
+        <div class="scale-row">
+          <span class="scale-px">30</span>
+          <span class="scale-sample" style="font-size:30px;line-height:1.1;font-weight:800">Personas</span>
+          <span class="scale-tok">--text-page<em>1,1 · 800</em></span>
+          <span class="scale-use">Título de página · 07 .psn-head, 04 .gx-dname, 11 .ac-h</span>
+        </div>
+      </div>
+    </div>
+    <p class="note">Las maquetas usan 24 tamaños distintos; este tablero fija <b>11</b>. Los medios pasos
+      (12,5 · 13,5 · 15,5 · 16,5 · 19 · 21 · 23 · 25 · 27 · 28 · 29 · 31 · 32) se normalizan al paso
+      inmediato, según la tabla §12.4 de <code>sistema-nuevo.md</code>.</p>
+  </section>
+
+  <!-- ============================================================
+       3 · ESPACIADO
+       ============================================================ -->
+  <section class="row" id="espaciado">
+    <div class="row-head">
+      <h2><span class="n">3</span> Espaciado · 14 tokens</h2>
+      <p>Base de 4 px con medios pasos de 2 px; la barra muestra el ancho real multiplicado por 4.</p>
+    </div>
+    <div class="sp-list">
+      <div class="sp-row"><span class="sp-tok">--sp-0</span><span class="sp-val">2px</span><span class="sp-bar" style="--w:8px"></span><span class="sp-use">Icono y etiqueta en píldora · 02 .pill</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-1</span><span class="sp-val">4px</span><span class="sp-bar" style="--w:16px"></span><span class="sp-use">Filas muy densas · 02 .groups</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-2</span><span class="sp-val">6px</span><span class="sp-bar" style="--w:24px"></span><span class="sp-use">Lista de avisos · 09 .av-celebs</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-3</span><span class="sp-val">8px</span><span class="sp-bar" style="--w:32px"></span><span class="sp-use">Botones apilados, icono y texto · 02 .btn</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-4</span><span class="sp-val">10px</span><span class="sp-bar" style="--w:40px"></span><span class="sp-use">Filas dentro de una tarjeta · 02 .wishes</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-5</span><span class="sp-val">12px</span><span class="sp-bar" style="--w:48px"></span><span class="sp-use">Relleno de la tarjeta de deseo · 02 .wish</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-6</span><span class="sp-val">14px</span><span class="sp-bar" style="--w:56px"></span><span class="sp-use">Relleno de fila y de campo · 02 .celebs li</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-7</span><span class="sp-val">16px</span><span class="sp-bar" style="--w:64px"></span><span class="sp-use">Margen lateral del móvil · 02 .pf-scroll</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-8</span><span class="sp-val">18px</span><span class="sp-bar" style="--w:72px"></span><span class="sp-use">Relleno de tarjeta de escritorio · 02 .dt-card</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-9</span><span class="sp-val">20px</span><span class="sp-bar" style="--w:80px"></span><span class="sp-use">Relleno de hoja inferior · 02 .sheet</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-10</span><span class="sp-val">24px</span><span class="sp-bar" style="--w:96px"></span><span class="sp-use">Separación entre bloques · 06 .fd-dialog</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-11</span><span class="sp-val">28px</span><span class="sp-bar" style="--w:112px"></span><span class="sp-use">Respiro bajo la hoja y la barra · 10 .pr-save</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-12</span><span class="sp-val">32px</span><span class="sp-bar" style="--w:128px"></span><span class="sp-use">Margen del encabezado de escritorio · 02 .dt-head</span></div>
+      <div class="sp-row"><span class="sp-tok">--sp-13</span><span class="sp-val">40px</span><span class="sp-bar" style="--w:160px"></span><span class="sp-use">Columnas del artboard · 02 .cat-row</span></div>
+    </div>
+    <p class="note"><b>Escritorio:</b> contenido de 1200 px dentro de la ventana de 1280 (02 .dt-main) y
+      ficha de dos columnas <code>1fr 340px</code> con 24 px (08 .dd-dmain). <b>Tablet:</b> pendiente de T7.</p>
+  </section>
+
+  <!-- ============================================================
+       4 · RADIOS
+       ============================================================ -->
+  <section class="row" id="radios">
+    <div class="row-head">
+      <h2><span class="n">4</span> Radios · 9 tokens</h2>
+      <p>Tarjeta 20 px; píldora total para botones y chips. Regla del tile: lado / 4.</p>
+    </div>
+    <div class="r-grid">
+      <div class="r-card"><span class="r-shape" style="--rr:9px;width:44px;height:44px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-badge</span><span class="r-val">9px</span><span class="r-use">Bandera de tipo de aviso · 09 .av-kind</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:12px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-xs</span><span class="r-val">12px</span><span class="r-use">Tile de 40 px, nota, «Mostrar» · 02 .cat-pick</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:14px"></span><span class="r-txt"><span class="r-tok">--r-sm</span><span class="r-val">14px</span><span class="r-use">Campo, selector, fila, media del deseo · 11 .ac-input</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:16px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-md</span><span class="r-val">16px</span><span class="r-use">Chip de celebración, aviso, toast · 09 .av-celeb</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:18px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-lg</span><span class="r-val">18px</span><span class="r-use">Fila de opciones y de ajustes · 10 .pr-row</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:20px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-card</span><span class="r-val">20px</span><span class="r-use">Tarjeta de deseo, persona, grupo · 02 .wish</span></span></div>
+      <div class="r-card"><span class="r-shape" style="--rr:24px;border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-dialog</span><span class="r-val">24px</span><span class="r-use">Diálogo de escritorio · 06 .fd-dialog</span></span></div>
+      <div class="r-card"><span class="r-shape sheet"></span><span class="r-txt"><span class="r-tok">--r-sheet</span><span class="r-val">28px</span><span class="r-use">Hoja inferior (sólo arriba) · 02 .sheet</span></span></div>
+      <div class="r-card"><span class="r-shape pill" style="border-color:var(--border-strong)"></span><span class="r-txt"><span class="r-tok">--r-pill</span><span class="r-val">999px</span><span class="r-use">Botón, chip, pestaña · 02 .btn, .dt-nav a</span></span></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       5 · SOMBRAS
+       ============================================================ -->
+  <section class="row" id="sombras">
+    <div class="row-head">
+      <h2><span class="n">5</span> Sombras · 9 sombras y 1 anillo</h2>
+      <p>Todas con la tinta (43,26,18) salvo las tres cálidas del primario, que sustituyen al degradado anterior.</p>
+    </div>
+    <div class="sh-grid">
+      <div class="sh-card"><span class="b" style="--s:var(--sh-1)"></span><span class="sh-tok">--sh-1</span><span class="sh-val">0 2px 8px rgba(43,26,18,.05)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Tarjeta en reposo</span></div>
+      <div class="sh-card"><span class="b" style="--s:var(--sh-2)"></span><span class="sh-tok">--sh-2</span><span class="sh-val">0 10px 28px rgba(43,26,18,.08)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Tarjeta elevada</span></div>
+      <div class="sh-card"><span class="b cta" style="--s:var(--sh-cta)"></span><span class="sh-tok">--sh-cta</span><span class="sh-val">0 8px 18px rgba(185,61,18,.22)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Botón primario</span></div>
+      <div class="sh-card"><span class="b" style="--s:var(--sh-glow);background:var(--primary-soft);border-color:var(--primary-line)"></span><span class="sh-tok">--sh-glow</span><span class="sh-val">0 12px 30px rgba(185,61,18,.10)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Panel de celebración</span></div>
+      <div class="sh-card"><span class="b toast" style="--s:var(--sh-toast)"></span><span class="sh-tok">--sh-toast</span><span class="sh-val">0 14px 30px rgba(43,26,18,.30)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Toast</span></div>
+      <div class="sh-card"><span class="b" style="--s:var(--sh-sheet)"></span><span class="sh-tok">--sh-sheet</span><span class="sh-val">0 -10px 30px rgba(43,26,18,.22)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Hoja inferior</span></div>
+      <div class="sh-card"><span class="b" style="--s:var(--sh-dialog)"></span><span class="sh-tok">--sh-dialog</span><span class="sh-val">0 30px 70px rgba(43,26,18,.34)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Diálogo</span></div>
+      <div class="sh-card"><span class="b" style="--s:var(--sh-bar)"></span><span class="sh-tok">--sh-bar</span><span class="sh-val">0 -6px 18px rgba(43,26,18,.06)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Barra de acción fija</span></div>
+      <div class="sh-card"><span class="b cta" style="--s:var(--sh-danger);background:var(--danger);border-color:var(--danger)"></span><span class="sh-tok">--sh-danger</span><span class="sh-val">0 8px 18px rgba(180,35,24,.22)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Botón de peligro</span></div>
+      <div class="sh-card"><span class="b" style="box-shadow:var(--ring-selected);border-color:var(--primary)"></span><span class="sh-tok">--ring-selected</span><span class="sh-val">0 0 0 3px var(--primary-soft)</span><span class="sh-use" style="font-size:12.5px;color:var(--ink-2)">Anillo de lo elegido (no es sombra)</span></div>
+    </div>
+    <p class="note">Reglas: <b>una</b> sombra por tarjeta en reposo; el foco no usa sombra sino anillo; y
+      ninguna superficie lleva desenfoque de fondo: la única transparencia permitida es
+      <code>rgba(255,248,241,.97)</code> en la barra de pestañas (02 .pf-nav).</p>
+  </section>
+
+  <!-- ============================================================
+       6 · ICONOS DE CATEGORÍA
+       ============================================================ -->
+  <section class="row" id="iconos">
+    <div class="row-head">
+      <h2><span class="n">6</span> Iconos de categoría · 12 categorías, 4 familias</h2>
+      <p>Trazo de 1,8 px sobre 24×24, un solo color: el de su familia. El color nunca va solo.</p>
+    </div>
+    <ul class="cat-grid">
+      <li class="cat"><span class="cat-t tile-a" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-headphones"/></svg></span><span class="cat-b"><span class="cat-n">Tecnología</span><span class="cat-f">Familia A · teja</span><span class="cat-i">#primary-soft / #primary-dark</span></span></li>
+      <li class="cat"><span class="cat-t tile-c" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-book"/></svg></span><span class="cat-b"><span class="cat-n">Libros</span><span class="cat-f">Familia C · arena</span><span class="cat-i">#sand / #sand-ink</span></span></li>
+      <li class="cat"><span class="cat-t tile-c" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-sweater"/></svg></span><span class="cat-b"><span class="cat-n">Ropa y accesorios</span><span class="cat-f">Familia C · arena</span><span class="cat-i">#sand / #sand-ink</span></span></li>
+      <li class="cat"><span class="cat-t tile-c" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-shoe"/></svg></span><span class="cat-b"><span class="cat-n">Calzado</span><span class="cat-f">Familia C · arena</span><span class="cat-i">#sand / #sand-ink</span></span></li>
+      <li class="cat"><span class="cat-t tile-b" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-moka"/></svg></span><span class="cat-b"><span class="cat-n">Hogar y cocina</span><span class="cat-f">Familia B · verde</span><span class="cat-i">#accent-soft / #accent</span></span></li>
+      <li class="cat"><span class="cat-t tile-b" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-cake"/></svg></span><span class="cat-b"><span class="cat-n">Comida y bebida</span><span class="cat-f">Familia B · verde</span><span class="cat-i">#accent-soft / #accent</span></span></li>
+      <li class="cat"><span class="cat-t tile-a" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-ticket"/></svg></span><span class="cat-b"><span class="cat-n">Música y entradas</span><span class="cat-f">Familia A · teja</span><span class="cat-i">#primary-soft / #primary-dark</span></span></li>
+      <li class="cat"><span class="cat-t tile-a" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-vase"/></svg></span><span class="cat-b"><span class="cat-n">Experiencias y talleres</span><span class="cat-f">Familia A · teja</span><span class="cat-i">#primary-soft / #primary-dark</span></span></li>
+      <li class="cat"><span class="cat-t tile-c" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-dice"/></svg></span><span class="cat-b"><span class="cat-n">Juegos y juguetes</span><span class="cat-f">Familia C · arena</span><span class="cat-i">#sand / #sand-ink</span></span></li>
+      <li class="cat"><span class="cat-t tile-b" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-ball"/></svg></span><span class="cat-b"><span class="cat-n">Deporte y aire libre</span><span class="cat-f">Familia B · verde</span><span class="cat-i">#accent-soft / #accent</span></span></li>
+      <li class="cat"><span class="cat-t tile-c" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-drop"/></svg></span><span class="cat-b"><span class="cat-n">Belleza y cuidado</span><span class="cat-f">Familia C · arena</span><span class="cat-i">#sand / #sand-ink</span></span></li>
+      <li class="cat"><span class="cat-t tile-n" aria-hidden="true"><svg class="ic-30" width="30" height="30"><use href="#i-gift"/></svg></span><span class="cat-b"><span class="cat-n">Otro regalo</span><span class="cat-f">Familia N · neutro</span><span class="cat-i">#sand-2 / #ink-2</span></span></li>
+    </ul>
+    <div class="fam-legend">
+      <div class="fam-card"><span class="fam-chip tile-a">A</span><span class="fam-t"><b>A · teja · 3</b><span>6,77:1</span></span></div>
+      <div class="fam-card"><span class="fam-chip tile-b">B</span><span class="fam-t"><b>B · verde · 3</b><span>5,08:1</span></span></div>
+      <div class="fam-card"><span class="fam-chip tile-c">C</span><span class="fam-t"><b>C · arena · 5</b><span>6,34:1</span></span></div>
+      <div class="fam-card"><span class="fam-chip tile-n">N</span><span class="fam-t"><b>N · neutro · 1</b><span>8,00:1</span></span></div>
+    </div>
+    <p class="note">Tamaños: 64 px de franja con icono de 36 en la tarjeta de deseo (02 .wish-media);
+      56×56 con icono de 30 en la rejilla de categorías (02 .cat-t); 40×40 con icono de 23 en el
+      selector del formulario (02 .cat-pick). <b>El reparto no cambia</b> cuando el deseo está
+      reservado: el estado se lee en su píldora.</p>
+  </section>
+
+  <!-- ============================================================
+       7 · COMPONENTES
+       ============================================================ -->
+  <section class="row" id="componentes">
+    <div class="row-head">
+      <h2><span class="n">7</span> Componentes · 13 piezas con sus estados</h2>
+      <p>Cada pieza con los valores canónicos y el artboard del que sale.</p>
+    </div>
+
+    <div class="comp-grid">
+
+      <!-- 7.1 botones -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.1 · Botones</h3><span class="src">02 · .btn / 10 · .btn-danger</span></div>
+        <div class="demo">
+          <p class="row-lbl">Primario</p>
+          <div class="btn-row">
+            <span class="st"><span class="st-lbl">Reposo</span><button class="btn btn-primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir deseo</button></span>
+            <span class="st"><span class="st-lbl">Hover</span><button class="btn btn-primary is-hover" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir deseo</button></span>
+            <span class="st"><span class="st-lbl">Foco</span><button class="btn btn-primary focus-demo" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir deseo</button></span>
+            <span class="st"><span class="st-lbl">Deshabilitado</span><button class="btn btn-primary" type="button" disabled>Guardar cambios</button></span>
+          </div>
+          <p class="row-lbl">Secundario, suave, peligro y texto</p>
+          <div class="btn-row">
+            <button class="btn btn-secondary" type="button">Ahora no</button>
+            <button class="btn btn-secondary is-hover" type="button">Ahora no</button>
+            <button class="btn btn-soft" type="button"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+            <button class="btn btn-danger" type="button">Borrar deseo</button>
+            <button class="btn-link" type="button">Volver a pedirlo</button>
+            <button class="btn-icon" type="button" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></button>
+          </div>
+        </div>
+        <p class="spec"><b>Alto mínimo 48</b> · píldora <code>--r-pill</code> · relleno 10/20 · 17 px/700 ·
+          contorno 2 px transparente · hueco 8. Primario con <code>--sh-cta</code>; peligro con
+          <code>--sh-danger</code>; deshabilitado <code>--sand-2</code> + <code>--ink-2</code> sin sombra.
+          <b>Un solo primario por pantalla.</b> Texto subrayado 2 px con 4 px de separación.</p>
+      </div>
+
+      <!-- 7.13 pestañas -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.13 · Pestañas</h3><span class="src">02 · .pf-nav / .dt-nav</span></div>
+        <div class="demo" style="padding:10px">
+          <p class="row-lbl">Barra inferior del móvil · 72 px, 4 secciones</p>
+          <div style="width:342px;border:1px solid var(--border-strong);border-radius:16px;overflow:hidden">
+            <nav class="tabbar" aria-label="Pestañas de ejemplo">
+              <a class="tab-i" href="#componentes" aria-current="page"><span class="tab-ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span>Inicio</a>
+              <a class="tab-i" href="#componentes"><span class="tab-ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span>Mi lista</a>
+              <a class="tab-i" href="#componentes"><span class="tab-ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg></span>Personas</a>
+              <a class="tab-i" href="#componentes"><span class="tab-ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span class="tab-badge">3</span></span>Avisos</a>
+            </nav>
+          </div>
+          <p class="row-lbl">Escritorio · píldoras en el encabezado</p>
+          <nav class="dt-nav" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-pill);padding:4px" aria-label="Pestañas de escritorio de ejemplo">
+            <a href="#componentes" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+            <a href="#componentes"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Mi lista</a>
+            <a href="#componentes"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+            <a href="#componentes"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos</a>
+          </nav>
+        </div>
+        <p class="spec">Activa: fondo <code>--primary-soft</code>, texto <code>--primary-dark</code> 800 y
+          <code>aria-current="page"</code>: el estado se lee por color <b>y</b> por peso. Inactiva
+          <code>--ink-2</code> 14 px/600 (icono 23). Contador 19 px de alto, 13 px/800, píldora
+          <code>--primary</code>. <b>Los grupos no son pestaña:</b> viven dentro de Personas.</p>
+      </div>
+
+      <!-- 7.7 avatares -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.7 · Avatar emoji</h3><span class="src">02 · .avatar / 10 · .pr-av-72</span></div>
+        <div class="demo">
+          <div class="av-row">
+            <span class="av-item"><span class="av-c" style="--s:40px" aria-hidden="true">🎸</span><span class="av-cap">40</span></span>
+            <span class="av-item"><span class="av-c" style="--s:48px" aria-hidden="true">👩‍🍳</span><span class="av-cap">48</span></span>
+            <span class="av-item"><span class="av-c big" style="--s:56px" aria-hidden="true">🐝</span><span class="av-cap">56</span></span>
+            <span class="av-item"><span class="av-c big" style="--s:72px" aria-hidden="true">🚲</span><span class="av-cap">72</span></span>
+            <span class="av-item"><span class="av-c sel" style="--s:56px" aria-hidden="true">🌻</span><span class="av-cap">selección</span></span>
+            <span class="av-item"><span class="av-c all" style="--s:56px" aria-hidden="true">+</span><span class="av-cap">todos</span></span>
+          </div>
+        </div>
+        <p class="spec">Círculo <code>1:1</code> · relleno <code>linear-gradient(180deg,#fff,#FFF2E6)</code> ·
+          contorno 2 px <code>--border-strong</code> · glifo <b>≈ 0,48 × lado</b> (40→20, 48→24, 56→27,
+          72→36) · <code>--sh-1</code> a partir de 56. Hover/selección: contorno <code>--primary</code> +
+          anillo <code>--ring-selected</code>. Variante «todos» con contorno discontinuo. Sólo emoji.</p>
+      </div>
+
+      <!-- 7.14 avisos -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.14 · Aviso de error, de éxito y de información</h3><span class="src">11 · .ac-alert / 10 · .pr-banner</span></div>
+        <div class="demo" style="background:var(--surface);border-style:solid;border-color:var(--border)">
+          <div class="alert" role="alert">
+            <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+            <span><span class="alert-t">Correo o contraseña incorrectos</span><span class="alert-d">Revisa la contraseña; si no la recuerdas, podemos enviarte un enlace.</span></span>
+          </div>
+          <div class="alert ok" role="status">
+            <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+            <span><span class="alert-t">Cambios guardados</span></span>
+          </div>
+          <div class="alert info" role="status">
+            <svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>
+            <span><span class="alert-t">La sorpresa se respeta</span><span class="alert-d">El grupo sólo verá que está reservado.</span></span>
+          </div>
+          <div class="banner" style="margin-top:12px"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Guardado a las 9:41</div>
+          <div class="banner err" style="margin-top:10px"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>No se pudo guardar</div>
+        </div>
+        <p class="spec">Relleno 12/14 · radio <code>--r-md</code> · <b>contorno 2 px</b> · hueco 11 · icono 24.
+          Error <code>--danger-soft</code>+<code>--danger-line</code>, texto <code>--danger-dark</code> (9,26:1).
+          Éxito <code>--accent-soft</code>+<code>--accent-line</code>, texto <code>--accent-ink</code> (8,54:1).
+          Variante en línea más compacta (11/14) para el perfil.
+          <code>role="alert"</code> sólo en el error que aparece tras una acción.</p>
+      </div>
+
+      <!-- 7.5 tarjeta de deseo -->
+      <div class="comp wide">
+        <div class="comp-h"><h3>7.5 · Tarjeta de deseo · con icono de categoría y enlace sólo icono</h3><span class="src">02 · .wish / 05 · .wish / 08 · .dd-wish</span></div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div class="frame">
+            <div class="wish">
+              <div class="wish-media tile-a">
+                <svg aria-hidden="true"><use href="#i-headphones"/></svg>
+                <span class="w-media-end"><span class="w-price">349,00 €</span><span class="w-cat">Tecnología</span></span>
+              </div>
+              <div class="w-head">
+                <h4 class="w-title">Auriculares inalámbricos Sony WH-1000XM5</h4>
+                <a class="w-link" href="#componentes" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Auriculares inalámbricos Sony WH-1000XM5"><svg class="ic-24" width="24" height="24" aria-hidden="true"><use href="#i-link"/></svg></a>
+              </div>
+              <p class="w-prio"><span class="hearts" aria-hidden="true"><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg></span>Me encantaría</p>
+              <p class="w-note"><span class="w-note-l">Nota</span>Los quiero con cancelación de ruido para el tren, mejor en negro y con el estuche rígido, como los que probé en casa de Marta.</p>
+            </div>
+            <div class="wish is-mine">
+              <p class="state state-mine"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Lo regalas tú</p>
+              <div class="wish-media tile-b">
+                <svg aria-hidden="true"><use href="#i-moka"/></svg>
+                <span class="w-media-end"><span class="w-price">34,95 €</span><span class="w-cat">Hogar y cocina</span></span>
+              </div>
+              <div class="w-head"><h4 class="w-title">Cafetera italiana Bialetti 6 tazas</h4></div>
+              <p class="w-prio"><span class="hearts" aria-hidden="true"><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg></span>Le gustaría</p>
+              <button class="btn btn-soft" type="button" style="width:100%"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Dejar de reservarlo</button>
+            </div>
+          </div>
+          <div class="frame" style="flex:1 1 auto;width:auto">
+            <div class="wish">
+              <p class="state state-other"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>Ya reservado</p>
+              <div class="wish-media tile-c">
+                <svg aria-hidden="true"><use href="#i-shoe"/></svg>
+                <span class="w-media-end"><span class="w-price">129,00 €</span><span class="w-cat">Calzado</span></span>
+              </div>
+              <div class="w-head">
+                <h4 class="w-title">Zapatillas de running Asics Gel-Nimbus</h4>
+                <a class="w-link" href="#componentes" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Zapatillas de running Asics Gel-Nimbus"><svg class="ic-24" width="24" height="24" aria-hidden="true"><use href="#i-link"/></svg></a>
+              </div>
+              <p class="w-prio"><span class="hearts" aria-hidden="true"><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg></span>Le gustaría</p>
+              <p class="w-note"><span class="w-note-l">Nota</span>Talla 43. Mejor las de este año, que la suela es más blanda para el asfalto del paseo.</p>
+              <div class="demo" style="margin-top:10px;border-style:solid;border-color:var(--border);background:var(--bg)">
+                <p style="font-size:13px;line-height:1.4;color:var(--ink-2)"><b style="color:var(--ink)">Sin botón:</b> el deseo lo regala otra persona, así que no hay acción que pulsar y se explica por qué.</p>
+              </div>
+            </div>
+            <div class="demo" style="margin-top:12px;border-style:solid;border-color:var(--border)">
+              <p class="row-lbl" style="margin-top:0">Estructura, de arriba abajo</p>
+              <p style="font-size:13.5px;line-height:1.5;color:var(--ink-2)">
+                1 · franja de categoría 64 px, radio 14, icono 36 y precio 18/800<br>
+                2 · título 18/800, máximo 3 líneas<br>
+                3 · tres corazones 17 px + texto («Me encantaría / Le gustaría / Le haría ilusión»)<br>
+                4 · enlace a la tienda <b style="color:var(--ink)">sólo icono</b>, 48×48, con <code style="font-family:var(--font-mono);font-size:12.5px">aria-label</code><br>
+                5 · nota con prefijo «Nota», recortada a 3 líneas (en el detalle no se recorta)<br>
+                6 · píldora de estado · 7 · acción
+              </p>
+            </div>
+          </div>
+        </div>
+        <p class="spec">Tarjeta: <code>--surface</code>, contorno 1 px <code>--border</code>, radio
+          <code>--r-card</code> 20, relleno 12, <code>--sh-1</code>. Cuando el deseo es propio, contorno
+          <code>--accent-line</code>. El color de la categoría <b>no</b> cambia por el estado: el estado
+          va en la píldora (icono + texto + color).</p>
+      </div>
+
+      <!-- 7.6 chip de celebración -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.6 · Chip de celebración</h3><span class="src">02 · .celebs / 09 · .av-celeb / 07 · .psn-celeb</span></div>
+        <div class="demo">
+          <p class="row-lbl">Bloque · próximo (16 px, 1,5 px)</p>
+          <ul style="display:grid;gap:8px">
+            <li style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;background:var(--primary-soft);border:1.5px solid var(--primary-line);border-radius:var(--r-md)">
+              <span class="av-c" style="--s:40px" aria-hidden="true">🎂</span>
+              <span style="flex:1 1 auto;min-width:0;font-size:17px;line-height:1.25"><b style="display:block;font-weight:800">Cumpleaños de Javier</b><span style="display:block;color:var(--ink-2);font-size:16px">3 de diciembre</span></span>
+              <span style="flex:0 0 auto;background:var(--surface);color:var(--primary-dark);padding:5px 12px;border-radius:var(--r-pill);box-shadow:var(--sh-1);font-size:16px;font-weight:700;white-space:nowrap">faltan 7 días</span>
+            </li>
+            <li style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;background:var(--surface);border:1.5px solid var(--border-strong);border-radius:var(--r-md)">
+              <span class="av-c" style="--s:40px" aria-hidden="true">⛪</span>
+              <span style="flex:1 1 auto;min-width:0;font-size:17px;line-height:1.25"><b style="display:block;font-weight:800">Santo de Lucía</b><span style="display:block;color:var(--ink-2);font-size:16px">13 de diciembre</span></span>
+              <span style="flex:0 0 auto;font-size:16px;font-weight:700;color:var(--ink-2);white-space:nowrap">faltan 17 días</span>
+            </li>
+          </ul>
+          <p class="row-lbl">Línea en texto · sin caja (lista de Personas)</p>
+          <p class="p-celeb is-next" style="margin-top:0"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Su cumpleaños, <b>3 de diciembre</b> · faltan 7 días</span></p>
+        </div>
+        <p class="spec">Alto mínimo 56, relleno 8/14, avatar 40, radio <code>--r-md</code>, contorno <b>1,5 px</b>.
+          La próxima: fondo <code>--primary-soft</code>, contorno <code>--primary-line</code> y la fecha en
+          píldora blanca. Sólo cumpleaños y onomástica, ordenados por cercanía; los eventos de grupo no
+          entran aquí.</p>
+      </div>
+
+      <!-- 7.8 filas -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.8 · Fila de persona y de grupo</h3><span class="src">07 · .psn-main / .psn-grow</span></div>
+        <div class="demo" style="padding:0;border-style:solid;border-color:var(--border)">
+          <ul class="list">
+            <li>
+              <a class="p-row" href="#componentes">
+                <span class="av-c" aria-hidden="true">🎸</span>
+                <span class="p-b">
+                  <span class="p-top"><span class="p-name">Javier</span><span class="p-count">7 deseos</span></span>
+                  <span class="p-celeb is-next"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Su cumpleaños, <b>3 de diciembre</b></span></span>
+                  <span class="p-tags"><span class="p-tag">🎄 Familia Martín</span><span class="p-tag">🏢 Oficina</span></span>
+                </span>
+                <svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </a>
+            </li>
+            <li>
+              <a class="g-row" href="#componentes">
+                <span class="g-ic" aria-hidden="true">🎄</span>
+                <span class="g-b"><span class="g-name">Familia Martín</span><span class="g-meta">6 personas · 41 deseos</span></span>
+                <svg class="chev" style="margin:0" aria-hidden="true"><use href="#i-chev"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <p class="spec">Persona: avatar 48, nombre 18/800, recuento 16/700 <code>--ink-2</code>, celebración
+          en una línea, grupos como etiquetas <code>--r-pill</code> sobre <code>--sand</code>.
+          Grupo: alto 64, tile 46 con radio 14, nombre 18/800, meta 16. Toda la fila es el enlace; el
+          hover subraya el nombre. Cada persona aparece <b>una sola vez</b> con sus grupos dentro.</p>
+      </div>
+
+      <!-- 7.12 campos -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.12 · Campo con «Mostrar»</h3><span class="src">11 · .ac-input / .ac-show</span></div>
+        <div class="demo" style="background:var(--surface);border-style:solid;border-color:var(--border)">
+          <label class="field">
+            <span class="field-l">Nombre</span>
+            <span class="field-wrap"><input class="input" type="text" value="Javier" readonly></span>
+            <span class="field-hint">Así te ven las personas de tus grupos.</span>
+          </label>
+          <label class="field">
+            <span class="field-l">Contraseña</span>
+            <span class="field-wrap">
+              <input class="input input-pw" type="password" value="sorpresa2026" placeholder="Al menos 8 caracteres">
+              <button class="show" type="button" aria-label="Mostrar la contraseña">Mostrar</button>
+            </span>
+            <span class="field-hint">Con «Mostrar» compruebas lo que has escrito.</span>
+          </label>
+          <label class="field">
+            <span class="field-l">Contraseña · foco</span>
+            <span class="field-wrap">
+              <input class="input input-pw is-focus" type="password" value="sorpresa2026">
+              <button class="show" type="button" aria-label="Mostrar la contraseña">Mostrar</button>
+            </span>
+          </label>
+          <label class="field">
+            <span class="field-l">Correo</span>
+            <span class="field-wrap"><input class="input is-err" type="email" value="javier@" aria-invalid="true" aria-describedby="f-err"></span>
+            <span class="field-err" id="f-err"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>Escribe el correo completo: falta el dominio.</span>
+          </label>
+          <label class="field">
+            <span class="field-l">Grupo (sólo lectura)</span>
+            <span class="field-wrap"><input class="input is-off" type="text" value="Familia Martín" readonly></span>
+          </label>
+        </div>
+        <p class="spec">Alto <b>56</b> · radio <code>--r-sm</code> · relleno 0/14 · 17 px/600 · contorno 2 px
+          <code>--border-control</code> (3,57:1) · placeholder <code>--ink-2</code> (8,92:1) ·
+          «Mostrar» 48 px dentro del campo con <code>padding-right:104px</code> · foco con anillo de 3 px y
+          3 px de separación · error <code>--danger</code> + <code>--danger-soft</code> + mensaje 16/700
+          <code>--danger-dark</code> con icono · deshabilitado <code>--sand-2</code>.</p>
+      </div>
+
+      <!-- 7.11 toast -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.11 · Toast con «Deshacer»</h3><span class="src">05 · .ml-toast / .ml-undo</span></div>
+        <div class="demo" style="background:var(--bg)">
+          <div class="toast" role="status" aria-live="polite">
+            <span class="toast-t">Auriculares Sony: a Recibidos</span>
+            <button class="toast-undo" type="button"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Deshacer</button>
+          </div>
+          <p class="row-lbl">Con foco en «Deshacer»</p>
+          <div class="toast" role="status" aria-live="polite">
+            <span class="toast-t">Auriculares Sony: a Recibidos</span>
+            <button class="toast-undo" type="button" style="outline:3px solid var(--on-ink-accent);outline-offset:2px"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Deshacer</button>
+          </div>
+        </div>
+        <p class="spec">Fondo <code>--ink</code>, texto <code>--on-ink</code> (15,28:1), radio
+          <code>--r-md</code>, relleno 9/10/9/14, <code>--sh-toast</code>. Anclado a <b>14 px</b> de los lados y
+          <b>84 px</b> del pie (72 de la barra + 12). «Deshacer» 48 px, <code>--on-ink-accent</code>
+          (14,23:1), subrayado 2 px, foco con anillo claro. Una sola acción; no bloquea; deshacer
+          devuelve el deseo con su precio, su nota y su enlace.</p>
+      </div>
+
+      <!-- 7.9 hoja inferior -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.9 · Hoja inferior</h3><span class="src">08 · .dd-sheet / 10 · .pr-sheet</span></div>
+        <div class="sheet-demo">
+          <div class="sheet-under" aria-hidden="true">
+            <div class="wish">
+              <div class="wish-media tile-b"><svg><use href="#i-moka"/></svg><span class="w-media-end"><span class="w-price">34,95 €</span><span class="w-cat">Hogar y cocina</span></span></div>
+              <h4 class="w-title">Cafetera italiana Bialetti 6 tazas</h4>
+            </div>
+          </div>
+          <div class="scrim" aria-hidden="true"></div>
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" aria-describedby="sh-d">
+            <div class="grab" aria-hidden="true"></div>
+            <div class="sheet-head">
+              <h4 class="sheet-h" id="sh-h">¿Lo regalas tú?</h4>
+              <button class="x-btn" type="button" aria-label="Cerrar">×</button>
+            </div>
+            <p class="sheet-wish">Cafetera italiana Bialetti 6 tazas<span>34,95 € · Hogar y cocina</span></p>
+            <p class="sheet-p" id="sh-d">El resto del grupo lo verá como reservado y nadie lo repetirá. Si cambias de idea, podrás dejarlo libre cuando quieras.</p>
+            <div class="sheet-btns">
+              <button class="btn btn-primary" type="button" style="width:100%">Sí, lo regalo yo</button>
+              <button class="btn btn-secondary" type="button" style="width:100%">Ahora no</button>
+            </div>
+          </div>
+        </div>
+        <p class="spec">Anclada abajo · <code>--r-sheet</code> 28 sólo arriba · relleno 10/20/28 ·
+          <code>--sh-sheet</code> · velo <code>rgba(43,26,18,.52)</code> · asa 44×5 · título
+          <code>--text-sheet</code> 22/800 · cerrar 48 px · máximo dos botones, primario arriba ·
+          <code>role="dialog"</code>, <code>aria-modal</code>, fondo <code>inert</code>. En móvil, toda
+          confirmación es una hoja.</p>
+      </div>
+
+      <!-- 7.10 diálogo -->
+      <div class="comp">
+        <div class="comp-h"><h3>7.10 · Diálogo (escritorio)</h3><span class="src">06 · .fd-dialog</span></div>
+        <div class="demo" style="background:var(--sand);border-style:solid;border-color:var(--border-strong);padding:18px">
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-h">
+            <div class="dlg-head">
+              <h4 id="dlg-h">Editar deseo</h4>
+              <button class="x-btn" type="button" aria-label="Cerrar">×</button>
+            </div>
+            <div class="dlg-body">
+              <p>Título, precio, prioridad, enlaces y visibilidad: lo mismo del móvil, en una caja centrada.</p>
+            </div>
+            <div class="dlg-foot">
+              <button class="btn btn-secondary" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="button">Guardar</button>
+            </div>
+          </div>
+        </div>
+        <p class="spec">Hasta 880 px de ancho · <code>--r-dialog</code> 24 · <code>--sh-dialog</code> · velo
+          <code>rgba(43,26,18,.30)</code> · cabecera y pie con borde de 1 px <code>--border</code> ·
+          relleno 14/24 y 12/24 · acciones a la derecha con 12 px de hueco · foco atrapado y devuelto al
+          disparador. (En esta muestra la caja va a 640 px para caber en la columna.)</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       8 · FOCO Y MOVIMIENTO
+       ============================================================ -->
+  <section class="row" id="foco">
+    <div class="row-head">
+      <h2><span class="n">8</span> Foco y movimiento</h2>
+      <p>Un solo estilo de foco en toda la app; ninguna animación es necesaria para entender la interfaz.</p>
+    </div>
+    <div class="focus-grid">
+      <div class="focus-card">
+        <p class="row-lbl" style="margin-top:0">Sobre lienzo y tarjeta</p>
+        <div class="demo"><span class="mock-focus">Añadir deseo</span></div>
+        <p class="f-t"><b>3 px</b> <code style="font-family:var(--font-mono);font-size:12.5px">--primary-dark</code> con
+          <b>3 px</b> de separación · 7,78:1 sobre el lienzo y 8,19:1 sobre blanco. En campos y controles
+          el anillo sigue la forma del control (<code>--r-sm</code> 14).</p>
+      </div>
+      <div class="focus-card on-soft">
+        <p class="row-lbl" style="margin-top:0;color:var(--primary-dark)">Sobre teja suave</p>
+        <div class="demo" style="background:var(--primary-soft);border-color:var(--primary-line)"><span class="mock-focus">Lo regalo yo</span></div>
+        <p class="f-t"><b>Mismo anillo</b> <code style="font-family:var(--font-mono);font-size:12.5px">--primary-dark</code>:
+          6,77:1, se ve igual sobre el panel de celebración.</p>
+      </div>
+      <div class="focus-card on-ink">
+        <p class="row-lbl" style="margin-top:0;color:var(--on-ink)">Sobre tinta (toast)</p>
+        <div class="demo" style="background:var(--ink);border-color:var(--ink)"><span class="mock-focus on-ink">Deshacer</span></div>
+        <p class="f-t" style="color:var(--on-ink)"><b style="color:var(--on-ink)">Anillo claro</b>
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--on-ink-accent)">--on-ink-accent</code>:
+          14,23:1. El foco nunca se comunica sólo con la sombra.</p>
+      </div>
+    </div>
+
+    <div class="motion-grid">
+      <div class="motion"><span class="m-tok">--dur-state</span><span class="m-val">.16s ease</span><p class="m-use">Color de fondo, borde y texto en hover, foco y selección. Es la única transición de estado.</p></div>
+      <div class="motion"><span class="m-tok">--dur-spin</span><span class="m-val">.9s linear</span><p class="m-use">Giro de la rueda de carga (06 .fd-spin, 11 .ac-spin).</p><div class="spin" aria-hidden="true"></div></div>
+      <div class="motion"><span class="m-tok">reduced-motion</span><span class="m-val">sin movimiento</span><p class="m-use">Con <code style="font-family:var(--font-mono);font-size:12.5px">prefers-reduced-motion: reduce</code> no hay transiciones ni animaciones: la rueda se queda quieta y el interruptor salta a su sitio.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       9 · DIFERENCIAS CON EL SISTEMA ACTUAL
+       ============================================================ -->
+  <section class="row" id="diferencias">
+    <div class="row-head">
+      <h2><span class="n">9</span> Diferencias con el sistema actual</h2>
+      <p>Comparado con <code style="font-family:var(--font-mono);font-size:15px">design/system.md</code>, que no se modifica.</p>
+    </div>
+    <table class="diff">
+      <thead><tr><th style="width:180px">Aspecto</th><th style="width:420px">Sistema actual</th><th>Sistema nuevo</th></tr></thead>
+      <tbody>
+        <tr><td><b>Marca</b></td><td class="now">#aa2c32 con degradado 135° a #ff7574</td><td class="new">#B93D12 plano con sombra cálida <code>--sh-cta</code></td></tr>
+        <tr><td><b>Lienzo</b></td><td class="now">#fff4f4 rosa pálido, secciones #ffecee</td><td class="new">#FFF8F1 crema, secciones <code>--sand</code> #FBEBDC</td></tr>
+        <tr><td><b>Tinta</b></td><td class="now">un solo nivel: #4c212b</td><td class="new">dos niveles: #2B1A12 (16,68:1) y #5C4033 (9,39:1)</td></tr>
+        <tr><td><b>Éxito</b></td><td class="now">#006666 verde azulado</td><td class="new">#2F6F4E con fondo #E1F0E7 y texto #1F4A33</td></tr>
+        <tr><td><b>Prioridad</b></td><td class="now">chips de 3 colores (alta / media / baja) + chip de precio</td><td class="new">corazones <code>--primary</code> + texto y precio 18/800; sin chips de color</td></tr>
+        <tr><td><b>Bordes</b></td><td class="now">«no 1px borders»: sólo capas tonales y sombras</td><td class="new">sí: 1 px separador, 1,5 px chips y filas, 2 px controles</td></tr>
+        <tr><td><b>Cristal</b></td><td class="now">navegación y modales al 70–80 % con 20 px de desenfoque</td><td class="new">superficies opacas; única transparencia <code>rgba(255,248,241,.97)</code> en la barra</td></tr>
+        <tr><td><b>Tipografía</b></td><td class="now">Be Vietnam Pro + Plus Jakarta Sans, sin escala documentada</td><td class="new">Nunito única, 600/700/800, escala de 11 pasos (13–30 px)</td></tr>
+        <tr><td><b>Radios</b></td><td class="now">0.5rem y 0.75rem (tarjeta 12 px)</td><td class="new">9 tokens; tarjeta <b>20 px</b>, hoja 28, diálogo 24, píldora 999</td></tr>
+        <tr><td><b>Sombras</b></td><td class="now">dos ambientales rosadas apiladas</td><td class="new">9 sombras + 1 anillo; sólo tres cálidas y sólo en el primario</td></tr>
+        <tr><td><b>Navegación</b></td><td class="now">3 pestañas (Deseos / Grupos / Perfil) en dock flotante</td><td class="new">4 pestañas (Inicio / Mi lista / Personas / Avisos) en barra sólida de 72 px</td></tr>
+        <tr><td><b>Corte</b></td><td class="now">un breakpoint en 768 px</td><td class="new">móvil 390 (16 px laterales) y escritorio con contenido de 1200; tablet pendiente (T7)</td></tr>
+        <tr><td><b>Táctil</b></td><td class="now">no documentado</td><td class="new">mínimo 48×48 en cualquier control</td></tr>
+        <tr><td><b>Foco</b></td><td class="now">anillo con <code>--primary</code></td><td class="new">anillo de 3 px <code>--primary-dark</code> con 3 px de separación; variante clara sobre tinta</td></tr>
+        <tr><td><b>Movimiento</b></td><td class="now">no documentado</td><td class="new">.16s ease de estado y .9s linear de carga; movimiento reducido respetado</td></tr>
+        <tr><td><b>Contenido</b></td><td class="now">fotos de producto</td><td class="new">12 iconos de categoría en 4 familias</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Las 7 diferencias que más cambian el código: el mapa de color completo, la familia
+      tipográfica, el radio de las tarjetas, los bordes que ahora existen, la navegación de 4 pestañas,
+      el mínimo táctil de 48 px y el foco de 3 px. El resto son detalles de densidad.</p>
+  </section>
+
+</main>
+
+<footer>
+  Fuente de este tablero: <b>sistema-nuevo.md</b>, extraído de los artboards 02, 04, 05, 06, 07, 08, 09,
+  10 y 11 de <code style="font-family:var(--font-mono)">design/rediseno-muro/</code>. Sistema nuevo,
+  dirección «Personas primero» (S2). Las desviaciones de las maquetas y su valor canónico están en la
+  tabla §12 de esa ficha.
+</footer>
+
+</body>
+</html>

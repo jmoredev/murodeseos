@@ -96,6 +96,72 @@
       "sentAt": "2026-11-26T18:26:22.501Z",
       "resolvedAt": "2026-11-26T18:33:40.745Z",
       "resolution": "El botón pasa de «Crear mi lista» a «Crear mi cuenta» (es el registro) con la aclaración «Solo te pedimos un correo y una contraseña. Después apuntas tu primer deseo.»"
+    },
+    {
+      "id": "r4kyosfj",
+      "file": "06-formulario-deseo.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(2) > div > div:nth-of-type(3) > header > h3",
+      "excerpt": "Nuevo deseo",
+      "comment": "A la hora de añadir un nuevo deseo entiendo que debajo d Notas van también las opciones de ¿Quien puede verlo? y el/los enlaces a la tienda. Al final la vista de de la pantalla 2 de añadir un deseo y la pantalla 3 de editarlo tienen que ser casi idénticas",
+      "createdAt": "2026-11-27T07:51:51.844Z",
+      "status": "open",
+      "sentAt": "2026-11-27T07:51:51.896Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "02d95b8d",
+      "file": "07-personas.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(3) > section > ul > li:nth-of-type(1) > a > span:nth-of-type(1)",
+      "excerpt": "🎸",
+      "comment": "Cuidado con que se compriman los iconos, se ve muy mal",
+      "createdAt": "2026-11-27T07:52:47.422Z",
+      "status": "open",
+      "sentAt": "2026-11-27T07:52:47.441Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "tvjmajj8",
+      "file": "07-personas.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(3) > section > ul > li:nth-of-type(3) > p > span:nth-of-type(2)",
+      "excerpt": "🎸 Familia Martín",
+      "comment": "Estos grupos deberían de ser clickeables para que te lleve a su vista",
+      "createdAt": "2026-11-27T07:53:10.976Z",
+      "status": "open",
+      "sentAt": "2026-11-27T07:53:10.993Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "k2nt4exm",
+      "file": "07-personas.html",
+      "selector": "#movil1-h",
+      "excerpt": "Móvil · la pestaña «Personas»",
+      "comment": "No me gusta nada esta pantalla, porque mezcla personas y grupos y si tienes muchas personas tienes que bajar hasta abajo del todo para encontrar los grupos. Hay que rediseñarla, hay que tener acceso rápido tanto a los grupos como a la spersonas",
+      "createdAt": "2026-11-27T07:54:40.475Z",
+      "status": "open",
+      "sentAt": "2026-11-27T07:54:40.492Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "cccqaboa",
+      "file": "10-perfil.html",
+      "selector": "body > header > div > div:nth-of-type(1) > h1",
+      "excerpt": "Perfil",
+      "comment": "No entiendo bien en esta pantalla como editar tu perfil. Entiendo que desde la pantalla 3 deberías de llegar a las pantallas 1 y 2",
+      "createdAt": "2026-11-27T07:58:01.182Z",
+      "status": "open",
+      "sentAt": "2026-11-27T07:58:01.215Z",
+      "resolvedAt": null
+    },
+    {
+      "id": "qrjd91mu",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(5) > div:nth-of-type(2) > figure > div > div:nth-of-type(5) > fieldset > label:nth-of-type(2)",
+      "excerpt": "🌻 📚 ⚽ Amigos de la Uni 8 participantes",
+      "comment": "Entiendo que no hace falta pulsar unicamente sobre el radio button sino que al pulsar sobre toda la tarjeta se selecciona",
+      "createdAt": "2026-11-27T08:08:30.418Z",
+      "status": "open",
+      "sentAt": "2026-11-27T08:08:30.466Z",
+      "resolvedAt": null
     }
   ]
 }

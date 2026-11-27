@@ -1,0 +1,53 @@
+{
+  "arrangement": "free",
+  "positions": {
+    "system": {
+      "x": 346,
+      "y": 0
+    },
+    "01-clara.html": {
+      "x": 1866,
+      "y": 0
+    },
+    "02-personas-primero.html": {
+      "x": 3386,
+      "y": 0
+    },
+    "03-muro-visual.html": {
+      "x": 0,
+      "y": 2444
+    },
+    "04-ficha-grupo.html": {
+      "x": 6426,
+      "y": 0
+    },
+    "05-mi-lista.html": {
+      "x": 7946,
+      "y": 0
+    },
+    "06-formulario-deseo.html": {
+      "x": 9466,
+      "y": 0
+    },
+    "07-personas.html": {
+      "x": 10986,
+      "y": 0
+    },
+    "08-detalle-deseo.html": {
+      "x": 12506,
+      "y": 0
+    },
+    "09-avisos.html": {
+      "x": 14026,
+      "y": 0
+    },
+    "10-perfil.html": {
+      "x": 15546,
+      "y": 0
+    },
+    "11-acceso.html": {
+      "x": 17066,
+      "y": 0
+    }
+  }
+}
