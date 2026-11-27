@@ -22,6 +22,13 @@ export interface ConnectivityStore {
     getSnapshot(): boolean;
     /** Se suscribe a los cambios; devuelve la baja. */
     subscribe(onChange: () => void): () => void;
+    /**
+     * Vuelve a preguntar por el estado y avisa a quien escuche. Es lo que necesita un
+     * «Reintentar» que no recarga la página: si la conexión volvió sin evento `online`
+     * (navegadores que no lo emiten, o un `onLine` que cambió y nadie avisó), la relectura
+     * basta para que `useSyncExternalStore` vuelva a pintar con el valor nuevo.
+     */
+    recheck(): void;
 }
 
 /**
@@ -30,6 +37,8 @@ export interface ConnectivityStore {
  */
 export function createConnectivityStore(platformOS: string): ConnectivityStore {
     const supported = platformOS === 'web';
+    // Quién escucha. Se guardan aquí para poder avisarles sin un evento del navegador (`recheck`).
+    const listeners = new Set<() => void>();
 
     const getSnapshot = (): boolean => {
         if (!supported) return true;
@@ -38,16 +47,29 @@ export function createConnectivityStore(platformOS: string): ConnectivityStore {
     };
 
     const subscribe = (onChange: () => void): (() => void) => {
-        if (!supported || typeof window === 'undefined') return () => {};
+        if (!supported) return () => {};
+        listeners.add(onChange);
+        if (typeof window === 'undefined') {
+            return () => {
+                listeners.delete(onChange);
+            };
+        }
         window.addEventListener('online', onChange);
         window.addEventListener('offline', onChange);
         return () => {
+            listeners.delete(onChange);
             window.removeEventListener('online', onChange);
             window.removeEventListener('offline', onChange);
         };
     };
 
-    return { supported, getSnapshot, subscribe };
+    const recheck = (): void => {
+        if (!supported) return;
+        // Copia: un suscriptor puede darse de baja mientras se avisa al resto.
+        for (const listener of Array.from(listeners)) listener();
+    };
+
+    return { supported, getSnapshot, subscribe, recheck };
 }
 
 /** La instancia real: en web escucha al navegador; en nativo es inerte. */

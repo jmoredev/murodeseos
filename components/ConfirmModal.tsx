@@ -78,15 +78,24 @@ export function ConfirmModal({
         };
         document.addEventListener('keydown', onKeyDown);
 
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, [isOpen, onClose]);
+
+    /**
+     * El foco se pone en «Cancelar» al abrir **y también al cambiar de forma** (hoja ⇄ ventana):
+     * son dos subárboles distintos, así que al cruzar el ancho de escritorio el que se pinta se
+     * remonta y el foco caería al documento, dejando la confirmación abierta sin teclado. Se
+     * vuelve a poner dentro en vez de mover el foco a un botón concreto que el usuario no eligió.
+     */
+    useEffect(() => {
+        if (!isOpen) return;
+
         const t = window.requestAnimationFrame(() => {
             document.querySelector<HTMLButtonElement>('[data-confirm-cancel]')?.focus();
         });
 
-        return () => {
-            window.cancelAnimationFrame(t);
-            document.removeEventListener('keydown', onKeyDown);
-        };
-    }, [isOpen, onClose]);
+        return () => window.cancelAnimationFrame(t);
+    }, [isOpen, isDesktop]);
 
     useEffect(() => {
         if (isOpen) return;

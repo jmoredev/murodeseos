@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppIcon } from '@/components/ui/AppIcon';
-import { useOnline } from '@/lib/use-online';
+import { connectivity, useOnline } from '@/lib/use-online';
 
 /**
  * Banda de «Sin conexión» (12 · P4). Se monta una sola vez en el armazón de la app
@@ -18,25 +18,38 @@ import { useOnline } from '@/lib/use-online';
 
 export interface OfflineBannerProps {
     /**
-     * Qué hace «Reintentar». Por defecto recarga la página: es la acción que el icono promete y
-     * la única que puede recuperar la conexión de verdad. Se puede sustituir desde el armazón.
+     * Qué hace «Reintentar». Por defecto **vuelve a preguntar** por la conexión y, si sigue sin
+     * haberla, lo dice en la propia banda. No recarga la página: recargar sin conexión deja la
+     * app en la página «sin conexión» del navegador y tira lo que hubiera sin guardar.
      */
     onRetry?: () => void;
 }
 
-function recargarPagina() {
-    if (typeof window !== 'undefined' && typeof window.location?.reload === 'function') {
-        window.location.reload();
-    }
-}
-
 export function OfflineBanner({ onRetry }: OfflineBannerProps) {
     const online = useOnline();
+    // Si se pulsó «Reintentar» y sigue sin conexión, se dice: un botón que no responde nada
+    // parece roto. Al volver la conexión, el aviso se limpia para no quedar pegado al siguiente corte.
+    const [sigueSinConexion, setSigueSinConexion] = useState(false);
+
+    useEffect(() => {
+        if (online) setSigueSinConexion(false);
+    }, [online]);
 
     // `useOnline` devuelve `true` en nativo y en el servidor: la banda nunca aparece sin fuente.
     if (online) return null;
 
-    const reintentar = onRetry ?? recargarPagina;
+    const reintentar = () => {
+        if (onRetry) {
+            onRetry();
+            return;
+        }
+
+        // Releer el estado real (`navigator.onLine`) y avisar a quien esté suscrito: si la conexión
+        // volvió sin que llegara el evento `online`, la banda desaparece igualmente en este mismo
+        // render. Si sigue sin haberla, se dice sin prometer nada sobre datos guardados (S8).
+        connectivity.recheck();
+        setSigueSinConexion(!connectivity.getSnapshot());
+    };
 
     return (
         <View
@@ -59,6 +72,11 @@ export function OfflineBanner({ onRetry }: OfflineBannerProps) {
                     No tienes conexión a internet. Puede que lo que ves no esté actualizado; vuelve a intentarlo
                     cuando la conexión vuelva.
                 </Text>
+                {sigueSinConexion ? (
+                    <Text role="status" className="mt-1.5 text-[16px] leading-[1.38] text-ink">
+                        Sigue sin conexión. Comprueba tu red e inténtalo otra vez.
+                    </Text>
+                ) : null}
                 <Pressable
                     onPress={reintentar}
                     accessibilityRole="button"

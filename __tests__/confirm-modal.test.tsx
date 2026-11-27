@@ -149,6 +149,21 @@ describe('ConfirmModal', () => {
         disparador.remove();
     });
 
+    it('al cruzar el ancho de escritorio con la confirmación abierta, el foco sigue dentro', async () => {
+        abrir();
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus());
+
+        // La hoja y la ventana son dos subárboles distintos: al cambiar de ancho el que se pinta
+        // se remonta y el foco caería al documento, dejando la confirmación a medias sin teclado.
+        act(() => {
+            fijarAncho(1280);
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        expect(screen.getByRole('dialog')).toHaveAttribute('data-layout', 'dialog');
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus());
+    });
+
     it('cerrado no pinta nada', () => {
         const { container } = render(
             <ConfirmModal isOpen={false} onClose={vi.fn()} onConfirm={vi.fn()} {...COPY_BORRAR} />,

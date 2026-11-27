@@ -50,6 +50,20 @@ describe('createConnectivityStore', () => {
         expect(onChange).toHaveBeenCalledTimes(2);
     });
 
+    it('«recheck» vuelve a leer el estado y avisa aunque el navegador no haya dado un evento', () => {
+        const store = createConnectivityStore('web');
+        const onChange = vi.fn();
+        store.subscribe(onChange);
+
+        // La conexión cambió sin que `online`/`offline` llegaran: es el caso que aprovecha el
+        // botón «Reintentar» de la banda, que pregunta en vez de recargar la página.
+        setOnLine(false);
+        store.recheck();
+
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(store.getSnapshot()).toBe(false);
+    });
+
     it('en nativo no se suscribe a nada y responde siempre «en línea»', () => {
         const store = createConnectivityStore('ios');
         const onChange = vi.fn();

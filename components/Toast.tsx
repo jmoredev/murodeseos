@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useIsDesktop } from '@/lib/use-is-desktop';
 
@@ -58,9 +58,29 @@ export function Toast({ message, type = 'success', duration, onClose, action }: 
     const esError = type === 'error';
     const duracion = duration ?? (action ? DURACION_CON_ACCION_MS : DURACION_CONFIRMACION_MS);
 
+    /**
+     * Identidad del brindis que hay en pantalla. `useToast` reutiliza esta misma pieza cuando el
+     * llamador sustituye un mensaje por otro, así que el cierre retardado del viejo sigue vivo
+     * sobre el nuevo: si cerrara a ciegas lo borraría 300 ms después de aparecer (el caso de la
+     * acción cuyo manejador muestra otro brindis). Cada sustitución sube el contador y el cierre
+     * sólo avisa al llamador si el brindis sigue siendo el suyo.
+     */
+    const firma = `${type}\u0000${message}\u0000${action?.label ?? ''}\u0000${duracion}`;
+    const firmaRef = useRef(firma);
+    const tokenRef = useRef(0);
+
+    useEffect(() => {
+        if (firmaRef.current === firma) return;
+        firmaRef.current = firma;
+        tokenRef.current += 1;
+    }, [firma]);
+
     const cerrar = () => {
         setIsVisible(false);
-        setTimeout(onClose, SALIDA_MS);
+        const token = tokenRef.current;
+        setTimeout(() => {
+            if (tokenRef.current === token) onClose();
+        }, SALIDA_MS);
     };
 
     useEffect(() => {
@@ -78,7 +98,11 @@ export function Toast({ message, type = 'success', duration, onClose, action }: 
             // un cuadro—, se cancela el cuadro: si no, volvería a mostrar el brindis ya cerrado.
             cancelAnimationFrame(enterFrame);
             setIsVisible(false);
-            setTimeout(onClose, SALIDA_MS);
+            // Mismo cerco que en `cerrar`: el aviso al llamador sólo vale para este brindis.
+            const token = tokenRef.current;
+            setTimeout(() => {
+                if (tokenRef.current === token) onClose();
+            }, SALIDA_MS);
         }, duracion);
 
         return () => {

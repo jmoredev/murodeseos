@@ -109,6 +109,44 @@ describe('Toast', () => {
         expect(onPress).toHaveBeenCalledTimes(1);
     });
 
+    it('el cierre retardado no se lleva por delante el brindis con el que la acción lo sustituye', () => {
+        /**
+         * `useToast` reutiliza la misma pieza al cambiar de mensaje, así que el `setTimeout` de la
+         * salida del viejo sigue vivo. Si cierra a ciegas, borra el brindis nuevo 300 ms después
+         * de que la acción lo muestre: el usuario ve parpadear el que ya no importa.
+         */
+        function Demo() {
+            const { showToast, ToastComponent } = useToast();
+            return (
+                <div>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            showToast('«Cafetera italiana Bialetti» se ha movido a Recibidos', 'success', {
+                                action: {
+                                    label: 'Deshacer',
+                                    onPress: () => showToast('Se ha deshecho el cambio'),
+                                },
+                            })
+                        }
+                    >
+                        mostrar
+                    </button>
+                    {ToastComponent}
+                </div>
+            );
+        }
+        render(<Demo />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'mostrar' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Deshacer' }));
+        expect(screen.getByText('Se ha deshecho el cambio')).toBeInTheDocument();
+
+        // La salida del brindis viejo (300 ms) ya pasó.
+        avanzar(300);
+        expect(screen.getByText('Se ha deshecho el cambio')).toBeInTheDocument();
+    });
+
     it('el de confirmación se anuncia como estado, sin robar el foco', () => {
         render(<Toast message="Deseo guardado" onClose={vi.fn()} />);
 
