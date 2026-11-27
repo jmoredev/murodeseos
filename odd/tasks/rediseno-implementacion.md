@@ -4,8 +4,8 @@ Lleva a la app el diseño cerrado en `design/rediseno-muro/` (ficha de diseño:
 `odd/tasks/rediseno-muro.md`). Once tramos de menos a más riesgo, cada uno un PR contra la rama de
 integración `feat/rediseno`; al final, un único merge a `main` y un tag.
 
-**Rama de integración:** `feat/rediseno` (sale de `design/rediseno-muro`) · **Estado:** abierta, T1 en
-curso en `feat/rediseno-01-tokens`.
+**Rama de integración:** `feat/rediseno` (sale de `design/rediseno-muro`) · **Estado:** abierta; T1 integrado
+(`bc75133`, #100), T2 en curso en `feat/rediseno-02-estados-acceso`.
 
 ## Specs
 
@@ -37,12 +37,13 @@ borran sin sustituto. Los ids del tour y los `?tab=` antiguos siguen funcionando
 
 ## Tasks
 
-- [ ] T1 — Colores, tipografía y contorno: tokens de `sistema-nuevo.md` en `tailwind.config.cjs` y
+- [x] T1 — Colores, tipografía y contorno: tokens de `sistema-nuevo.md` en `tailwind.config.cjs` y
   `app/global.css`, Nunito con `expo-font`, hex sueltos (AppErrorBoundary, PrimaryButton, DateField,
   TourOverlay, spinners, placeholders, `app.json`, `public/manifest.json`), guardianes
-  `contrast-floor`/`typography-floor`. S4–S7 · worker · rama `feat/rediseno-01-tokens` · commits `529f83a`, `6c83b74`, `04346a0`
+  `contrast-floor`/`typography-floor`. S4–S7 · worker · rama `feat/rediseno-01-tokens` · commits `529f83a`, `6c83b74`, `04346a0`, `fd92c3f` · PR #100 → `feat/rediseno`, squash `bc75133`
   Risk: item 5 (dependencia nueva `@expo-google-fonts/nunito`).
-- [ ] T2 — Estados globales y acceso (12, 11). S4, S7 · — · commit —
+- [ ] T2 — Estados globales y acceso (12, 11). S4, S7 · worker · rama `feat/rediseno-02-estados-acceso` ·
+  commit —
 - [ ] T3 — Perfil índice + apartados, tallas de lista (10). S4, S7 · — · commit —
 - [ ] T4 — Mi lista y formulario de deseo (05, 06; varios enlaces, «¿Quién puede verlo?»). S4, S7 · — ·
   commit —
@@ -87,3 +88,14 @@ llega a 4.5037:1, el guardián de contraste fallaría»). Reproducido: falso pos
 `04346a0` fija ese redondeo en el test (+4 líneas, sin tocar aserciones). El validador dirigido la
 rechaza porque las aserciones no cambian → estado terminal `escalated` (sin regresión, sin
 follow-ups). T1 queda verificado por Vitest/tsc/eslint; la revisión nativa no aprobó.
+
+L6 — 2026-11-27, propietario: «adelante con push y pr». Se sube `feat/rediseno` (`bd21e1a`) y
+`feat/rediseno-01-tokens`; PR #100 hacia `feat/rediseno`. CI: E2E falla en
+`e2e/wishlist.spec.ts:354`, que fijaba el degradado viejo de Guardar (hueco de S7 en T1); `fd92c3f`
+lo comprueba por el relleno plano `primary` leído del token. Segundo intento: fallo de
+infraestructura (puerto 54524 ocupado al arrancar Supabase), relanzado una vez → tipos, unitarias
+y E2E en verde. `birthday-reminders.spec.ts:213` fue intermitente (pasó al reintentar). Merge del
+PR: decisión del propietario.
+
+L7 — 2026-11-27, propietario: «Merge y seguimos con T2». PR #100 integrado con squash (`bc75133`,
+convención del repo); T2 arranca en `feat/rediseno-02-estados-acceso` desde `feat/rediseno`.
