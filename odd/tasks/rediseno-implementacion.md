@@ -40,7 +40,7 @@ borran sin sustituto. Los ids del tour y los `?tab=` antiguos siguen funcionando
 - [ ] T1 — Colores, tipografía y contorno: tokens de `sistema-nuevo.md` en `tailwind.config.cjs` y
   `app/global.css`, Nunito con `expo-font`, hex sueltos (AppErrorBoundary, PrimaryButton, DateField,
   TourOverlay, spinners, placeholders, `app.json`, `public/manifest.json`), guardianes
-  `contrast-floor`/`typography-floor`. S4–S7 · worker · rama `feat/rediseno-01-tokens` · commit —
+  `contrast-floor`/`typography-floor`. S4–S7 · worker · rama `feat/rediseno-01-tokens` · commits `529f83a`, `6c83b74`, `04346a0`
   Risk: item 5 (dependencia nueva `@expo-google-fonts/nunito`).
 - [ ] T2 — Estados globales y acceso (12, 11). S4, S7 · — · commit —
 - [ ] T3 — Perfil índice + apartados, tallas de lista (10). S4, S7 · — · commit —
@@ -68,3 +68,22 @@ breakpoint único `> 768` (`lib/use-is-desktop.ts`); guardianes que leen el repo
 (`__tests__/contrast-floor.test.ts`, `typography-floor.test.ts`, `icon-chrome.test.ts`); 88 ficheros
 Vitest y 25 specs Playwright; huecos de datos con migración: `category`, Recibidos (`received_at`),
 aviso «reserva retirada»; el resto es UI.
+
+L4 — 2026-11-27, T1: commits `529f83a` (paleta, Nunito, hex sueltos, guardianes, docs) y `6c83b74`
+(página sin conexión de `public/sw.js` y `--font-app` con la cara `Nunito_600SemiBold`, defectos A1/A2
+del verificador). Verificador independiente (item 5): PASS en S4–S7; `tsc`, `eslint`, Vitest 89
+ficheros / 938 pruebas + 1 todo y `expo export -p web` en verde; e2e pendientes de CI (Supabase).
+Pendiente fuera de T1: regenerar `public/AppIcons/*.png` y `favicon.ico` con fondo #FFF8F1;
+`expo-linear-gradient` queda sin uso. Revisión nativa `review-9dac295bf8de4c6e` (lentes riesgo,
+resiliencia, fiabilidad; base `bd21e1a`, `--committed-only`): el primer revisor superó el límite del
+relay (996 s, prompt 113 KB). El propietario elige «Subir el límite y relanzar»: reiniciar Pi con
+`GENTLE_PI_REVIEW_RELAY_PI_TIMEOUT_MS` más alto y retomar el mismo linaje con STATUS.
+
+L5 — 2026-11-27, revisión `review-9dac295bf8de4c6e` retomada con el límite a 3 600 000 ms: los tres
+revisores terminan (25 s, 227 s, 320 s) y el refutador corrobora un único BLOCKER, R3-001 («/61 ya
+llega a 4.5037:1, el guardián de contraste fallaría»). Reproducido: falso positivo — el test pasa
+(9/9); 4.5037 es la mezcla sin redondear, y `blendOver` redondea a 8 bits como el píxel pintado
+(#7e7169), que queda bajo AA. Propietario: «Corrección honesta mínima (Recomendada)». Commit
+`04346a0` fija ese redondeo en el test (+4 líneas, sin tocar aserciones). El validador dirigido la
+rechaza porque las aserciones no cambian → estado terminal `escalated` (sin regresión, sin
+follow-ups). T1 queda verificado por Vitest/tsc/eslint; la revisión nativa no aprobó.
