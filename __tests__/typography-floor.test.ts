@@ -177,10 +177,12 @@ describe('familia canónica Nunito (§2)', () => {
     expect(layout).not.toMatch(/@expo-google-fonts\/(be-vietnam-pro|plus-jakarta-sans)/);
   });
 
-  it('`app/global.css` declara --font-app con Nunito como primera familia', () => {
+  it('`app/global.css` declara --font-app con una cara de Nunito registrada por expo-font como primera familia', () => {
+    // expo-font registra las caras como `Nunito_600SemiBold`, no como `Nunito`:
+    // con el nombre genérico el texto sin clase `font-*` caía a system-ui.
     const css = readFileSync(path.join(ROOT, 'app', 'global.css'), 'utf8');
     const fontApp = css.match(/--font-app:\s*'([^']+)'/)?.[1];
-    expect(fontApp).toBe('Nunito');
+    expect(fontApp).toBe('Nunito_600SemiBold');
   });
 
   it('no queda ninguna referencia a Be Vietnam Pro ni a Plus Jakarta Sans en el código', () => {

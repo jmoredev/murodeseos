@@ -55,4 +55,19 @@ describe('colores del chrome atados a los tokens', () => {
     expect(themeColor?.toLowerCase()).toBe(PRIMARY);
     expect(surfaceBg?.toLowerCase()).toBe(CANVAS);
   });
+
+  it('la página sin conexión de `public/sw.js` sólo usa colores de la paleta', () => {
+    const sw = readFileSync(path.join(ROOT, 'public', 'sw.js'), 'utf8');
+    const palette = new Set([PRIMARY, CANVAS, tokenHex('ink'), tokenHex('on-primary')]);
+    const used = [...sw.matchAll(/#[0-9a-fA-F]{6}\b/g)].map((m) => m[0].toLowerCase());
+    expect(used.length).toBeGreaterThan(0);
+    expect(used.filter((hex) => !palette.has(hex))).toEqual([]);
+  });
+
+  it('la familia por defecto de `app/global.css` es una cara de Nunito que el layout carga', () => {
+    const css = readFileSync(path.join(ROOT, 'app', 'global.css'), 'utf8');
+    const first = css.match(/--font-app:\s*'([^']+)'/)?.[1];
+    expect(first).toMatch(/^Nunito_\w+$/);
+    expect(layout).toContain(String(first));
+  });
 });
