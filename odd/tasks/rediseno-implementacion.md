@@ -35,6 +35,16 @@ S7 — Sin regresiones: cada tramo mantiene en verde `tsc`, `eslint --max-warnin
 afectados; los tests que fijan textos o estilos antiguos se actualizan en el mismo tramo, nunca se
 borran sin sustituto. Los ids del tour y los `?tab=` antiguos siguen funcionando hasta T11/T10.
 
+S8 — Alcance de T2 (decisiones del propietario, L8): sin conexión «Aviso simple, sin prometer datos
+guardados (Recomendado)»; instalar la app «Fuera de T2, para más adelante (Recomendado)»; entrega
+«Dos PRs: T2a estados y T2b acceso (Recomendado)».
+
+S9 — Límites técnicos de T2 (L8): la invitación con auto-unión (11 P6) es T10; T2a crea el componente
+de esqueleto y la pantalla de arranque, y cada pestaña lo conecta en su tramo (T3/T4/T6/T10); el
+registro no cambia salvo lo que comparta `PasswordInput` (el «Mostrar» de texto entra como opción);
+la hoja de confirmación cambia de forma pero mantiene el texto que le pasa cada pantalla (el texto de
+borrar deseo es T4/T5); el enlace «Ver todo el historial en Avisos» espera a T8.
+
 ## Tasks
 
 - [x] T1 — Colores, tipografía y contorno: tokens de `sistema-nuevo.md` en `tailwind.config.cjs` y
@@ -42,8 +52,12 @@ borran sin sustituto. Los ids del tour y los `?tab=` antiguos siguen funcionando
   TourOverlay, spinners, placeholders, `app.json`, `public/manifest.json`), guardianes
   `contrast-floor`/`typography-floor`. S4–S7 · worker · rama `feat/rediseno-01-tokens` · commits `529f83a`, `6c83b74`, `04346a0`, `fd92c3f` · PR #100 → `feat/rediseno`, squash `bc75133`
   Risk: item 5 (dependencia nueva `@expo-google-fonts/nunito`).
-- [ ] T2 — Estados globales y acceso (12, 11). S4, S7 · worker · rama `feat/rediseno-02-estados-acceso` ·
-  commit —
+- [ ] T2a — Estados globales (12): arranque, componente de esqueleto, aviso sin conexión simple,
+  «Algo ha ido mal», 404, toasts, hoja de confirmación, Novedades. S4, S7, S8, S9 · worker · rama
+  `feat/rediseno-02-estados-acceso` · commit —
+- [ ] T2b — Acceso (11): login (móvil y escritorio), errores, recuperar contraseña como pantalla,
+  correo enviado, límite de enlaces, nueva contraseña con un campo y «Mostrar», contraseña cambiada,
+  enlace caducado. S4, S7, S8, S9 · worker · rama `feat/rediseno-02b-acceso` · commit —
 - [ ] T3 — Perfil índice + apartados, tallas de lista (10). S4, S7 · — · commit —
 - [ ] T4 — Mi lista y formulario de deseo (05, 06; varios enlaces, «¿Quién puede verlo?»). S4, S7 · — ·
   commit —
@@ -99,3 +113,10 @@ PR: decisión del propietario.
 
 L7 — 2026-11-27, propietario: «Merge y seguimos con T2». PR #100 integrado con squash (`bc75133`,
 convención del repo); T2 arranca en `feat/rediseno-02-estados-acceso` desde `feat/rediseno`.
+
+L8 — 2026-11-27, mapa del explorador para T2: ~1 400–1 850 líneas en dos bloques sin ficheros
+comunes (estados ~650–900, acceso ~750–950); hoy no hay detección de conexión, ni esqueletos, ni
+aviso de instalar, ni pantallas de recuperar contraseña/correo enviado/contraseña cambiada. Respuestas
+(ask_user_question): sin conexión «Aviso simple, sin prometer datos guardados (Recomendado)»; instalar
+«Fuera de T2, para más adelante (Recomendado)»; entrega «Dos PRs: T2a estados y T2b acceso
+(Recomendado)».
