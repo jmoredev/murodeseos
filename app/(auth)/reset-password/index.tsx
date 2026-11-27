@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { signOut } from '@/lib/sign-out';
 import { validateNewPassword } from '@/lib/password';
-import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { PasswordInput } from '@/components/ui/PasswordInput';
+import { AppIcon } from '@/components/ui/AppIcon';
+import { AuthAlert } from '@/components/auth/AuthAlert';
+import { AuthButton } from '@/components/auth/AuthButton';
+import { AuthColumn, AuthScreen } from '@/components/auth/AuthScreen';
+import { AuthTextField } from '@/components/auth/AuthTextField';
+import { isOfflineError } from '@/components/auth/errors';
+import { SCREEN_SUBTITLE, SCREEN_TITLE } from '@/components/auth/styles';
+
+/**
+ * Nueva contraseña desde el enlace del correo (`11-acceso.html`, P10–P12).
+ *
+ * Un solo campo con «Mostrar» (decisión del propietario, S4): nadie escribe dos
+ * veces lo mismo ni tiene que adivinar cuál de los dos se equivocó. Se mantiene
+ * el mínimo de 8 caracteres y la misma llamada `updateUser`.
+ *
+ * Al guardar no se salta a la lista: P11 confirma lo hecho y ofrece las dos
+ * salidas. P12 cubre el enlace abierto en otro dispositivo o caducado.
+ */
 
 /** Margen para que el cliente canjee el código del enlace antes de darlo por inválido. */
 const LINK_CHECK_MS = 3000;
@@ -15,9 +31,9 @@ export default function ResetPasswordPage() {
     const [checking, setChecking] = useState(true);
     const [hasSession, setHasSession] = useState(false);
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [changed, setChanged] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -59,11 +75,6 @@ export default function ResetPasswordPage() {
             return;
         }
 
-        if (password !== confirmPassword) {
-            setError('Las contraseñas no coinciden');
-            return;
-        }
-
         setSaving(true);
         setError('');
 
@@ -78,115 +89,194 @@ export default function ResetPasswordPage() {
             }
 
             saved = true;
-        } catch {
+        } catch (thrown) {
             // Igual que al pedir el enlace: un fallo lanzado no puede dejar el
             // formulario bloqueado.
-            setError('No pudimos guardar la contraseña. Comprueba tu conexión e inténtalo otra vez.');
+            setError(
+                isOfflineError(thrown)
+                    ? 'No pudimos guardar la contraseña. Comprueba tu conexión e inténtalo otra vez.'
+                    : 'No pudimos guardar la contraseña. Inténtalo otra vez.',
+            );
         } finally {
             setSaving(false);
         }
 
-        // La navegación queda **fuera** del `catch`: si fallara, el mensaje no puede
-        // decir que la contraseña no se guardó cuando sí se guardó.
-        if (saved) {
-            router.replace('/');
-        }
+        if (saved) setChanged(true);
     };
 
-    return (
-        <SafeAreaView className="flex-1 bg-surface">
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-            >
-                <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} className="px-6">
-                    <View className="w-full max-w-md self-center">
-                        <Text className="text-3xl font-display text-on-background tracking-tight mb-3">
-                            Nueva contraseña
+    const handleSignOut = async () => {
+        await signOut();
+        router.replace('/login');
+    };
+
+    if (checking) {
+        return (
+            <AuthScreen>
+                <AuthColumn className="justify-center">
+                    <View role="status" testID="reset-checking" className="items-center py-10">
+                        <Text className="text-[17px] font-sans text-ink-2">
+                            Comprobando el enlace…
                         </Text>
-
-                        {checking ? (
-                            <View testID="reset-checking" className="items-center py-10">
-                                <ActivityIndicator size="large" color="#B93D12" />
-                                <Text className="mt-4 text-on-surface/70 font-sans-medium">Comprobando el enlace...</Text>
-                            </View>
-                        ) : !hasSession ? (
-                            <View testID="reset-link-invalid">
-                                <Text className="text-on-surface/70 font-sans mb-6">
-                                    Este enlace no es válido o ha caducado. Pide uno nuevo desde el inicio de
-                                    sesión y ábrelo en este mismo dispositivo.
-                                </Text>
-                                <PrimaryButton
-                                    onPress={() => router.replace('/login')}
-                                    accessibilityLabel="Volver al inicio de sesión"
-                                    testID="back-to-login-button"
-                                    textClassName="text-on-primary font-sans-bold text-base"
-                                >
-                                    Volver al inicio de sesión
-                                </PrimaryButton>
-                            </View>
-                        ) : (
-                            <>
-                                <Text className="text-on-surface/70 font-sans mb-8">
-                                    Escribe tu contraseña nueva. Entrarás directamente.
-                                </Text>
-
-                                {error ? (
-                                    <View className="mb-4 p-4 rounded-2xl bg-primary/10">
-                                        <Text testID="reset-error" className="text-primary text-sm font-sans-medium">
-                                            {error}
-                                        </Text>
-                                    </View>
-                                ) : null}
-
-                                <View className="space-y-4">
-                                    <View>
-                                        <Text className="text-sm font-sans-semibold text-on-background mb-2">
-                                            Contraseña nueva
-                                        </Text>
-                                        <PasswordInput
-                                            className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
-                                            style={{ fontSize: 16 }}
-                                            placeholder="••••••••"
-                                            placeholderTextColor="#5C4033"
-                                            value={password}
-                                            onChangeText={setPassword}
-                                            accessibilityLabel="Contraseña nueva"
-                                            testID="new-password-input"
-                                        />
-                                    </View>
-
-                                    <View>
-                                        <Text className="text-sm font-sans-semibold text-on-background mb-2">
-                                            Repite la contraseña
-                                        </Text>
-                                        <PasswordInput
-                                            className="p-4 rounded-full bg-surface-container-highest text-on-background font-sans"
-                                            style={{ fontSize: 16 }}
-                                            placeholder="••••••••"
-                                            placeholderTextColor="#5C4033"
-                                            value={confirmPassword}
-                                            onChangeText={setConfirmPassword}
-                                            accessibilityLabel="Repite la contraseña nueva"
-                                            testID="confirm-password-input"
-                                        />
-                                    </View>
-
-                                    <PrimaryButton
-                                        onPress={handleSubmit}
-                                        disabled={saving}
-                                        accessibilityLabel="Guardar contraseña"
-                                        testID="save-password-button"
-                                        textClassName="text-on-primary font-sans-bold text-base"
-                                    >
-                                        {saving ? 'Guardando...' : 'Guardar contraseña'}
-                                    </PrimaryButton>
-                                </View>
-                            </>
-                        )}
                     </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </AuthColumn>
+            </AuthScreen>
+        );
+    }
+
+    if (!hasSession && !changed) {
+        return (
+            <AuthScreen>
+                <AuthColumn>
+                    <Text className={SCREEN_TITLE}>Nueva contraseña</Text>
+
+                    <View testID="reset-link-invalid">
+                        <AuthAlert
+                            className="mt-[18px]"
+                            title="Este enlace no es válido o ha caducado"
+                            body="Los enlaces duran una hora. Pide uno nuevo desde el inicio de sesión y ábrelo en este mismo dispositivo."
+                        />
+
+                        <View className="mt-[18px] gap-2.5">
+                            <AuthButton
+                                label="Pedir un enlace nuevo"
+                                onPress={() => router.replace('/forgot-password')}
+                                testID="request-new-link-button"
+                            />
+                            <AuthButton
+                                variant="secondary"
+                                label="Volver al inicio de sesión"
+                                onPress={() => router.replace('/login')}
+                                testID="back-to-login-button"
+                            />
+                        </View>
+
+                        <View className="mt-3.5 flex-row items-start gap-[9px] rounded-[14px] bg-primary-soft px-3 py-2.5">
+                            <AppIcon
+                                name="info"
+                                size={20}
+                                className="mt-px text-primary-dark"
+                                accessibilityElementsHidden
+                                importantForAccessibility="no"
+                            />
+                            <Text className="flex-1 text-[17px] font-sans leading-[1.35] text-ink">
+                                Si ya pediste el enlace en el ordenador, ábrelo ahí: en el móvil no
+                                funcionará.
+                            </Text>
+                        </View>
+                    </View>
+                </AuthColumn>
+            </AuthScreen>
+        );
+    }
+
+    if (changed) {
+        return (
+            <AuthScreen>
+                <AuthColumn>
+                    <View role="status" testID="password-changed" className="mt-6 items-center">
+                        <View className="h-[76px] w-[76px] items-center justify-center rounded-full border-2 border-accent-line bg-accent-soft">
+                            <AppIcon
+                                name="check"
+                                size={38}
+                                className="text-accent-ink"
+                                accessibilityElementsHidden
+                                importantForAccessibility="no"
+                            />
+                        </View>
+                        <Text className={`${SCREEN_TITLE} mt-4 text-center`}>
+                            Contraseña cambiada
+                        </Text>
+                        <Text className={`${SCREEN_SUBTITLE} max-w-[320px] text-center`}>
+                            Ya puedes entrar con tu contraseña nueva. Te dejamos dentro, con tu
+                            lista y tus grupos como estaban.
+                        </Text>
+                    </View>
+
+                    <View className="mt-[18px] gap-2.5">
+                        <AuthButton
+                            label="Ir a mi lista"
+                            onPress={() => router.replace('/')}
+                            testID="go-to-list-button"
+                        />
+                        <AuthButton
+                            variant="secondary"
+                            label="Cerrar sesión"
+                            onPress={handleSignOut}
+                            testID="sign-out-button"
+                        />
+                    </View>
+
+                    <AuthAlert
+                        variant="ok"
+                        title="Tus listas no cambian"
+                        body="Los grupos y los regalos que ya habías reservado siguen como estaban."
+                        testID="password-changed-note"
+                    />
+                </AuthColumn>
+            </AuthScreen>
+        );
+    }
+
+    return (
+        <AuthScreen>
+            <AuthColumn>
+                <Text className={`${SCREEN_TITLE} mt-4`}>Nueva contraseña</Text>
+                <Text className={SCREEN_SUBTITLE}>
+                    Escribe tu contraseña nueva. Entrarás directamente.
+                </Text>
+
+                <View
+                    testID="reset-form"
+                    aria-busy={saving}
+                    className="mt-[18px] gap-4"
+                >
+                    <AuthTextField
+                        label="Contraseña nueva"
+                        testID="new-password-input"
+                        accessibilityLabel="Contraseña nueva"
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        password={{ toggleMode: 'text' }}
+                        value={password}
+                        off={saving}
+                        error={error || undefined}
+                        errorTestID="reset-error"
+                        hint="Al menos 8 caracteres. Pulsa «Mostrar» para comprobar que está bien escrita."
+                        hintIcon="key"
+                        onChangeText={(text) => {
+                            setPassword(text);
+                            if (error) setError('');
+                        }}
+                    />
+
+                    <AuthButton
+                        onPress={handleSubmit}
+                        label="Guardar contraseña"
+                        loadingLabel="Guardando…"
+                        loading={saving}
+                        testID="save-password-button"
+                        spinnerTestID="save-password-spinner"
+                    />
+                </View>
+
+                <View className="mt-3.5 flex-row items-start gap-[9px] rounded-[14px] bg-primary-soft px-3 py-2.5">
+                    <AppIcon
+                        name="info"
+                        size={20}
+                        className="mt-px text-primary-dark"
+                        accessibilityElementsHidden
+                        importantForAccessibility="no"
+                    />
+                    <Text className="flex-1 text-[17px] font-sans leading-[1.35] text-ink">
+                        No hace falta escribirla dos veces: con «Mostrar» lo compruebas y no hay dos
+                        sitios donde equivocarse.
+                    </Text>
+                </View>
+
+                <Text className="mt-2.5 text-center text-[16px] font-sans leading-[1.35] text-ink-2">
+                    Este enlace sirve solo en este dispositivo, el mismo donde pediste el correo.
+                </Text>
+            </AuthColumn>
+        </AuthScreen>
     );
 }

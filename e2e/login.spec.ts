@@ -8,7 +8,9 @@ test.describe('Flujo de Inicio de Sesión', () => {
     })
 
     test('debería mostrar el formulario de inicio de sesión', async ({ page }) => {
-        await expect(page.getByText(/bienvenido de nuevo/i)).toBeVisible()
+        // La copy del rediseño sustituye a «Bienvenido de nuevo»: el título es
+        // «Iniciar sesión» y el subtítulo explica para qué se entra (11 · P1).
+        await expect(page.getByText('Entra para ver tu lista y la de tu gente.')).toBeVisible()
         await expect(page.getByTestId('email-input')).toBeVisible()
         await expect(page.getByTestId('password-input')).toBeVisible()
         await expect(page.getByTestId('login-button')).toBeVisible()
@@ -79,7 +81,9 @@ test.describe('Flujo de Inicio de Sesión', () => {
 
         await page.getByTestId('login-button').evaluate((el) => (el as HTMLElement).click())
 
-        // El mensaje de error debería mostrarse aunque no se use `required` a nivel HTML
-        await expect(page.getByText(/correo electrónico válido/i)).toBeVisible({ timeout: 15000 })
+        // Los campos vacíos se corrigen sin empezar de cero y sin prefijo «Error:»
+        // (11 · P4): un mensaje junto a cada campo.
+        await expect(page.getByText('Escribe tu correo electrónico')).toBeVisible({ timeout: 15000 })
+        await expect(page.getByText('Escribe tu contraseña')).toBeVisible({ timeout: 15000 })
     })
 })

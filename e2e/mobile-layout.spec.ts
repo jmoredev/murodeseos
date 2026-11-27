@@ -553,13 +553,13 @@ test.describe('Diseño móvil a 360px', () => {
 
         // 6) /reset-password: with the authenticated storage state
         //    `supabase.auth.getSession()` resolves a session, so this page renders
-        //    its change-password form branch, and the scan covers its two inputs
-        //    (new-password / confirm at :146,:162). Nothing is submitted: the
-        //    scan is read-only.
+        //    its change-password form branch, and the scan covers its only input
+        //    (new-password). Nothing is submitted: the scan is read-only.
         await page.goto('/reset-password');
-        // exact: true — 'Contraseña nueva' would otherwise substring-match the
-        // second input's label 'Repite la contraseña nueva' too.
+        // exact: true — la etiqueta visible es «Contraseña nueva» y el subtítulo de
+        // la pantalla también la nombra: se busca el campo, no la prosa.
         await expect(page.getByLabel('Contraseña nueva', { exact: true })).toBeVisible({ timeout: 10000 });
+        await expect(page.getByTestId('confirm-password-input')).toHaveCount(0);
         await expectFormFontSizeAtLeast16(page, '/reset-password');
     });
 
