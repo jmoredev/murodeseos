@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Dirección 02 · Añadir y editar un deseo</title>
+<style>
+  /* ============================================================
+     Dirección 02 — «Personas primero» · artboard 06
+     Formulario del deseo (añadir y editar), móvil y navegador.
+     Fundamentos copiados de 02-personas-primero.html: paleta,
+     reset, tipografía, botones, tarjetas, marcos y formulario.
+     Clases nuevas (solo para esta pantalla): prefijo fd-.
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .pill-count{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .tile-off{background:#F6EBE2;color:var(--muted)}
+  .tile-n{background:#F6EBE2;color:var(--ink-2)}   /* «Otro regalo»: neutro pero legible */
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .tradeoff-tag{
+    background:var(--primary-soft);color:var(--primary-dark);
+    font-size:14px;font-weight:800;padding:3px 10px;border-radius:999px;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5;font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  /* ============================================================
+     alta y primera configuración · piezas de formulario copiadas
+     ============================================================ */
+  .alta-field{display:block;min-width:0}
+  .alta-label{display:block;font-size:17px;line-height:1.25;font-weight:800;margin-bottom:6px}
+  .alta-input{
+    display:block;width:100%;height:56px;padding:0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);
+    background:var(--surface);border:2px solid var(--border-strong);border-radius:14px;
+  }
+  .alta-input::placeholder{color:var(--ink-2);opacity:1;font-weight:600}
+  .alta-input:focus-visible,.alta-select:focus-visible{border-radius:14px}
+  .alta-input-wrap{position:relative;display:block}
+  .alta-input-ic{padding-left:50px}
+  .alta-in-ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-2);pointer-events:none}
+  .alta-hint{margin-top:6px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+  .alta-hint-c{text-align:center}
+  .alta-fs{border:0;margin:16px 0 0;padding:0;min-width:0}
+  .alta-legend{padding:0;margin-bottom:8px;font-size:18px;line-height:1.25;font-weight:800}
+  .alta-opt{font-size:16px;font-weight:600;color:var(--ink-2)}
+  .alta-sel-wrap{position:relative;display:block}
+  .alta-select{
+    display:block;width:100%;height:56px;padding:0 40px 0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);background:var(--surface);
+    border:2px solid var(--border-strong);border-radius:14px;
+    appearance:none;-webkit-appearance:none;
+  }
+  .alta-sel-ic{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(90deg);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  .cat-pick{
+    display:flex;align-items:center;gap:12px;width:100%;min-height:56px;
+    margin-top:8px;padding:6px 12px;border-radius:14px;text-align:left;
+    background:var(--surface);border:2px solid var(--border-strong);
+  }
+  .cat-pick:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .cat-t{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto}
+  .cat-t .ic{width:30px;height:30px}
+  .cat-pick .cat-t{width:40px;height:40px;border-radius:12px}
+  .cat-pick .cat-t .ic{width:23px;height:23px}
+  .cat-pick-txt{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}
+  .cat-pick-name{font-size:17px;line-height:1.25;font-weight:800}
+  .cat-pick-help{font-size:16px;line-height:1.25;color:var(--ink-2)}
+  .cat-pick-act{
+    display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .cat-pick-act .ic{width:20px;height:20px}
+  /* variante compacta para el formulario del móvil: el resumen cabe en una línea */
+  .fd-cat{gap:10px;padding:6px 10px}
+  .fd-cat .cat-pick-act .ic{width:18px;height:18px}
+  .cat-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .cat-chip{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:10px 18px;
+    border-radius:999px;border:2px solid var(--border-strong);background:var(--surface);
+    font-size:17px;font-weight:700;color:var(--ink);
+  }
+  .cat-chip:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .cat-chip[aria-pressed="true"]{border-color:var(--primary);background:#FFF3EB;color:var(--primary-dark)}
+  .cat-chip .ic{width:20px;height:20px}
+
+  /* ---------- tarjeta de deseo (la misma que ven los grupos) ---------- */
+  .wish{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:12px;box-shadow:var(--sh-1);
+  }
+  .wish-media{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    height:64px;border-radius:14px;padding:0 12px;
+  }
+  .wish-media .ic-36{width:38px;height:38px}
+  .w-media-end{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2}
+  .w-cat{font-size:16px;font-weight:600;color:var(--ink-2);margin-top:3px}
+  .w-price{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .w-title{margin-top:9px;font-size:18px;line-height:1.24;font-weight:800;letter-spacing:-.005em}
+  .w-head{display:flex;align-items:flex-start;gap:8px;margin-top:9px}
+  .w-head .w-title{margin-top:0;flex:1 1 auto;padding-top:3px}
+  .w-link{
+    flex:0 0 auto;width:48px;height:48px;margin:-4px -6px -6px 0;border-radius:50%;
+    display:grid;place-items:center;color:var(--primary-dark);background:var(--surface);
+    border:1.5px solid var(--border-strong);text-decoration:none;
+  }
+  .w-link:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .w-note{
+    margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--bg);
+    border-left:3px solid var(--border-strong);font-size:17px;line-height:1.4;color:var(--ink-2);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .w-note-l{font-weight:800;color:var(--ink);margin-right:6px}
+  .w-prio{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:17px;color:var(--ink-2)}
+  .hearts{display:inline-flex;gap:1px;color:var(--primary)}
+  .hearts .ic{width:17px;height:17px}
+  .hearts .off{color:var(--muted)}
+
+  /* ---------- notas de flujo ---------- */
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     FORMULARIO DEL DESEO · piezas nuevas (fd-)
+     ============================================================ */
+  .fd-top{display:flex;align-items:center;gap:10px;padding-top:2px;flex-wrap:wrap}
+  .fd-screen{font-size:25px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .fd-screen-sm{font-size:25px}
+  .fd-form{display:grid;gap:6px;margin-top:10px}
+  .fd-legend{margin-bottom:6px}
+  .fd-field{display:block;min-width:0}
+  .fd-field-gap{margin-top:8px}
+  .fd-hint-tight{margin-top:-6px}
+  .fd-fs-tight{margin-top:10px}
+  .fd-fs-flush{margin-top:4px}
+  .fd-opt-flush{margin-bottom:0}
+  .cat-pick-flush{margin-top:0}
+  .fd-input-ic{padding-left:50px}
+  .fd-textarea{
+    display:block;width:100%;min-height:96px;padding:12px 14px;resize:none;
+    font-family:var(--font);font-size:17px;line-height:1.4;font-weight:600;color:var(--ink);
+    background:var(--surface);border:2px solid var(--border-strong);border-radius:14px;
+  }
+  .fd-textarea::placeholder{color:var(--ink-2);opacity:1;font-weight:600}
+  .fd-textarea:focus-visible{border-radius:14px}
+  .fd-textarea-sm{min-height:56px}
+
+  /* botón principal que espera: sigue siendo el primer nivel, pero se ve inactivo */
+  .fd-btn-wait{background:var(--border);color:var(--ink-2);box-shadow:none;border-color:var(--border-strong)}
+  .fd-btn-wait:hover{background:var(--border)}
+
+  /* estado de lectura del enlace */
+  .fd-status{
+    display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;
+    margin-top:14px;padding:14px;border-radius:18px;
+    background:var(--sand);border:1px solid var(--border-strong);
+  }
+  .fd-spin{
+    grid-row:1 / span 2;width:28px;height:28px;margin-top:8px;border-radius:50%;
+    border:3px solid #E8C3A8;border-top-color:var(--primary);
+    animation:fd-spin .9s linear infinite;
+  }
+  @keyframes fd-spin{to{transform:rotate(360deg)}}
+  .fd-status-t{font-size:18px;line-height:1.3;font-weight:800}
+  .fd-status-s{font-size:17px;line-height:1.35;color:var(--ink-2)}
+  .fd-actions{display:grid;gap:6px;margin-top:16px}
+  .fd-actions .link-btn{justify-self:center}
+
+  /* banner de éxito */
+  .fd-banner{
+    display:flex;gap:8px;align-items:flex-start;margin:0 0 2px;padding:6px 12px;
+    border-radius:16px;background:var(--accent-soft);border:1px solid #C4E0CE;
+    font-size:17px;line-height:1.3;color:#1F4A33;
+  }
+  .fd-banner .ic{width:20px;height:20px;margin-top:1px;color:var(--accent)}
+  .fd-banner b{font-weight:800}
+
+  /* precio + moneda */
+  .fd-price-row{display:grid;grid-template-columns:1fr 118px;gap:10px;align-items:start}
+
+  /* prioridad: 3 tarjetas de radio */
+  .fd-prio{display:grid;gap:6px;margin-top:2px}
+  .fd-prio-card{
+    position:relative;display:block;min-height:59px;padding:6px 12px;
+    border:2px solid var(--border-strong);border-radius:16px;background:var(--surface);
+    cursor:pointer;
+  }
+  .fd-prio-card input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  .fd-prio-card input:focus-visible{outline:none}
+  .fd-prio-card:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:3px}
+  .fd-prio-card:has(input:checked){border-color:var(--primary);background:#FFF3EB;box-shadow:0 0 0 3px var(--primary-soft)}
+  .fd-prio-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .fd-prio-sel{display:none;align-items:center;gap:4px;font-size:17px;font-weight:800;color:var(--primary-dark)}
+  .fd-prio-sel .ic{width:18px;height:18px}
+  .fd-prio-card:has(input:checked) .fd-prio-sel{display:inline-flex}
+  .fd-prio-t{display:block;margin-top:4px;font-size:17px;line-height:1.25;font-weight:800}
+  .fd-prio-row{grid-template-columns:repeat(3,1fr)}
+  .fd-prio-2{grid-template-columns:1fr 1fr}
+  .fd-prio-row .fd-prio-card{display:flex;flex-direction:column;justify-content:flex-start;gap:6px}
+
+  /* enlaces de la tienda */
+  .fd-links{display:grid;gap:6px;margin-top:2px}
+  .fd-link-row{
+    display:flex;align-items:center;gap:10px;padding:1px 4px 1px 10px;
+    border:1px solid var(--border-strong);border-radius:14px;background:var(--surface);
+  }
+  .fd-link-ic{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sand);color:#7A4A2A}
+  .fd-link-ic .ic{width:21px;height:21px}
+  .fd-link-txt{flex:1 1 auto;min-width:0}
+  .fd-link-host{display:block;font-size:17px;line-height:1.2;font-weight:800}
+  .fd-link-url{
+    display:block;font-size:16px;line-height:1.3;color:var(--ink-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .fd-quitar{
+    flex:0 0 auto;min-height:48px;padding:0 10px;border-radius:12px;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .fd-quitar:hover{background:var(--primary-soft)}
+  .fd-add-row{margin-top:4px}
+
+  /* visibilidad */
+  .fd-opt{
+    display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 14px;margin-bottom:4px;
+    border:2px solid var(--border-strong);border-radius:16px;cursor:pointer;background:var(--surface);
+  }
+  .fd-opt input{width:24px;height:24px;margin:0;accent-color:var(--primary);flex:0 0 auto}
+  .fd-opt input:focus-visible{outline:none}
+  .fd-opt:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:3px}
+  .fd-opt:has(input:checked){border-color:var(--primary);background:#FFF3EB}
+  .fd-opt-t{flex:1 1 auto;font-size:17px;line-height:1.25;font-weight:700}
+  .fd-opt-sel{display:none;align-items:center;gap:4px;font-size:17px;font-weight:800;color:var(--primary-dark)}
+  .fd-opt-sel .ic{width:18px;height:18px}
+  .fd-opt:has(input:checked) .fd-opt-sel{display:inline-flex}
+  .fd-checks{display:grid;gap:2px;margin:4px 0 0 14px}
+  .fd-check{
+    display:flex;align-items:center;gap:12px;min-height:48px;padding:2px 6px;border-radius:12px;cursor:pointer;
+  }
+  .fd-check:hover{background:#FFF1E5}
+  .fd-check input{width:24px;height:24px;margin:0;accent-color:var(--primary);flex:0 0 auto}
+  .fd-check:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:2px}
+  .fd-check-t{flex:1 1 auto;font-size:17px;line-height:1.25;font-weight:700}
+  .fd-check-s{font-size:17px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .fd-check input:checked ~ .fd-check-s{color:var(--accent)}
+  .fd-vis-hint{
+    display:flex;gap:8px;align-items:flex-start;margin-top:4px;padding:6px 12px;border-radius:14px;
+    background:var(--sand);font-size:17px;line-height:1.3;color:var(--ink);
+  }
+  .fd-vis-hint .ic{width:19px;height:19px;margin-top:2px;color:#7A4A2A}
+
+  /* borrar (solo en edición) */
+  .fd-sep{margin-top:6px;padding-top:8px;border-top:2px solid var(--border)}
+  .fd-danger{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;
+    border-radius:12px;font-size:17px;font-weight:800;color:#B42318;
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .fd-danger:hover{background:#FDECEA}
+  .fd-danger .ic{width:20px;height:20px}
+  .fd-danger-hint{margin-top:4px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+  /* barra inferior fija */
+  .fd-bar{
+    position:absolute;left:0;right:0;bottom:0;z-index:5;padding:12px 16px 20px;
+    background:var(--surface);border-top:1px solid var(--border);
+    box-shadow:0 -6px 18px rgba(43,26,18,.06);
+  }
+  .fd-bar .btn{min-height:52px}
+  .pf-scroll.fd-scroll-bar{bottom:85px;padding-bottom:10px}
+
+  /* ============================================================
+     ESCRITORIO · diálogo centrado sobre «Mi lista»
+     ============================================================ */
+  .fd-under{position:absolute;inset:0}
+  .fd-under-body{padding:24px 40px;filter:blur(2px)}
+  .fd-under-in{width:1000px;margin:0 auto}
+  .fd-under-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+  .fd-under-h{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .fd-under-sub{margin-top:4px;font-size:17px;color:var(--ink-2)}
+  .fd-under-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .fd-scrim2{position:absolute;inset:0;background:rgba(43,26,18,.3)}
+
+  .fd-dialog{
+    position:absolute;left:50%;top:80px;bottom:20px;transform:translateX(-50%);
+    width:880px;display:flex;flex-direction:column;
+    background:var(--surface);border-radius:24px;overflow:hidden;
+    box-shadow:0 30px 70px rgba(43,26,18,.34);
+  }
+  .fd-dlg-head{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 24px;border-bottom:1px solid var(--border);
+  }
+  .fd-dlg-head h3{font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .fd-x{
+    width:48px;height:48px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+    border:2px solid var(--border-strong);background:var(--surface);color:var(--ink);font-size:26px;line-height:1;
+  }
+  .fd-x:hover{background:#FFF1E5;border-color:var(--ink-2)}
+  .fd-dlg-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 300px;gap:24px;padding:14px 24px 0}
+  .fd-left-wrap{position:relative;min-height:0}
+  .fd-left-wrap::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:48px;pointer-events:none;
+    background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.86) 62%,#fff 100%);
+  }
+  .fd-dlg-left{height:100%;overflow-y:auto;padding:0 8px 26px 0;scrollbar-width:thin}
+  .fd-dlg-left::-webkit-scrollbar{width:8px}
+  .fd-dlg-left::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px}
+  .fd-dlg-form{display:grid;gap:12px;margin-top:12px}
+  .fd-dlg-foot{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:12px;
+    padding:12px 24px;border-top:1px solid var(--border);background:var(--surface);
+  }
+  .fd-prev{padding-top:2px;min-height:0;overflow:hidden}
+  .fd-prev-h{font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .fd-prev-sub{margin-top:4px;font-size:16px;line-height:1.3;color:var(--ink-2)}
+  .fd-prev-cap{margin:12px 0 6px;font-size:16px;font-weight:800;color:var(--primary-dark)}
+  .fd-prev-note{margin-top:10px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+
+  /* ============================================================
+     FILA DE ESTADOS
+     ============================================================ */
+  .fd-states{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
+  .fd-state-card{
+    height:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:18px;box-shadow:var(--sh-1);
+  }
+  .fd-state-h{font-size:16px;font-weight:800;color:var(--primary-dark);margin-bottom:10px}
+  .fd-state-t{font-size:17px;line-height:1.4}
+  .fd-state-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .fd-state-btns .btn{flex:1 1 auto;padding:10px 14px}
+  .fd-fail{display:flex;gap:10px;align-items:flex-start}
+  .fd-fail .ic{width:22px;height:22px;margin-top:1px;color:var(--primary-dark);flex:0 0 auto}
+  .fd-err-card{border-color:#F0C3BE;background:#FFF8F7}
+  .fd-input-err{border-color:#B42318;background:#FFF8F7}
+  .fd-err-msg{
+    display:flex;gap:6px;align-items:flex-start;margin-top:6px;
+    font-size:17px;line-height:1.3;font-weight:700;color:#B42318;
+  }
+  .fd-err-msg .ic{width:19px;height:19px;margin-top:1px}
+  .fd-bullets{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 24px;margin-top:24px}
+  .fd-bullets li{display:flex;gap:10px;align-items:flex-start;font-size:17px;line-height:1.45}
+  .fd-bullets b{font-weight:800}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+    .fd-spin{animation:none!important;border-top-color:var(--primary)}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="currentColor"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.6 15.2v-2.8a7.4 7.4 0 0 1 14.8 0v2.8"/><rect x="3.2" y="13.8" width="4.6" height="7" rx="2.3"/><rect x="16.2" y="13.8" width="4.6" height="7" rx="2.3"/></g></symbol>
+    <symbol id="i-sweater" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.6 4.2 4.3 6.6a1 1 0 0 0-.5.9l.9 4.2 2.6-.6v8.5h9.4v-8.5l2.6.6.9-4.2a1 1 0 0 0-.5-.9L15.4 4.2a2.6 2.6 0 0 1-3.4 0 2.6 2.6 0 0 1-3.4 0Z"/></g></symbol>
+    <symbol id="i-shoe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3.4 16.6h11.9c1.7 0 3.2-.7 4.3-2l.6-.7c.6-.7.2-1.8-.7-2l-4.3-.9-3-2.4a2 2 0 0 0-1.3-.5H6.6L3.4 12.2Z"/><path d="M3.4 16.6v2.2h17.2"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 6.8h14.8"/><path d="M9.4 6.8V4.6h5.2v2.2"/><path d="M6.6 6.8 7.6 19a1.4 1.4 0 0 0 1.4 1.3h6a1.4 1.4 0 0 0 1.4-1.3l1-12.2"/><path d="M10.4 10.6v5.8M13.6 10.6v5.8"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 de 03 · Detalle</p>
+      <h1>Añadir y editar un deseo</h1>
+      <p class="tradeoff">
+        <span class="tradeoff-tag">Propósito</span>
+        Pegar el enlace de la tienda y repasar lo que la app ya ha rellenado: nombre, precio, categoría e ilusión, con la vista previa de cómo lo verán tus grupos.
+      </p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>El enlace primero: la app lee la página y rellena nombre, precio y categoría. Si no puede, el enlace sigue guardado y se acaba a mano.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Todo con etiqueta visible encima, campos de 56 px y un solo botón principal: «Guardar deseo» siempre al alcance en la barra de abajo.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>La ilusión se dice con palabras y corazones («Un detalle», «Me gustaría», «Me hace mucha ilusión»), no con un número.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Varios enlaces por deseo y visibilidad por grupos, con un resumen en palabras: quién lo verá y quién no.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA MÓVIL
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil</h2>
+      <p>Las tres pantallas del formulario. Sin barra de pestañas: es una tarea con principio y fin, y la acción principal vive en la barra inferior.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: LEYENDO EL ENLACE ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Leyendo el enlace</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <header class="fd-top">
+              <a class="back" href="#movil-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Cancelar</a>
+              <h3 class="fd-screen">Nuevo deseo</h3>
+            </header>
+
+            <div class="fd-form">
+              <div class="fd-field">
+                <label class="alta-label" for="p1-enlace">Enlace de la tienda</label>
+                <div class="alta-input-wrap">
+                  <svg class="ic alta-in-ic" aria-hidden="true"><use href="#i-link"/></svg>
+                  <input class="alta-input alta-input-ic" id="p1-enlace" type="text" name="enlace-1" inputmode="url" autocomplete="off" value="amazon.es/dp/B09XS7JWHH">
+                </div>
+                <p class="alta-hint">Pega el enlace de la ficha del producto.</p>
+              </div>
+            </div>
+
+            <div class="fd-status" role="status" aria-live="polite">
+              <span class="fd-spin" aria-hidden="true"></span>
+              <p class="fd-status-t">Leyendo la página…</p>
+              <p class="fd-status-s">Rellenamos el nombre, el precio y la categoría por ti.</p>
+            </div>
+
+            <div class="fd-actions">
+              <button class="btn btn-primary btn-block fd-btn-wait" type="button" aria-disabled="true" aria-describedby="p1-espera">Leyendo…</button>
+              <p class="alta-hint alta-hint-c" id="p1-espera">Suele tardar un par de segundos.</p>
+              <button class="link-btn" type="button">Continuar a mano</button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: FORMULARIO RELLENADO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Formulario rellenado · parte de arriba</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll fd-scroll-bar">
+            <header class="fd-top">
+              <a class="back" href="#p1-enlace"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+              <h3 class="fd-screen">Nuevo deseo</h3>
+            </header>
+
+            <p class="fd-banner">
+              <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+              <span>Rellenado a partir de <b>amazon.es</b>. Revisa que esté bien.</span>
+            </p>
+
+            <div class="fd-form">
+              <div class="fd-field">
+                <label class="alta-label" for="p2-titulo">¿Qué te gustaría?</label>
+                <input class="alta-input" id="p2-titulo" type="text" name="titulo-2" value="Auriculares inalámbricos Sony WH-1000XM5">
+              </div>
+
+              <div class="fd-field">
+                <p class="alta-label" id="p2-cat-h">Categoría</p>
+                <button class="cat-pick fd-cat" type="button" aria-labelledby="p2-cat-h">
+                  <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                  <span class="cat-pick-txt">
+                    <span class="cat-pick-name">Tecnología</span>
+                    <span class="cat-pick-help">Elegida a partir del enlace</span>
+                  </span>
+                  <span class="cat-pick-act">Cambiar<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                </button>
+              </div>
+
+              <div class="fd-field">
+                <div class="fd-price-row">
+                  <div>
+                    <label class="alta-label" for="p2-precio">Precio (opcional)</label>
+                    <input class="alta-input" id="p2-precio" type="text" name="precio-2" inputmode="decimal" value="349,00">
+                  </div>
+                  <div>
+                    <label class="alta-label" for="p2-moneda">Moneda</label>
+                    <span class="alta-sel-wrap">
+                      <select class="alta-select" id="p2-moneda" name="moneda-2">
+                        <option selected>€ EUR</option>
+                        <option>US$ USD</option>
+                        <option>£ GBP</option>
+                        <option>ARS</option>
+                        <option>MXN</option>
+                        <option>Sin moneda</option>
+                      </select>
+                      <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+                <p class="alta-hint">Teclado numérico con coma decimal.</p>
+              </div>
+
+              <fieldset class="alta-fs">
+                <legend class="alta-legend fd-legend">¿Cuánta ilusión te hace?</legend>
+                <div class="fd-prio">
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p2-prioridad" value="1">
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Un detalle</span>
+                  </label>
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p2-prioridad" value="2">
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Me gustaría</span>
+                  </label>
+                  <label class="fd-prio-card">
+                    <input type="radio" name="p2-prioridad" value="3" checked>
+                    <span class="fd-prio-top">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                      </span>
+                      <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                    </span>
+                    <span class="fd-prio-t">Me hace mucha ilusión</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="fd-field">
+                <label class="alta-label" for="p2-nota">Nota (opcional)</label>
+                <textarea class="fd-textarea" id="p2-nota" name="nota-2" rows="3" placeholder="Talla, color, detalles…"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="fd-bar">
+            <button class="btn btn-primary btn-block" type="button">Guardar deseo</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: EDITAR · PARTE DE ABAJO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Editar deseo · parte de abajo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll fd-scroll-bar">
+            <header class="fd-top">
+              <a class="back" href="#movil-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+              <h3 class="fd-screen fd-screen-sm">Editar deseo</h3>
+            </header>
+
+            <div class="alta-fs fd-fs-tight">
+              <h4 class="alta-legend fd-legend" id="p3-links-h">Enlaces de la tienda</h4>
+              <ul class="fd-links" aria-labelledby="p3-links-h">
+                <li class="fd-link-row">
+                  <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                  <span class="fd-link-txt">
+                    <span class="fd-link-host">amazon.es</span>
+                    <span class="fd-link-url">amazon.es/dp/B09XS7JWHH</span>
+                  </span>
+                  <button class="fd-quitar" type="button" aria-label="Quitar el enlace de amazon.es">Quitar</button>
+                </li>
+                <li class="fd-link-row">
+                  <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                  <span class="fd-link-txt">
+                    <span class="fd-link-host">mediamarkt.es</span>
+                    <span class="fd-link-url">mediamarkt.es/es/product/auriculares-sony-wh1000xm5-negro/3245678.html</span>
+                  </span>
+                  <button class="fd-quitar" type="button" aria-label="Quitar el enlace de mediamarkt.es">Quitar</button>
+                </li>
+              </ul>
+              <p class="fd-add-row"><button class="link-btn" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir otra tienda</button></p>
+            </div>
+
+            <div class="fd-field fd-field-gap">
+              <label class="alta-label" for="p3-nota">Nota (opcional)</label>
+              <textarea class="fd-textarea fd-textarea-sm" id="p3-nota" name="nota-3" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
+            </div>
+
+            <fieldset class="alta-fs fd-fs-tight">
+              <legend class="alta-legend fd-legend">¿Quién puede verlo?</legend>
+              <label class="fd-opt">
+                <input type="radio" name="p3-visible" value="todos">
+                <span class="fd-opt-t">Todos mis grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <label class="fd-opt">
+                <input type="radio" name="p3-visible" value="algunos" checked>
+                <span class="fd-opt-t">Solo algunos grupos</span>
+                <span class="fd-opt-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+              </label>
+              <div class="fd-checks">
+                <label class="fd-check">
+                  <input type="checkbox" name="p3-grupo" value="familia" checked>
+                  <span class="fd-check-t">Familia Martín</span>
+                  <span class="fd-check-s">Lo verá</span>
+                </label>
+                <label class="fd-check">
+                  <input type="checkbox" name="p3-grupo" value="uni">
+                  <span class="fd-check-t">Amigos de la Uni</span>
+                  <span class="fd-check-s">No lo verá</span>
+                </label>
+              </div>
+              <p class="fd-vis-hint">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Amigos de la Uni no verá este deseo.</span>
+              </p>
+            </fieldset>
+
+            <div class="fd-sep">
+              <button class="fd-danger" type="button"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Borrar este deseo</button>
+            </div>
+          </div>
+
+          <div class="fd-bar">
+            <button class="btn btn-primary btn-block" type="button">Guardar cambios</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: NAVEGADOR DE ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>El formulario se abre en una ventana centrada sobre «Mi lista», con la vista previa de la tarjeta a la derecha y los botones siempre visibles abajo.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Nuevo deseo · ventana sobre Mi lista</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Nuevo deseo</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <!-- página de fondo: Mi lista, atenuada y desenfocada -->
+          <div class="fd-under" aria-hidden="true">
+            <header class="dt-head">
+              <p class="wordmark"><span class="wm-ic"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+              <nav class="dt-nav" aria-label="Navegación principal">
+                <a href="#inicio"><svg class="ic"><use href="#i-home"/></svg>Inicio</a>
+                <a href="#mi-lista" aria-current="page"><svg class="ic"><use href="#i-heart"/></svg>Mi lista</a>
+                <a href="#personas"><svg class="ic"><use href="#i-people"/></svg>Personas</a>
+                <a href="#avisos"><svg class="ic"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge">2</span></a>
+              </nav>
+              <p class="dt-user"><span class="avatar">🌻</span>Lucía</p>
+            </header>
+
+            <div class="fd-under-body">
+              <div class="fd-under-in">
+                <div class="fd-under-head">
+                  <div>
+                    <p class="fd-under-h">Mi lista</p>
+                    <p class="fd-under-sub">5 deseos · visibles para Familia Martín y Amigos de la Uni</p>
+                  </div>
+                  <span class="pill pill-count">5 deseos</span>
+                </div>
+                <div class="fd-under-grid">
+                  <article class="wish">
+                    <div class="wish-media tile-a">
+                      <svg class="ic ic-36"><use href="#i-headphones"/></svg>
+                      <span class="w-media-end"><span class="w-price">349,00 €</span><span class="w-cat">Tecnología</span></span>
+                    </div>
+                    <p class="w-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                  </article>
+                  <article class="wish">
+                    <div class="wish-media tile-b">
+                      <svg class="ic ic-36"><use href="#i-moka"/></svg>
+                      <span class="w-media-end"><span class="w-price">34,95 €</span><span class="w-cat">Hogar y cocina</span></span>
+                    </div>
+                    <p class="w-title">Cafetera italiana Bialetti 6 tazas</p>
+                  </article>
+                  <article class="wish">
+                    <div class="wish-media tile-c">
+                      <svg class="ic ic-36"><use href="#i-sweater"/></svg>
+                      <span class="w-media-end"><span class="w-price">59,00 €</span><span class="w-cat">Ropa y accesorios</span></span>
+                    </div>
+                    <p class="w-title">Jersey de lana azul marino, talla L</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="fd-scrim2" aria-hidden="true"></div>
+
+          <!-- ventana del formulario -->
+          <div class="fd-dialog" role="dialog" aria-modal="true" aria-labelledby="fd-dlg-h">
+            <div class="fd-dlg-head">
+              <h3 id="fd-dlg-h">Nuevo deseo</h3>
+              <button class="fd-x" type="button" aria-label="Cerrar">×</button>
+            </div>
+
+            <div class="fd-dlg-body">
+              <div class="fd-left-wrap">
+                <div class="fd-dlg-left">
+                  <p class="fd-banner">
+                    <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+                    <span>Rellenado a partir de <b>amazon.es</b>. Revisa que esté bien.</span>
+                  </p>
+
+                  <div class="fd-dlg-form">
+                    <div class="fd-field">
+                      <label class="alta-label" for="w-titulo">¿Qué te gustaría?</label>
+                      <input class="alta-input" id="w-titulo" type="text" name="titulo-web" value="Auriculares inalámbricos Sony WH-1000XM5">
+                    </div>
+
+                    <div class="fd-field">
+                      <p class="alta-label" id="w-cat-h">Categoría</p>
+                      <button class="cat-pick cat-pick-flush" type="button" aria-labelledby="w-cat-h">
+                        <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                        <span class="cat-pick-txt">
+                          <span class="cat-pick-name">Tecnología</span>
+                          <span class="cat-pick-help">Elegida a partir del enlace</span>
+                        </span>
+                        <span class="cat-pick-act">Cambiar<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                      </button>
+                    </div>
+
+                    <div class="fd-price-row">
+                      <div>
+                        <label class="alta-label" for="w-precio">Precio (opcional)</label>
+                        <input class="alta-input" id="w-precio" type="text" name="precio-web" inputmode="decimal" value="349,00" aria-describedby="w-precio-hint">
+                      </div>
+                      <div>
+                        <label class="alta-label" for="w-moneda">Moneda</label>
+                        <span class="alta-sel-wrap">
+                          <select class="alta-select" id="w-moneda" name="moneda-web">
+                            <option selected>€ EUR</option>
+                            <option>US$ USD</option>
+                            <option>£ GBP</option>
+                            <option>ARS</option>
+                            <option>MXN</option>
+                            <option>Sin moneda</option>
+                          </select>
+                          <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                    <p class="alta-hint fd-hint-tight" id="w-precio-hint">Solo el número, con coma decimal: por ejemplo 25,90.</p>
+
+                    <fieldset class="alta-fs fd-fs-flush">
+                      <legend class="alta-legend">¿Cuánta ilusión te hace?</legend>
+                      <div class="fd-prio fd-prio-row">
+                        <label class="fd-prio-card">
+                          <input type="radio" name="w-prioridad" value="1">
+                          <span class="fd-prio-top">
+                            <span class="hearts" aria-hidden="true">
+                              <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                            </span>
+                            <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                          </span>
+                          <span class="fd-prio-t">Un detalle</span>
+                        </label>
+                        <label class="fd-prio-card">
+                          <input type="radio" name="w-prioridad" value="2">
+                          <span class="fd-prio-top">
+                            <span class="hearts" aria-hidden="true">
+                              <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                            </span>
+                            <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                          </span>
+                          <span class="fd-prio-t">Me gustaría</span>
+                        </label>
+                        <label class="fd-prio-card">
+                          <input type="radio" name="w-prioridad" value="3" checked>
+                          <span class="fd-prio-top">
+                            <span class="hearts" aria-hidden="true">
+                              <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                            </span>
+                            <span class="fd-prio-sel">Elegido<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span>
+                          </span>
+                          <span class="fd-prio-t">Me hace mucha ilusión</span>
+                        </label>
+                      </div>
+                    </fieldset>
+
+                    <div class="alta-fs fd-fs-flush">
+                      <h4 class="alta-legend" id="w-links-h">Enlaces de la tienda</h4>
+                      <ul class="fd-links" aria-labelledby="w-links-h">
+                        <li class="fd-link-row">
+                          <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                          <span class="fd-link-txt">
+                            <span class="fd-link-host">amazon.es</span>
+                            <span class="fd-link-url">amazon.es/dp/B09XS7JWHH</span>
+                          </span>
+                          <button class="fd-quitar" type="button" aria-label="Quitar el enlace de amazon.es">Quitar</button>
+                        </li>
+                        <li class="fd-link-row">
+                          <span class="fd-link-ic" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                          <span class="fd-link-txt">
+                            <span class="fd-link-host">mediamarkt.es</span>
+                            <span class="fd-link-url">mediamarkt.es/es/product/auriculares-sony-wh1000xm5-negro/3245678.html</span>
+                          </span>
+                          <button class="fd-quitar" type="button" aria-label="Quitar el enlace de mediamarkt.es">Quitar</button>
+                        </li>
+                      </ul>
+                      <p class="fd-add-row"><button class="link-btn" type="button"><svg class="ic ic-20" aria-hidden="true"><use href="#i-plus"/></svg>Añadir otra tienda</button></p>
+                    </div>
+
+                    <div class="fd-field">
+                      <label class="alta-label" for="w-nota">Nota (opcional)</label>
+                      <textarea class="fd-textarea" id="w-nota" name="nota-web" rows="2" placeholder="Talla, color, detalles…">Mejor en negro.</textarea>
+                    </div>
+
+                    <fieldset class="alta-fs fd-fs-flush">
+                      <legend class="alta-legend">¿Quién puede verlo?</legend>
+                      <div class="fd-prio fd-prio-2">
+                        <label class="fd-opt fd-opt-flush">
+                          <input type="radio" name="w-visible" value="todos" checked>
+                          <span class="fd-opt-t">Todos mis grupos</span>
+                        </label>
+                        <label class="fd-opt fd-opt-flush">
+                          <input type="radio" name="w-visible" value="algunos">
+                          <span class="fd-opt-t">Solo algunos grupos</span>
+                        </label>
+                      </div>
+                      <p class="alta-hint">Lo verán <b>Familia Martín</b> y <b>Amigos de la Uni</b>: tus dos grupos.</p>
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="fd-prev" aria-labelledby="fd-prev-h">
+                <h4 class="fd-prev-h" id="fd-prev-h">Así lo verán tus grupos</h4>
+                <p class="fd-prev-sub">La misma tarjeta que en la lista de un grupo.</p>
+                <p class="fd-prev-cap">Vista previa</p>
+                <article class="wish">
+                  <div class="wish-media tile-a">
+                    <svg class="ic ic-36" aria-hidden="true"><use href="#i-headphones"/></svg>
+                    <span class="w-media-end">
+                      <span class="w-price">349,00 €</span>
+                      <span class="w-cat">Tecnología</span>
+                    </span>
+                  </div>
+                  <div class="w-head">
+                    <p class="w-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                    <span class="w-link" aria-hidden="true"><svg class="ic"><use href="#i-link"/></svg></span>
+                  </div>
+                  <p class="w-prio">
+                    <span class="hearts" aria-hidden="true">
+                      <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                    </span>
+                    <span>Le hace mucha ilusión</span>
+                  </p>
+                  <p class="w-note"><span class="w-note-l">Nota</span>Mejor en negro.</p>
+                </article>
+                <p class="fd-prev-note">En la tarjeta se ve un solo icono de enlace; al abrir el deseo se ven los 2 enlaces.</p>
+              </aside>
+            </div>
+
+            <div class="fd-dlg-foot">
+              <button class="btn btn-secondary" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="button">Guardar deseo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       FILA: ESTADOS DEL FORMULARIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="estados-h">
+    <div class="row-head">
+      <h2 id="estados-h">Estados del formulario</h2>
+      <p>Los tres momentos que no son el camino feliz, con la misma voz: se dice qué ha pasado, si se ha guardado algo y qué se puede hacer.</p>
+    </div>
+
+    <div class="fd-states">
+      <section class="fd-state-card" aria-labelledby="est-1">
+        <h3 class="fd-state-h" id="est-1">No se pudo leer el enlace</h3>
+        <div class="fd-fail">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <p class="fd-state-t">No pudimos leer esa página. Rellena los datos a mano: el enlace ya está guardado.</p>
+        </div>
+        <div class="fd-state-btns">
+          <button class="btn btn-soft" type="button">Rellenar a mano</button>
+          <button class="btn btn-secondary" type="button">Probar otro enlace</button>
+        </div>
+      </section>
+
+      <section class="fd-state-card fd-err-card" aria-labelledby="est-2">
+        <h3 class="fd-state-h" id="est-2">Precio mal escrito</h3>
+        <div class="fd-field">
+          <label class="alta-label" for="est-precio">Precio (opcional)</label>
+          <input class="alta-input fd-input-err" id="est-precio" type="text" inputmode="decimal" value="25,9 €" aria-invalid="true" aria-describedby="est-precio-msg">
+          <p class="fd-err-msg" id="est-precio-msg">
+            <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+            <span>Escribe solo el número, por ejemplo 25,90.</span>
+          </p>
+        </div>
+        <p class="alta-hint">El resto del deseo se conserva tal cual estaba.</p>
+      </section>
+
+      <section class="fd-state-card" aria-labelledby="est-3">
+        <h3 class="fd-state-h" id="est-3">Sin lecturas por ahora</h3>
+        <div class="fd-fail">
+          <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+          <p class="fd-state-t">Has agotado las lecturas por ahora. Espera unos minutos o rellena el deseo a mano.</p>
+        </div>
+        <p class="fd-state-btns">
+          <button class="btn btn-secondary" type="button">Rellenar a mano</button>
+        </p>
+      </section>
+    </div>
+
+    <ul class="fd-bullets">
+      <li><span class="fn" aria-hidden="true">1</span><span>El enlace <b>no es obligatorio</b>: con «No tengo enlace: lo escribo yo» el formulario se rellena a mano y se guarda igual.</span></li>
+      <li><span class="fn" aria-hidden="true">2</span><span>«<b>Ya lo tengo</b>» no está aquí: se marca en <b>Mi lista</b>, cuando el regalo ya está en casa.</span></li>
+      <li><span class="fn" aria-hidden="true">3</span><span>La tarjeta «<b>¿Añadimos tu talla?</b>» solo aparece con <b>Ropa y accesorios</b> o <b>Calzado</b>, y solo si tu perfil aún no tiene talla.</span></li>
+    </ul>
+  </section>
+
+</main>
+</body>
+</html>

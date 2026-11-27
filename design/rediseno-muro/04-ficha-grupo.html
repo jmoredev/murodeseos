@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Ficha de grupo · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero” · artboard «Ficha de grupo».
+     Fundamentos copiados tal cual de 02-personas-primero.html:
+     paleta, reset, tipografía, botones, píldoras, avatares, marco
+     de móvil, marco de navegador y cabecera del dueño.
+     Lo específico de esta pantalla usa el prefijo «gx-».
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .pill-count{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .tile-off{background:#F6EBE2;color:var(--muted)}
+  .tile-n{background:#F6EBE2;color:var(--ink-2)}   /* «Otro regalo»: neutro pero legible */
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;background:var(--surface);
+    border:1.5px solid var(--border-strong);border-radius:999px;padding:3px 11px;
+    font-size:16px;font-weight:700;color:var(--ink);
+  }
+  .tag .ic{width:16px;height:16px;color:var(--accent)}
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .pf-nav{
+    position:absolute;left:0;right:0;bottom:0;height:72px;z-index:5;
+    padding:4px 8px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:rgba(255,248,241,.97);border-top:1px solid var(--border);
+  }
+  .nav-i{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    min-height:48px;border-radius:14px;text-decoration:none;
+    color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.1;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .nav-i .ic{width:23px;height:23px}
+  .nav-i:hover{background:#FFF1E5}
+  .nav-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .nav-ic-wrap{position:relative;display:block}
+  .nav-badge{
+    position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;
+    border-radius:99px;background:var(--primary);color:#fff;
+    font-size:12.5px;font-weight:800;line-height:19px;text-align:center;
+  }
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  /* ---------- notas del dueño ---------- */
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .gx-notas{width:1200px;padding-top:0}
+  .gx-notas ol{grid-template-columns:1fr 1fr;gap:16px 40px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     FICHA DE GRUPO · piezas nuevas (prefijo gx-)
+     ============================================================ */
+  .gx-head{margin-top:0}
+  .gx-name{font-size:27px;line-height:1.12;font-weight:800;letter-spacing:-.02em}
+  .gx-meta{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:4px}
+  .gx-acts{display:flex;gap:10px;margin-top:12px}
+  .gx-dim-btn{background:#F3E4D8;color:var(--ink-2);border-color:var(--border-strong)}
+  .gx-acts .btn{padding:10px 14px;gap:7px;white-space:nowrap}
+  .gx-acts .btn-primary{flex:1 1 auto}
+  .gx-acts .btn-secondary{flex:0 0 auto}
+  .gx-btn-ic{width:20px;height:20px;color:var(--ink-2)}
+
+  .gx-blk{
+    font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em;
+    margin-top:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  }
+  .gx-blk-sub{font-size:16px;line-height:1.3;font-weight:600;color:var(--ink-2)}
+
+  /* próximas celebraciones */
+  .gx-celebs{display:grid;gap:8px;margin-top:10px}
+  .gx-celeb{
+    display:flex;align-items:center;gap:10px;padding:6px 12px;
+    background:var(--surface);border:1.5px solid var(--border-strong);border-radius:16px;
+  }
+  .gx-celeb-next{background:var(--primary-soft);border-color:#F3CDB6}
+  .gx-celeb-txt{flex:1 1 auto;min-width:0}
+  .gx-celeb-t{display:block;font-size:17px;line-height:1.3}
+  .gx-celeb-t b{font-weight:800}
+  .gx-celeb-d{display:block;font-size:17px;line-height:1.3;color:var(--ink-2)}
+  .gx-celeb-when{
+    flex:0 0 auto;font-size:17px;line-height:1.3;font-weight:700;
+    color:var(--ink-2);white-space:nowrap;text-align:right;
+  }
+  .gx-celeb-next .gx-celeb-when{color:var(--primary-dark)}
+  .gx-next-flag{
+    display:block;background:var(--surface);color:var(--primary-dark);
+    border-radius:999px;padding:1px 10px;margin:0 0 4px auto;
+    font-size:17px;line-height:1.35;font-weight:800;
+  }
+
+  /* participantes (móvil) */
+  .gx-people{
+    margin-top:8px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--r-card);padding:2px 10px;box-shadow:var(--sh-1);
+  }
+  .gx-people > li + li{border-top:1px solid var(--border)}
+  .gx-person{
+    display:flex;align-items:center;gap:12px;min-height:56px;padding:7px 4px;
+    border-radius:14px;text-decoration:none;color:inherit;
+    transition:background-color .16s ease;
+  }
+  .gx-person:hover{background:#FFF1E5}
+  .gx-person:hover .gx-person-name{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .gx-person .avatar{width:48px;height:48px;font-size:24px}
+  .gx-person-b{flex:1 1 auto;min-width:0}
+  .gx-person-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .gx-person-name{font-size:17px;line-height:1.25;font-weight:800}
+  .gx-alias{display:block;font-size:17px;line-height:1.2;color:var(--ink-2);font-weight:600;margin-top:1px}
+  .gx-person-count{font-size:17px;line-height:1.25;font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .gx-person-count-link{
+    color:var(--primary-dark);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;
+  }
+  .gx-person-sub{display:block;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:1px}
+  .gx-chev{width:20px;height:20px;flex:0 0 auto;color:var(--primary-dark)}
+
+  /* ============================================================
+     PANTALLA 2 · hoja de opciones del grupo
+     ============================================================ */
+  .gx-scrim{position:absolute;inset:0;background:rgba(43,26,18,.52);z-index:8}
+  .gx-sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:9;
+    background:var(--surface);border-radius:28px 28px 0 0;
+    padding:10px 18px 26px;box-shadow:0 -10px 30px rgba(43,26,18,.22);
+  }
+  .gx-grab{width:44px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 8px}
+  .gx-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .gx-sheet-h{font-size:21px;line-height:1.25;font-weight:800;letter-spacing:-.015em;padding-top:8px}
+  .gx-x{
+    width:48px;height:48px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
+    border:2px solid var(--border-strong);background:var(--surface);color:var(--ink);
+    font-size:26px;line-height:1;
+  }
+  .gx-x:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .gx-sheet-rows{display:grid;gap:8px;margin-top:12px}
+  .gx-srow{
+    display:flex;align-items:center;gap:12px;width:100%;min-height:74px;
+    padding:10px 11px;border-radius:18px;background:var(--surface);
+    border:1.5px solid var(--border);text-align:left;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .gx-srow:hover{background:#FFF3E9;border-color:var(--border-strong)}
+  .gx-srow-ic{
+    flex:0 0 auto;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+    background:var(--sand);color:#7A4A2A;
+  }
+  .gx-srow-body{flex:1 1 auto;min-width:0}
+  .gx-srow-t{display:block;font-size:17px;line-height:1.25;font-weight:800}
+  .gx-srow-d{display:block;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .gx-sheet-sep{margin-top:14px;padding-top:14px;border-top:2px solid var(--border)}
+  .gx-srow-danger{border-color:#EFC9C5}
+  .gx-srow-danger .gx-srow-ic{background:#FDECEA;color:var(--danger)}
+  .gx-srow-danger .gx-srow-t{color:var(--danger)}
+  .gx-srow-danger .gx-srow-d{color:var(--danger-dark)}
+  .gx-srow-danger:hover{background:#FDF3F2;border-color:#DE9D97}
+
+  /* ============================================================
+     PANTALLA 3 · avisos del grupo
+     ============================================================ */
+  .gx-set-h{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .gx-fs{border:0;margin:14px 0 0;padding:0;min-width:0}
+  .gx-legend{
+    display:block;padding:0;margin-bottom:6px;
+    font-size:17px;line-height:1.4;color:var(--ink-2);
+  }
+  .gx-pref{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .gx-pref:last-child{border-bottom:0;padding-bottom:4px}
+  .gx-pref-txt{flex:1 1 auto;min-width:0}
+  .gx-pref-t{font-size:17px;line-height:1.3;font-weight:700}
+  .gx-pref-d{font-size:16px;line-height:1.35;color:var(--ink-2);margin-top:2px}
+  .gx-sw{
+    flex:0 0 auto;display:inline-flex;align-items:center;gap:10px;
+    min-height:48px;padding:5px 12px 5px 8px;border-radius:999px;
+    border:2px solid var(--border-strong);background:var(--surface);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .gx-sw:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .gx-trk{
+    position:relative;display:block;width:52px;height:30px;border-radius:99px;
+    background:#EFE2D7;border:2px solid #7A5B45;
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .gx-knb{
+    position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:2px solid #7A5B45;
+    transition:transform .16s ease,border-color .16s ease;
+  }
+  .gx-sw-s{font-size:17px;font-weight:800;line-height:1.2;color:var(--ink-2);min-width:22px}
+  .gx-sw[aria-checked="true"]{border-color:#B4D5C3;background:var(--accent-soft)}
+  .gx-sw[aria-checked="true"] .gx-trk{background:var(--accent);border-color:var(--accent)}
+  .gx-sw[aria-checked="true"] .gx-knb{transform:translateX(22px);border-color:var(--accent)}
+  .gx-sw[aria-checked="true"] .gx-sw-s{color:#1F4A33}
+
+  .gx-field{margin-top:20px}
+  .gx-label{display:block;font-size:17px;line-height:1.25;font-weight:800;margin-bottom:6px}
+  .gx-sel-wrap{position:relative;display:block}
+  .gx-select{
+    display:block;width:100%;height:56px;padding:0 44px 0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);background:var(--surface);
+    border:2px solid var(--border-strong);border-radius:14px;
+    appearance:none;-webkit-appearance:none;
+  }
+  .gx-select:hover{border-color:var(--ink-2)}
+  .gx-sel-ic{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(90deg);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  .gx-save{margin-top:16px}
+  .gx-note{font-size:16px;line-height:1.4;color:var(--ink-2);margin-top:10px}
+
+  /* ============================================================
+     ESCRITORIO · ficha en dos columnas
+     ============================================================ */
+  .gx-dmain{
+    flex:1 1 auto;min-height:0;width:1180px;margin:0 auto;padding:16px 0;
+    display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;
+  }
+  .gx-dleft{min-width:0}
+  .gx-dcol{min-width:0}
+  .gx-dcard{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:18px;box-shadow:var(--sh-1);
+  }
+  .gx-dcard + .gx-dcard{margin-top:16px}
+  .gx-dhead{padding:18px 20px}
+  .gx-dhead-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+  .gx-dname{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .gx-dmeta{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:4px}
+  .gx-dacts{display:flex;gap:10px;flex:0 0 auto}
+  .gx-dblk{
+    font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em;
+    margin:20px 0 10px;display:flex;align-items:baseline;gap:10px;
+  }
+  .gx-dblk-sub{font-size:16px;font-weight:600;color:var(--ink-2)}
+  .gx-dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .gx-dpcard{
+    display:flex;flex-direction:column;padding:14px;min-height:0;
+    background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-card);
+    text-decoration:none;color:inherit;box-shadow:var(--sh-1);
+    transition:background-color .16s ease,border-color .16s ease;
+  }
+  .gx-dpcard:hover{background:#FFFDFB;border-color:var(--primary)}
+  .gx-dpcard:hover .gx-dpn{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .gx-dpav{width:56px;height:56px;font-size:27px}
+  .gx-dpn{display:block;font-size:18px;line-height:1.25;font-weight:800;margin-top:10px}
+  .gx-dp-alias{display:block;font-size:17px;line-height:1.2;font-weight:600;color:var(--ink-2);margin-top:1px}
+  .gx-dps{display:block;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:4px}
+  .gx-dpc{display:block;font-size:17px;line-height:1.3;font-weight:700;color:var(--ink);margin-top:2px}
+  .gx-dpa{
+    display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:8px;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+  }
+  .gx-dpa .gx-chev{width:18px;height:18px}
+  .gx-next-flag-inline{
+    display:inline-block;background:var(--surface);color:var(--primary-dark);
+    border-radius:999px;padding:1px 9px;margin-left:6px;
+    font-size:17px;line-height:1.3;font-weight:800;
+  }
+
+  .gx-dh{font-size:21px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .gx-dsub{font-size:17px;line-height:1.35;color:var(--ink-2);margin-top:4px}
+  .gx-dlbl{display:block;font-size:17px;line-height:1.25;font-weight:800;margin:14px 0 6px}
+  .gx-dinput{
+    display:block;width:100%;height:56px;padding:0 14px;border-radius:14px;
+    background:var(--bg);border:2px solid var(--border-strong);color:var(--ink);
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    font-size:24px;font-weight:800;letter-spacing:.14em;
+  }
+  .gx-dinput:focus-visible{border-radius:14px}
+  .gx-dbtns{display:grid;gap:10px;margin-top:14px}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.6" width="16" height="14.4" rx="2.4"/><path d="M4 10h16M8.4 3.6v3.6M15.6 3.6v3.6"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5.4" cy="12" r="1.95"/><circle cx="12" cy="12" r="1.95"/><circle cx="18.6" cy="12" r="1.95"/></g></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 19.8h4.1L19 9.1a2.9 2.9 0 0 0-4.1-4.1L4.2 15.7Z"/><path d="m14.2 5.7 4.1 4.1"/></g></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 4.6H6.2a1.8 1.8 0 0 0-1.8 1.8v11.2a1.8 1.8 0 0 0 1.8 1.8h8.2"/><path d="M10.6 12h9"/><path d="m16.6 8.6 3.4 3.4-3.4 3.4"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 6.8h14.8"/><path d="M9.4 6.8V4.9h5.2v1.9"/><path d="m6.6 6.8.9 12.1a1.8 1.8 0 0 0 1.8 1.6h5.4a1.8 1.8 0 0 0 1.8-1.6l.9-12.1"/><path d="M10.2 10.6v6.4M13.8 10.6v6.4"/></g></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.2"/><path d="M15.6 8.4V6.6a2.2 2.2 0 0 0-2.2-2.2H6.6a2.2 2.2 0 0 0-2.2 2.2v6.8a2.2 2.2 0 0 0 2.2 2.2h1.8"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 «Personas primero»</p>
+      <h1>Ficha de grupo</h1>
+      <p class="tradeoff">La ficha del grupo reúne en una sola pantalla quién está, qué se celebra pronto y dónde se invita; administrar queda detrás de «Opciones» y no estorba.</p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Las personas van primero: cada participante es una fila grande con su próxima celebración y sus deseos.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>«La próxima» se dice con palabras, no solo con color: nadie tiene que adivinar qué celebración llega antes.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Invitar desde dentro del grupo no pregunta nada: abre el enlace y el código K7P2QX directamente.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Administrar es de quien administra: las opciones de riesgo se leen con texto y quedan lejos de las de todos los días.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA MÓVIL
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil</h2>
+      <p>Ficha, opciones y avisos del mismo grupo. La pestaña «Personas» queda activa porque la ficha vive dentro de ella.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: FICHA DE GRUPO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Ficha de «Familia Martín»</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <a class="back" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Personas</a>
+
+            <header class="gx-head">
+              <h2 class="gx-name">Familia Martín</h2>
+              <p class="gx-meta">6 participantes · Tú lo administras</p>
+            </header>
+
+            <div class="gx-acts">
+              <button class="btn btn-primary" type="button">Invitar a alguien</button>
+              <button class="btn btn-secondary" type="button" aria-haspopup="dialog">
+                <svg class="ic gx-btn-ic" aria-hidden="true"><use href="#i-more"/></svg>Opciones
+              </button>
+            </div>
+
+            <section aria-labelledby="p1-celeb-h">
+              <h3 class="gx-blk" id="p1-celeb-h">Próximas celebraciones</h3>
+              <ul class="gx-celebs">
+                <li class="gx-celeb gx-celeb-next">
+                  <span class="gx-celeb-txt">
+                    <span class="gx-celeb-t"><b>Javier</b> · Su santo</span>
+                    <span class="gx-celeb-d">3 de diciembre</span>
+                  </span>
+                  <span class="gx-celeb-when"><span class="gx-next-flag">La próxima</span>Faltan 7 días</span>
+                </li>
+                <li class="gx-celeb">
+                  <span class="gx-celeb-txt">
+                    <span class="gx-celeb-t"><b>Javier</b> · Su cumpleaños</span>
+                    <span class="gx-celeb-d">12 de diciembre</span>
+                  </span>
+                  <span class="gx-celeb-when">Faltan 16 días</span>
+                </li>
+                <li class="gx-celeb">
+                  <span class="gx-celeb-txt">
+                    <span class="gx-celeb-t"><b>Pablo</b> · Su cumpleaños</span>
+                    <span class="gx-celeb-d">9 de enero</span>
+                  </span>
+                </li>
+              </ul>
+            </section>
+
+            <section aria-labelledby="p1-ppl-h">
+              <h3 class="gx-blk" id="p1-ppl-h">Participantes <span class="gx-blk-sub">6 personas</span></h3>
+              <ul class="gx-people">
+                <li>
+                  <a class="gx-person" href="#mi-lista">
+                    <span class="avatar" aria-hidden="true">🌻</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Lucía</span><span class="gx-person-count gx-person-count-link">Mi lista</span></span>
+                      <span class="gx-person-sub">Tú · Administras el grupo</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-person" href="#javier">
+                    <span class="avatar" aria-hidden="true">🎸</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Javier</span><span class="gx-person-count">4 deseos</span></span>
+                      <span class="gx-person-sub">Su santo · 3 de diciembre</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-person" href="#abuela-carmen">
+                    <span class="avatar" aria-hidden="true">👵</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Abuela Carmen</span><span class="gx-person-count">3 deseos</span></span>
+                      <span class="gx-alias">Carmen</span>
+                      <span class="gx-person-sub">Onomástica · 16 de julio</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-person" href="#pablo">
+                    <span class="avatar" aria-hidden="true">🚲</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Pablo</span><span class="gx-person-count">2 deseos</span></span>
+                      <span class="gx-person-sub">Cumpleaños · 9 de enero</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-person" href="#marta">
+                    <span class="avatar" aria-hidden="true">📚</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Marta</span><span class="gx-person-count">6 deseos</span></span>
+                      <span class="gx-person-sub">Cumpleaños · 3 de febrero</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-person" href="#andres">
+                    <span class="avatar" aria-hidden="true">⚽</span>
+                    <span class="gx-person-b">
+                      <span class="gx-person-top"><span class="gx-person-name">Andrés</span><span class="gx-person-count">1 deseo</span></span>
+                      <span class="gx-person-sub">Sin fechas todavía</span>
+                    </span>
+                    <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: OPCIONES DEL GRUPO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Opciones del grupo · hoja</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <!-- la ficha, atenuada detrás de la hoja -->
+          <div class="pf-scroll has-nav" aria-hidden="true">
+            <span class="back"><svg class="ic"><use href="#i-back"/></svg>Personas</span>
+            <div class="gx-head">
+              <p class="gx-name">Familia Martín</p>
+              <p class="gx-meta">6 participantes · Tú lo administras</p>
+            </div>
+            <div class="gx-acts">
+              <span class="btn gx-dim-btn">Invitar a alguien</span>
+              <span class="btn gx-dim-btn"><svg class="ic gx-btn-ic"><use href="#i-more"/></svg>Opciones</span>
+            </div>
+            <h3 class="gx-blk">Próximas celebraciones</h3>
+            <ul class="gx-celebs">
+              <li class="gx-celeb gx-celeb-next">
+                <span class="gx-celeb-txt">
+                  <span class="gx-celeb-t"><b>Javier</b> · Su santo</span>
+                  <span class="gx-celeb-d">3 de diciembre</span>
+                </span>
+                <span class="gx-celeb-when"><span class="gx-next-flag">La próxima</span>Faltan 7 días</span>
+              </li>
+              <li class="gx-celeb">
+                <span class="gx-celeb-txt">
+                  <span class="gx-celeb-t"><b>Javier</b> · Su cumpleaños</span>
+                  <span class="gx-celeb-d">12 de diciembre</span>
+                </span>
+                <span class="gx-celeb-when">Faltan 16 días</span>
+              </li>
+            </ul>
+          </div>
+          <nav class="pf-nav" aria-label="Navegación principal de la ficha (atenuada)" aria-hidden="true">
+            <span class="nav-i"><svg class="ic"><use href="#i-home"/></svg><span>Inicio</span></span>
+            <span class="nav-i"><svg class="ic"><use href="#i-heart"/></svg><span>Mi lista</span></span>
+            <span class="nav-i" aria-current="page"><svg class="ic"><use href="#i-people"/></svg><span>Personas</span></span>
+            <span class="nav-i"><span class="nav-ic-wrap"><svg class="ic"><use href="#i-bell"/></svg><span class="nav-badge">2</span></span><span>Avisos</span></span>
+          </nav>
+
+          <div class="gx-scrim" aria-hidden="true"></div>
+
+          <div class="gx-sheet" role="dialog" aria-modal="true" aria-labelledby="p2-sheet-h">
+            <div class="gx-grab" aria-hidden="true"></div>
+            <div class="gx-sheet-head">
+              <h3 class="gx-sheet-h" id="p2-sheet-h">Opciones de Familia Martín</h3>
+              <button class="gx-x" type="button" aria-label="Cerrar">×</button>
+            </div>
+
+            <div class="gx-sheet-rows">
+              <button class="gx-srow" type="button">
+                <span class="gx-srow-ic" aria-hidden="true"><svg class="ic"><use href="#i-bell"/></svg></span>
+                <span class="gx-srow-body">
+                  <span class="gx-srow-t">Avisos de este grupo</span>
+                  <span class="gx-srow-d">Elige qué te avisamos</span>
+                </span>
+                <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+
+              <button class="gx-srow" type="button">
+                <span class="gx-srow-ic" aria-hidden="true"><svg class="ic"><use href="#i-pencil"/></svg></span>
+                <span class="gx-srow-body">
+                  <span class="gx-srow-t">Cambiar el nombre del grupo</span>
+                  <span class="gx-srow-d">Solo quien lo administra</span>
+                </span>
+                <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+
+              <button class="gx-srow" type="button">
+                <span class="gx-srow-ic" aria-hidden="true"><svg class="ic"><use href="#i-exit"/></svg></span>
+                <span class="gx-srow-body">
+                  <span class="gx-srow-t">Salir del grupo</span>
+                  <span class="gx-srow-d">Dejarás de ver sus listas</span>
+                </span>
+                <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+            </div>
+
+            <div class="gx-sheet-sep">
+              <button class="gx-srow gx-srow-danger" type="button">
+                <span class="gx-srow-ic" aria-hidden="true"><svg class="ic"><use href="#i-trash"/></svg></span>
+                <span class="gx-srow-body">
+                  <span class="gx-srow-t">Eliminar el grupo</span>
+                  <span class="gx-srow-d">Se borra para todos. No se puede deshacer.</span>
+                </span>
+                <svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: AVISOS DEL GRUPO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Avisos de «Familia Martín»</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <a class="back" href="#familia-martin"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Familia Martín</a>
+
+            <h2 class="gx-set-h">Avisos</h2>
+
+            <fieldset class="gx-fs">
+              <legend class="gx-legend">Elige qué quieres que te avisemos de este grupo.</legend>
+
+              <div class="gx-pref">
+                <div class="gx-pref-txt">
+                  <p class="gx-pref-t" id="p3-t1">Alguien reserva un regalo</p>
+                  <p class="gx-pref-d" id="p3-d1">Para saber qué ya está cogido.</p>
+                </div>
+                <button class="gx-sw" type="button" role="switch" aria-checked="true" aria-labelledby="p3-t1" aria-describedby="p3-d1">
+                  <span class="gx-trk" aria-hidden="true"><span class="gx-knb"></span></span>
+                  <span class="gx-sw-s">Sí</span>
+                </button>
+              </div>
+
+              <div class="gx-pref">
+                <div class="gx-pref-txt">
+                  <p class="gx-pref-t" id="p3-t2">Alguien añade un deseo</p>
+                  <p class="gx-pref-d" id="p3-d2">Para descubrir ideas nuevas a tiempo.</p>
+                </div>
+                <button class="gx-sw" type="button" role="switch" aria-checked="true" aria-labelledby="p3-t2" aria-describedby="p3-d2">
+                  <span class="gx-trk" aria-hidden="true"><span class="gx-knb"></span></span>
+                  <span class="gx-sw-s">Sí</span>
+                </button>
+              </div>
+
+              <div class="gx-pref">
+                <div class="gx-pref-txt">
+                  <p class="gx-pref-t" id="p3-t3">Se quita un deseo que reservaste</p>
+                  <p class="gx-pref-d" id="p3-d3">Para que no compres algo que ya no hace falta.</p>
+                </div>
+                <button class="gx-sw" type="button" role="switch" aria-checked="true" aria-labelledby="p3-t3" aria-describedby="p3-d3">
+                  <span class="gx-trk" aria-hidden="true"><span class="gx-knb"></span></span>
+                  <span class="gx-sw-s">Sí</span>
+                </button>
+              </div>
+
+              <div class="gx-pref">
+                <div class="gx-pref-txt">
+                  <p class="gx-pref-t" id="p3-t4">Cumpleaños</p>
+                  <p class="gx-pref-d" id="p3-d4">El día en que cumplen años.</p>
+                </div>
+                <button class="gx-sw" type="button" role="switch" aria-checked="true" aria-labelledby="p3-t4" aria-describedby="p3-d4">
+                  <span class="gx-trk" aria-hidden="true"><span class="gx-knb"></span></span>
+                  <span class="gx-sw-s">Sí</span>
+                </button>
+              </div>
+
+              <div class="gx-pref">
+                <div class="gx-pref-txt">
+                  <p class="gx-pref-t" id="p3-t5">Santos</p>
+                  <p class="gx-pref-d" id="p3-d5">El día de su santo.</p>
+                </div>
+                <button class="gx-sw" type="button" role="switch" aria-checked="false" aria-labelledby="p3-t5" aria-describedby="p3-d5">
+                  <span class="gx-trk" aria-hidden="true"><span class="gx-knb"></span></span>
+                  <span class="gx-sw-s">No</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="gx-field">
+              <label class="gx-label" for="p3-when">Avísame con antelación</label>
+              <span class="gx-sel-wrap">
+                <select class="gx-select" id="p3-when" name="antelacion">
+                  <option>3 días antes</option>
+                  <option selected>7 días antes</option>
+                  <option>14 días antes</option>
+                </select>
+                <svg class="ic gx-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+              </span>
+            </div>
+
+            <button class="btn btn-primary btn-block gx-save" type="button">Guardar cambios</button>
+            <p class="gx-note">Solo cambia tus avisos: el resto del grupo sigue con los suyos.</p>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>La misma ficha en 1180 px: los participantes en tarjetas a la izquierda y las celebraciones con la invitación a la derecha.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Ficha de «Familia Martín» · sesión de Lucía</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Familia Martín</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="gx-dmain">
+            <div class="gx-dleft">
+              <section class="gx-dcard gx-dhead" aria-labelledby="d-name">
+                <div class="gx-dhead-row">
+                  <div>
+                    <h2 class="gx-dname" id="d-name">Familia Martín</h2>
+                    <p class="gx-dmeta">6 participantes · Tú lo administras</p>
+                  </div>
+                  <div class="gx-dacts">
+                    <button class="btn btn-primary" type="button">Invitar a alguien</button>
+                    <button class="btn btn-secondary" type="button" aria-haspopup="dialog">
+                      <svg class="ic gx-btn-ic" aria-hidden="true"><use href="#i-more"/></svg>Opciones
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <h2 class="gx-dblk" id="d-ppl">Participantes <span class="gx-dblk-sub">Cada tarjeta abre su lista</span></h2>
+
+              <ul class="gx-dgrid" aria-labelledby="d-ppl">
+                <li>
+                  <a class="gx-dpcard" href="#mi-lista">
+                    <span class="avatar gx-dpav" aria-hidden="true">🌻</span>
+                    <span class="gx-dpn">Lucía</span>
+                    <span class="gx-dps">Tú · Administras el grupo</span>
+                    <span class="gx-dpc">5 deseos</span>
+                    <span class="gx-dpa">Ver mi lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-dpcard" href="#javier">
+                    <span class="avatar gx-dpav" aria-hidden="true">🎸</span>
+                    <span class="gx-dpn">Javier</span>
+                    <span class="gx-dps">Su santo · 3 de diciembre</span>
+                    <span class="gx-dpc">4 deseos</span>
+                    <span class="gx-dpa">Ver su lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-dpcard" href="#abuela-carmen">
+                    <span class="avatar gx-dpav" aria-hidden="true">👵</span>
+                    <span class="gx-dpn">Abuela Carmen</span>
+                    <span class="gx-dp-alias">Carmen</span>
+                    <span class="gx-dps">Onomástica · 16 de julio</span>
+                    <span class="gx-dpc">3 deseos</span>
+                    <span class="gx-dpa">Ver su lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-dpcard" href="#pablo">
+                    <span class="avatar gx-dpav" aria-hidden="true">🚲</span>
+                    <span class="gx-dpn">Pablo</span>
+                    <span class="gx-dps">Cumpleaños · 9 de enero</span>
+                    <span class="gx-dpc">2 deseos</span>
+                    <span class="gx-dpa">Ver su lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-dpcard" href="#marta">
+                    <span class="avatar gx-dpav" aria-hidden="true">📚</span>
+                    <span class="gx-dpn">Marta</span>
+                    <span class="gx-dps">Cumpleaños · 3 de febrero</span>
+                    <span class="gx-dpc">6 deseos</span>
+                    <span class="gx-dpa">Ver su lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="gx-dpcard" href="#andres">
+                    <span class="avatar gx-dpav" aria-hidden="true">⚽</span>
+                    <span class="gx-dpn">Andrés</span>
+                    <span class="gx-dps">Sin fechas todavía</span>
+                    <span class="gx-dpc">1 deseo</span>
+                    <span class="gx-dpa">Ver su lista<svg class="gx-chev" aria-hidden="true"><use href="#i-chev"/></svg></span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="gx-dcol">
+              <section class="gx-dcard" aria-labelledby="d-celeb-h">
+                <h2 class="gx-dh" id="d-celeb-h">Próximas celebraciones</h2>
+                <ul class="gx-celebs">
+                  <li class="gx-celeb gx-celeb-next">
+                    <span class="gx-celeb-txt">
+                      <span class="gx-celeb-t"><b>Javier</b> · Su santo <span class="gx-next-flag-inline">La próxima</span></span>
+                      <span class="gx-celeb-d">3 de diciembre · Faltan 7 días</span>
+                    </span>
+                  </li>
+                  <li class="gx-celeb">
+                    <span class="gx-celeb-txt">
+                      <span class="gx-celeb-t"><b>Javier</b> · Su cumpleaños</span>
+                      <span class="gx-celeb-d">12 de diciembre · Faltan 16 días</span>
+                    </span>
+                  </li>
+                  <li class="gx-celeb">
+                    <span class="gx-celeb-txt">
+                      <span class="gx-celeb-t"><b>Pablo</b> · Su cumpleaños</span>
+                      <span class="gx-celeb-d">9 de enero · Faltan 44 días</span>
+                    </span>
+                  </li>
+                </ul>
+              </section>
+
+              <section class="gx-dcard" aria-labelledby="d-inv-h">
+                <h2 class="gx-dh" id="d-inv-h">Invita a alguien</h2>
+                <p class="gx-dsub">Comparte el enlace o el código. Quien no tenga cuenta entra igual.</p>
+                <label class="gx-dlbl" for="d-code">Código de «Familia Martín»</label>
+                <input class="gx-dinput" id="d-code" type="text" value="K7P2QX" readonly>
+                <div class="gx-dbtns">
+                  <button class="btn btn-soft btn-block" type="button">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-link"/></svg>Copiar enlace
+                  </button>
+                  <button class="btn btn-secondary btn-block" type="button">
+                    <svg class="ic ic-20" aria-hidden="true"><use href="#i-copy"/></svg>Copiar código
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="notas-h">
+    <div class="row-head">
+      <h2 id="notas-h">Notas de la pantalla</h2>
+      <p>Cuatro reglas que la ficha respeta y que conviene no romper al implementarla.</p>
+    </div>
+
+    <div class="devices">
+      <div class="flow-notes gx-notas">
+        <h3>Qué se ve y qué no</h3>
+        <p>Los alias son privados y las opciones de administración también: cada persona ve solo lo suyo.</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span>Los alias son privados: «Abuela Carmen» solo lo ves tú. El grupo ve «Carmen», y su nombre real aparece pequeño debajo para no confundir a nadie.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>Las opciones de administración no existen para quien no administra: sin «Cambiar el nombre del grupo» ni «Eliminar el grupo», en lugar de mostrarlas desactivadas.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Salir del grupo deja de mostrarte sus listas y no borra nada; eliminar el grupo lo borra para las seis personas y no se puede deshacer. Por eso viven separadas y la de peligro se lee en rojo y con texto.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>«Invitar a alguien» desde aquí ya sabe el grupo: no pregunta nada y abre directamente el enlace y el código K7P2QX.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

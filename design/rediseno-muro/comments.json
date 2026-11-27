@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "gnq6o5zm",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(2) > div > div:nth-of-type(3) > section:nth-of-type(4) > div > button",
+      "excerpt": "Invitar a alguien",
+      "comment": "En este botón luego habría que seleccionar en qué grupo se quiere invitar a alguien",
+      "createdAt": "2026-11-26T17:02:21.324Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:02:21.348Z",
+      "resolvedAt": "2026-11-26T17:05:58.841Z",
+      "resolution": "«Invitar a alguien» ahora abre una hoja «¿A qué grupo quieres invitar?» con los grupos como opciones grandes; nueva fila «Detalle · Invitar a alguien» (pantalla 2b + notas del flujo)."
+    },
+    {
+      "id": "hl0x1nbx",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(2) > div > div:nth-of-type(3) > section:nth-of-type(4) > ul > li:nth-of-type(1)",
+      "excerpt": "🎸 👵 🚲 Familia Martín 6 participantes",
+      "comment": "Esto debería de ser clicable para que te mande dentro de ese grupo directamente",
+      "createdAt": "2026-11-26T17:02:52.234Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:02:52.256Z",
+      "resolvedAt": "2026-11-26T17:07:50.998Z",
+      "resolution": "Cada grupo de «Tus grupos» (móvil y escritorio) es ahora un enlace de fila completa de 56 px con flecha › que abre la ficha del grupo; subrayado y fondo al pasar."
+    },
+    {
+      "id": "nhhkimhi",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(2) > div > div:nth-of-type(3) > section:nth-of-type(3) > div:nth-of-type(2) > span:nth-of-type(1)",
+      "excerpt": "Auriculares inalámbricos Sony WH-1000XM5",
+      "comment": "Por lo que veo es mejor cambiar las imágenes de los productos por logos, me gusta mucho como queda, hay que ver como extraer la categoría de un deseo para saber su logo",
+      "createdAt": "2026-11-26T17:03:27.647Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:03:27.663Z",
+      "resolvedAt": "2026-11-26T18:05:18.594Z",
+      "resolution": "Nueva fila «Detalle · Iconos por categoría»: 12 categorías con icono y familia de color, cómo se obtiene la categoría (tienda → palabras del título → «Otro regalo», siempre editable) y el campo «Categoría» del formulario; deseos con su categoría visible."
+    },
+    {
+      "id": "z7q0irzg",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(3) > div > div:nth-of-type(3) > details > summary",
+      "excerpt": "Sus tallas: Camiseta L · Pantalón 42 · Calzado 43",
+      "comment": "Esto habría que cambiarlo de posición para que esté más accesible. Si hay muchos regalos hay que bajar hasta abajo del todo",
+      "createdAt": "2026-11-26T17:03:59.289Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:03:59.305Z",
+      "resolvedAt": "2026-11-26T18:06:13.389Z",
+      "resolution": "«Sus tallas» sube justo debajo de la cabecera de Javier (antes de los regalos); al desplegarse muestra también marcas y color favorito."
+    },
+    {
+      "id": "gbkthww0",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(3) > div > div:nth-of-type(3) > div > span:nth-of-type(2)",
+      "excerpt": "Faltan 16 días",
+      "comment": "Hay que tener en cuenta que, aparte del cumpleaños, pueden indicar su día de santo",
+      "createdAt": "2026-11-26T17:04:22.723Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:04:22.740Z",
+      "resolvedAt": "2026-11-26T18:24:34.242Z",
+      "resolution": "La ficha de Javier lista sus dos celebraciones (santo 3 dic · faltan 7 días, destacada; cumpleaños 12 dic · faltan 16 días); Inicio y escritorio muestran la más cercana y recuerdan la otra."
+    },
+    {
+      "id": "jecfp7aw",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(3) > div > div:nth-of-type(2) > button:nth-of-type(3)",
+      "excerpt": "¿Te han invitado? Únete con tu código",
+      "comment": "No entiendo esto aquí, Si le pasan un código que ocurre? Porque igualmente necesita registrarse o iniciar sesión en su cuenta",
+      "createdAt": "2026-11-26T17:05:13.800Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T17:05:13.817Z",
+      "resolvedAt": "2026-11-26T18:25:59.966Z",
+      "resolution": "Quitado «¿Te han invitado? Únete con tu código» de la bienvenida; quien abre el enlace ve «Lucía te ha invitado a…» y entra al grupo al registrarse o iniciar sesión (nota 5 + ejemplo en la fila Invitar); el código queda para usuarios ya dentro, en «Personas»."
+    },
+    {
+      "id": "3bwg5dnk",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(3) > div > div:nth-of-type(3) > ul:nth-of-type(2) > li:nth-of-type(1)",
+      "excerpt": "34,95 € Hogar y cocina Cafetera italiana Bialetti 6 tazas Le gustaría Reservar este regalo",
+      "comment": "Y el enlace del regalo donde aparece? Debería de ser simplemente con un icono de enlace. También si el usuario agrega una descripción donde saldría?",
+      "createdAt": "2026-11-26T18:25:54.506Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T18:25:54.526Z",
+      "resolvedAt": "2026-11-26T18:30:42.011Z",
+      "resolution": "Enlace a la tienda como icono de enlace junto al título (48 px en móvil, 32 px junto al precio en escritorio, con etiqueta accesible); la descripción sale como «Nota» bajo la prioridad (máx. 3 líneas). Solo aparecen si el deseo los tiene."
+    },
+    {
+      "id": "hqs4pctu",
+      "file": "02-personas-primero.html",
+      "selector": "body > main > section:nth-of-type(1) > div:nth-of-type(2) > figure:nth-of-type(1) > div > div:nth-of-type(3) > div > div:nth-of-type(2) > button:nth-of-type(1)",
+      "excerpt": "Crear mi lista",
+      "comment": "Este botón entiendo que tiene la funcionalidad de registrar al usuario no?",
+      "createdAt": "2026-11-26T18:26:22.481Z",
+      "status": "resolved",
+      "sentAt": "2026-11-26T18:26:22.501Z",
+      "resolvedAt": "2026-11-26T18:33:40.745Z",
+      "resolution": "El botón pasa de «Crear mi lista» a «Crear mi cuenta» (es el registro) con la aclaración «Solo te pedimos un correo y una contraseña. Después apuntas tu primer deseo.»"
+    }
+  ]
+}

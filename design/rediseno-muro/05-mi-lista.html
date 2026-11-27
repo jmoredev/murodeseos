@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Mi lista · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección «Personas primero» · artboard «Mi lista».
+     Fundamentos copiados tal cual de 02-personas-primero.html:
+     paleta, reset, tipografía, botones, píldoras, avatares, marco
+     de móvil, marco de navegador y cabecera del dueño.
+     Lo propio de esta pantalla usa el prefijo «ml-».
+     El cuerpo base va a 17 px: aquí todo el texto de lectura mide
+     17 px o más; solo las pistas secundarias bajan a 16 px.
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --danger:#B42318;        /* 6,5:1 sobre blanco */
+    --danger-dark:#7A1A12;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:17px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:17px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .pill-count{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .tile-off{background:#F6EBE2;color:var(--muted)}
+  .tile-n{background:#F6EBE2;color:var(--ink-2)}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;background:var(--surface);
+    border:1.5px solid var(--border-strong);border-radius:999px;padding:3px 11px;
+    font-size:16px;font-weight:700;color:var(--ink);
+  }
+  .tag .ic{width:16px;height:16px;color:var(--accent)}
+
+  /* ============================================================
+     CABECERA DEL DUEÑO
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys ol{grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .pf-nav{
+    position:absolute;left:0;right:0;bottom:0;height:72px;z-index:5;
+    padding:4px 8px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:rgba(255,248,241,.97);border-top:1px solid var(--border);
+  }
+  .nav-i{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    min-height:48px;border-radius:14px;text-decoration:none;
+    color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.1;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .nav-i .ic{width:23px;height:23px}
+  .nav-i:hover{background:#FFF1E5}
+  .nav-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .nav-ic-wrap{position:relative;display:block}
+  .nav-badge{
+    position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;
+    border-radius:99px;background:var(--primary);color:#fff;
+    font-size:12.5px;font-weight:800;line-height:19px;text-align:center;
+  }
+
+  /* ============================================================
+     FICHAS DE DESEO (base compartida)
+     ============================================================ */
+  .wishes{display:grid;gap:12px;margin-top:10px}
+  .wish{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:12px;box-shadow:var(--sh-1);
+  }
+  .wish-media{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    height:64px;border-radius:14px;padding:0 12px;
+  }
+  .wish-media .ic-36{width:38px;height:38px}
+  .w-media-end{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2}
+  .w-cat{font-size:16px;font-weight:600;color:var(--ink-2);margin-top:3px}
+  .w-price{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .w-title{margin-top:8px;font-size:18px;line-height:1.24;font-weight:800;letter-spacing:-.005em}
+  .w-head{display:flex;align-items:flex-start;gap:8px;margin-top:9px}
+  .w-head .w-title{margin-top:0;flex:1 1 auto;padding-top:3px}
+  .w-link{
+    flex:0 0 auto;width:48px;height:48px;margin:-4px -6px -6px 0;border-radius:50%;
+    display:grid;place-items:center;color:var(--primary-dark);background:var(--surface);
+    border:1.5px solid var(--border-strong);text-decoration:none;
+  }
+  .w-link:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .w-note{
+    margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--bg);
+    border-left:3px solid var(--border-strong);font-size:17px;line-height:1.4;color:var(--ink-2);
+  }
+  .w-note-l{font-weight:800;color:var(--ink);margin-right:6px}
+  .w-prio{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:17px;color:var(--ink-2)}
+  .hearts{display:inline-flex;gap:1px;color:var(--primary)}
+  .hearts .ic{width:17px;height:17px}
+  .hearts .off{color:var(--muted)}
+  .helper{
+    display:flex;gap:9px;align-items:flex-start;background:var(--accent-soft);
+    border-radius:14px;padding:9px 12px;margin-top:12px;
+    font-size:17px;line-height:1.28;color:#244C36;
+  }
+  .helper .ic{width:20px;height:20px;margin-top:1px;color:var(--accent)}
+
+  /* ============================================================
+     MARCO DE NAVEGADOR 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  .dt-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:18px;box-shadow:var(--sh-1);
+  }
+  .dt-h{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .dt-sub{font-size:16px;line-height:1.4;color:var(--ink-2);margin-top:4px}
+
+  /* ---------- notas del dueño ---------- */
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+
+  /* ============================================================
+     MI LISTA · piezas nuevas (prefijo ml-)
+     ============================================================ */
+  .ml-head{margin-top:0}
+  .ml-title{font-size:29px;line-height:1.14;font-weight:800;letter-spacing:-.02em}
+  .ml-sub{margin-top:3px;font-size:17px;line-height:1.3;color:var(--ink-2)}
+  .ml-add{margin-top:10px}
+  .ml-hint{margin-top:4px;font-size:16px;line-height:1.3;color:var(--ink-2)}
+  .ml-info{
+    display:flex;gap:9px;align-items:flex-start;margin-top:10px;padding:8px 12px;
+    border-radius:14px;background:var(--accent-soft);
+    font-size:17px;line-height:1.32;color:#244C36;
+  }
+  .ml-info .ic{flex:0 0 auto;width:20px;height:20px;margin-top:1px;color:var(--accent)}
+
+  /* control segmentado: la pestaña activa se lee por el peso, el subrayado
+     y el icono de visto, no solo por el color */
+  .ml-seg{
+    display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px;padding:4px;
+    background:#F8EBE0;border:1.5px solid var(--border-strong);border-radius:999px;
+  }
+  .ml-seg-tab{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 8px;border-radius:999px;border:2px solid transparent;
+    font-size:17px;font-weight:700;line-height:1.2;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease,border-color .16s ease;
+  }
+  .ml-seg-tab:hover{background:#FFF3E9;color:var(--ink)}
+  .ml-seg-tab .ic{display:none;width:19px;height:19px;flex:0 0 auto}
+  .ml-seg-tab[aria-selected="true"]{
+    background:var(--surface);color:var(--ink);font-weight:800;
+    border-color:var(--ink);box-shadow:var(--sh-1);
+  }
+  .ml-seg-tab[aria-selected="true"] .ic{display:block}
+  .ml-seg-tab[aria-selected="true"] span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+
+  /* ordenar */
+  .ml-sort{display:block;margin-top:10px}
+  .ml-sort-wrap{position:relative;display:block}
+  .ml-select{
+    display:block;width:100%;height:56px;padding:0 44px 0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);background:var(--surface);
+    border:2px solid var(--border-strong);border-radius:14px;
+    appearance:none;-webkit-appearance:none;
+  }
+  .ml-select:hover{border-color:var(--ink-2)}
+  .ml-sel-ic{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%) rotate(90deg);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  .ml-panel{display:block}
+  .ml-free{font-size:17px;font-weight:700;color:var(--ink-2)}
+
+  /* acciones de un deseo propio: editar y marcar como recibido */
+  .ml-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .ml-acts .btn{padding:10px 8px;gap:6px;font-size:17px}
+  .ml-acts .btn .ic{width:20px;height:20px}
+
+  /* quién puede verlo: se dice con el icono del ojo y las palabras */
+  .ml-eye{
+    display:flex;align-items:flex-start;gap:6px;margin-top:6px;
+    font-size:17px;line-height:1.3;color:var(--ink-2);
+  }
+  .ml-eye .ic{flex:0 0 auto;width:18px;height:18px;margin-top:2px}
+
+  /* ---- móvil 2: cabecera fija y lista desplazada ---- */
+  .ml-pf-body{position:absolute;top:44px;left:0;right:0;bottom:72px;display:flex;flex-direction:column}
+  .ml-pf-top{
+    flex:0 0 auto;padding:4px 16px 10px;background:rgba(255,248,241,.98);
+    border-bottom:1px solid var(--border);
+  }
+  .ml-pf-top .ml-seg{margin-top:12px}
+  .ml-pf-list{
+    flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:0 16px 12px;scrollbar-width:none;
+  }
+  .ml-pf-list::-webkit-scrollbar{display:none}
+  .ml-shift{margin-top:-76px}
+
+  /* aviso flotante sobre la barra de pestañas */
+  .ml-toast{
+    position:absolute;left:14px;right:14px;bottom:84px;z-index:6;
+    display:flex;align-items:center;gap:8px;padding:9px 10px 9px 14px;
+    background:var(--ink);color:#FFF3E8;border-radius:16px;
+    box-shadow:0 14px 30px rgba(43,26,18,.3);
+  }
+  .ml-toast-txt{flex:1 1 auto;font-size:17px;line-height:1.3;color:#FFF3E8}
+  .ml-undo{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:12px;
+    font-size:17px;font-weight:800;color:#FFE9DA;
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .ml-undo:hover{background:rgba(255,243,232,.16);color:#fff}
+  .ml-undo .ic{width:20px;height:20px}
+  .ml-toast :focus-visible{outline-color:#FFE9DA}
+
+  /* ---- móvil 3: recibidos ---- */
+  .ml-intro{margin-top:12px;font-size:17px;line-height:1.38;color:var(--ink-2)}
+  .ml-recs{display:grid;gap:10px;margin-top:12px}
+  .ml-rec{
+    background:#FFFCF8;border:1px solid var(--border);border-radius:18px;padding:12px;
+  }
+  .ml-rec-top{display:flex;align-items:flex-start;gap:12px}
+  .ml-rec-tile{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:0 0 auto}
+  .ml-rec-tile .ic{width:28px;height:28px}
+  .ml-rec-body{flex:1 1 auto;min-width:0}
+  .ml-rec-title{font-size:18px;line-height:1.24;font-weight:800;letter-spacing:-.005em}
+  .ml-rec-meta{font-size:16px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .ml-rec-date{display:flex;align-items:center;gap:5px;font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .ml-rec-date .ic{width:17px;height:17px}
+  .ml-rec-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+  .ml-rec-acts .btn{padding:10px 14px;font-size:17px;gap:6px}
+  .ml-rec-acts .btn .ic{width:20px;height:20px}
+  .ml-danger{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    min-height:48px;padding:8px 14px;border-radius:999px;
+    font-size:17px;font-weight:800;color:var(--danger);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .ml-danger:hover{background:#FDECEA}
+  .ml-danger .ic{width:20px;height:20px}
+
+  /* ---- escritorio ---- */
+  .ml-dt-main{
+    width:1200px;margin:0 auto;padding:16px 0;display:grid;
+    grid-template-columns:1fr 320px;gap:24px;align-items:start;
+  }
+  .ml-dt-col{min-width:0}
+  .ml-dt-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+  .ml-dt-title{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .ml-dt-sub{margin-top:4px;font-size:17px;line-height:1.3;color:var(--ink-2)}
+  .ml-dt-add{flex:0 0 auto;padding-top:2px}
+  .ml-dt-add .btn{padding:12px 22px}
+  .ml-dt-bar{display:flex;align-items:center;gap:16px;margin-top:14px}
+  .ml-dt-bar .ml-seg{flex:0 0 420px;margin-top:0}
+  .ml-dt-bar .ml-sort{flex:0 0 330px;margin-top:0}
+  .ml-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .ml-wish{padding:12px}
+  .ml-wish .wish-media{height:56px}
+  .ml-wish .w-title{font-size:17px;line-height:1.28}
+  .ml-wish .w-prio{font-size:17px}
+  .ml-dt-side{min-width:0}
+  .ml-dt-side .dt-card + .dt-card{margin-top:16px}
+  .ml-vis{display:grid;margin-top:8px}
+  .ml-vis li{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+  .ml-vis li:last-child{border-bottom:0}
+  .ml-vis .stack{display:flex;flex:0 0 auto}
+  .ml-vis .stack span{
+    width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:15px;
+    background:linear-gradient(180deg,#fff,#FFF2E6);border:2px solid var(--border-strong);
+  }
+  .ml-vis .stack span + span{margin-left:-10px}
+  .ml-vis-txt{flex:1 1 auto;min-width:0}
+  .ml-vis-name{display:block;font-size:17px;line-height:1.25;font-weight:700}
+  .ml-vis-meta{display:block;font-size:16px;line-height:1.3;color:var(--ink-2)}
+  .ml-side-note{margin-top:10px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .ml-tastes{display:grid;gap:7px;margin-top:10px;font-size:17px;line-height:1.35}
+  .ml-taste{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .ml-taste-v{font-weight:800;white-space:nowrap}
+  .ml-taste-k{color:var(--ink-2)}
+  .ml-side-foot{margin-top:8px}
+
+  /* ---- fila de estados y notas ---- */
+  .ml-notes{
+    width:1200px;margin:0 auto;display:grid;
+    grid-template-columns:330px 330px 1fr;gap:24px;align-items:start;
+  }
+  .ml-note-label{font-size:17px;line-height:1.25;font-weight:700;color:var(--primary-dark);margin-bottom:10px}
+  .ml-empty{
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-card);
+    padding:18px;box-shadow:var(--sh-1);
+  }
+  .ml-empty-h{display:flex;align-items:center;gap:12px}
+  .ml-empty-ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto}
+  .ml-empty-t{font-size:21px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .ml-empty-s{margin-top:10px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .ml-empty .btn{margin-top:14px}
+  .ml-bul h3{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.01em;margin-bottom:12px}
+  .ml-bul ol{display:grid;gap:12px}
+  .ml-bul li{display:flex;gap:10px;align-items:flex-start;font-size:17px;line-height:1.45}
+  .ml-bul b{font-weight:800}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="currentColor"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.6" width="16" height="14.4" rx="2.4"/><path d="M4 10h16M8.4 3.6v3.6M15.6 3.6v3.6"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.6 15.2v-2.8a7.4 7.4 0 0 1 14.8 0v2.8"/><rect x="3.2" y="13.8" width="4.6" height="7" rx="2.3"/><rect x="16.2" y="13.8" width="4.6" height="7" rx="2.3"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.8 5.4h5.6A2.2 2.2 0 0 1 11.6 7.6V20a2 2 0 0 0-2-1.8H3.8Z"/><path d="M20.2 5.4h-5.6A2.2 2.2 0 0 0 12.4 7.6V20a2 2 0 0 1 2-1.8h5.8Z"/></g></symbol>
+    <symbol id="i-shoe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3.4 16.6h11.9c1.7 0 3.2-.7 4.3-2l.6-.7c.6-.7.2-1.8-.7-2l-4.3-.9-3-2.4a2 2 0 0 0-1.3-.5H6.6L3.4 12.2Z"/><path d="M3.4 16.6v2.2h17.2"/></g></symbol>
+    <symbol id="i-vase" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M9.2 3.6h5.6l-.9 3.1a7 7 0 0 1 3.9 6.2c0 4.1-2.5 7.5-5.8 7.5s-5.8-3.4-5.8-7.5a7 7 0 0 1 3.9-6.2Z"/><path d="M8.6 12.4h6.8"/></g></symbol>
+    <symbol id="i-mug" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M5.6 6.8h10.2v9.4a3.8 3.8 0 0 1-3.8 3.8h-2.6a3.8 3.8 0 0 1-3.8-3.8Z"/><path d="M15.8 9.6h1.9a2.8 2.8 0 0 1 0 5.6h-1.9"/><path d="M8.4 3.6v1.7M12 3.6v1.7"/></g></symbol>
+    <symbol id="i-sweater" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.6 4.2 4.3 6.6a1 1 0 0 0-.5.9l.9 4.2 2.6-.6v8.5h9.4v-8.5l2.6.6.9-4.2a1 1 0 0 0-.5-.9L15.4 4.2a2.6 2.6 0 0 1-3.4 0 2.6 2.6 0 0 1-3.4 0Z"/></g></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8.4h16v2.4a2.2 2.2 0 0 0 0 4.4v2.4H4v-2.4a2.2 2.2 0 0 0 0-4.4Z"/><path d="M13.4 9.4v5.2" stroke-dasharray="1.4 2.4"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 7h14.8M9.4 7V4.8h5.2V7"/><path d="m6.6 7 .9 12a1.6 1.6 0 0 0 1.6 1.5h5.8a1.6 1.6 0 0 0 1.6-1.5l.9-12"/><path d="M10.4 10.6v6.6M13.6 10.6v6.6"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 6.4 4.6 11l4.6 4.6"/><path d="M4.6 11h8.4a5.6 5.6 0 0 1 0 11.2H9"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DEL DUEÑO
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección «Personas primero»</p>
+      <h1>Mi lista</h1>
+      <p class="tradeoff">Tu lista es tuya: se edita sin ruido, la sorpresa queda protegida y marcar «Ya lo tengo» no borra nada, se puede deshacer.</p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta pantalla</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>Un solo botón principal, «Añadir un deseo», y siempre en el mismo sitio: arriba.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>La sorpresa se dice una vez y bien: no ves quién ha reservado qué, ni te lo insinúa ningún hueco de la tarjeta.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Pendientes y Recibidos con el mismo control segmentado; la pestaña activa se ve por el peso, el subrayado y el visto.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>«Ya lo tengo» mueve el deseo a Recibidos y ofrece «Deshacer» en el acto; nada desaparece sin vuelta.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px · Hoy es 26 de noviembre</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA MÓVIL
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil</h2>
+      <p>La pestaña «Mi lista» en tres momentos: la lista, el aviso de «Ya lo tengo» y los recibidos. La barra inferior deja 20 px de área segura encima del gesto del sistema.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: MI LISTA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Mi lista · pendientes</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="ml-head">
+              <h2 class="ml-title">Mi lista</h2>
+              <p class="ml-sub">5 deseos · los ven Familia Martín y Amigos de la Uni</p>
+            </header>
+
+            <button class="btn btn-primary btn-block ml-add" type="button" aria-describedby="ml-hint-1">
+              <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir un deseo
+            </button>
+            <p class="ml-hint" id="ml-hint-1">Pega el enlace de la tienda o escríbelo tú</p>
+
+            <p class="ml-info">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span>Tus regalos son sorpresa: no verás quién ha reservado qué.</span>
+            </p>
+
+            <div class="ml-seg" role="tablist" aria-label="Deseos pendientes o recibidos">
+              <button class="ml-seg-tab" type="button" role="tab" id="t1-pend" aria-selected="true">
+                <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Pendientes · 5</span>
+              </button>
+              <button class="ml-seg-tab" type="button" role="tab" id="t1-rec" aria-selected="false" tabindex="-1">
+                <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Recibidos · 2</span>
+              </button>
+            </div>
+
+            <div class="ml-sort">
+              <label class="sr-only" for="orden-1">Ordenar los deseos</label>
+              <span class="ml-sort-wrap">
+                <select class="ml-select" id="orden-1">
+                  <option selected>Ordenar: Más ilusión primero</option>
+                  <option>Ordenar: Más recientes primero</option>
+                  <option>Ordenar: Precio, de menor a mayor</option>
+                </select>
+                <svg class="ic ml-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+              </span>
+            </div>
+
+            <div class="ml-panel" role="tabpanel" id="p1-pend" aria-labelledby="t1-pend" tabindex="0">
+              <ul class="wishes" aria-label="Deseos pendientes">
+                <li class="wish">
+                  <div class="wish-media tile-a">
+                    <svg class="ic ic-36" aria-hidden="true"><use href="#i-headphones"/></svg>
+                    <span class="w-media-end">
+                      <span class="w-price">349,00 €</span>
+                      <span class="w-cat">Tecnología</span>
+                    </span>
+                  </div>
+                  <div class="w-head">
+                    <p class="w-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                    <a class="w-link" href="#tienda-auriculares" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Auriculares inalámbricos Sony WH-1000XM5"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                  </div>
+                  <p class="w-prio">
+                    <span class="hearts" aria-hidden="true">
+                      <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                    </span>
+                    <span>Me hace mucha ilusión</span>
+                  </p>
+                  <div class="ml-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Editar: Auriculares inalámbricos Sony WH-1000XM5">Editar</button>
+                    <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Auriculares inalámbricos Sony WH-1000XM5"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                  </div>
+                </li>
+
+                <li class="wish">
+                  <div class="wish-media tile-a">
+                    <svg class="ic ic-36" aria-hidden="true"><use href="#i-vase"/></svg>
+                    <span class="w-media-end">
+                      <span class="w-price ml-free">Sin precio</span>
+                      <span class="w-cat">Experiencias y talleres</span>
+                    </span>
+                  </div>
+                  <p class="w-title">Clases de cerámica (bono de 4 sesiones)</p>
+                  <p class="w-prio">
+                    <span class="hearts" aria-hidden="true">
+                      <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                    </span>
+                    <span>Me hace mucha ilusión</span>
+                  </p>
+                  <p class="ml-eye">
+                    <svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg>
+                    <span>Solo lo ve Familia Martín</span>
+                  </p>
+                  <div class="ml-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Editar: Clases de cerámica (bono de 4 sesiones)">Editar</button>
+                    <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Clases de cerámica (bono de 4 sesiones)"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                  </div>
+                </li>
+
+                <li class="wish">
+                  <div class="wish-media tile-c">
+                    <svg class="ic ic-36" aria-hidden="true"><use href="#i-shoe"/></svg>
+                    <span class="w-media-end">
+                      <span class="w-price">120,00 €</span>
+                      <span class="w-cat">Calzado</span>
+                    </span>
+                  </div>
+                  <div class="w-head">
+                    <p class="w-title">Zapatillas de running Asics Gel-Nimbus</p>
+                    <a class="w-link" href="#tienda-zapatillas" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                  </div>
+                  <p class="w-prio">
+                    <span class="hearts" aria-hidden="true">
+                      <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                    </span>
+                    <span>Me gustaría</span>
+                  </p>
+                  <p class="w-note"><span class="w-note-l">Nota</span>Talla 39</p>
+                  <div class="ml-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Editar: Zapatillas de running Asics Gel-Nimbus">Editar</button>
+                    <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: YA LO TENGO · DESHACER ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">«Ya lo tengo» · deshacer</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="ml-pf-body">
+            <div class="ml-pf-top">
+              <header class="ml-head">
+                <h2 class="ml-title">Mi lista</h2>
+                <p class="ml-sub">4 deseos · los ven Familia Martín y Amigos de la Uni</p>
+              </header>
+              <div class="ml-seg" role="tablist" aria-label="Deseos pendientes o recibidos">
+                <button class="ml-seg-tab" type="button" role="tab" id="t2-pend" aria-selected="true">
+                  <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Pendientes · 4</span>
+                </button>
+                <button class="ml-seg-tab" type="button" role="tab" id="t2-rec" aria-selected="false" tabindex="-1">
+                  <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Recibidos · 3</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="ml-pf-list">
+              <div role="tabpanel" id="p2-pend" aria-labelledby="t2-pend" tabindex="0">
+                <ul class="wishes ml-shift" aria-label="Deseos pendientes">
+                  <li class="wish">
+                    <div class="wish-media tile-c">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-shoe"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">120,00 €</span>
+                        <span class="w-cat">Calzado</span>
+                      </span>
+                    </div>
+                    <div class="w-head">
+                      <p class="w-title">Zapatillas de running Asics Gel-Nimbus</p>
+                      <a class="w-link" href="#tienda-zapatillas" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                    </div>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span>Me gustaría</span>
+                    </p>
+                    <p class="w-note"><span class="w-note-l">Nota</span>Talla 39</p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Zapatillas de running Asics Gel-Nimbus">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+
+                  <li class="wish">
+                    <div class="wish-media tile-b">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-mug"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">18,50 €</span>
+                        <span class="w-cat">Hogar y cocina</span>
+                      </span>
+                    </div>
+                    <p class="w-title">Taza de cerámica artesanal</p>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span>Un detalle</span>
+                    </p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Taza de cerámica artesanal">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Taza de cerámica artesanal"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <p class="ml-toast" role="status" aria-live="polite">
+            <span class="ml-toast-txt">«Libro «El infinito en un junco»» se ha movido a Recibidos.</span>
+            <button class="ml-undo" type="button"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Deshacer</button>
+          </p>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: RECIBIDOS ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Recibidos</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <header class="ml-head">
+              <h2 class="ml-title">Mi lista</h2>
+            </header>
+
+            <div class="ml-seg" role="tablist" aria-label="Deseos pendientes o recibidos">
+              <button class="ml-seg-tab" type="button" role="tab" id="t3-pend" aria-selected="false" tabindex="-1">
+                <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Pendientes · 4</span>
+              </button>
+              <button class="ml-seg-tab" type="button" role="tab" id="t3-rec" aria-selected="true">
+                <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Recibidos · 3</span>
+              </button>
+            </div>
+
+            <div role="tabpanel" id="p3-rec" aria-labelledby="t3-rec" tabindex="0">
+              <p class="ml-intro">Aquí guardamos lo que ya tienes. Tus grupos ya no lo ven.</p>
+
+              <ul class="ml-recs" aria-label="Deseos recibidos">
+                <li class="ml-rec">
+                  <div class="ml-rec-top">
+                    <span class="ml-rec-tile tile-c" aria-hidden="true"><svg class="ic"><use href="#i-book"/></svg></span>
+                    <div class="ml-rec-body">
+                      <p class="ml-rec-title">Libro «El infinito en un junco»</p>
+                      <p class="ml-rec-meta">Libros</p>
+                      <p class="ml-rec-date"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Recibido el 26 de noviembre</span></p>
+                    </div>
+                  </div>
+                  <div class="ml-rec-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Volver a pedirlo: Libro «El infinito en un junco». Vuelve a Pendientes con su precio, su nota y su enlace."><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Volver a pedirlo</button>
+                    <button class="ml-danger" type="button" aria-label="Borrar para siempre: Libro «El infinito en un junco»"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Borrar</button>
+                  </div>
+                </li>
+
+                <li class="ml-rec">
+                  <div class="ml-rec-top">
+                    <span class="ml-rec-tile tile-c" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                    <div class="ml-rec-body">
+                      <p class="ml-rec-title">Bufanda de lana gris</p>
+                      <p class="ml-rec-meta">Ropa y accesorios</p>
+                      <p class="ml-rec-date"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Recibido el 12 de noviembre</span></p>
+                    </div>
+                  </div>
+                  <div class="ml-rec-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Volver a pedirlo: Bufanda de lana gris. Vuelve a Pendientes con su precio, su nota y su enlace."><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Volver a pedirlo</button>
+                    <button class="ml-danger" type="button" aria-label="Borrar para siempre: Bufanda de lana gris"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Borrar</button>
+                  </div>
+                </li>
+
+                <li class="ml-rec">
+                  <div class="ml-rec-top">
+                    <span class="ml-rec-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-ticket"/></svg></span>
+                    <div class="ml-rec-body">
+                      <p class="ml-rec-title">Disco «Mismo sitio, distinto lugar»</p>
+                      <p class="ml-rec-meta">Música y entradas</p>
+                      <p class="ml-rec-date"><svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg><span>Recibido el 3 de octubre</span></p>
+                    </div>
+                  </div>
+                  <div class="ml-rec-acts">
+                    <button class="btn btn-secondary" type="button" aria-label="Volver a pedirlo: Disco «Mismo sitio, distinto lugar». Vuelve a Pendientes con su precio, su nota y su enlace."><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Volver a pedirlo</button>
+                    <button class="ml-danger" type="button" aria-label="Borrar para siempre: Disco «Mismo sitio, distinto lugar»"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Borrar</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: NAVEGADOR DE ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>La misma lista en 1280 × 800: los deseos en dos columnas y, a la derecha, quién ve la lista y tus tallas.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Mi lista · sesión iniciada como Lucía</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Mi lista</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="ml-dt-main">
+            <div class="ml-dt-col">
+              <div class="ml-dt-top">
+                <div>
+                  <h2 class="ml-dt-title">Mi lista</h2>
+                  <p class="ml-dt-sub">5 deseos · los ven Familia Martín y Amigos de la Uni</p>
+                </div>
+                <div class="ml-dt-add">
+                  <button class="btn btn-primary" type="button">
+                    <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir un deseo
+                  </button>
+                </div>
+              </div>
+
+              <p class="ml-info">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Tus regalos son sorpresa: no verás quién ha reservado qué.</span>
+              </p>
+
+              <div class="ml-dt-bar">
+                <div class="ml-seg" role="tablist" aria-label="Deseos pendientes o recibidos">
+                  <button class="ml-seg-tab" type="button" role="tab" id="td-pend" aria-selected="true">
+                    <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Pendientes · 5</span>
+                  </button>
+                  <button class="ml-seg-tab" type="button" role="tab" id="td-rec" aria-selected="false" tabindex="-1">
+                    <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>Recibidos · 2</span>
+                  </button>
+                </div>
+                <div class="ml-sort">
+                  <label class="sr-only" for="orden-d">Ordenar los deseos</label>
+                  <span class="ml-sort-wrap">
+                    <select class="ml-select" id="orden-d">
+                      <option selected>Ordenar: Más ilusión primero</option>
+                      <option>Ordenar: Más recientes primero</option>
+                      <option>Ordenar: Precio, de menor a mayor</option>
+                    </select>
+                    <svg class="ic ml-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </span>
+                </div>
+              </div>
+
+              <div role="tabpanel" id="pd-pend" aria-labelledby="td-pend" tabindex="0">
+                <ul class="ml-grid" aria-label="Deseos pendientes">
+                  <li class="wish ml-wish">
+                    <div class="wish-media tile-a">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-headphones"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">349,00 €</span>
+                        <span class="w-cat">Tecnología</span>
+                      </span>
+                    </div>
+                    <div class="w-head">
+                      <p class="w-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                      <a class="w-link" href="#tienda-auriculares" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Auriculares inalámbricos Sony WH-1000XM5"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                    </div>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                      </span>
+                      <span>Me hace mucha ilusión</span>
+                    </p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Auriculares inalámbricos Sony WH-1000XM5">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Auriculares inalámbricos Sony WH-1000XM5"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+
+                  <li class="wish ml-wish">
+                    <div class="wish-media tile-a">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-vase"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price ml-free">Sin precio</span>
+                        <span class="w-cat">Experiencias y talleres</span>
+                      </span>
+                    </div>
+                    <p class="w-title">Clases de cerámica (bono de 4 sesiones)</p>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                      </span>
+                      <span>Me hace mucha ilusión</span>
+                    </p>
+                    <p class="ml-eye">
+                      <svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg>
+                      <span>Solo lo ve Familia Martín</span>
+                    </p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Clases de cerámica (bono de 4 sesiones)">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Clases de cerámica (bono de 4 sesiones)"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+
+                  <li class="wish ml-wish">
+                    <div class="wish-media tile-c">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-shoe"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">120,00 €</span>
+                        <span class="w-cat">Calzado</span>
+                      </span>
+                    </div>
+                    <div class="w-head">
+                      <p class="w-title">Zapatillas de running Asics Gel-Nimbus</p>
+                      <a class="w-link" href="#tienda-zapatillas" title="Abrir en amazon.es" aria-label="Abrir en la tienda (amazon.es): Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                    </div>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span>Me gustaría</span>
+                    </p>
+                    <p class="w-note"><span class="w-note-l">Nota</span>Talla 39</p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Zapatillas de running Asics Gel-Nimbus">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Zapatillas de running Asics Gel-Nimbus"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+
+                  <li class="wish ml-wish">
+                    <div class="wish-media tile-b">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-mug"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">18,50 €</span>
+                        <span class="w-cat">Hogar y cocina</span>
+                      </span>
+                    </div>
+                    <p class="w-title">Taza de cerámica artesanal</p>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span>Un detalle</span>
+                    </p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Taza de cerámica artesanal">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Taza de cerámica artesanal"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+
+                  <li class="wish ml-wish">
+                    <div class="wish-media tile-c">
+                      <svg class="ic ic-36" aria-hidden="true"><use href="#i-book"/></svg>
+                      <span class="w-media-end">
+                        <span class="w-price">21,90 €</span>
+                        <span class="w-cat">Libros</span>
+                      </span>
+                    </div>
+                    <p class="w-title">Libro «El infinito en un junco»</p>
+                    <p class="w-prio">
+                      <span class="hearts" aria-hidden="true">
+                        <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                      </span>
+                      <span>Me gustaría</span>
+                    </p>
+                    <div class="ml-acts">
+                      <button class="btn btn-secondary" type="button" aria-label="Editar: Libro «El infinito en un junco»">Editar</button>
+                      <button class="btn btn-soft" type="button" aria-label="Ya lo tengo: mover a Recibidos Libro «El infinito en un junco»"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Ya lo tengo</button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <aside class="ml-dt-side" aria-label="Ajustes de tu lista">
+              <section class="dt-card" aria-labelledby="ml-vis-h">
+                <h2 class="dt-h" id="ml-vis-h">Quién ve tu lista</h2>
+                <ul class="ml-vis">
+                  <li>
+                    <span class="stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                    <span class="ml-vis-txt">
+                      <span class="ml-vis-name">Familia Martín</span>
+                      <span class="ml-vis-meta">6 participantes</span>
+                    </span>
+                  </li>
+                  <li>
+                    <span class="stack" aria-hidden="true"><span>🌻</span><span>📚</span><span>⚽</span></span>
+                    <span class="ml-vis-txt">
+                      <span class="ml-vis-name">Amigos de la Uni</span>
+                      <span class="ml-vis-meta">8 participantes</span>
+                    </span>
+                  </li>
+                </ul>
+                <p class="ml-side-note">Puedes ocultar un deseo a un grupo al editarlo.</p>
+              </section>
+
+              <section class="dt-card" aria-labelledby="ml-taste-h">
+                <h2 class="dt-h" id="ml-taste-h">Tus tallas y gustos</h2>
+                <ul class="ml-tastes">
+                  <li class="ml-taste"><span class="ml-taste-k">Camiseta</span><span class="ml-taste-v">M</span></li>
+                  <li class="ml-taste"><span class="ml-taste-k">Pantalón</span><span class="ml-taste-v">38</span></li>
+                  <li class="ml-taste"><span class="ml-taste-k">Calzado</span><span class="ml-taste-v">39</span></li>
+                  <li class="ml-taste"><span class="ml-taste-k">Color favorito</span><span class="ml-taste-v">verde</span></li>
+                </ul>
+                <p class="ml-side-foot"><a class="link-btn" href="#perfil">Editar en tu perfil</a></p>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       FILA: ESTADOS Y NOTAS
+       ========================================================== -->
+  <section class="row" aria-labelledby="estados-h">
+    <div class="row-head">
+      <h2 id="estados-h">Estados de Mi lista</h2>
+      <p>Los dos vacíos posibles y lo que cambia al marcar un deseo como recibido.</p>
+    </div>
+
+    <div class="ml-notes">
+      <section aria-labelledby="ml-e1">
+        <h3 class="ml-note-label" id="ml-e1">Pendientes sin ningún deseo</h3>
+        <div class="ml-empty">
+          <div class="ml-empty-h">
+            <span class="ml-empty-ic tile-a" aria-hidden="true"><svg class="ic ic-28"><use href="#i-gift"/></svg></span>
+            <p class="ml-empty-t">Tu lista está vacía</p>
+          </div>
+          <p class="ml-empty-s">Apunta lo primero que te gustaría recibir: así tu familia acertará.</p>
+          <button class="btn btn-primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>Añadir un deseo</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="ml-e2">
+        <h3 class="ml-note-label" id="ml-e2">Recibidos vacío</h3>
+        <div class="ml-empty">
+          <div class="ml-empty-h">
+            <span class="ml-empty-ic tile-b" aria-hidden="true"><svg class="ic ic-28"><use href="#i-check"/></svg></span>
+            <p class="ml-empty-t">Todavía no has marcado nada como recibido.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="ml-bul" aria-labelledby="ml-bul-h">
+        <h3 id="ml-bul-h">Lo que cambia con «Ya lo tengo»</h3>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span><b>Se puede deshacer.</b> El deseo no se borra: pasa a Recibidos y el aviso ofrece «Deshacer» durante unos segundos.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span><b>Si alguien lo había reservado, se le avisa</b> para que no lo compre. Tú no te enteras de quién era: la sorpresa se mantiene.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span><b>«Volver a pedirlo» lo devuelve a Pendientes</b> con sus datos: precio, nota, enlace y quién puede verlo.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span><b>«Borrar» pide confirmación</b> antes de nada: «¿Borrar «Auriculares inalámbricos Sony WH-1000XM5» para siempre?».</span></li>
+        </ol>
+      </section>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

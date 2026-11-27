@@ -1,0 +1,48 @@
+{
+  "title": "Rediseño de Muro de Deseos",
+  "brief": "Rediseño completo de la interfaz, mobile first y también para navegador de escritorio: fácil de usar para todas las edades y que muestre claramente su objetivo (listas de deseos compartidas en grupos donde los demás reservan el regalo para no repetir).",
+  "artboards": [
+    {
+      "file": "01-clara.html",
+      "title": "Clara — lista clara",
+      "tradeoff": "Máxima legibilidad y cero ambigüedad para cualquier edad; menos emocional y muestra menos deseos por pantalla.",
+      "width": 1440,
+      "height": 2295
+    },
+    {
+      "file": "02-personas-primero.html",
+      "title": "Personas primero — celebraciones",
+      "tradeoff": "Comunica al instante el objetivo social (regalar a quien quieres, a tiempo); tu propia lista queda a un toque y la portada tiene más elementos.",
+      "width": 1440,
+      "height": 7234
+    },
+    {
+      "file": "03-muro-visual.html",
+      "title": "Muro visual — tablero de deseos",
+      "tradeoff": "El más emocional y fiel al nombre «Muro de deseos»; depende de buenas fotos y resulta algo más denso para personas mayores.",
+      "width": 1440,
+      "height": 2191
+    },
+    {
+      "file": "04-ficha-grupo.html",
+      "title": "Personas primero · Ficha de grupo",
+      "tradeoff": "Pantalla de la dirección elegida: participantes y celebraciones a la vista; las opciones de administración quedan detrás de «Opciones».",
+      "width": 1440,
+      "height": 2589
+    },
+    {
+      "file": "05-mi-lista.html",
+      "title": "Personas primero · Mi lista y Recibidos",
+      "tradeoff": "Pantalla de la dirección elegida: «Ya lo tengo» se puede deshacer y la sorpresa queda explícita; se ven menos deseos por pantalla.",
+      "width": 1440,
+      "height": 2659
+    },
+    {
+      "file": "06-formulario-deseo.html",
+      "title": "Personas primero · Añadir y editar deseo",
+      "tradeoff": "Pantalla de la dirección elegida: el enlace rellena casi todo y hay vista previa; el formulario es largo y en móvil requiere scroll.",
+      "width": 1440,
+      "height": 2730
+    }
+  ]
+}

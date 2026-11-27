@@ -1,0 +1,2030 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Dirección 02 · Personas primero</title>
+<style>
+  /* ============================================================
+     Dirección 02 — “Personas primero”
+     Paleta propia (sustituye el sistema actual, pedido de restyle):
+     crema cálida, teja, verde salvia, tarjetas de 20 px y píldoras.
+     ============================================================ */
+  :root{
+    --bg:#FFF8F1;
+    --surface:#FFFFFF;
+    --ink:#2B1A12;
+    --ink-2:#5C4033;         /* 8,7:1 sobre --bg */
+    --primary:#B93D12;       /* blanco encima: 5,6:1 */
+    --primary-dark:#8F2E0C;  /* 6,8:1 sobre --primary-soft */
+    --primary-soft:#FDE5D6;
+    --accent:#2F6F4E;        /* 6,0:1 sobre blanco */
+    --accent-soft:#E1F0E7;
+    --muted:#8A7A70;         /* solo decoración / deshabilitado */
+    --border:#F0DFD2;
+    --border-strong:#E3C8B6;
+    --sand:#FBEBDC;
+    --gold:#E7A33C;
+    --r-card:20px;
+    --sh-1:0 2px 8px rgba(43,26,18,.05);
+    --sh-2:0 10px 28px rgba(43,26,18,.08);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{margin:0}
+  body{
+    width:1440px;margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4,p,ul,ol,figure{margin:0;padding:0}
+  ul,ol{list-style:none}
+  img,svg{display:block}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+  a{color:inherit}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+  :focus-visible{outline:3px solid var(--primary-dark);outline-offset:3px;border-radius:8px}
+  .strip :focus-visible{outline-color:#FDE5D6}
+  main{padding-bottom:28px}
+
+  /* ---------- iconos ---------- */
+  .ic{width:24px;height:24px;flex:0 0 auto}
+  .ic-20{width:20px;height:20px}
+  .ic-28{width:28px;height:28px}
+  .ic-36{width:36px;height:36px}
+
+  /* ---------- piezas comunes ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:10px 20px;border-radius:999px;
+    border:2px solid transparent;font-size:17px;font-weight:700;line-height:1.25;
+    text-align:center;transition:background-color .16s ease,border-color .16s ease,color .16s ease;
+  }
+  .btn-block{width:100%}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(185,61,18,.22)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--border-strong)}
+  .btn-secondary:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .btn-soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#EEC4A8}
+  .btn-soft:hover{background:#FBD9C4;border-color:var(--primary-dark)}
+  .link-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:48px;padding:8px 12px;border-radius:14px;
+    font-size:16px;font-weight:700;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .link-btn:hover{background:var(--primary-soft)}
+  .avatar{
+    width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+    font-size:27px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:5px 12px;font-size:16px;font-weight:700;white-space:nowrap;
+  }
+  .pill-days{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
+  .pill-count{background:var(--surface);color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .tile-a{background:var(--primary-soft);color:var(--primary-dark)}
+  .tile-b{background:var(--accent-soft);color:var(--accent)}
+  .tile-c{background:var(--sand);color:#7A4A2A}
+  .tile-off{background:#F6EBE2;color:var(--muted)}
+  .tile-n{background:#F6EBE2;color:var(--ink-2)}   /* «Otro regalo»: neutro pero legible */
+
+  /* ============================================================
+     CABECERA DE LA DIRECCIÓN (para el dueño)
+     ============================================================ */
+  .strip{background:var(--ink);color:#FFF3E8;padding:26px 0 18px}
+  .strip-in{
+    width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 660px;
+    gap:48px;align-items:start;
+  }
+  .kicker{font-size:15px;font-weight:700;color:#E7C3AC;margin-bottom:6px}
+  .strip h1{font-size:40px;line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  .tradeoff{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;
+    margin-top:14px;max-width:540px;font-size:16.5px;line-height:1.45;color:#F7E3D5;
+  }
+  .keys ol{grid-template-columns:1fr 1fr;gap:10px 22px}
+  .keys li{font-size:15.5px;line-height:1.4}
+  .tradeoff-tag{
+    background:var(--primary-soft);color:var(--primary-dark);
+    font-size:14px;font-weight:800;padding:3px 10px;border-radius:999px;
+  }
+  .keys h2{font-size:18px;font-weight:800;color:#FFF3E8;margin-bottom:10px}
+  .keys ol{display:grid}
+  .keys li{display:flex;gap:9px;align-items:flex-start;color:#F7E3D5}
+  .keys .kn{
+    flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:14px;font-weight:800;display:grid;place-items:center;
+    margin-top:2px;
+  }
+  .strip-note{
+    width:1200px;margin:18px auto 0;padding-top:12px;
+    border-top:1px solid rgba(255,243,232,.16);
+    font-size:14px;color:#D9B6A0;
+  }
+
+  /* ============================================================
+     FILAS DEL ARTBOARD
+     ============================================================ */
+  .row{width:1300px;margin:24px auto 0}
+  .row + .row{margin-top:28px}
+  .row-head{
+    display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
+    padding-bottom:8px;margin-bottom:16px;border-bottom:2px solid var(--border-strong);
+  }
+  .row-head h2{font-size:25px;font-weight:800;letter-spacing:-.01em}
+  .row-head p{font-size:16px;color:var(--ink-2)}
+  .devices{display:flex;gap:46px;justify-content:center;align-items:flex-start}
+
+  /* ---------- detalle: invitar a alguien (hoja de selección de grupo) ---------- */
+  .sheet-bg{position:absolute;top:44px;left:0;right:0;bottom:0;padding:4px 16px}
+  .scrim{position:absolute;inset:0;background:rgba(43,26,18,.5);z-index:8}
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:9;background:var(--surface);
+    border-radius:28px 28px 0 0;padding:10px 20px 34px;box-shadow:0 -10px 30px rgba(43,26,18,.22);
+  }
+  .grab{width:44px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 8px}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .sheet-head h3{font-size:26px;font-weight:800;letter-spacing:-.01em}
+  .x-btn{
+    width:48px;height:48px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+    border:2px solid var(--border-strong);background:var(--surface);color:var(--ink);font-size:26px;line-height:1;
+  }
+  .sheet fieldset{border:0;margin:6px 0 0;padding:0}
+  .sheet legend{font-size:18px;font-weight:700;margin-bottom:10px;padding:0}
+  .g-opt{
+    display:flex;align-items:center;gap:12px;min-height:66px;padding:10px 14px;margin-bottom:10px;
+    border:2px solid var(--border-strong);border-radius:18px;cursor:pointer;background:var(--surface);
+  }
+  .g-opt input{width:24px;height:24px;margin:0;accent-color:var(--primary);flex:0 0 auto}
+  .g-opt input:focus-visible{outline:none}
+  .g-opt:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:3px}
+  .g-opt:has(input:checked){border-color:var(--primary);background:#FFF3EB}
+  .g-opt .g-text{flex:1 1 auto}
+  .g-chosen{display:none;font-size:15px;font-weight:800;color:var(--primary-dark)}
+  .g-opt:has(input:checked) .g-chosen{display:inline-flex;align-items:center;gap:4px}
+  .sheet-note{font-size:17px;line-height:1.45;color:var(--ink-2);margin:2px 0 14px}
+  .sheet-note b{color:var(--ink)}
+  .code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-weight:800;letter-spacing:.08em;color:var(--ink)}
+  .sheet .btn + .btn{margin-top:10px}
+  .flow-notes{width:600px;padding-top:44px}
+  .flow-notes h3{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .flow-notes > p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-bottom:16px}
+  .flow-notes ol{display:grid;gap:14px}
+  .flow-notes li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.5}
+  .inv-mock{margin-top:22px;padding:18px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-card);box-shadow:var(--sh-1)}
+  .inv-mock h4{font-size:16px;font-weight:700;color:var(--primary-dark);margin-bottom:12px}
+  .inv-banner{display:flex;gap:14px;align-items:center;padding:14px;border-radius:16px;background:var(--primary-soft)}
+  .inv-t{font-size:19px;font-weight:800;line-height:1.25}
+  .inv-s{font-size:17px;line-height:1.4;color:var(--ink-2);margin-top:4px}
+  .inv-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .fn{
+    flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--primary-soft);
+    color:var(--primary-dark);font-size:15px;font-weight:800;display:grid;place-items:center;margin-top:1px;
+  }
+  /* ---------- detalle: iconos por categoría ---------- */
+  .cat-row{
+    display:grid;grid-template-columns:640px 580px;justify-content:space-between;
+    gap:40px;align-items:start;
+  }
+  .cat-h{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .cat-sub{font-size:16px;line-height:1.4;color:var(--ink-2);margin-top:4px}
+  .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .cat-card{
+    display:flex;flex-direction:column;gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:12px;box-shadow:var(--sh-1);
+  }
+  .cat-t{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto}
+  .cat-t .ic{width:30px;height:30px}
+  .cat-name{font-size:17px;line-height:1.2;font-weight:800;letter-spacing:-.005em}
+  .cat-eg{font-size:16px;line-height:1.3;color:var(--ink-2)}
+
+  .cat-how{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:22px 24px;box-shadow:var(--sh-1);
+  }
+  .cat-how > h3{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+  .cat-steps{display:grid;gap:18px;margin-top:16px}
+  .cat-steps li{display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.45}
+  .cat-steps b{font-weight:800}
+  .cat-form{margin-top:22px;padding-top:18px;border-top:2px solid var(--border)}
+  .cat-form-h{font-size:16px;line-height:1.3;font-weight:700;color:var(--ink-2)}
+  .cat-label{font-size:17px;line-height:1.25;font-weight:800;margin-top:12px}
+  .cat-pick{
+    display:flex;align-items:center;gap:12px;width:100%;min-height:56px;
+    margin-top:8px;padding:6px 12px;border-radius:14px;text-align:left;
+    background:var(--surface);border:2px solid var(--border-strong);
+  }
+  .cat-pick:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .cat-pick .cat-t{width:40px;height:40px;border-radius:12px}
+  .cat-pick .cat-t .ic{width:23px;height:23px}
+  .cat-pick-txt{flex:1 1 auto;display:flex;flex-direction:column;min-width:0}
+  .cat-pick-name{font-size:17px;line-height:1.25;font-weight:800}
+  .cat-pick-help{font-size:16px;line-height:1.25;color:var(--ink-2)}
+  .cat-pick-act{
+    display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;
+  }
+  .cat-pick-act .ic{width:20px;height:20px}
+  .cat-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .cat-chip{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:10px 18px;
+    border-radius:999px;border:2px solid var(--border-strong);background:var(--surface);
+    font-size:17px;font-weight:700;color:var(--ink);
+  }
+  .cat-chip:hover{background:#FFF3E9;border-color:var(--ink-2)}
+  .cat-chip[aria-pressed="true"]{border-color:var(--primary);background:#FFF3EB;color:var(--primary-dark)}
+  .cat-chip .ic{width:20px;height:20px}
+  .cat-note{font-size:16px;line-height:1.35;color:var(--ink-2);margin-top:12px}
+  .device{width:390px}
+  .cap{margin-bottom:12px}
+  .cap-n{display:block;font-size:13.5px;font-weight:700;color:var(--primary-dark)}
+  .cap-t{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:1px}
+
+  /* ============================================================
+     MARCO DE MÓVIL 390 × 844
+     ============================================================ */
+  .pf{
+    position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 0 0 10px #241610,0 0 0 12px #4B332A,0 26px 50px rgba(43,26,18,.26);
+  }
+  .pf *{min-width:0}
+  .pf-notch{
+    position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:112px;height:24px;border-radius:0 0 16px 16px;background:#241610;z-index:6;
+  }
+  .pf-status{
+    position:absolute;top:0;left:0;right:0;height:44px;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;font-size:15px;font-weight:700;color:var(--ink);
+  }
+  .sb-time{letter-spacing:.01em}
+  .sb-right{display:flex;align-items:center;gap:5px}
+  .pf-scroll{
+    position:absolute;top:44px;left:0;right:0;bottom:0;
+    overflow-y:auto;overflow-x:hidden;padding:4px 16px 22px;
+    scrollbar-width:none;
+  }
+  .pf-scroll::-webkit-scrollbar{display:none}
+  .pf-scroll.has-nav{bottom:72px;padding-bottom:4px}
+  .pf-home{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:120px;height:5px;border-radius:99px;background:rgba(43,26,18,.3);z-index:7;
+  }
+  .pf-nav{
+    position:absolute;left:0;right:0;bottom:0;height:72px;z-index:5;
+    padding:4px 8px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+    background:rgba(255,248,241,.97);border-top:1px solid var(--border);
+  }
+  .nav-i{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    min-height:48px;border-radius:14px;text-decoration:none;
+    color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.1;
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .nav-i .ic{width:23px;height:23px}
+  .nav-i:hover{background:#FFF1E5}
+  .nav-i[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .nav-ic-wrap{position:relative;display:block}
+  .nav-badge{
+    position:absolute;top:-5px;right:-9px;min-width:19px;height:19px;padding:0 5px;
+    border-radius:99px;background:var(--primary);color:#fff;
+    font-size:12.5px;font-weight:800;line-height:19px;text-align:center;
+  }
+
+  /* ============================================================
+     PANTALLA 1 — BIENVENIDA
+     ============================================================ */
+  .welcome{padding:2px 0 0}
+  .welcome-art svg{width:340px;height:auto;margin:0 auto}
+  .welcome-title{
+    margin-top:10px;font-size:29px;line-height:1.14;font-weight:800;letter-spacing:-.02em;
+  }
+  .welcome-purpose{margin-top:9px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .steps{display:grid;gap:9px;margin-top:14px}
+  .step{display:flex;align-items:center;gap:11px;padding:10px 14px 10px 10px;border-radius:18px}
+  .step-a{background:var(--primary-soft)}
+  .step-b{background:var(--accent-soft)}
+  .step-c{background:var(--sand)}
+  .step-n{
+    flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--surface);
+    color:var(--ink);font-size:17px;font-weight:800;display:grid;place-items:center;
+    box-shadow:var(--sh-1);
+  }
+  .step-t{font-size:17px;line-height:1.3;font-weight:600;flex:1 1 auto}
+  .step-ic{color:var(--ink-2);opacity:.85}
+  .welcome-cta{display:grid;gap:8px;margin-top:14px}
+  .welcome-cta .link-btn{margin-top:2px}
+  .cta-hint{font-size:16px;line-height:1.35;color:var(--ink-2);text-align:center;margin:-2px 0 4px}
+
+  /* ============================================================
+     PANTALLA 2 — INICIO
+     ============================================================ */
+  .home-hi{font-size:29px;line-height:1.15;font-weight:800;letter-spacing:-.02em;padding:2px 0 8px}
+  .hero{
+    background:var(--primary-soft);border-radius:var(--r-card);padding:12px 14px;
+    box-shadow:0 10px 24px rgba(185,61,18,.1);
+  }
+  .hero-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .eyebrow{font-size:17px;font-weight:800;color:var(--primary-dark)}
+  .hero-person{display:flex;align-items:center;gap:12px;margin:6px 0 10px}
+  .hero-txt h3{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .hero-txt p{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+  .hero-also{display:flex;align-items:flex-start;gap:8px;font-size:16px;line-height:1.35;color:var(--ink-2);margin:0 0 12px}
+  .hero-also .ic{color:var(--primary-dark);margin-top:1px}
+  .hero-also-dt{margin:10px 0 0;text-align:left}
+  /* celebraciones en la ficha de una persona: cumpleaños + santo */
+  .celebs{display:grid;gap:8px;margin-top:12px}
+  .celebs li{
+    display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:16px;
+  }
+  .celebs li.is-next{background:var(--primary-soft);border-color:#F3CDB6}
+  .celebs .ic{color:var(--primary-dark)}
+  .celebs .c-txt{flex:1 1 auto;font-size:17px;line-height:1.25}
+  .celebs .c-txt b{display:block;font-weight:800}
+  .celebs .c-txt span{display:block;color:var(--ink-2)}
+  .celebs .c-when{flex:0 0 auto;font-size:16px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .celebs .is-next .c-when{background:var(--surface);color:var(--primary-dark);padding:5px 12px;border-radius:999px;box-shadow:var(--sh-1)}
+  .block-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pf h3.blk, .blk{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .ppl{margin-top:10px}
+  .ppl-strip{
+    display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+    margin:6px -16px 0;padding:0 16px 2px;
+  }
+  .ppl-strip::-webkit-scrollbar{display:none}
+  .person{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:1px;border-radius:16px;text-decoration:none;color:var(--ink);
+    min-height:48px;min-width:56px;
+  }
+  .person:hover .avatar{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .p-name{font-size:16px;font-weight:600;line-height:1.15;white-space:nowrap}
+  .avatar-all{
+    background:var(--surface);border:2px dashed var(--border-strong);color:var(--ink-2);
+  }
+  .p-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:12px;margin-top:10px;box-shadow:var(--sh-1);
+  }
+  .p-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:33px}
+  .mini-row{display:flex;gap:10px;margin:8px 0 8px}
+  .mini-tile{width:48px;height:48px;border-radius:13px;display:grid;place-items:center}
+  .mini-tile .ic{width:25px;height:25px}
+  .groups{display:grid;gap:4px;margin:6px 0 2px}
+  .groups li{display:flex;align-items:center;gap:12px;min-height:42px}
+  .stack{display:flex;flex:0 0 auto}
+  .stack span{
+    width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px;
+    background:linear-gradient(180deg,#fff,#FFF2E6);border:2px solid var(--border-strong);
+  }
+  .stack span + span{margin-left:-11px}
+  .g-text{display:block}
+  /* cada grupo es un enlace de fila completa que abre la ficha del grupo */
+  .groups li,.dt-groups li{display:block;min-height:0}
+  .g-link{
+    display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 8px;margin:0 -8px;
+    border-radius:14px;color:inherit;text-decoration:none;
+    transition:background-color .16s ease;
+  }
+  .g-link:hover{background:#FFF1E5}
+  .g-link:hover .g-name{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+  .g-link .g-text{flex:1 1 auto}
+  .g-go{flex:0 0 auto;width:22px;height:22px;color:var(--primary-dark)}
+  .g-name{display:block;font-size:17px;font-weight:700;line-height:1.25}
+  .g-meta{display:block;font-size:16px;line-height:1.25;color:var(--ink-2)}
+
+  /* ============================================================
+     PANTALLA 3 — LISTA DE JAVIER
+     ============================================================ */
+  .back{
+    display:inline-flex;align-items:center;gap:4px;min-height:48px;padding:0 12px 0 4px;
+    margin-left:-4px;border-radius:12px;font-size:17px;font-weight:700;
+    color:var(--primary-dark);text-decoration:none;
+  }
+  .back:hover{background:var(--primary-soft)}
+  .back .ic{width:20px;height:20px}
+  .person-head{display:flex;align-items:center;gap:12px;margin-top:2px}
+  .av-xl{width:56px;height:56px;font-size:27px}
+  .person-head h2{font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .person-head .p-meta{font-size:17px;line-height:1.25;color:var(--ink-2)}
+  .tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;background:var(--surface);
+    border:1.5px solid var(--border-strong);border-radius:999px;padding:3px 11px;
+    font-size:16px;font-weight:700;color:var(--ink);
+  }
+  .tag .ic{width:16px;height:16px;color:var(--accent)}
+  .helper{
+    display:flex;gap:9px;align-items:flex-start;background:var(--accent-soft);
+    border-radius:14px;padding:9px 12px;margin-top:12px;
+    font-size:17px;line-height:1.28;color:#244C36;
+  }
+  .helper .ic{width:20px;height:20px;margin-top:1px;color:var(--accent)}
+  .wishes{display:grid;gap:12px;margin-top:12px}
+  .wish{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:12px;box-shadow:var(--sh-1);
+  }
+  .wish-media{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    height:64px;border-radius:14px;padding:0 12px;
+  }
+  .wish-media .ic-36{width:38px;height:38px}
+  .w-media-end{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2}
+  .w-cat{font-size:16px;font-weight:600;color:var(--ink-2);margin-top:3px}
+  .w-price{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .w-title{margin-top:9px;font-size:18px;line-height:1.24;font-weight:800;letter-spacing:-.005em}
+  /* enlace a la tienda: solo icono (etiqueta accesible + title), 48 px; nota del deseo debajo de la prioridad */
+  .w-head{display:flex;align-items:flex-start;gap:8px;margin-top:9px}
+  .w-head .w-title{margin-top:0;flex:1 1 auto;padding-top:3px}
+  .w-link{
+    flex:0 0 auto;width:48px;height:48px;margin:-4px -6px -6px 0;border-radius:50%;
+    display:grid;place-items:center;color:var(--primary-dark);background:var(--surface);
+    border:1.5px solid var(--border-strong);text-decoration:none;
+  }
+  .w-link:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .w-note{
+    margin-top:8px;padding:8px 12px;border-radius:12px;background:var(--bg);
+    border-left:3px solid var(--border-strong);font-size:17px;line-height:1.4;color:var(--ink-2);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .w-note-l{font-weight:800;color:var(--ink);margin-right:6px}
+  .dw-link{
+    display:inline-grid;place-items:center;width:32px;height:32px;margin:-6px 0 -6px 10px;vertical-align:middle;
+    border-radius:50%;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--primary-dark);
+  }
+  .dw-link:hover{background:var(--primary-soft);border-color:var(--primary-dark)}
+  .dw-link .ic{width:17px;height:17px}
+  .w-prio{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:17px;color:var(--ink-2)}
+  .hearts{display:inline-flex;gap:1px;color:var(--primary)}
+  .hearts .ic{width:17px;height:17px}
+  .hearts .off{color:var(--muted)}
+  .wish .btn{margin-top:10px}
+  .state{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:3px 11px;font-size:16px;font-weight:800;margin-bottom:9px;
+  }
+  .state-mine{background:var(--accent-soft);color:#1F4A33}
+  .state-other{background:#F4EBE3;color:var(--ink-2);border:1.5px dashed var(--border-strong)}
+  .state .ic{width:17px;height:17px}
+  .wish.is-mine{border-color:#BFDCCB}
+  .wish.is-other{background:#FDF7F1}
+  /* El deseo reservado por otra persona conserva el color de su categoría:
+     el estado ya se lee en la píldora, con candado y texto, no con el color. */
+  details.sizes{
+    margin:12px 0 4px;background:var(--surface);border:1px solid var(--border-strong);
+    border-radius:16px;font-size:17px;line-height:1.3;color:var(--ink);
+  }
+  details.sizes summary{
+    display:flex;align-items:center;gap:10px;min-height:56px;padding:10px 14px;
+    border-radius:16px;cursor:pointer;list-style:none;
+  }
+  details.sizes summary::-webkit-details-marker{display:none}
+  details.sizes summary:hover{background:#FFF3E9}
+  .sizes .ic:first-child{color:var(--primary-dark)}
+  .sizes .chev{margin-left:auto;color:var(--ink-2);transform:rotate(90deg);transition:transform .16s ease}
+  details[open] .chev{transform:rotate(-90deg)}
+  .sizes b{font-weight:800}
+  .sizes-panel{padding:0 14px 12px 46px;font-size:16px;line-height:1.4;color:var(--ink-2)}
+
+  /* ============================================================
+     NAVEGADOR DE ESCRITORIO 1280 × 800
+     ============================================================ */
+  .browser{width:1280px;margin:0 auto}
+  .bf{
+    width:1280px;border-radius:18px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px var(--border-strong),0 24px 56px rgba(43,26,18,.16);
+  }
+  .chrome{
+    height:44px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:#F6E8DC;border-bottom:1px solid var(--border-strong);
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:50%;background:#D9B79E;display:block}
+  .url{
+    flex:1;height:29px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:999px;
+    font-size:14px;color:var(--ink-2);
+  }
+  .chrome-right{display:flex;gap:6px;color:#7A5B45;font-size:13px;font-weight:700}
+  .view{height:756px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+  .dt-head{
+    flex:0 0 auto;height:72px;display:flex;align-items:center;gap:26px;
+    padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);
+  }
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .wordmark .wm-ic{
+    width:38px;height:38px;border-radius:12px;background:var(--primary-soft);
+    display:grid;place-items:center;color:var(--primary-dark);
+  }
+  .dt-nav{display:flex;gap:4px}
+  .dt-nav a{
+    display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 15px;
+    border-radius:999px;text-decoration:none;font-size:17px;font-weight:600;color:var(--ink-2);
+    transition:background-color .16s ease,color .16s ease;
+  }
+  .dt-nav a .ic{width:20px;height:20px}
+  .dt-nav a:hover{background:#FFF1E5;color:var(--ink)}
+  .dt-nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:800}
+  .dt-badge{
+    min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--primary);
+    color:#fff;font-size:13px;font-weight:800;line-height:20px;text-align:center;
+  }
+  .dt-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700}
+  .dt-user .avatar{width:42px;height:42px;font-size:21px}
+
+  .dt-main{
+    width:1200px;margin:0 auto;padding:16px 0;display:grid;
+    grid-template-columns:296px 512px 344px;gap:24px;align-items:start;
+  }
+  .dt-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+    padding:18px;box-shadow:var(--sh-1);
+  }
+  .dt-card + .dt-card{margin-top:16px}
+  .dt-h{font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.015em}
+  .dt-sub{font-size:16px;line-height:1.4;color:var(--ink-2);margin-top:4px}
+  .eyebrow-dt{font-size:17px;font-weight:800;color:var(--primary-dark)}
+
+  /* columna izquierda */
+  .hero-dt{background:var(--primary-soft);border-color:#F3CDB6;box-shadow:0 12px 30px rgba(185,61,18,.1)}
+  .hero-dt-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .hero-dt-person{display:flex;flex-direction:column;align-items:center;text-align:center;margin:14px 0 16px}
+  .hero-dt-person .avatar{width:64px;height:64px;font-size:31px}
+  .hero-dt-person h2{font-size:26px;line-height:1.15;font-weight:800;margin-top:10px;letter-spacing:-.02em}
+  .hero-dt-person p{font-size:17px;line-height:1.3;color:var(--ink-2);margin-top:3px}
+  .hero-dt-person .pill{margin-top:8px}
+  .hero-dt-person .tag{margin-top:8px}
+  .hero-dt .avail{font-size:16px;color:var(--ink-2);text-align:center;margin-bottom:12px}
+  .later-list{display:grid;gap:2px;margin-top:12px}
+  .later-list li{display:flex;align-items:center;gap:12px;padding:8px 0}
+  .later-av{
+    width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:19px;
+    background:linear-gradient(180deg,#fff,#FFF2E6);border:2px solid var(--border-strong);
+  }
+  .later-name{display:block;font-size:17px;font-weight:700;line-height:1.25}
+  .later-date{display:block;font-size:16px;color:var(--ink-2);line-height:1.25}
+
+  /* columna central */
+  .wishes-dt{margin-top:12px;display:grid;gap:8px}
+  .dw{
+    display:flex;align-items:flex-start;gap:12px;padding:10px;
+    border:1px solid var(--border);border-radius:16px;background:#FFFCF9;
+  }
+  .dw.is-mine{background:var(--accent-soft);border-color:#BFDCCB}
+  .dw.is-other{background:#F7F0E9;border-color:var(--border-strong)}
+  .dw-media{width:56px;height:56px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto}
+  .dw-media .ic{width:30px;height:30px}
+  .dw.is-other .dw-media{background:#EADFD5;color:var(--ink-2)}
+  .dw-body{flex:1 1 auto}
+  .dw-title{font-size:17px;line-height:1.28;font-weight:800;letter-spacing:-.005em}
+  .dw-price{font-size:17px;font-weight:700;color:var(--ink-2);margin-top:2px}
+  .dw-cat{font-size:16px;line-height:1.3;color:var(--ink-2);margin-top:1px}
+  .dw-state{
+    display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;
+    font-size:15px;font-weight:800;margin-top:6px;
+  }
+  .dw-state.mine{background:#fff;color:#1F4A33;border:1.5px solid #9CC9AF}
+  .dw-state.other{background:#fff;color:var(--ink-2);border:1.5px solid var(--border-strong)}
+  .dw-state .ic{width:15px;height:15px}
+  .dw-action{flex:0 0 196px;display:flex;justify-content:flex-end;align-items:center}
+  .dw-action .btn{font-size:16px;padding:8px 16px;min-height:48px}
+  .helper-dt{
+    display:flex;gap:8px;align-items:flex-start;margin-top:10px;
+    font-size:16px;line-height:1.4;color:var(--ink-2);
+  }
+  .helper-dt .ic{width:18px;height:18px;margin-top:2px;color:var(--accent)}
+
+  /* columna derecha */
+  .my-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .my-rows{display:grid;gap:10px;margin:14px 0}
+  .my-row{display:flex;align-items:center;gap:12px}
+  .my-tile{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto}
+  .my-tile .ic{width:25px;height:25px}
+  .my-name{display:block;font-size:16px;line-height:1.25;font-weight:700}
+  .my-price{display:block;font-size:16px;line-height:1.3;color:var(--ink-2)}
+  .dt-groups{display:grid;gap:10px;margin:12px 0 4px}
+  .dt-groups li{display:flex;align-items:center;gap:12px;min-height:48px}
+  .dt-groups .stack span{width:32px;height:32px;font-size:15px}
+  .dt-groups .g-name{font-size:17px}
+  .dt-groups .g-meta{font-size:16px}
+  .dt-cta{margin-top:16px}
+
+  /* ============================================================
+     alta y primera configuración
+     ============================================================ */
+  .alta{padding-top:2px}
+  .alta-h{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-top:10px}
+  .alta-sub{margin-top:8px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .alta-form{display:grid;gap:16px;margin-top:16px}
+  .alta-field{display:block;min-width:0}
+  .alta-label{display:block;font-size:17px;line-height:1.25;font-weight:800;margin-bottom:6px}
+  .alta-input{
+    display:block;width:100%;height:56px;padding:0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);
+    background:var(--surface);border:2px solid var(--border-strong);border-radius:14px;
+  }
+  .alta-input::placeholder{color:var(--ink-2);opacity:1;font-weight:600}
+  .alta-input:focus-visible,.alta-select:focus-visible{border-radius:14px}
+  .alta-input-wrap{position:relative;display:block}
+  .alta-input-ic{padding-left:50px}
+  .alta-in-ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-2);pointer-events:none}
+  .alta-input-pw{padding-right:104px}
+  .alta-show{
+    position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    min-height:48px;padding:0 12px;border-radius:12px;
+    font-size:17px;font-weight:800;color:var(--primary-dark);
+    text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;
+  }
+  .alta-show:hover{background:var(--primary-soft)}
+  .alta-note{
+    display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:10px 12px;
+    border-radius:14px;background:var(--primary-soft);
+    font-size:17px;line-height:1.35;color:var(--ink);
+  }
+  .alta-note .ic{flex:0 0 auto;width:20px;height:20px;margin-top:1px;color:var(--primary-dark)}
+  .alta-done{padding:26px 0 0}
+  .alta-done .alta-h{margin-top:0}
+  .alta-done .alta-field{margin-top:30px}
+  .alta-done .alta-actions{margin-top:32px;gap:10px}
+  .alta-hint{margin-top:6px;font-size:16px;line-height:1.35;color:var(--ink-2)}
+  .alta-actions{display:grid;gap:8px;margin-top:18px}
+  .alta-alt{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;margin-top:2px;font-size:17px;line-height:1.3;color:var(--ink-2)}
+  .alta-hint-c{text-align:center}
+  .alta-prog{display:flex;align-items:center;gap:12px;padding:4px 0 2px}
+  .alta-prog-bars{display:flex;gap:6px;flex:1 1 auto}
+  .alta-prog-seg{flex:1 1 0;height:8px;border-radius:99px;background:var(--border-strong)}
+  .alta-prog-seg.is-on{background:var(--primary)}
+  .alta-prog-t{font-size:16px;font-weight:800;color:var(--ink-2);white-space:nowrap}
+  .alta-preview{
+    display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:14px;padding:14px;
+    border-radius:var(--r-card);background:var(--primary-soft);box-shadow:0 10px 24px rgba(185,61,18,.1);
+  }
+  .alta-av-72{
+    width:72px;height:72px;border-radius:50%;display:grid;place-items:center;
+    font-size:36px;line-height:1;background:linear-gradient(180deg,#fff,#FFF2E6);
+    border:2px solid var(--border-strong);box-shadow:var(--sh-1);
+  }
+  .alta-preview-t{font-size:16px;font-weight:800;color:var(--primary-dark)}
+  .alta-preview-n{font-size:25px;line-height:1.15;font-weight:800;letter-spacing:-.015em}
+  .alta-faces{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .alta-face{
+    position:relative;display:grid;place-items:center;min-height:64px;
+    border:2px solid var(--border-strong);border-radius:16px;background:var(--surface);
+    font-size:28px;line-height:1;cursor:pointer;
+    transition:border-color .16s ease,background-color .16s ease;
+  }
+  .alta-face input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+  .alta-face input:focus-visible{outline:none}
+  .alta-face:has(input:focus-visible){outline:3px solid var(--primary-dark);outline-offset:3px}
+  .alta-face:has(input:checked){border-color:var(--primary);background:#FFF3EB;box-shadow:0 0 0 3px var(--primary-soft)}
+  .alta-face-tick{
+    display:none;position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;
+    place-items:center;background:var(--primary);color:#fff;box-shadow:var(--sh-1);
+  }
+  .alta-face-tick .ic{width:16px;height:16px}
+  .alta-face:has(input:checked) .alta-face-tick{display:grid}
+  .alta-fs{border:0;margin:16px 0 0;padding:0;min-width:0}
+  .alta-fs + .alta-field{margin-top:16px}
+  .alta-legend{padding:0;margin-bottom:8px;font-size:18px;line-height:1.25;font-weight:800}
+  .alta-opt{font-size:16px;font-weight:600;color:var(--ink-2)}
+  .alta-row2{display:grid;grid-template-columns:104px 1fr;gap:12px}
+  .alta-sel-wrap{position:relative;display:block}
+  .alta-select{
+    display:block;width:100%;height:56px;padding:0 40px 0 14px;
+    font-size:17px;font-weight:600;color:var(--ink);background:var(--surface);
+    border:2px solid var(--border-strong);border-radius:14px;
+    appearance:none;-webkit-appearance:none;
+  }
+  .alta-sel-ic{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(90deg);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  .alta-sug{margin-top:4px;padding:12px 14px;border-radius:16px;background:var(--sand);border:1px solid var(--border-strong)}
+  .alta-sug-head{display:flex;gap:10px;align-items:flex-start}
+  .alta-sug-ic{
+    flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+    background:var(--surface);color:var(--primary-dark);box-shadow:var(--sh-1);
+  }
+  .alta-sug-t{font-size:17px;line-height:1.35;color:var(--ink)}
+  .alta-sug-t b{font-weight:800}
+  .alta-sug-btns{display:flex;gap:10px;margin-top:12px}
+  .alta-sug-btns .btn{flex:1 1 0;min-width:0;padding:10px 12px;font-size:17px}
+  /* piezas estáticas de la columna de notas */
+  .alta-mock{
+    margin-top:22px;padding:18px;background:var(--surface);
+    border:1px solid var(--border-strong);border-radius:var(--r-card);box-shadow:var(--sh-1);
+  }
+  .alta-mock h4{font-size:16px;font-weight:700;color:var(--primary-dark);margin-bottom:12px}
+  .alta-demo{padding:14px;border-radius:16px;background:var(--bg);border:1px solid var(--border)}
+  .alta-demo-head{display:flex;align-items:center;gap:12px}
+  .alta-demo-ic{
+    flex:0 0 auto;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;
+    background:var(--primary-soft);color:var(--primary-dark);
+  }
+  .alta-demo-t{font-size:18px;line-height:1.25;font-weight:800}
+  .alta-demo-s{margin-top:8px;font-size:17px;line-height:1.4;color:var(--ink-2)}
+  .alta-demo .alta-label{margin-top:12px}
+  .alta-demo-btns{display:flex;gap:10px;margin-top:12px}
+  .alta-demo-btns .btn{flex:1 1 0;min-width:0;padding:10px 14px;font-size:17px}
+  /* alta en el navegador: vista previa a la izquierda, tarjeta del paso a la derecha */
+  .alta-web{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;justify-content:center;padding:16px 32px}
+  .alta-web-grid{display:grid;grid-template-columns:384px 520px;gap:44px;align-items:start;width:1040px}
+  .alta-panel{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:20px 24px;border-radius:var(--r-card);background:var(--primary-soft);
+    box-shadow:0 12px 30px rgba(185,61,18,.1);
+  }
+  .alta-panel-t{font-size:16px;font-weight:800;color:var(--primary-dark)}
+  .alta-panel .alta-av-72{margin-top:10px}
+  .alta-panel-n{margin-top:8px;font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.02em}
+  .alta-mini-steps{
+    width:100%;display:grid;gap:10px;margin-top:18px;padding-top:16px;
+    border-top:1.5px solid #F3CDB6;text-align:left;
+  }
+  .alta-mini-steps li{display:flex;gap:10px;align-items:flex-start;font-size:17px;line-height:1.35}
+  .alta-mini-steps .fn{width:26px;height:26px;font-size:15px;margin-top:0}
+  .alta-card{
+    max-width:520px;padding:18px 24px;background:var(--surface);
+    border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh-2);
+  }
+  .alta-card .alta-h{font-size:26px;margin-top:6px}
+  .alta-card .alta-sub{margin-top:4px}
+  .alta-card .alta-fs{margin-top:12px}
+  .alta-card .alta-prog{padding:0}
+  .alta-card .alta-sug{margin-top:2px}
+  .alta-card .alta-actions{margin-top:10px}
+
+  /* movimiento opcional */
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== sprite de iconos (SVG en línea) ===== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.4 12 4l8 6.4V19a1.6 1.6 0 0 1-1.6 1.6H15V15.2H9v5.4H5.6A1.6 1.6 0 0 1 4 19Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-heart-fill" viewBox="0 0 24 24"><path d="M12 20.2s-8-5.1-8-10.4A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8 3.4c0 5.3-8 10.4-8 10.4Z" fill="currentColor"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9.2" cy="8.2" r="3.3"/><path d="M3 19.4c0-3.4 2.8-5.7 6.2-5.7s6.2 2.3 6.2 5.7"/><path d="M16.3 5.3a3 3 0 0 1 0 5.8"/><path d="M17.6 13.9c2.2.5 3.6 2.3 3.6 5.1"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6a5.6 5.6 0 0 1 5.6 5.6v3.2L19.2 16H4.8l1.6-3.6V9.2A5.6 5.6 0 0 1 12 3.6Z"/><path d="M10 19a2 2 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5.5 15.5 12 9 18.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6 9.6 17.4 19.2 6.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4.8" y="10.4" width="14.4" height="9.2" rx="2.4"/><path d="M8.4 10.4V8a3.6 3.6 0 0 1 7.2 0v2.4"/></g></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.2" stroke-linecap="round"/><circle cx="12" cy="7.9" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.6" width="16" height="14.4" rx="2.4"/><path d="M4 10h16M8.4 3.6v3.6M15.6 3.6v3.6"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4.4 10.4h15.2V19a1.6 1.6 0 0 1-1.6 1.6H6a1.6 1.6 0 0 1-1.6-1.6Z"/><path d="M3.2 6.6h17.6v3.8H3.2Z"/><path d="M12 6.6v14"/><path d="M12 6.6C10.2 2.6 6.4 3.8 7.2 5.8s4.8.8 4.8.8Z"/><path d="M12 6.6c1.8-4 5.6-2.8 4.8-.8s-4.8.8-4.8.8Z"/></g></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4.6 15.2v-2.8a7.4 7.4 0 0 1 14.8 0v2.8"/><rect x="3.2" y="13.8" width="4.6" height="7" rx="2.3"/><rect x="16.2" y="13.8" width="4.6" height="7" rx="2.3"/></g></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.8 5.4h5.6A2.2 2.2 0 0 1 11.6 7.6V20a2 2 0 0 0-2-1.8H3.8Z"/><path d="M20.2 5.4h-5.6A2.2 2.2 0 0 0 12.4 7.6V20a2 2 0 0 1 2-1.8h5.8Z"/></g></symbol>
+    <symbol id="i-shoe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3.4 16.6h11.9c1.7 0 3.2-.7 4.3-2l.6-.7c.6-.7.2-1.8-.7-2l-4.3-.9-3-2.4a2 2 0 0 0-1.3-.5H6.6L3.4 12.2Z"/><path d="M3.4 16.6v2.2h17.2"/></g></symbol>
+    <symbol id="i-vase" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M9.2 3.6h5.6l-.9 3.1a7 7 0 0 1 3.9 6.2c0 4.1-2.5 7.5-5.8 7.5s-5.8-3.4-5.8-7.5a7 7 0 0 1 3.9-6.2Z"/><path d="M8.6 12.4h6.8"/></g></symbol>
+    <symbol id="i-mug" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M5.6 6.8h10.2v9.4a3.8 3.8 0 0 1-3.8 3.8h-2.6a3.8 3.8 0 0 1-3.8-3.8Z"/><path d="M15.8 9.6h1.9a2.8 2.8 0 0 1 0 5.6h-1.9"/><path d="M8.4 3.6v1.7M12 3.6v1.7"/></g></symbol>
+    <symbol id="i-moka" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7.4 20h9.2l-1.2-6.2H8.6Z"/><path d="M8.6 13.8 10 7.6h4l1.4 6.2"/><path d="M9.8 7.6 8.6 4.4h6.8l-1.2 3.2"/><path d="M14.8 9.4h2.1a2.4 2.4 0 0 1 0 4.8h-1.5"/><path d="M6.4 10.6 9 8.8"/></g></symbol>
+    <symbol id="i-sweater" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8.6 4.2 4.3 6.6a1 1 0 0 0-.5.9l.9 4.2 2.6-.6v8.5h9.4v-8.5l2.6.6.9-4.2a1 1 0 0 0-.5-.9L15.4 4.2a2.6 2.6 0 0 1-3.4 0 2.6 2.6 0 0 1-3.4 0Z"/></g></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8.4h16v2.4a2.2 2.2 0 0 0 0 4.4v2.4H4v-2.4a2.2 2.2 0 0 0 0-4.4Z"/><path d="M13.4 9.4v5.2" stroke-dasharray="1.4 2.4"/></g></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.6"/><circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></g></symbol>
+    <symbol id="i-cake" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 20h14.8M5.8 20v-6.4h12.4V20"/><path d="M4.6 13.6c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3"/><path d="M9.4 13.6V10M14.6 13.6V10"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.2 13.8a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.2-1.2"/></g></symbol>
+    <symbol id="i-ball" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6c-1.9 2.6-2.9 5.4-2.9 8.4s1 5.8 2.9 8.4"/><path d="M12 3.6c1.9 2.6 2.9 5.4 2.9 8.4s-1 5.8-2.9 8.4"/><path d="M3.9 9.4c2.5 1.3 5.4 1.9 8.1 1.9s5.6-.6 8.1-1.9"/></g></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c3.4 4 5.4 6.9 5.4 9.4a5.4 5.4 0 0 1-10.8 0c0-2.5 2-5.4 5.4-9.4Z"/><path d="M9.4 13.6a2.6 2.6 0 0 0 2.6 2.6"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CABECERA DE LA DIRECCIÓN
+     ============================================================ -->
+<header class="strip">
+  <div class="strip-in">
+    <div class="strip-lead">
+      <p class="kicker">Rediseño del Muro · Dirección 02 de 03</p>
+      <h1>Personas primero</h1>
+      <p class="tradeoff">
+        <span class="tradeoff-tag">Compromiso</span>
+        Comunica al instante el objetivo social (regalar a quien quieres, a tiempo); tu propia lista queda a un toque y la portada tiene más elementos.
+      </p>
+    </div>
+    <div class="keys">
+      <h2>Claves de esta dirección</h2>
+      <ol>
+        <li><span class="kn" aria-hidden="true">1</span><span>«¿A quién le toca regalo pronto?»: la celebración de Javier manda y su lista está a un toque.</span></li>
+        <li><span class="kn" aria-hidden="true">2</span><span>Las personas son el mapa: avatares grandes, los grupos dentro de «Personas» y las tallas en cada lista.</span></li>
+        <li><span class="kn" aria-hidden="true">3</span><span>Reservar sin dudas: icono, texto y color en cada estado, más un aviso único y nadie repite regalo.</span></li>
+        <li><span class="kn" aria-hidden="true">4</span><span>Cálido y legible a cualquier edad: cuerpo de 17 px, botones de 48 px y un solo botón principal.</span></li>
+      </ol>
+    </div>
+  </div>
+  <p class="strip-note">Contenido de demostración · Móvil 390 × 844 px · Navegador 1280 × 800 px</p>
+</header>
+
+<main>
+
+  <!-- ==========================================================
+       FILA MÓVIL
+       ========================================================== -->
+  <section class="row" aria-labelledby="movil-h">
+    <div class="row-head">
+      <h2 id="movil-h">Móvil</h2>
+      <p>Tres pantallas del recorrido principal. La barra inferior deja 20 px de área segura encima del gesto del sistema.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1: BIENVENIDA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1</span>
+          <span class="cap-t">Bienvenida · sin cuenta</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="welcome">
+              <div class="welcome-art">
+                <svg viewBox="0 0 340 176" role="img" aria-label="Tres personas alrededor de un regalo, con corazones y confeti">
+                  <rect x="8" y="14" width="324" height="152" rx="38" fill="#FDE5D6"/>
+                  <circle cx="60" cy="42" r="4.5" fill="#E7A33C"/>
+                  <circle cx="292" cy="38" r="5.5" fill="#2F6F4E" opacity=".6"/>
+                  <circle cx="256" cy="150" r="4" fill="#B93D12" opacity=".55"/>
+                  <circle cx="84" cy="152" r="3.4" fill="#E7A33C" opacity=".85"/>
+                  <path d="M62 62s-9-6.2-9-12a5.6 5.6 0 0 1 9-4.2 5.6 5.6 0 0 1 9 4.2c0 5.8-9 12-9 12Z" fill="#B93D12" opacity=".85"/>
+                  <path d="M286 74s-7-4.8-7-9.3a4.3 4.3 0 0 1 7-3.2 4.3 4.3 0 0 1 7 3.2c0 4.5-7 9.3-7 9.3Z" fill="#B93D12" opacity=".5"/>
+                  <ellipse cx="122" cy="158" rx="42" ry="5" fill="#E8C3A8" opacity=".5"/>
+                  <ellipse cx="232" cy="158" rx="42" ry="5" fill="#E8C3A8" opacity=".5"/>
+                  <path d="M106 111a18 18 0 0 1 36 0v45h-36Z" fill="#2F6F4E"/>
+                  <circle cx="124" cy="96" r="16" fill="#D9976A"/>
+                  <path d="M108 93a16 16 0 0 1 32 0c0-9.5-7.2-14-16-14s-16 4.5-16 14Z" fill="#3A2318"/>
+                  <path d="M198 113a18 18 0 0 1 36 0v43h-36Z" fill="#B93D12"/>
+                  <circle cx="216" cy="98" r="16" fill="#B67A50"/>
+                  <path d="M200 96a16 16 0 0 1 32 0c0-9-6.8-13.5-16-13.5S200 87 200 96Z" fill="#2B1A12"/>
+                  <path d="M156 92a14 14 0 0 1 28 0v64h-28Z" fill="#E7A33C"/>
+                  <circle cx="170" cy="80" r="13" fill="#8E5A3A"/>
+                  <path d="M157 78a13 13 0 0 1 26 0c0-7.5-5.6-11.5-13-11.5S157 70.5 157 78Z" fill="#43291C"/>
+                  <rect x="146" y="116" width="58" height="42" rx="9" fill="#B93D12"/>
+                  <rect x="140" y="106" width="70" height="17" rx="7" fill="#8F2E0C"/>
+                  <rect x="167" y="106" width="14" height="52" fill="#FDE5D6"/>
+                  <path d="M174 107c-9-15-26-7-16 4 3 3 9 3 16-4Z" fill="#FDE5D6"/>
+                  <path d="M174 107c9-15 26-7 16 4-3 3-9 3-16-4Z" fill="#FDE5D6"/>
+                </svg>
+              </div>
+
+              <h2 class="welcome-title">Regalos sin repetir para la gente que quieres</h2>
+              <p class="welcome-purpose">Muro de Deseos es tu lista de deseos compartida: apuntas lo que te gustaría recibir y tu familia o tus amigos reservan un regalo para que nadie lo repita.</p>
+
+              <ol class="steps">
+                <li class="step step-a"><span class="step-n" aria-hidden="true">1</span><span class="step-t">Apunta lo que te gustaría recibir.</span><svg class="ic step-ic" aria-hidden="true"><use href="#i-gift"/></svg></li>
+                <li class="step step-b"><span class="step-n" aria-hidden="true">2</span><span class="step-t">Compártelo con tu familia o amigos en un grupo.</span><svg class="ic step-ic" aria-hidden="true"><use href="#i-people"/></svg></li>
+                <li class="step step-c"><span class="step-n" aria-hidden="true">3</span><span class="step-t">Ellos reservan un regalo y nadie lo repite.</span><svg class="ic step-ic" aria-hidden="true"><use href="#i-heart"/></svg></li>
+              </ol>
+
+              <div class="welcome-cta">
+                <button class="btn btn-primary btn-block" type="button" aria-describedby="signup-hint">Crear mi cuenta</button>
+                <p class="cta-hint" id="signup-hint">Solo te pedimos un correo y una contraseña. Después apuntas tu primer deseo.</p>
+                <button class="btn btn-secondary btn-block" type="button">Ya tengo cuenta · Iniciar sesión</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 2: INICIO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2</span>
+          <span class="cap-t">Inicio · sesión de Lucía</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <h2 class="home-hi">Hola, Lucía 🌻</h2>
+
+            <section class="hero" aria-labelledby="hero-h">
+              <div class="hero-top">
+                <p class="eyebrow">Próxima celebración</p>
+                <p class="pill pill-days">Faltan 7 días</p>
+              </div>
+              <div class="hero-person">
+                <span class="avatar" aria-hidden="true">🎸</span>
+                <div class="hero-txt">
+                  <h3 id="hero-h">Javier celebra su santo</h3>
+                  <p>El 3 de diciembre · Familia Martín</p>
+                </div>
+              </div>
+              <p class="hero-also"><svg class="ic ic-20" aria-hidden="true"><use href="#i-cake"/></svg><span>Y su cumpleaños, el 12 de diciembre (faltan 16 días)</span></p>
+              <button class="btn btn-primary btn-block" type="button">Ver qué le gustaría</button>
+            </section>
+
+            <section class="ppl" aria-labelledby="ppl-h">
+              <h3 id="ppl-h" class="blk">Tus personas</h3>
+              <ul class="ppl-strip">
+                <li><a class="person" href="#javier"><span class="avatar" aria-hidden="true">🎸</span><span class="p-name">Javier</span></a></li>
+                <li><a class="person" href="#carmen"><span class="avatar" aria-hidden="true">👵</span><span class="p-name">Carmen</span></a></li>
+                <li><a class="person" href="#pablo"><span class="avatar" aria-hidden="true">🚲</span><span class="p-name">Pablo</span></a></li>
+                <li><a class="person" href="#marta"><span class="avatar" aria-hidden="true">📚</span><span class="p-name">Marta</span></a></li>
+                <li><a class="person" href="#andres"><span class="avatar" aria-hidden="true">⚽</span><span class="p-name">Andrés</span></a></li>
+                <li><button class="person" type="button"><span class="avatar avatar-all" aria-hidden="true"><svg class="ic ic-20"><use href="#i-plus"/></svg></span><span class="p-name">Ver todas</span></button></li>
+              </ul>
+            </section>
+
+            <section class="p-card" aria-labelledby="mylist-h">
+              <div class="p-card-head">
+                <h3 id="mylist-h" class="blk">Tu lista de deseos</h3>
+                <p class="pill pill-count">5 deseos</p>
+              </div>
+              <div class="mini-row">
+                <span class="mini-tile tile-a"><svg class="ic ic-28" aria-hidden="true"><use href="#i-headphones"/></svg><span class="sr-only">Auriculares inalámbricos Sony WH-1000XM5 · Tecnología</span></span>
+                <span class="mini-tile tile-b"><svg class="ic ic-28" aria-hidden="true"><use href="#i-mug"/></svg><span class="sr-only">Taza de cerámica artesanal · Hogar y cocina</span></span>
+              </div>
+              <button class="btn btn-secondary btn-block" type="button">Añadir un deseo</button>
+            </section>
+
+            <section class="p-card" aria-labelledby="grp-h">
+              <div class="p-card-head">
+                <h3 id="grp-h" class="blk">Tus grupos</h3>
+                <button class="link-btn" type="button" aria-haspopup="dialog">Invitar a alguien</button>
+              </div>
+              <ul class="groups">
+                <li>
+                  <a class="g-link" href="#grupo-familia-martin">
+                    <span class="stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                    <span class="g-text"><span class="g-name">Familia Martín</span><span class="g-meta">6 participantes</span></span>
+                    <svg class="g-go" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+                <li>
+                  <a class="g-link" href="#grupo-amigos-de-la-uni">
+                    <span class="stack" aria-hidden="true"><span>🌻</span><span>📚</span><span>⚽</span></span>
+                    <span class="g-text"><span class="g-name">Amigos de la Uni</span><span class="g-meta">8 participantes</span></span>
+                    <svg class="g-go" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 3: LISTA DE JAVIER ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 3</span>
+          <span class="cap-t">Lista de Javier · con desplazamiento</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll has-nav">
+            <a class="back" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Inicio</a>
+
+            <header class="person-head">
+              <span class="avatar av-xl" aria-hidden="true">🎸</span>
+              <div>
+                <h2>Javier Martín</h2>
+                <p class="p-meta">Tu hermano</p>
+              </div>
+            </header>
+
+            <div class="tags">
+              <span class="tag"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Familia Martín</span>
+            </div>
+
+            <!-- Celebraciones: cumpleaños y día del santo (onomástica), ordenadas por cercanía -->
+            <ul class="celebs" aria-label="Celebraciones de Javier">
+              <li class="is-next">
+                <svg class="ic" aria-hidden="true"><use href="#i-cal"/></svg>
+                <span class="c-txt"><b>Su santo</b><span>3 de diciembre</span></span>
+                <span class="c-when"><span class="sr-only">Próxima celebración: </span>Faltan 7 días</span>
+              </li>
+              <li>
+                <svg class="ic" aria-hidden="true"><use href="#i-cake"/></svg>
+                <span class="c-txt"><b>Su cumpleaños</b><span>12 de diciembre</span></span>
+                <span class="c-when">Faltan 16 días</span>
+              </li>
+            </ul>
+
+            <!-- Tallas arriba, junto a la cabecera: se consultan antes de elegir y no obligan a bajar toda la lista -->
+            <details class="sizes">
+              <summary>
+                <svg class="ic" aria-hidden="true"><use href="#i-sweater"/></svg>
+                <span>Sus tallas: <b>Camiseta L</b> · <b>Pantalón 42</b> · <b>Calzado 43</b></span>
+                <svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg>
+              </summary>
+              <p class="sizes-panel">Marcas favoritas: <b>Levi’s, Fender</b> · Color favorito: <b>azul marino</b>. Javier lo actualiza en su perfil cuando cambia.</p>
+            </details>
+
+            <ul class="wishes" aria-label="Deseos de Javier">
+              <li class="wish">
+                <div class="wish-media tile-b">
+                  <svg class="ic ic-36" aria-hidden="true"><use href="#i-moka"/></svg>
+                  <span class="w-media-end">
+                    <span class="w-price">34,95 €</span>
+                    <span class="w-cat">Hogar y cocina</span>
+                  </span>
+                </div>
+                <div class="w-head">
+                  <p class="w-title">Cafetera italiana Bialetti 6 tazas</p>
+                  <a class="w-link" href="#tienda-cafetera" aria-label="Abrir en la tienda (amazon.es): Cafetera italiana Bialetti 6 tazas" title="Abrir en amazon.es"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                </div>
+                <p class="w-prio">
+                  <span class="hearts" aria-hidden="true">
+                    <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                  </span>
+                  <span>Le gustaría</span>
+                </p>
+                <p class="w-note"><span class="w-note-l">Nota</span>La quiero de inducción: la de casa no vale para la vitro nueva.</p>
+                <button class="btn btn-soft btn-block" type="button" aria-label="Reservar este regalo: Cafetera italiana Bialetti 6 tazas">Reservar este regalo</button>
+              </li>
+
+              <li class="wish is-mine">
+                <p class="state state-mine"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Lo regalas tú</p>
+                <div class="wish-media tile-c">
+                  <svg class="ic ic-36" aria-hidden="true"><use href="#i-sweater"/></svg>
+                  <span class="w-media-end">
+                    <span class="w-price">59,00 €</span>
+                    <span class="w-cat">Ropa y accesorios</span>
+                  </span>
+                </div>
+                <div class="w-head">
+                  <p class="w-title">Jersey de lana azul marino, talla L</p>
+                  <a class="w-link" href="#tienda-jersey" aria-label="Abrir en la tienda (elcorteingles.es): Jersey de lana azul marino, talla L" title="Abrir en elcorteingles.es"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                </div>
+                <p class="w-prio">
+                  <span class="hearts" aria-hidden="true">
+                    <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                  </span>
+                  <span>Le hace mucha ilusión</span>
+                </p>
+                <button class="btn btn-secondary btn-block" type="button" aria-label="Cancelar la reserva de Jersey de lana azul marino, talla L">Cancelar reserva</button>
+              </li>
+
+              <li class="wish is-other">
+                <p class="state state-other"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>Ya lo regala otra persona</p>
+                <div class="wish-media tile-a">
+                  <svg class="ic ic-36" aria-hidden="true"><use href="#i-ticket"/></svg>
+                  <span class="w-media-end">
+                    <span class="w-price">45,00 €</span>
+                    <span class="w-cat">Música y entradas</span>
+                  </span>
+                </div>
+                <div class="w-head">
+                  <p class="w-title">Entradas para Vetusta Morla</p>
+                  <a class="w-link" href="#tienda-entradas" aria-label="Abrir en la tienda (ticketmaster.es): Entradas para Vetusta Morla" title="Abrir en ticketmaster.es"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a>
+                </div>
+                <p class="w-prio">
+                  <span class="hearts" aria-hidden="true">
+                    <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic"><use href="#i-heart-fill"/></svg>
+                  </span>
+                  <span>Le hace mucha ilusión</span>
+                </p>
+              </li>
+
+              <li class="wish">
+                <div class="wish-media tile-c">
+                  <svg class="ic ic-36" aria-hidden="true"><use href="#i-dice"/></svg>
+                  <span class="w-media-end">
+                    <span class="w-price">42,00 €</span>
+                    <span class="w-cat">Juegos y juguetes</span>
+                  </span>
+                </div>
+                <p class="w-title">Juego de mesa Catan</p>
+                <p class="w-prio">
+                  <span class="hearts" aria-hidden="true">
+                    <svg class="ic"><use href="#i-heart-fill"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg>
+                  </span>
+                  <span>Un detalle</span>
+                </p>
+                <p class="w-note"><span class="w-note-l">Nota</span>La versión básica; las ampliaciones ya las tengo.</p>
+                <button class="btn btn-soft btn-block" type="button" aria-label="Reservar este regalo: Juego de mesa Catan">Reservar este regalo</button>
+              </li>
+            </ul>
+
+            <p class="helper">
+              <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+              <span>Cuando reservas un regalo, el resto del grupo lo ve como reservado y nadie lo repite.</span>
+            </p>
+          </div>
+
+          <nav class="pf-nav" aria-label="Navegación principal">
+            <a class="nav-i" href="#inicio"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>Inicio</span></a>
+            <a class="nav-i" href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>Mi lista</span></a>
+            <a class="nav-i" href="#personas" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg><span>Personas</span></a>
+            <a class="nav-i" href="#avisos">
+              <span class="nav-ic-wrap">
+                <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span class="nav-badge" aria-hidden="true">2</span>
+              </span>
+              <span>Avisos</span>
+              <span class="sr-only">2 avisos sin leer</span>
+            </a>
+          </nav>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: ALTA Y PRIMERA CONFIGURACIÓN
+       ========================================================== -->
+  <section class="row" aria-labelledby="alta-h">
+    <div class="row-head">
+      <h2 id="alta-h">Alta y primera configuración</h2>
+      <p>Del botón «Crear mi cuenta» al primer deseo: dos pasos cortos y solo el nombre es obligatorio.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1a: CREAR TU CUENTA ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1a</span>
+          <span class="cap-t">Crear tu cuenta</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="alta">
+              <a class="back" href="#alta-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Volver</a>
+              <h3 class="alta-h">Crea tu cuenta</h3>
+              <p class="alta-sub">Con tu cuenta guardas tu lista y la compartes con quien quieras.</p>
+
+              <div class="alta-form">
+                <div class="alta-field">
+                  <label class="alta-label" for="a-email">Correo electrónico</label>
+                  <input class="alta-input" id="a-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="tu@ejemplo.com" value="lucia.martin@gmail.com">
+                </div>
+                <div class="alta-field">
+                  <label class="alta-label" for="a-pass">Contraseña</label>
+                  <div class="alta-input-wrap">
+                    <input class="alta-input alta-input-pw" id="a-pass" type="password" name="password" autocomplete="new-password" value="Muro2026lucia">
+                    <button class="alta-show" type="button" aria-controls="a-pass" aria-pressed="false">Mostrar</button>
+                  </div>
+                  <p class="alta-hint">Elige una que recuerdes. Pulsa «Mostrar» para comprobar que está bien escrita.</p>
+                </div>
+              </div>
+
+              <div class="alta-actions">
+                <button class="btn btn-primary btn-block" type="button">Crear mi cuenta</button>
+                <p class="alta-alt">¿Ya tienes cuenta? <button class="link-btn" type="button">Inicia sesión</button></p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 1b: PASO 1 DE 2 ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1b</span>
+          <span class="cap-t">Paso 1 de 2</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="alta">
+              <div class="alta-prog">
+                <span class="alta-prog-bars" aria-hidden="true"><span class="alta-prog-seg is-on"></span><span class="alta-prog-seg"></span></span>
+                <p class="alta-prog-t">Paso 1 de 2</p>
+              </div>
+
+              <h3 class="alta-h">¿Cómo te van a ver los demás?</h3>
+              <p class="alta-sub">Tu familia y tus amigos te verán con este nombre y este dibujo.</p>
+
+              <div class="alta-preview">
+                <p class="alta-preview-t">Así te verán</p>
+                <span class="alta-av-72" aria-hidden="true">🌻</span>
+                <p class="alta-preview-n">Lucía</p>
+              </div>
+
+              <fieldset class="alta-fs">
+                <legend class="alta-legend">Elige tu dibujo</legend>
+                <div class="alta-faces">
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="girasol" checked>
+                    <span aria-hidden="true">🌻</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Girasol · Elegido</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="guitarra">
+                    <span aria-hidden="true">🎸</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Guitarra</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="abuela">
+                    <span aria-hidden="true">👵</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Abuela</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="bicicleta">
+                    <span aria-hidden="true">🚲</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Bicicleta</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="libros">
+                    <span aria-hidden="true">📚</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Libros</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="balon">
+                    <span aria-hidden="true">⚽</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Balón</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="gato">
+                    <span aria-hidden="true">🐱</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Gato</span>
+                  </label>
+                  <label class="alta-face">
+                    <input type="radio" name="alta-dibujo" value="luna">
+                    <span aria-hidden="true">🌙</span>
+                    <span class="alta-face-tick" aria-hidden="true"><svg class="ic"><use href="#i-check"/></svg></span>
+                    <span class="sr-only">Luna</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="alta-field">
+                <label class="alta-label" for="a-nombre">Tu nombre o apodo</label>
+                <input class="alta-input" id="a-nombre" type="text" name="nickname" autocomplete="nickname" value="Lucía">
+                <p class="alta-hint">Mínimo 3 caracteres.</p>
+              </div>
+
+              <div class="alta-actions">
+                <button class="btn btn-primary btn-block" type="button">Continuar</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <!-- ---------- PANTALLA 1c: PASO 2 DE 2 ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1c</span>
+          <span class="cap-t">Paso 2 de 2</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="alta">
+              <div class="alta-prog">
+                <span class="alta-prog-bars" aria-hidden="true"><span class="alta-prog-seg is-on"></span><span class="alta-prog-seg is-on"></span></span>
+                <p class="alta-prog-t">Paso 2 de 2</p>
+              </div>
+
+              <a class="back" href="#alta-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+
+              <h3 class="alta-h">¿Cuándo lo celebras?</h3>
+              <p class="alta-sub">Así tu familia sabrá cuándo regalarte. Solo el día y el mes: el año no hace falta.</p>
+
+              <fieldset class="alta-fs">
+                <legend class="alta-legend">Tu cumpleaños</legend>
+                <div class="alta-row2">
+                  <div class="alta-field">
+                    <label class="alta-label" for="a-dia">Día</label>
+                    <span class="alta-sel-wrap">
+                      <select class="alta-select" id="a-dia" name="dia">
+                        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                      </select>
+                      <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                  <div class="alta-field">
+                    <label class="alta-label" for="a-mes">Mes</label>
+                    <span class="alta-sel-wrap">
+                      <select class="alta-select" id="a-mes" name="mes">
+                        <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                      </select>
+                      <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="alta-fs">
+                <legend class="alta-legend">Tu santo <span class="alta-opt">(opcional)</span></legend>
+                <div class="alta-sug">
+                  <div class="alta-sug-head">
+                    <span class="alta-sug-ic" aria-hidden="true"><svg class="ic"><use href="#i-cal"/></svg></span>
+                    <p class="alta-sug-t"><b>Sugerencia:</b> el santo de Lucía es el <b>13 de diciembre</b> (Santa Lucía). ¿Es el tuyo?</p>
+                  </div>
+                  <div class="alta-sug-btns">
+                    <button class="btn btn-soft" type="button">Sí, es ese</button>
+                    <button class="btn btn-secondary" type="button">No, otra fecha</button>
+                  </div>
+                </div>
+              </fieldset>
+
+              <div class="alta-actions">
+                <button class="btn btn-primary btn-block" type="button">Guardar y continuar</button>
+                <button class="link-btn" type="button">Ahora no</button>
+                <p class="alta-hint alta-hint-c">Podrás añadirlas cuando quieras desde tu perfil.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: DESPUÉS DEL ALTA
+       ========================================================== -->
+  <section class="row" aria-labelledby="post-alta-h">
+    <div class="row-head">
+      <h2 id="post-alta-h">Después del alta</h2>
+      <p>Al terminar, la persona aterriza en su primer deseo; las tallas se piden más tarde, cuando sirven.</p>
+    </div>
+
+    <div class="devices">
+
+      <!-- ---------- PANTALLA 1d: TU PRIMER DESEO ---------- -->
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 1d</span>
+          <span class="cap-t">Tu primer deseo</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+            <span class="sb-right">
+              <svg class="sb-ic" viewBox="0 0 18 12" width="17" height="11" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.6" width="3" height="6.4" rx="1"/><rect x="10" y="3.2" width="3" height="8.8" rx="1"/><rect x="15" y="0.8" width="3" height="11.2" rx="1"/></svg>
+              <svg class="sb-ic" viewBox="0 0 16 12" width="15" height="11" fill="currentColor"><path d="M8 11 5.9 8.5a3.2 3.2 0 0 1 4.2 0Z"/><path d="M3.6 5.6a6.3 6.3 0 0 1 8.8 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M1.2 2.7a9.8 9.8 0 0 1 13.6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <svg class="sb-ic" viewBox="0 0 26 12" width="24" height="11"><rect x="0.6" y="0.6" width="22" height="10.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2.4" y="2.4" width="14.5" height="7.2" rx="1.8" fill="currentColor"/><path d="M24.2 4.2v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".45"/></svg>
+            </span>
+          </div>
+
+          <div class="pf-scroll">
+            <div class="alta alta-done">
+              <h3 class="alta-h">¡Listo, Lucía! 🌻</h3>
+              <p class="alta-sub">Ahora apunta lo primero que te gustaría recibir.</p>
+
+              <div class="alta-field">
+                <label class="alta-label" for="a-enlace">Enlace de la tienda</label>
+                <div class="alta-input-wrap">
+                  <svg class="ic alta-in-ic" aria-hidden="true"><use href="#i-link"/></svg>
+                  <input class="alta-input alta-input-ic" id="a-enlace" type="url" name="enlace" inputmode="url" placeholder="Pega aquí el enlace" value="">
+                </div>
+              </div>
+
+              <p class="alta-note">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Leemos la página y rellenamos por ti el nombre, el precio y la categoría.</span>
+              </p>
+
+              <div class="alta-actions">
+                <button class="btn btn-primary btn-block" type="button">Leer el enlace</button>
+                <button class="btn btn-secondary btn-block" type="button">No tengo enlace: lo escribo yo</button>
+                <button class="link-btn" type="button">Hacerlo más tarde · Ir al inicio</button>
+              </div>
+            </div>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <div class="flow-notes">
+        <h3>Cómo funciona el alta</h3>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span>Una sola contraseña con «Mostrar», en lugar de escribirla dos veces: es más fácil a cualquier edad y evita el mismo error.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>Solo el nombre es obligatorio. El dibujo ya viene elegido al azar y se cambia con un toque.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Las fechas van con día y mes, sin año. El santo se sugiere a partir del nombre y siempre se puede decir que no.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>Con «Ahora no», las fechas quedan vacías. Su Inicio se lo recordará con amabilidad; a los demás no se les avisa de nada.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span>Las tallas y los gustos no se piden aquí: aparecen al añadir un deseo de «Ropa y accesorios» o «Calzado», en una tarjeta de su Inicio y en su perfil.</span></li>
+          <li><span class="fn" aria-hidden="true">6</span><span>Si llegó por una invitación, tras el paso 2 entra directamente al grupo: «Mira qué le gustaría a Javier».</span></li>
+        </ol>
+
+        <section class="alta-mock" aria-labelledby="alta-mock-1">
+          <h4 id="alta-mock-1">Recordatorio en su Inicio</h4>
+          <div class="alta-demo">
+            <div class="alta-demo-head">
+              <span class="alta-demo-ic" aria-hidden="true"><svg class="ic"><use href="#i-cake"/></svg></span>
+              <p class="alta-demo-t">Te falta tu cumpleaños</p>
+            </div>
+            <p class="alta-demo-s">Si lo añades, tu familia sabrá cuándo regalarte.</p>
+            <div class="alta-demo-btns">
+              <button class="btn btn-soft" type="button">Añadir fecha</button>
+              <button class="btn btn-secondary" type="button">Ahora no</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="alta-mock" aria-labelledby="alta-mock-2">
+          <h4 id="alta-mock-2">Al añadir un deseo de ropa o calzado</h4>
+          <div class="alta-demo">
+            <div class="alta-demo-head">
+              <span class="alta-demo-ic" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+              <p class="alta-demo-t">¿Añadimos tu talla?</p>
+            </div>
+            <p class="alta-demo-s">Así quien te regale «Zapatillas de running Asics Gel-Nimbus» acertará.</p>
+            <label class="alta-label" for="alta-talla">Talla de calzado</label>
+            <span class="alta-sel-wrap">
+              <select class="alta-select" id="alta-talla" name="talla-calzado">
+                <option>37</option><option>38</option><option selected>39</option><option>40</option><option>41</option><option>42</option>
+              </select>
+              <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+            </span>
+            <div class="alta-demo-btns">
+              <button class="btn btn-soft" type="button">Guardar talla</button>
+              <button class="btn btn-secondary" type="button">Ahora no</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA: ALTA EN EL NAVEGADOR
+       ========================================================== -->
+  <section class="row" aria-labelledby="alta-web-h">
+    <div class="row-head">
+      <h2 id="alta-web-h">Alta en el navegador</h2>
+      <p>En escritorio, los mismos pasos en una tarjeta centrada, con la vista previa de cómo te verán.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Primeros pasos · Paso 2 de 2</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Primeros pasos</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+          </header>
+
+          <div class="alta-web">
+            <div class="alta-web-grid">
+              <aside class="alta-panel" aria-labelledby="alta-panel-h">
+                <p class="alta-panel-t" id="alta-panel-h">Así te verán</p>
+                <span class="alta-av-72" aria-hidden="true">🌻</span>
+                <p class="alta-panel-n">Lucía</p>
+                <ol class="alta-mini-steps">
+                  <li><span class="fn" aria-hidden="true">1</span><span>Apunta lo que te gustaría recibir.</span></li>
+                  <li><span class="fn" aria-hidden="true">2</span><span>Compártelo con tu familia o amigos en un grupo.</span></li>
+                  <li><span class="fn" aria-hidden="true">3</span><span>Ellos reservan un regalo y nadie lo repite.</span></li>
+                </ol>
+              </aside>
+
+              <div class="alta-card">
+                <div class="alta-prog">
+                  <span class="alta-prog-bars" aria-hidden="true"><span class="alta-prog-seg is-on"></span><span class="alta-prog-seg is-on"></span></span>
+                  <p class="alta-prog-t">Paso 2 de 2</p>
+                </div>
+
+                <a class="back" href="#alta-web-h"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg>Atrás</a>
+
+                <h3 class="alta-h">¿Cuándo lo celebras?</h3>
+                <p class="alta-sub">Así tu familia sabrá cuándo regalarte. Solo el día y el mes: el año no hace falta.</p>
+
+                <fieldset class="alta-fs">
+                  <legend class="alta-legend">Tu cumpleaños</legend>
+                  <div class="alta-row2">
+                    <div class="alta-field">
+                      <label class="alta-label" for="w-dia">Día</label>
+                      <span class="alta-sel-wrap">
+                        <select class="alta-select" id="w-dia" name="web-dia">
+                          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option selected>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>21</option><option>22</option><option>23</option><option>24</option><option>25</option><option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+                        </select>
+                        <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                    <div class="alta-field">
+                      <label class="alta-label" for="w-mes">Mes</label>
+                      <span class="alta-sel-wrap">
+                        <select class="alta-select" id="w-mes" name="web-mes">
+                          <option>enero</option><option>febrero</option><option selected>marzo</option><option>abril</option><option>mayo</option><option>junio</option><option>julio</option><option>agosto</option><option>septiembre</option><option>octubre</option><option>noviembre</option><option>diciembre</option>
+                        </select>
+                        <svg class="ic alta-sel-ic" aria-hidden="true"><use href="#i-chev"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="alta-fs">
+                  <legend class="alta-legend">Tu santo <span class="alta-opt">(opcional)</span></legend>
+                  <div class="alta-sug">
+                    <div class="alta-sug-head">
+                      <span class="alta-sug-ic" aria-hidden="true"><svg class="ic"><use href="#i-cal"/></svg></span>
+                      <p class="alta-sug-t"><b>Sugerencia:</b> el santo de Lucía es el <b>13 de diciembre</b> (Santa Lucía). ¿Es el tuyo?</p>
+                    </div>
+                    <div class="alta-sug-btns">
+                      <button class="btn btn-soft" type="button">Sí, es ese</button>
+                      <button class="btn btn-secondary" type="button">No, otra fecha</button>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <div class="alta-actions">
+                  <button class="btn btn-primary btn-block" type="button">Guardar y continuar</button>
+                  <button class="link-btn" type="button">Ahora no</button>
+                  <p class="alta-hint alta-hint-c">Podrás añadirlas cuando quieras desde tu perfil.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <!-- ==========================================================
+       FILA DETALLE: INVITAR A ALGUIEN
+       ========================================================== -->
+  <section class="row" aria-labelledby="invite-h">
+    <div class="row-head">
+      <h2 id="invite-h">Detalle · Invitar a alguien</h2>
+      <p>Al tocar «Invitar a alguien» en «Tus grupos», primero eliges a qué grupo invitas.</p>
+    </div>
+
+    <div class="devices">
+      <figure class="device">
+        <figcaption class="cap">
+          <span class="cap-n">Pantalla 2b</span>
+          <span class="cap-t">Inicio · elegir grupo para invitar</span>
+        </figcaption>
+        <div class="pf">
+          <div class="pf-notch" aria-hidden="true"></div>
+          <div class="pf-status" aria-hidden="true">
+            <span class="sb-time">9:41</span>
+          </div>
+
+          <div class="sheet-bg" aria-hidden="true">
+            <p class="home-hi">Hola, Lucía 🌻</p>
+            <div class="hero">
+              <div class="hero-top">
+                <p class="eyebrow">Próxima celebración</p>
+                <p class="pill pill-days">Faltan 7 días</p>
+              </div>
+              <div class="hero-person">
+                <span class="avatar">🎸</span>
+                <div class="hero-txt"><p><b>Javier celebra su santo</b></p><p>El 3 de diciembre · Familia Martín</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="scrim" aria-hidden="true"></div>
+
+          <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+            <div class="grab" aria-hidden="true"></div>
+            <div class="sheet-head">
+              <h3 id="sheet-h">Invitar a alguien</h3>
+              <button class="x-btn" type="button" aria-label="Cerrar">×</button>
+            </div>
+            <fieldset>
+              <legend>¿A qué grupo quieres invitar?</legend>
+              <label class="g-opt">
+                <input type="radio" name="invite-group" checked>
+                <span class="stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                <span class="g-text"><span class="g-name">Familia Martín</span><span class="g-meta">6 participantes</span></span>
+                <span class="g-chosen"><svg class="ic ic-20" aria-hidden="true"><use href="#i-check"/></svg>Elegido</span>
+              </label>
+              <label class="g-opt">
+                <input type="radio" name="invite-group">
+                <span class="stack" aria-hidden="true"><span>🌻</span><span>📚</span><span>⚽</span></span>
+                <span class="g-text"><span class="g-name">Amigos de la Uni</span><span class="g-meta">8 participantes</span></span>
+                <span class="g-chosen"><svg class="ic ic-20" aria-hidden="true"><use href="#i-check"/></svg>Elegido</span>
+              </label>
+            </fieldset>
+            <p class="sheet-note">Le enviaremos un enlace para unirse a <b>Familia Martín</b>. Si ya usa la app, también puede escribir el código <span class="code">K7P2QX</span> en «Personas».</p>
+            <button class="btn btn-primary btn-block" type="button">Compartir invitación</button>
+            <button class="btn btn-secondary btn-block" type="button">Copiar código</button>
+          </div>
+          <div class="pf-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <div class="flow-notes">
+        <h3>Un paso más, sin dudas</h3>
+        <p>Desde Inicio no sabemos a qué grupo quieres invitar, así que lo preguntamos antes de compartir nada.</p>
+        <ol>
+          <li><span class="fn" aria-hidden="true">1</span><span>«Invitar a alguien» abre esta hoja con la pregunta «¿A qué grupo quieres invitar?» y tus grupos como opciones grandes, con su número de participantes.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>La opción elegida se marca con borde, punto y la palabra «Elegido», no solo con color. El texto de abajo repite el nombre del grupo para confirmar.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Si solo tienes un grupo, viene ya marcado y basta con «Compartir invitación». Desde la ficha de un grupo, «Invitar» ya sabe el grupo y se salta la pregunta.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>En el navegador, el mismo enlace de «Tus grupos» abre estas opciones en una ventana centrada.</span></li>
+          <li><span class="fn" aria-hidden="true">5</span><span>Quien recibe el enlace y no tiene cuenta no tiene que escribir ningún código: la bienvenida le dice quién le invita y, al crear su cuenta o iniciar sesión, entra directamente al grupo. El código solo se escribe ya dentro de la app, en «Personas › Unirme con un código».</span></li>
+        </ol>
+
+        <section class="inv-mock" aria-labelledby="inv-mock-h">
+          <h4 id="inv-mock-h">Así ve la bienvenida quien abre la invitación</h4>
+          <div class="inv-banner">
+            <span class="avatar" aria-hidden="true">🌻</span>
+            <div>
+              <p class="inv-t">Lucía te ha invitado a «Familia Martín»</p>
+              <p class="inv-s">Crea tu cuenta o inicia sesión y entrarás directamente al grupo.</p>
+            </div>
+          </div>
+          <div class="inv-btns">
+            <button class="btn btn-primary" type="button">Crear mi cuenta y unirme</button>
+            <button class="btn btn-secondary" type="button">Ya tengo cuenta · Iniciar sesión</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA DETALLE: ICONOS POR CATEGORÍA
+       ========================================================== -->
+  <section class="row" aria-labelledby="icons-h">
+    <div class="row-head">
+      <h2 id="icons-h">Detalle · Iconos por categoría</h2>
+      <p>Cada deseo se muestra con el icono de su categoría en lugar de una foto: siempre se ve igual de claro y no depende de la tienda.</p>
+    </div>
+
+    <div class="cat-row">
+      <!-- las 12 categorías, cada una con su icono y su familia de color -->
+      <div class="cat-ref">
+        <h3 class="cat-h">Las 12 categorías</h3>
+        <p class="cat-sub">Cuatro familias de color acompañan al icono, pero cada categoría se reconoce por su dibujo y su nombre, nunca solo por el color.</p>
+        <ul class="cat-grid">
+          <li class="cat-card">
+            <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+            <span class="cat-name">Tecnología</span>
+            <span class="cat-eg">Auriculares, móviles, cámaras</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-c" aria-hidden="true"><svg class="ic"><use href="#i-book"/></svg></span>
+            <span class="cat-name">Libros</span>
+            <span class="cat-eg">Novelas, cómics, cuentos</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-c" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+            <span class="cat-name">Ropa y accesorios</span>
+            <span class="cat-eg">Jerséis, bolsos, relojes</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-c" aria-hidden="true"><svg class="ic"><use href="#i-shoe"/></svg></span>
+            <span class="cat-name">Calzado</span>
+            <span class="cat-eg">Zapatillas, botas</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-b" aria-hidden="true"><svg class="ic"><use href="#i-moka"/></svg></span>
+            <span class="cat-name">Hogar y cocina</span>
+            <span class="cat-eg">Cafeteras, menaje, decoración</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-b" aria-hidden="true"><svg class="ic"><use href="#i-cake"/></svg></span>
+            <span class="cat-name">Comida y bebida</span>
+            <span class="cat-eg">Vinos, dulces, cestas</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-ticket"/></svg></span>
+            <span class="cat-name">Música y entradas</span>
+            <span class="cat-eg">Conciertos, teatro, discos</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-vase"/></svg></span>
+            <span class="cat-name">Experiencias y talleres</span>
+            <span class="cat-eg">Clases, escapadas, cursos</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-c" aria-hidden="true"><svg class="ic"><use href="#i-dice"/></svg></span>
+            <span class="cat-name">Juegos y juguetes</span>
+            <span class="cat-eg">Juegos de mesa, puzles</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-b" aria-hidden="true"><svg class="ic"><use href="#i-ball"/></svg></span>
+            <span class="cat-name">Deporte y aire libre</span>
+            <span class="cat-eg">Material deportivo, bicis</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-c" aria-hidden="true"><svg class="ic"><use href="#i-drop"/></svg></span>
+            <span class="cat-name">Belleza y cuidado</span>
+            <span class="cat-eg">Perfumes, cosmética</span>
+          </li>
+          <li class="cat-card">
+            <span class="cat-t tile-n" aria-hidden="true"><svg class="ic"><use href="#i-gift"/></svg></span>
+            <span class="cat-name">Otro regalo</span>
+            <span class="cat-eg">Cuando no encaja en ninguna</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- de dónde sale la categoría y cómo se cambia -->
+      <div class="cat-how">
+        <h3>¿Cómo sabe la app la categoría?</h3>
+        <ol class="cat-steps">
+          <li><span class="fn" aria-hidden="true">1</span><span>Al pegar el enlace, leemos la categoría que publica la tienda (por ejemplo, «Electrónica › Auriculares» en Amazon) y la traducimos a una de las 12.</span></li>
+          <li><span class="fn" aria-hidden="true">2</span><span>Si la tienda no la dice, buscamos palabras del título: «auriculares» → Tecnología, «zapatillas» → Calzado, «entradas» → Música y entradas.</span></li>
+          <li><span class="fn" aria-hidden="true">3</span><span>Si nada encaja, el deseo queda como «Otro regalo», con el icono de regalo.</span></li>
+          <li><span class="fn" aria-hidden="true">4</span><span>Tú siempre tienes la última palabra: en el formulario del deseo ves la categoría elegida y puedes cambiarla con un toque.</span></li>
+        </ol>
+
+        <div class="cat-form">
+          <h4 class="cat-form-h">Así se ve en el formulario</h4>
+          <p class="cat-label">Categoría</p>
+          <button class="cat-pick" type="button">
+            <span class="cat-t tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+            <span class="cat-pick-txt">
+              <span class="cat-pick-name">Tecnología</span>
+              <span class="cat-pick-help">Elegida a partir del enlace</span>
+            </span>
+            <span class="cat-pick-act">Cambiar<svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></span>
+          </button>
+          <ul class="cat-chips" aria-label="Ejemplos de categorías para elegir">
+            <li><button class="cat-chip" type="button" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Tecnología</button></li>
+            <li><button class="cat-chip" type="button" aria-pressed="false">Hogar y cocina</button></li>
+            <li><button class="cat-chip" type="button" aria-pressed="false">Libros</button></li>
+            <li><button class="cat-chip" type="button" aria-pressed="false">Otro regalo</button></li>
+          </ul>
+          <p class="cat-note">Al tocar «Cambiar» se abren las 12 categorías como opciones grandes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FILA ESCRITORIO
+       ========================================================== -->
+  <section class="row" aria-labelledby="desk-h">
+    <div class="row-head">
+      <h2 id="desk-h">Navegador (escritorio)</h2>
+      <p>La misma portada en 1280 × 800: tres columnas con la celebración a la izquierda, la lista de Javier en el centro y tu lista a la derecha.</p>
+    </div>
+
+    <figure class="browser">
+      <figcaption class="cap">
+        <span class="cap-n">Escritorio</span>
+        <span class="cap-t">Inicio · sesión iniciada como Lucía</span>
+      </figcaption>
+
+      <div class="bf">
+        <div class="chrome">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url">murodeseos — Inicio</span>
+          <span class="chrome-right" aria-hidden="true">100 %</span>
+        </div>
+
+        <div class="view">
+          <header class="dt-head">
+            <p class="wordmark"><span class="wm-ic" aria-hidden="true"><svg class="ic ic-20"><use href="#i-gift"/></svg></span>Muro de Deseos</p>
+            <nav class="dt-nav" aria-label="Navegación principal">
+              <a href="#inicio" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg>Inicio</a>
+              <a href="#mi-lista"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg>Mi lista</a>
+              <a href="#personas"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Personas</a>
+              <a href="#avisos"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>Avisos · <span class="dt-badge" aria-hidden="true">2</span><span class="sr-only">2 avisos sin leer</span></a>
+            </nav>
+            <p class="dt-user"><span class="avatar" aria-hidden="true">🌻</span>Lucía</p>
+          </header>
+
+          <div class="dt-main">
+            <!-- columna izquierda -->
+            <div class="dt-col">
+              <section class="dt-card hero-dt" aria-labelledby="d-hero">
+                <div class="hero-dt-top">
+                  <p class="eyebrow-dt">Próxima celebración</p>
+                </div>
+                <div class="hero-dt-person">
+                  <span class="avatar" aria-hidden="true">🎸</span>
+                  <h2 id="d-hero">Javier Martín</h2>
+                  <p>Celebra su santo el 3 de diciembre</p>
+                  <span class="pill pill-days">Faltan 7 días</span>
+                  <p class="hero-also hero-also-dt"><svg class="ic ic-20" aria-hidden="true"><use href="#i-cake"/></svg><span>Y su cumpleaños, el 12 de diciembre (faltan 16 días)</span></p>
+                  <span class="tag"><svg class="ic" aria-hidden="true"><use href="#i-people"/></svg>Familia Martín</span>
+                </div>
+                <button class="btn btn-primary btn-block" type="button">Ver qué le gustaría</button>
+              </section>
+
+              <section class="dt-card" aria-labelledby="d-later">
+                <h2 id="d-later" class="dt-h">Más adelante</h2>
+                <p class="dt-sub">En tus grupos, este año</p>
+                <ul class="later-list">
+                  <li>
+                    <span class="later-av" aria-hidden="true">👵</span>
+                    <span><span class="later-name">Carmen</span><span class="later-date">Onomástica · 16 de julio</span></span>
+                  </li>
+                  <li>
+                    <span class="later-av" aria-hidden="true">📚</span>
+                    <span><span class="later-name">Marta</span><span class="later-date">Cumpleaños · 3 de febrero</span></span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+
+            <!-- columna central -->
+            <section class="dt-card" aria-labelledby="d-javier">
+              <h2 id="d-javier" class="dt-h">Lo que le gustaría a Javier</h2>
+              <p class="dt-sub">4 deseos · 2 disponibles ahora</p>
+              <p class="helper-dt">
+                <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Cuando reservas un regalo, el resto del grupo lo ve como reservado y nadie lo repite.</span>
+              </p>
+
+              <ul class="wishes-dt">
+                <li class="dw">
+                  <span class="dw-media tile-b" aria-hidden="true"><svg class="ic"><use href="#i-moka"/></svg></span>
+                  <div class="dw-body">
+                    <p class="dw-title">Cafetera italiana Bialetti 6 tazas</p>
+                    <p class="dw-price">34,95 €<a class="dw-link" title="Abrir en la tienda" href="#tienda-cafetera" aria-label="Abrir en la tienda (amazon.es): Cafetera italiana Bialetti 6 tazas"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a></p>
+                    <p class="dw-cat">Hogar y cocina</p>
+                  </div>
+                  <div class="dw-action">
+                    <button class="btn btn-soft" type="button" aria-label="Reservar este regalo: Cafetera italiana Bialetti 6 tazas">Reservar este regalo</button>
+                  </div>
+                </li>
+
+                <li class="dw is-mine">
+                  <span class="dw-media tile-c" aria-hidden="true"><svg class="ic"><use href="#i-sweater"/></svg></span>
+                  <div class="dw-body">
+                    <p class="dw-title">Jersey de lana azul marino, talla L</p>
+                    <p class="dw-price">59,00 €<a class="dw-link" title="Abrir en la tienda" href="#tienda-jersey" aria-label="Abrir en la tienda (elcorteingles.es): Jersey de lana azul marino, talla L"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a></p>
+                    <p class="dw-cat">Ropa y accesorios</p>
+                    <p class="dw-state mine"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Lo regalas tú</p>
+                  </div>
+                  <div class="dw-action">
+                    <button class="btn btn-secondary" type="button" aria-label="Cancelar la reserva de Jersey de lana azul marino, talla L">Cancelar reserva</button>
+                  </div>
+                </li>
+
+                <li class="dw is-other">
+                  <span class="dw-media tile-a" aria-hidden="true"><svg class="ic"><use href="#i-ticket"/></svg></span>
+                  <div class="dw-body">
+                    <p class="dw-title">Entradas para Vetusta Morla</p>
+                    <p class="dw-price">45,00 €<a class="dw-link" title="Abrir en la tienda" href="#tienda-entradas" aria-label="Abrir en la tienda (ticketmaster.es): Entradas para Vetusta Morla"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></a></p>
+                    <p class="dw-cat">Música y entradas</p>
+                    <p class="dw-state other"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>Ya lo regala otra persona</p>
+                  </div>
+                  <div class="dw-action"></div>
+                </li>
+
+                <li class="dw">
+                  <span class="dw-media tile-c" aria-hidden="true"><svg class="ic"><use href="#i-dice"/></svg></span>
+                  <div class="dw-body">
+                    <p class="dw-title">Juego de mesa Catan</p>
+                    <p class="dw-price">42,00 €</p>
+                    <p class="dw-cat">Juegos y juguetes</p>
+                  </div>
+                  <div class="dw-action">
+                    <button class="btn btn-soft" type="button" aria-label="Reservar este regalo: Juego de mesa Catan">Reservar este regalo</button>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            <!-- columna derecha -->
+            <div class="dt-col">
+              <section class="dt-card" aria-labelledby="d-mylist">
+                <div class="my-head">
+                  <h2 id="d-mylist" class="dt-h">Tu lista</h2>
+                  <span class="pill pill-count">5 deseos</span>
+                </div>
+                <ul class="my-rows">
+                  <li class="my-row">
+                    <span class="my-tile tile-a" aria-hidden="true"><svg class="ic"><use href="#i-headphones"/></svg></span>
+                    <span>
+                      <span class="my-name">Auriculares inalámbricos Sony WH-1000XM5</span>
+                      <span class="my-price">349,00 € · Le hace mucha ilusión</span>
+                    </span>
+                  </li>
+                  <li class="my-row">
+                    <span class="my-tile tile-b" aria-hidden="true"><svg class="ic"><use href="#i-mug"/></svg></span>
+                    <span>
+                      <span class="my-name">Taza de cerámica artesanal</span>
+                      <span class="my-price">18,50 € · Un detalle</span>
+                    </span>
+                  </li>
+                </ul>
+                <button class="btn btn-secondary btn-block" type="button">Ver mi lista completa</button>
+              </section>
+
+              <section class="dt-card" aria-labelledby="d-groups">
+                <div class="my-head">
+                  <h2 id="d-groups" class="dt-h">Tus grupos</h2>
+                  <button class="link-btn" type="button" aria-haspopup="dialog">Invitar a alguien</button>
+                </div>
+                <ul class="dt-groups">
+                  <li>
+                    <a class="g-link" href="#grupo-familia-martin">
+                      <span class="stack" aria-hidden="true"><span>🎸</span><span>👵</span><span>🚲</span></span>
+                      <span class="g-text"><span class="g-name">Familia Martín</span><span class="g-meta">6 participantes</span></span>
+                      <svg class="g-go" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="g-link" href="#grupo-amigos-de-la-uni">
+                      <span class="stack" aria-hidden="true"><span>🌻</span><span>📚</span><span>⚽</span></span>
+                      <span class="g-text"><span class="g-name">Amigos de la Uni</span><span class="g-meta">8 participantes</span></span>
+                      <svg class="g-go" aria-hidden="true"><use href="#i-chev"/></svg>
+                    </a>
+                  </li>
+                </ul>
+              </section>
+
+              <div class="dt-cta">
+                <button class="btn btn-soft btn-block" type="button">Añadir un deseo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+</main>
+</body>
+</html>

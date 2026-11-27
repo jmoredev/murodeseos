@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema actual — Digital Keepsake</title>
+<style>
+  :root{--primary:#aa2c32;--pc:#ff7574;--surface:#fff4f4;--low:#ffecee;--high:#fff0f0;--highest:#ecd8e0;--white:#fff;--on:#4c212b;--olive:#6d5a00;--teal:#006666;--outline:#dc9ca8;
+    --sh:0 12px 24px rgba(76,33,43,.04),0 4px 8px rgba(76,33,43,.03);--shlg:0 16px 32px rgba(76,33,43,.06),0 8px 16px rgba(76,33,43,.04)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--on);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;width:1440px}
+  main{padding:48px 64px}
+  h1{font-size:40px;margin:0 0 4px}
+  h2{font-size:22px;margin:40px 0 16px}
+  p.lead{margin:0;color:#6b3a46;font-size:16px}
+  .grid{display:flex;flex-wrap:wrap;gap:16px}
+  .sw{width:160px;background:var(--white);border-radius:12px;box-shadow:var(--sh);overflow:hidden;font-size:13px}
+  .sw div{height:72px}
+  .sw p{margin:8px 12px 12px;line-height:1.4}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .type p{margin:8px 0}
+  .card{background:var(--white);border-radius:12px;box-shadow:var(--sh);padding:16px;width:220px}
+  .img{height:140px;border-radius:8px;background:var(--low);display:grid;place-items:center;font-size:13px;color:#6b3a46}
+  .chip{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;margin:8px 6px 0 0}
+  .btn{border:0;border-radius:999px;padding:12px 24px;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--primary),var(--pc))}
+  .btn:focus-visible,.tab:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .dock{display:flex;gap:4px;background:rgba(255,244,244,.8);box-shadow:var(--shlg);border-radius:999px;padding:6px;width:360px}
+  .tab{flex:1;border:0;background:none;border-radius:999px;padding:10px;font-size:13px;color:var(--on)}
+  .tab[aria-selected=true]{background:var(--white);font-weight:700}
+  .row{display:flex;gap:32px;align-items:flex-start}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Digital Keepsake</h1>
+    <p class="lead">Sistema visual actual de Muro de Deseos (referencia para comparar el rediseño). Fuentes: app/global.css, tailwind.config.cjs, docs/DESIGN.md.</p>
+  </header>
+
+  <section aria-labelledby="c"><h2 id="c">Colores</h2>
+    <div class="grid">
+      <div class="sw"><div style="background:#aa2c32"></div><p><code>primary</code><br>#aa2c32</p></div>
+      <div class="sw"><div style="background:#ff7574"></div><p><code>primary-container</code><br>#ff7574</p></div>
+      <div class="sw"><div style="background:#fff4f4"></div><p><code>surface</code><br>#fff4f4</p></div>
+      <div class="sw"><div style="background:#ffecee"></div><p><code>surface-container-low</code><br>#ffecee</p></div>
+      <div class="sw"><div style="background:#ecd8e0"></div><p><code>surface-container-highest</code><br>#ecd8e0</p></div>
+      <div class="sw"><div style="background:#4c212b"></div><p><code>on-surface</code><br>#4c212b</p></div>
+      <div class="sw"><div style="background:#6d5a00"></div><p><code>price / priority-medium</code><br>#6d5a00</p></div>
+      <div class="sw"><div style="background:#006666"></div><p><code>reserved / priority-low</code><br>#006666</p></div>
+      <div class="sw"><div style="background:#dc9ca8"></div><p><code>outline-variant</code><br>#dc9ca8</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="t" class="type"><h2 id="t">Tipografía</h2>
+    <p style="font-size:36px;font-weight:800">Plus Jakarta Sans 800 — Deseos</p>
+    <p style="font-size:24px;font-weight:700">Plus Jakarta Sans 700 — Mis grupos</p>
+    <p style="font-size:16px;font-weight:600">Be Vietnam Pro 600 — Prioridad Alta</p>
+    <p style="font-size:16px">Be Vietnam Pro 400 — Añade cosas que te ilusionen.</p>
+  </section>
+
+  <section aria-labelledby="k"><h2 id="k">Componentes</h2>
+    <div class="row">
+      <article class="card" aria-label="Tarjeta de deseo">
+        <div class="img">Imagen del producto</div>
+        <strong style="display:block;margin-top:12px">Auriculares inalámbricos</strong>
+        <span class="chip" style="background:#ffecee;color:#aa2c32">Prioridad Alta</span>
+        <span class="chip" style="background:#fff6d6;color:#6d5a00">79,99 €</span>
+      </article>
+      <div>
+        <button class="btn" type="button">Iniciar sesión</button>
+        <p style="font-size:13px;margin:16px 0 8px">Dock flotante (móvil)</p>
+        <div class="dock" role="tablist" aria-label="Secciones principales">
+          <button class="tab" role="tab" aria-selected="true">Deseos</button>
+          <button class="tab" role="tab" aria-selected="false">Grupos</button>
+          <button class="tab" role="tab" aria-selected="false">Perfil</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

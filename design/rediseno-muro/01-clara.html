@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Muro de Deseos · Dirección 01 «Clara»</title>
+<style>
+  :root{
+    --paper:#FAF7F2;
+    --surface:#FFFFFF;
+    --ink:#1F2328;
+    --ink-2:#4A4F57;
+    --primary:#1E5B4F;
+    --primary-hover:#164539;
+    --accent:#F2C14E;
+    --line:#E2DCD1;
+    --line-strong:#B7AFA1;
+    --danger:#B42318;
+    /* tints derivados, solo para fondos de fichas y estados */
+    --tint-green:#EAF3EE;
+    --tint-sand:#FAF1DB;
+    --tint-clay:#F2ECE3;
+    --tint-mute:#F2EEE7;
+    --canvas:#F1ECE3;
+    --r-card:14px;
+    --r-btn:12px;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    width:1440px;margin:0;background:var(--canvas);color:var(--ink);
+    font-family:var(--font);font-size:16px;line-height:1.5;
+    font-variant-numeric:tabular-nums;
+  }
+  p,ul,ol,figure{margin:0}
+  ul,ol{padding:0;list-style:none}
+  h1,h2,h3{margin:0;line-height:1.2;font-weight:700;letter-spacing:-0.01em}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  select{font:inherit}
+  :focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ---------- cabecera del artboard (para el dueño del producto) ---------- */
+  .brief{
+    background:var(--surface);border-bottom:1px solid var(--line);
+    padding:26px 56px 24px;display:grid;grid-template-columns:1fr 640px;gap:40px;
+  }
+  .brief-kicker{font-size:16px;color:var(--ink-2)}
+  .brief h1{font-size:40px;line-height:1.05;margin:6px 0 12px;letter-spacing:-0.02em}
+  .tradeoff{
+    font-size:18px;line-height:1.5;border-left:4px solid var(--accent);
+    padding-left:16px;max-width:640px;
+  }
+  .tradeoff strong{font-weight:700}
+  .brief-keys h2{font-size:24px;margin-bottom:10px}
+  .brief-keys ul{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}
+  .brief-keys li{font-size:17px;line-height:1.45;padding-left:16px;position:relative;color:var(--ink)}
+  .brief-keys li::before{
+    content:"";position:absolute;left:0;top:9px;width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+  }
+  .brief-keys b{font-weight:700}
+
+  /* ---------- filas del artboard ---------- */
+  .row{padding:26px 56px 6px}
+  .row-end{padding-bottom:24px}
+  .row-head{display:flex;align-items:baseline;gap:16px;margin-bottom:14px}
+  .row-head h2{font-size:26px}
+  .row-head p{font-size:17px;color:var(--ink-2);max-width:820px}
+  .phones{display:flex;gap:40px;justify-content:center}
+  .fig-cap{min-height:44px;margin-bottom:10px}
+  .fig-cap b{display:block;font-size:18px;font-weight:700}
+  .fig-cap span{display:block;font-size:16px;color:var(--ink-2);line-height:1.4}
+
+  /* ---------- dispositivo ---------- */
+  .device{
+    width:390px;height:844px;border-radius:36px;overflow:hidden;background:var(--paper);
+    display:flex;flex-direction:column;
+    box-shadow:0 0 0 1px #D8D1C4,0 14px 34px rgba(31,35,40,.15),0 2px 6px rgba(31,35,40,.06);
+    font-size:18px;line-height:1.5;
+  }
+  .statusbar{
+    height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;font-size:16px;font-weight:600;color:var(--ink);
+  }
+  .sb-icons{display:flex;align-items:center;gap:7px}
+  .ico{width:24px;height:24px;flex:none;display:block}
+  .ico-sm{width:17px;height:17px}
+
+  .scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#C9C1B2 transparent}
+  .scroll::-webkit-scrollbar{width:6px}
+  .scroll::-webkit-scrollbar-thumb{background:#C9C1B2;border-radius:3px}
+  .scroll::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------- barra superior de la app ---------- */
+  .appbar{
+    position:sticky;top:0;z-index:3;background:var(--paper);
+    padding:10px 18px 12px;display:flex;flex-direction:column;gap:2px;
+  }
+  .appbar h3{font-size:28px}
+  .appbar p{font-size:17px;color:var(--ink-2)}
+  .screen-body{padding:0 18px 28px}
+
+  /* ---------- botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    min-height:48px;padding:12px 18px;border-radius:var(--r-btn);
+    font-size:18px;font-weight:600;line-height:1.25;text-align:center;
+    border:1px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;
+  }
+  .btn-primary{background:var(--primary);color:#FFFFFF}
+  .btn-primary:hover{background:var(--primary-hover)}
+  .btn-outline{background:var(--surface);color:var(--primary);border:2px solid var(--primary)}
+  .btn-outline:hover{background:var(--tint-green)}
+  .btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+  .btn-secondary:hover{background:var(--tint-mute)}
+  .btn-block{width:100%}
+  .btn-text{
+    min-height:48px;padding:0 6px;font-size:17px;font-weight:600;color:var(--primary);
+    text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;
+    border-radius:8px;
+  }
+  .btn-text:hover{color:var(--primary-hover);background:var(--tint-green)}
+  .btn-back{
+    min-height:48px;padding:4px 10px 4px 2px;display:inline-flex;align-items:center;gap:8px;
+    font-size:17px;font-weight:600;color:var(--ink-2);border-radius:8px;
+  }
+  .btn-back:hover{color:var(--ink);background:var(--tint-mute)}
+
+  .hint{font-size:17px;color:var(--ink-2);margin-top:8px}
+  .sortbar{margin:18px 0 6px}
+  .select-wrap{position:relative}
+  .select-wrap .chev{
+    position:absolute;right:14px;top:50%;transform:translateY(-50%);
+    width:20px;height:20px;color:var(--ink-2);pointer-events:none;
+  }
+  select{
+    appearance:none;-webkit-appearance:none;width:100%;min-height:52px;
+    padding:12px 46px 12px 14px;font-size:17px;font-weight:600;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r-btn);
+  }
+  select:hover{border-color:var(--line-strong)}
+
+  /* ---------- bienvenida ---------- */
+  .welcome{display:flex;flex-direction:column;padding:14px 20px 32px}
+  .wordmark{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+  .mark{width:32px;height:32px;flex:none;border-radius:10px}
+  .welcome h3{font-size:28px;line-height:1.25;margin-top:18px;letter-spacing:-0.015em}
+  .welcome .purpose{font-size:18px;color:var(--ink-2);margin-top:10px}
+  .steps{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+  .steps li{
+    display:flex;gap:14px;align-items:flex-start;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r-card);padding:14px 16px;
+  }
+  .step-num{
+    width:36px;height:36px;flex:none;border-radius:50%;background:var(--tint-green);
+    color:var(--primary);display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:700;
+  }
+  .step-text{font-size:18px;line-height:1.5}
+  .welcome-cta{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+  .textlink{
+    min-height:48px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:17px;color:var(--ink-2);text-decoration:underline;
+    text-underline-offset:3px;text-decoration-thickness:1.5px;border-radius:8px;
+  }
+  .textlink:hover{color:var(--ink)}
+  .welcome .textlink{margin-top:6px}
+
+  /* ---------- filas de deseos ---------- */
+  .wishes{display:flex;flex-direction:column;margin-top:10px}
+  .wish{
+    display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;
+    align-items:start;padding:16px 0;border-bottom:1px solid var(--line);
+  }
+  .wish:last-child{border-bottom:0}
+  .thumb{
+    width:64px;height:64px;border-radius:10px;display:flex;align-items:center;
+    justify-content:center;color:var(--ink);border:1px solid var(--line);
+  }
+  .thumb svg{width:32px;height:32px;display:block}
+  .tone-green{background:var(--tint-green)}
+  .tone-sand{background:var(--tint-sand)}
+  .tone-clay{background:var(--tint-clay)}
+  .wish-main{min-width:0}
+  .wish-title{font-size:18px;font-weight:600;line-height:1.5}
+  .wish-price{font-size:18px;font-weight:600;line-height:1.5;margin-top:2px}
+  .wish-price .meta{font-size:17px;font-weight:400;color:var(--ink-2)}
+  .wish-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+  .wish-line .wish-price{margin-top:0}
+  /* la zona táctil sigue midiendo 48 px aunque la línea visible sea compacta */
+  .wish-line .btn-text{margin:-10px 0;flex:none}
+  .priority{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--ink-2);margin-top:8px}
+  .meter{display:inline-flex;align-items:center;gap:2px;flex:none}
+  .heart{width:15px;height:15px;color:var(--primary)}
+  .heart-off{width:15px;height:15px;color:var(--line-strong)}
+  .wish-actions{display:flex;flex-direction:column;align-items:flex-end}
+
+  /* ---------- ficha de Javier ---------- */
+  .person{display:flex;gap:14px;align-items:flex-start;margin-top:8px}
+  .avatar{
+    width:56px;height:56px;flex:none;border-radius:50%;background:var(--tint-sand);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:28px;line-height:1;
+  }
+  .person-name{font-size:28px;line-height:1.2}
+  .person-meta{font-size:17px;color:var(--ink-2);margin-top:4px}
+  .person-bday{display:flex;align-items:flex-start;gap:8px;font-size:17px;margin-top:8px}
+  .person-bday .ico{width:20px;height:20px;color:var(--ink-2);margin-top:3px}
+  .helper{
+    display:flex;gap:10px;align-items:flex-start;background:var(--surface);
+    border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:var(--r-btn);padding:12px 14px;font-size:17px;margin-top:16px;
+  }
+  .helper .ico{width:20px;height:20px;flex:none;margin-top:3px;color:var(--ink-2)}
+  .list-label{font-size:18px;font-weight:700;margin:20px 0 2px}
+
+  .wish-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+    padding:14px;margin-top:12px;
+  }
+  .wish-card-head{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:start}
+  .wish-card .wish-title{font-size:18px}
+  .wish-card .wish-price{font-size:18px}
+  .wish-card.is-mine{box-shadow:inset 0 0 0 1px var(--primary)}
+  .wish-card.is-taken{background:var(--tint-mute);border-color:var(--line)}
+  .wish-card .btn{margin-top:12px}
+
+  .badge-state{
+    display:inline-flex;align-items:center;gap:8px;min-height:32px;
+    padding:4px 12px;border-radius:999px;font-size:17px;font-weight:600;
+    border:1px solid var(--line-strong);background:var(--tint-mute);color:var(--ink-2);
+    margin-top:12px;
+  }
+  .badge-state .ico{width:18px;height:18px}
+  .badge-state.is-mine{background:var(--surface);border-color:var(--primary);color:var(--primary)}
+  .badge-state.is-taken{background:var(--surface)}
+
+  /* ---------- barra inferior de pestañas ---------- */
+  .tabbar{
+    flex:none;display:flex;gap:4px;background:var(--surface);border-top:1px solid var(--line);
+    padding:8px 6px calc(20px + env(safe-area-inset-bottom,0px));
+  }
+  .tab{
+    flex:1 1 0;min-height:56px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:4px;padding:4px 2px;border-radius:10px;color:var(--ink-2);
+    transition:background-color .15s ease,color .15s ease;
+  }
+  .tab:hover{background:var(--tint-mute)}
+  .tab .ico{color:inherit}
+  .tab-label{font-size:14px;line-height:1.2;font-weight:600;color:inherit;display:inline-flex;align-items:center;gap:5px}
+  .tab[aria-current="page"]{color:var(--primary)}
+  .tab[aria-current="page"] .tab-label{font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+  .badge{
+    min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--danger);
+    color:#FFFFFF;font-size:14px;font-weight:700;line-height:1;display:inline-flex;
+    align-items:center;justify-content:center;
+  }
+
+  /* ---------- navegador de escritorio ---------- */
+  .browser{
+    width:1280px;height:800px;border-radius:16px;overflow:hidden;background:var(--surface);
+    box-shadow:0 0 0 1px #D8D1C4,0 20px 44px rgba(31,35,40,.16),0 2px 8px rgba(31,35,40,.07);
+    display:flex;flex-direction:column;margin:0 auto;
+  }
+  .chrome{
+    flex:none;height:48px;display:flex;align-items:center;gap:16px;padding:0 16px;
+    background:var(--canvas);border-bottom:1px solid var(--line);
+  }
+  .chrome-dots{display:flex;gap:7px}
+  .chrome-dots i{width:10px;height:10px;border-radius:50%;background:#C9C1B2;display:block}
+  .address{
+    height:30px;flex:0 1 420px;display:flex;align-items:center;padding:0 14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    font-size:14px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .desk-app{flex:1;min-height:0;display:flex;background:var(--paper);font-size:16px}
+
+  .sidebar{
+    width:240px;flex:none;display:flex;flex-direction:column;
+    background:var(--surface);border-right:1px solid var(--line);padding:18px 14px 16px;
+  }
+  .side-wordmark{
+    display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;
+    letter-spacing:-0.01em;padding:4px 8px 18px;
+  }
+  .side-nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .side-item{
+    display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 10px;
+    border-radius:10px;font-size:16px;font-weight:600;color:var(--ink-2);text-align:left;
+    transition:background-color .15s ease,color .15s ease;
+  }
+  .side-item:hover{background:var(--tint-mute);color:var(--ink)}
+  .side-item[aria-current="page"]{background:var(--tint-green);color:var(--primary);font-weight:700}
+  .side-item .badge{margin-left:auto}
+  .side-sep{height:1px;background:var(--line);margin:12px 10px}
+  .side-user{
+    display:flex;align-items:center;gap:10px;padding:12px 8px 0;border-top:1px solid var(--line);
+  }
+  .side-user .avatar{width:40px;height:40px;font-size:21px}
+  .side-user-name{font-size:16px;font-weight:700;line-height:1.3}
+  .side-user-meta{font-size:16px;color:var(--ink-2);line-height:1.3}
+
+  .desk-main{flex:1;min-width:0;padding:28px;overflow:hidden}
+  .desk-grid{display:flex;gap:24px;height:100%}
+  .desk-col{flex:1 1 auto;max-width:660px;min-width:0}
+  .rail{width:300px;flex:none;display:flex;flex-direction:column;gap:16px}
+
+  .desk-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+  .desk-head h3{font-size:32px}
+  .desk-head p{font-size:16px;color:var(--ink-2);margin-top:4px}
+  .desk-add{text-align:right}
+  .desk-add .btn{font-size:17px;padding:12px 20px}
+  .desk-add p{font-size:16px;color:var(--ink-2);margin-top:8px;max-width:230px}
+  .desk-sort{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:20px 0 4px}
+  .desk-sort .select-wrap{width:320px}
+  .desk-sort select{min-height:48px;font-size:16px}
+  .desk-sort .count{font-size:16px;color:var(--ink-2)}
+
+  .desk-app .wishes{margin-top:4px}
+  .desk-app .wish{padding:12px 0;grid-template-columns:56px minmax(0,1fr) auto;gap:16px}
+  .desk-app .thumb{width:56px;height:56px}
+  .desk-app .thumb svg{width:28px;height:28px}
+  .desk-app .wish-title{font-size:17px}
+  .desk-app .wish-price{font-size:17px;margin-top:0}
+  .desk-app .wish-price .meta{font-size:16px}
+  .desk-app .priority{font-size:16px;margin-top:4px}
+  .desk-app .btn-text{font-size:16px;min-height:48px}
+
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+    padding:18px;
+  }
+  .card-title{font-size:24px;margin-bottom:12px}
+  .steps-mini{display:flex;flex-direction:column;gap:12px}
+  .steps-mini li{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.45}
+  .steps-mini .step-num{width:26px;height:26px;font-size:15px}
+  .cel{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+  .cel .avatar{width:44px;height:44px;font-size:22px}
+  .cel-name{font-size:17px;font-weight:700;line-height:1.3}
+  .cel-meta{font-size:16px;color:var(--ink-2);line-height:1.4}
+  .chip{
+    display:inline-flex;align-items:center;min-height:28px;padding:2px 10px;margin-top:8px;
+    background:var(--tint-sand);border:1px solid #E7D6A6;border-radius:999px;
+    font-size:16px;font-weight:600;
+  }
+  .card .btn{font-size:16px;min-height:48px}
+
+  .artboard-foot{
+    padding:4px 56px 30px;font-size:15px;color:var(--ink-2);
+    display:flex;justify-content:space-between;gap:24px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<!-- sprite de iconos: interno, sin recursos externos -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4.2 6h.01M4.2 12h.01M4.2 18h.01"/></g></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9.2" r="2.5"/><path d="M15.6 19.5a4.6 4.6 0 0 1 5-4.3"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 9.4a5.8 5.8 0 0 1 11.6 0c0 3.9 1.4 4.9 1.4 4.9H4.8s1.4-1 1.4-4.9Z"/><path d="M10 18a2.1 2.1 0 0 0 4 0"/></g></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.6"/><path d="M5 19.6a7 7 0 0 1 14 0"/></g></symbol>
+    <symbol id="i-users-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 10.2-2.9"/><path d="M18 9.5v5M20.5 12h-5"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5.5v13M5.5 12h13"/></g></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></g></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.4S4.6 16 4.6 11.2A4.1 4.1 0 0 1 12 8.5a4.1 4.1 0 0 1 7.4 2.7c0 4.8-7.4 9.2-7.4 9.2Z" fill="currentColor"/></symbol>
+    <symbol id="i-heart-outline" viewBox="0 0 24 24"><path d="M12 20.4S4.6 16 4.6 11.2A4.1 4.1 0 0 1 12 8.5a4.1 4.1 0 0 1 7.4 2.7c0 4.8-7.4 9.2-7.4 9.2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.8 4.6 4.6L19 7.4"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.6 10.5V8a3.4 3.4 0 0 1 6.8 0v2.5"/></g></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 11.2v5M12 8.1h.01"/></g></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.6" y="5.4" width="16.8" height="14.4" rx="2.4"/><path d="M3.6 10.2h16.8M8.2 3.4v4M15.8 3.4v4"/><path d="M8 14.4h2.4M13.6 14.4H16"/></g></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="1.8"/><path d="M3.5 13.4h17M12 9v11"/><path d="M12 9S10.6 4.6 8.3 4.6a2.2 2.2 0 0 0 0 4.4zM12 9s1.4-4.4 3.7-4.4a2.2 2.2 0 0 1 0 4.4z"/></g></symbol>
+  </defs>
+</svg>
+
+<header class="brief">
+  <div>
+    <p class="brief-kicker">Muro de Deseos · rediseño de la interfaz · dirección 01 de 3</p>
+    <h1>Clara</h1>
+    <p class="tradeoff"><strong>Compromiso:</strong> máxima legibilidad y cero ambigüedad para cualquier edad; menos emocional y muestra menos deseos por pantalla.</p>
+  </div>
+  <div class="brief-keys">
+    <h2>Claves de esta dirección</h2>
+    <ul>
+      <li><b>Una sola columna de filas.</b> Cada deseo se lee de arriba abajo, sin cuadrículas que compitan.</li>
+      <li><b>Estados en palabras claras.</b> «Lo regalas tú» o «Ya lo regala otra persona»; el color solo acompaña.</li>
+      <li><b>Títulos de 28 px y cuerpo de 18 px.</b> Bordes visibles y botones de 48 px o más.</li>
+      <li><b>Pestañas con etiqueta en el móvil.</b> Barra lateral con nombres en el escritorio.</li>
+    </ul>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ MÓVIL ============ -->
+  <section class="row" aria-labelledby="row-movil">
+    <div class="row-head">
+      <h2 id="row-movil">Móvil</h2>
+      <p>Tres pantallas a 390 × 844: bienvenida sin sesión, la lista propia de Lucía y la lista de su hermano Javier con los tres estados de reserva.</p>
+    </div>
+
+    <div class="phones">
+
+      <!-- ---------- 1. Bienvenida ---------- -->
+      <figure>
+        <figcaption class="fig-cap">
+          <b>1 · Bienvenida</b>
+          <span>Sin sesión: qué es la app y los tres pasos.</span>
+        </figcaption>
+        <div class="device">
+          <div class="statusbar" aria-hidden="true">
+            <span>9:41</span>
+            <span class="sb-icons">
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M2 16h3v4H2zM7 13h3v7H7zM12 10h3v10h-3zM17 7h3v13h-3z" fill="currentColor"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M12 18.2h.01M4.6 11.6a11 11 0 0 1 14.8 0M7.6 14.6a7 7 0 0 1 8.8 0" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><rect x="2" y="7.5" width="17" height="9" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="9.5" width="11" height="5" rx="1" fill="currentColor"/><path d="M20.8 11v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+          </div>
+
+          <div class="scroll" tabindex="0" aria-label="Pantalla de bienvenida">
+            <div class="welcome">
+              <p class="wordmark">
+                <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="7" fill="#1E5B4F"/><path d="M12 17.4S6.7 14 6.7 10.5A2.9 2.9 0 0 1 12 8.7a2.9 2.9 0 0 1 5.3 1.8c0 3.5-5.3 6.9-5.3 6.9Z" fill="#FFFFFF"/></svg>
+                Muro de Deseos
+              </p>
+
+              <h3>Regala lo que de verdad le gustaría</h3>
+              <p class="purpose">Tu lista de regalos compartida con tu familia o amigos: aquí apuntas lo que te gustaría y ellos lo reservan sin repetir.</p>
+
+              <ol class="steps">
+                <li>
+                  <span class="step-num" aria-hidden="true">1</span>
+                  <span class="step-text">Apunta lo que te gustaría recibir.</span>
+                </li>
+                <li>
+                  <span class="step-num" aria-hidden="true">2</span>
+                  <span class="step-text">Compártelo con tu familia o amigos en un grupo.</span>
+                </li>
+                <li>
+                  <span class="step-num" aria-hidden="true">3</span>
+                  <span class="step-text">Ellos reservan un regalo y nadie lo repite.</span>
+                </li>
+              </ol>
+
+              <div class="welcome-cta">
+                <button type="button" class="btn btn-primary btn-block">Crear mi lista</button>
+                <button type="button" class="btn btn-secondary btn-block">Ya tengo cuenta · Iniciar sesión</button>
+              </div>
+
+              <button type="button" class="textlink">¿Te han invitado? Únete con tu código</button>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <!-- ---------- 2. Mi lista ---------- -->
+      <figure>
+        <figcaption class="fig-cap">
+          <b>2 · Mi lista</b>
+          <span>Lucía añade, ordena y edita sus deseos.</span>
+        </figcaption>
+        <div class="device">
+          <div class="statusbar" aria-hidden="true">
+            <span>9:41</span>
+            <span class="sb-icons">
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M2 16h3v4H2zM7 13h3v7H7zM12 10h3v10h-3zM17 7h3v13h-3z" fill="currentColor"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M12 18.2h.01M4.6 11.6a11 11 0 0 1 14.8 0M7.6 14.6a7 7 0 0 1 8.8 0" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><rect x="2" y="7.5" width="17" height="9" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="9.5" width="11" height="5" rx="1" fill="currentColor"/><path d="M20.8 11v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+          </div>
+
+          <div class="scroll" tabindex="0" aria-label="Contenido de la pantalla Mi lista">
+            <div class="appbar">
+              <h3>Mi lista</h3>
+              <p>Lucía Martín · 5 deseos</p>
+            </div>
+
+            <div class="screen-body">
+              <button type="button" class="btn btn-primary btn-block">
+                <svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>
+                Añadir un deseo
+              </button>
+              <p class="hint">Pega el enlace de la tienda o escríbelo tú</p>
+
+              <div class="sortbar">
+                <label class="sr-only" for="sort-movil">Ordenar la lista</label>
+                <div class="select-wrap">
+                  <select id="sort-movil">
+                    <option selected>Ordenar: Más ilusión primero</option>
+                    <option>Ordenar: Precio, de menor a mayor</option>
+                    <option>Ordenar: Precio, de mayor a menor</option>
+                    <option>Ordenar: Los últimos añadidos</option>
+                  </select>
+                  <svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+                </div>
+              </div>
+
+              <ul class="wishes">
+
+                <li>
+                  <article class="wish">
+                    <div class="thumb tone-green" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 15v-3a7.5 7.5 0 0 1 15 0v3"/><rect x="2.4" y="13.9" width="4.3" height="7" rx="2.15"/><rect x="17.3" y="13.9" width="4.3" height="7" rx="2.15"/></g></svg>
+                    </div>
+                    <div class="wish-main">
+                      <p class="wish-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                      <div class="wish-line">
+                        <p class="wish-price">349,00 € <span class="meta">· de amazon.es</span></p>
+                        <button type="button" class="btn-text">Editar</button>
+                      </div>
+                      <p class="priority">
+                        <span class="meter" aria-hidden="true">
+                          <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg>
+                        </span>
+                        Me hace mucha ilusión
+                      </p>
+                    </div>
+                  </article>
+                </li>
+
+                <li>
+                  <article class="wish">
+                    <div class="thumb tone-sand" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9.6 3.6h4.8l-1.1 3.9c2 1.4 3.1 3.3 3.1 5.7 0 4-2 7.2-4.4 7.2s-4.4-3.2-4.4-7.2c0-2.4 1.1-4.3 3.1-5.7z"/><path d="M10.1 12.8h3.8"/></g></svg>
+                    </div>
+                    <div class="wish-main">
+                      <p class="wish-title">Clases de cerámica (bono de 4 sesiones)</p>
+                      <div class="wish-line">
+                        <p class="wish-price">Sin precio</p>
+                        <button type="button" class="btn-text">Editar</button>
+                      </div>
+                      <p class="priority">
+                        <span class="meter" aria-hidden="true">
+                          <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg>
+                        </span>
+                        Me hace mucha ilusión
+                      </p>
+                    </div>
+                  </article>
+                </li>
+
+                <li>
+                  <article class="wish">
+                    <div class="thumb tone-clay" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4.4 5.1A2.1 2.1 0 0 1 6.5 3h12.6v18H6.5a2.1 2.1 0 0 1-2.1-2.1z"/><path d="M8.6 3v18"/></g></svg>
+                    </div>
+                    <div class="wish-main">
+                      <p class="wish-title">Libro «El infinito en un junco»</p>
+                      <div class="wish-line">
+                        <p class="wish-price">21,90 €</p>
+                        <button type="button" class="btn-text">Editar</button>
+                      </div>
+                      <p class="priority">
+                        <span class="meter" aria-hidden="true">
+                          <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                        </span>
+                        Me gustaría
+                      </p>
+                    </div>
+                  </article>
+                </li>
+
+                <li>
+                  <article class="wish">
+                    <div class="thumb tone-green" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 16.4h13.9c2.2 0 5.3.9 5.3 3H2.4z"/><path d="M6 16.4c1.7-.4 2.9-1.2 3.9-2.4l2 1.4 1.9-1.1 1.4 1.4"/><path d="M2.4 16.4v-2.2"/></g></svg>
+                    </div>
+                    <div class="wish-main">
+                      <p class="wish-title">Zapatillas de running Asics Gel-Nimbus</p>
+                      <div class="wish-line">
+                        <p class="wish-price">120,00 € <span class="meta">· Talla 39</span></p>
+                        <button type="button" class="btn-text">Editar</button>
+                      </div>
+                      <p class="priority">
+                        <span class="meter" aria-hidden="true">
+                          <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                        </span>
+                        Me gustaría
+                      </p>
+                    </div>
+                  </article>
+                </li>
+
+                <li>
+                  <article class="wish">
+                    <div class="thumb tone-sand" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.4h10.6v7.1a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14.6 9.4h1.8a2.6 2.6 0 0 1 0 5.2h-1.8"/><path d="M7 11.6h4.6"/></g></svg>
+                    </div>
+                    <div class="wish-main">
+                      <p class="wish-title">Taza de cerámica artesanal</p>
+                      <div class="wish-line">
+                        <p class="wish-price">18,50 €</p>
+                        <button type="button" class="btn-text">Editar</button>
+                      </div>
+                      <p class="priority">
+                        <span class="meter" aria-hidden="true">
+                          <svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                        </span>
+                        Un detalle
+                      </p>
+                    </div>
+                  </article>
+                </li>
+
+              </ul>
+            </div>
+          </div>
+
+          <nav class="tabbar" aria-label="Navegación principal">
+            <button type="button" class="tab" aria-current="page">
+              <svg class="ico" aria-hidden="true"><use href="#i-list"/></svg>
+              <span class="tab-label">Mi lista</span>
+            </button>
+            <button type="button" class="tab">
+              <svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>
+              <span class="tab-label">Grupos</span>
+            </button>
+            <button type="button" class="tab" aria-label="Avisos, 2 sin leer">
+              <svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>
+              <span class="tab-label" aria-hidden="true">Avisos <span class="badge">2</span></span>
+            </button>
+            <button type="button" class="tab">
+              <svg class="ico" aria-hidden="true"><use href="#i-user"/></svg>
+              <span class="tab-label">Perfil</span>
+            </button>
+          </nav>
+        </div>
+      </figure>
+
+      <!-- ---------- 3. Lista de Javier ---------- -->
+      <figure>
+        <figcaption class="fig-cap">
+          <b>3 · Lista de Javier</b>
+          <span>Los tres estados: libre, lo regalas tú y ya lo regala otra persona.</span>
+        </figcaption>
+        <div class="device">
+          <div class="statusbar" aria-hidden="true">
+            <span>9:41</span>
+            <span class="sb-icons">
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M2 16h3v4H2zM7 13h3v7H7zM12 10h3v10h-3zM17 7h3v13h-3z" fill="currentColor"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M12 18.2h.01M4.6 11.6a11 11 0 0 1 14.8 0M7.6 14.6a7 7 0 0 1 8.8 0" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>
+              <svg class="ico ico-sm" viewBox="0 0 24 24"><rect x="2" y="7.5" width="17" height="9" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="9.5" width="11" height="5" rx="1" fill="currentColor"/><path d="M20.8 11v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+          </div>
+
+          <div class="scroll" tabindex="0" aria-label="Contenido de la lista de Javier Martín">
+            <div class="appbar">
+              <button type="button" class="btn-back">
+                <span aria-hidden="true">←</span> Grupos
+              </button>
+              <h3>Lista de Javier</h3>
+            </div>
+
+            <div class="screen-body">
+
+              <div class="person">
+                <span class="avatar" aria-hidden="true">🎸</span>
+                <div>
+                  <h3 class="person-name">Javier Martín</h3>
+                  <p class="person-meta">Tu hermano · Familia Martín</p>
+                  <p class="person-bday">
+                    <svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+                    <span>Cumpleaños: 12 de diciembre · faltan 16 días</span>
+                  </p>
+                </div>
+              </div>
+
+              <p class="helper">
+                <svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>
+                <span>Cuando reservas un regalo, el resto del grupo lo ve como reservado y nadie lo repite.</span>
+              </p>
+
+              <p class="list-label">Regalos de Javier</p>
+
+              <article class="wish-card">
+                <div class="wish-card-head">
+                  <div class="thumb tone-clay" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9.5 3h5l-1 4.5 1 13h-5l1-13z"/><path d="M14.6 12.6h2.2a2.4 2.4 0 0 1 0 4.8h-2.4"/><path d="M9 20.5h6"/></g></svg>
+                  </div>
+                  <div class="wish-main">
+                    <p class="wish-title">Cafetera italiana Bialetti 6 tazas</p>
+                    <p class="wish-price">34,95 €</p>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-outline btn-block">Reservar este regalo</button>
+              </article>
+
+              <article class="wish-card is-mine">
+                <div class="wish-card-head">
+                  <div class="thumb tone-green" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9.6 3.6 6.1 5.3 3.3 9l2.5 1.6 1.2-1v10.8h10V9.6l1.2 1L20.7 9l-2.8-3.7-3.5-1.7-1.3 2.2h-2.4z"/></g></svg>
+                  </div>
+                  <div class="wish-main">
+                    <p class="wish-title">Jersey de lana azul marino, talla L</p>
+                    <p class="wish-price">59,00 €</p>
+                  </div>
+                </div>
+                <p class="badge-state is-mine">
+                  <svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>
+                  Lo regalas tú
+                </p>
+                <button type="button" class="btn btn-secondary btn-block">Cancelar reserva</button>
+              </article>
+
+              <article class="wish-card is-taken">
+                <div class="wish-card-head">
+                  <div class="thumb tone-sand" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3.4 6.6h17.2v3.2a2.3 2.3 0 0 0 0 4.6v3.2H3.4v-3.2a2.3 2.3 0 0 0 0-4.6z"/><path d="M9.2 8.6v9" stroke-dasharray="2 2.4"/></g></svg>
+                  </div>
+                  <div class="wish-main">
+                    <p class="wish-title">Entradas para Vetusta Morla</p>
+                    <p class="wish-price">45,00 €</p>
+                  </div>
+                </div>
+                <p class="badge-state is-taken">
+                  <svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg>
+                  Ya lo regala otra persona
+                </p>
+              </article>
+
+              <article class="wish-card">
+                <div class="wish-card-head">
+                  <div class="thumb tone-clay" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="3.4"/><g fill="currentColor" stroke="none"><circle cx="9" cy="9" r="1.3"/><circle cx="15" cy="9" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="9" cy="15" r="1.3"/><circle cx="15" cy="15" r="1.3"/></g></g></svg>
+                  </div>
+                  <div class="wish-main">
+                    <p class="wish-title">Juego de mesa Catan</p>
+                    <p class="wish-price">42,00 €</p>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-outline btn-block">Reservar este regalo</button>
+              </article>
+            </div>
+          </div>
+
+          <nav class="tabbar" aria-label="Navegación principal">
+            <button type="button" class="tab">
+              <svg class="ico" aria-hidden="true"><use href="#i-list"/></svg>
+              <span class="tab-label">Mi lista</span>
+            </button>
+            <button type="button" class="tab" aria-current="page">
+              <svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>
+              <span class="tab-label">Grupos</span>
+            </button>
+            <button type="button" class="tab" aria-label="Avisos, 2 sin leer">
+              <svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>
+              <span class="tab-label" aria-hidden="true">Avisos <span class="badge">2</span></span>
+            </button>
+            <button type="button" class="tab">
+              <svg class="ico" aria-hidden="true"><use href="#i-user"/></svg>
+              <span class="tab-label">Perfil</span>
+            </button>
+          </nav>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ============ ESCRITORIO ============ -->
+  <section class="row row-end" aria-labelledby="row-desktop">
+    <div class="row-head">
+      <h2 id="row-desktop">Navegador (escritorio)</h2>
+      <p>La misma lista con barra lateral de 240 px, columna de contenido de 660 px y una columna de ayuda de 300 px con las próximas celebraciones.</p>
+    </div>
+
+    <figure>
+      <figcaption class="fig-cap">
+        <b>Mi lista en escritorio</b>
+        <span>Ventana de 1280 × 800: navegación a la izquierda, filas iguales a las del móvil y ayuda contextual a la derecha.</span>
+      </figcaption>
+
+      <div class="browser">
+        <div class="chrome">
+          <div class="chrome-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p class="address">murodeseos — Mi lista</p>
+        </div>
+
+        <div class="desk-app">
+
+          <aside class="sidebar">
+            <p class="side-wordmark">
+              <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="7" fill="#1E5B4F"/><path d="M12 17.4S6.7 14 6.7 10.5A2.9 2.9 0 0 1 12 8.7a2.9 2.9 0 0 1 5.3 1.8c0 3.5-5.3 6.9-5.3 6.9Z" fill="#FFFFFF"/></svg>
+              Muro de Deseos
+            </p>
+
+            <nav class="side-nav" aria-label="Navegación principal">
+              <button type="button" class="side-item" aria-current="page">
+                <svg class="ico" aria-hidden="true"><use href="#i-list"/></svg>
+                <span>Mi lista</span>
+              </button>
+              <button type="button" class="side-item">
+                <svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>
+                <span>Grupos</span>
+              </button>
+              <button type="button" class="side-item" aria-label="Avisos, 2 sin leer">
+                <svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg>
+                <span aria-hidden="true">Avisos</span>
+                <span class="badge" aria-hidden="true">2</span>
+              </button>
+              <button type="button" class="side-item">
+                <svg class="ico" aria-hidden="true"><use href="#i-user"/></svg>
+                <span>Perfil</span>
+              </button>
+              <div class="side-sep" role="presentation"></div>
+              <button type="button" class="side-item">
+                <svg class="ico" aria-hidden="true"><use href="#i-users-plus"/></svg>
+                <span>Unirse a un grupo</span>
+              </button>
+            </nav>
+
+            <div class="side-user">
+              <span class="avatar" aria-hidden="true">🌻</span>
+              <div>
+                <p class="side-user-name">Lucía Martín</p>
+                <p class="side-user-meta">2 grupos</p>
+              </div>
+            </div>
+          </aside>
+
+          <main class="desk-main">
+            <div class="desk-grid">
+
+              <div class="desk-col">
+                <div class="desk-head">
+                  <div>
+                    <h3>Mi lista</h3>
+                    <p>Lucía Martín · 5 deseos · 2 grupos</p>
+                  </div>
+                  <div class="desk-add">
+                    <button type="button" class="btn btn-primary">
+                      <svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>
+                      Añadir un deseo
+                    </button>
+                    <p>Pega el enlace de la tienda o escríbelo tú</p>
+                  </div>
+                </div>
+
+                <div class="desk-sort">
+                  <label class="sr-only" for="sort-desk">Ordenar la lista</label>
+                  <div class="select-wrap">
+                    <select id="sort-desk">
+                      <option selected>Ordenar: Más ilusión primero</option>
+                      <option>Ordenar: Precio, de menor a mayor</option>
+                      <option>Ordenar: Precio, de mayor a menor</option>
+                      <option>Ordenar: Los últimos añadidos</option>
+                    </select>
+                    <svg class="chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+                  </div>
+                </div>
+
+                <ul class="wishes">
+
+                  <li>
+                    <article class="wish">
+                      <div class="thumb tone-green" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 15v-3a7.5 7.5 0 0 1 15 0v3"/><rect x="2.4" y="13.9" width="4.3" height="7" rx="2.15"/><rect x="17.3" y="13.9" width="4.3" height="7" rx="2.15"/></g></svg>
+                      </div>
+                      <div class="wish-main">
+                        <p class="wish-title">Auriculares inalámbricos Sony WH-1000XM5</p>
+                        <p class="wish-price">349,00 € <span class="meta">· de amazon.es</span></p>
+                        <p class="priority">
+                          <span class="meter" aria-hidden="true">
+                            <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg>
+                          </span>
+                          Me hace mucha ilusión
+                        </p>
+                      </div>
+                      <div class="wish-actions"><button type="button" class="btn-text">Editar</button></div>
+                    </article>
+                  </li>
+
+                  <li>
+                    <article class="wish">
+                      <div class="thumb tone-sand" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9.6 3.6h4.8l-1.1 3.9c2 1.4 3.1 3.3 3.1 5.7 0 4-2 7.2-4.4 7.2s-4.4-3.2-4.4-7.2c0-2.4 1.1-4.3 3.1-5.7z"/><path d="M10.1 12.8h3.8"/></g></svg>
+                      </div>
+                      <div class="wish-main">
+                        <p class="wish-title">Clases de cerámica (bono de 4 sesiones)</p>
+                        <p class="wish-price">Sin precio</p>
+                        <p class="priority">
+                          <span class="meter" aria-hidden="true">
+                            <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg>
+                          </span>
+                          Me hace mucha ilusión
+                        </p>
+                      </div>
+                      <div class="wish-actions"><button type="button" class="btn-text">Editar</button></div>
+                    </article>
+                  </li>
+
+                  <li>
+                    <article class="wish">
+                      <div class="thumb tone-clay" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4.4 5.1A2.1 2.1 0 0 1 6.5 3h12.6v18H6.5a2.1 2.1 0 0 1-2.1-2.1z"/><path d="M8.6 3v18"/></g></svg>
+                      </div>
+                      <div class="wish-main">
+                        <p class="wish-title">Libro «El infinito en un junco»</p>
+                        <p class="wish-price">21,90 €</p>
+                        <p class="priority">
+                          <span class="meter" aria-hidden="true">
+                            <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                          </span>
+                          Me gustaría
+                        </p>
+                      </div>
+                      <div class="wish-actions"><button type="button" class="btn-text">Editar</button></div>
+                    </article>
+                  </li>
+
+                  <li>
+                    <article class="wish">
+                      <div class="thumb tone-green" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 16.4h13.9c2.2 0 5.3.9 5.3 3H2.4z"/><path d="M6 16.4c1.7-.4 2.9-1.2 3.9-2.4l2 1.4 1.9-1.1 1.4 1.4"/><path d="M2.4 16.4v-2.2"/></g></svg>
+                      </div>
+                      <div class="wish-main">
+                        <p class="wish-title">Zapatillas de running Asics Gel-Nimbus</p>
+                        <p class="wish-price">120,00 € <span class="meta">· Talla 39</span></p>
+                        <p class="priority">
+                          <span class="meter" aria-hidden="true">
+                            <svg class="heart"><use href="#i-heart"/></svg><svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                          </span>
+                          Me gustaría
+                        </p>
+                      </div>
+                      <div class="wish-actions"><button type="button" class="btn-text">Editar</button></div>
+                    </article>
+                  </li>
+
+                  <li>
+                    <article class="wish">
+                      <div class="thumb tone-sand" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.4h10.6v7.1a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14.6 9.4h1.8a2.6 2.6 0 0 1 0 5.2h-1.8"/><path d="M7 11.6h4.6"/></g></svg>
+                      </div>
+                      <div class="wish-main">
+                        <p class="wish-title">Taza de cerámica artesanal</p>
+                        <p class="wish-price">18,50 €</p>
+                        <p class="priority">
+                          <span class="meter" aria-hidden="true">
+                            <svg class="heart"><use href="#i-heart"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg><svg class="heart-off"><use href="#i-heart-outline"/></svg>
+                          </span>
+                          Un detalle
+                        </p>
+                      </div>
+                      <div class="wish-actions"><button type="button" class="btn-text">Editar</button></div>
+                    </article>
+                  </li>
+
+                </ul>
+              </div>
+
+              <aside class="rail" aria-label="Ayuda y próximas celebraciones">
+                <section class="card" aria-labelledby="how-title">
+                  <h3 class="card-title" id="how-title">Cómo funciona</h3>
+                  <ol class="steps-mini">
+                    <li><span class="step-num" aria-hidden="true">1</span><span>Apunta lo que te gustaría recibir.</span></li>
+                    <li><span class="step-num" aria-hidden="true">2</span><span>Compártelo con tu familia o amigos en un grupo.</span></li>
+                    <li><span class="step-num" aria-hidden="true">3</span><span>Ellos reservan un regalo y nadie lo repite.</span></li>
+                  </ol>
+                </section>
+
+                <section class="card" aria-labelledby="cel-title">
+                  <h3 class="card-title" id="cel-title">Próximas celebraciones</h3>
+                  <div class="cel">
+                    <span class="avatar" aria-hidden="true">🎸</span>
+                    <div>
+                      <p class="cel-name">Javier Martín</p>
+                      <p class="cel-meta">Cumpleaños · 12 de diciembre</p>
+                      <p><span class="chip">Faltan 16 días</span></p>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-block">Ver su lista</button>
+                </section>
+              </aside>
+
+            </div>
+          </main>
+
+        </div>
+      </div>
+    </figure>
+  </section>
+
+</main>
+
+<footer class="artboard-foot">
+  <span>Contenido de ejemplo para revisar el diseño: las personas, los grupos y los regalos son inventados.</span>
+  <span>Dirección 01 · Clara</span>
+</footer>
+
+</body>
+</html>
