@@ -6,6 +6,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
 import { getGithubPagesBasePath } from '@/lib/site-url';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import { BootScreen } from '@/components/BootScreen';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { TourTargetProvider } from '@/components/tour/TourTargetProvider';
 import { TourHost } from '@/components/tour/TourHost';
 import './global.css';
@@ -120,37 +122,46 @@ export default function RootLayout() {
         // arranque en frío— no se pintaba absolutamente nada, y en un móvil con el
         // sistema en modo oscuro eso es una **pantalla negra sin explicación**,
         // indistinguible de una app colgada: el propietario reportó exactamente eso.
-        // Se pinta el fondo de la marca, que es lo que se sigue viendo si las
-        // fuentes no llegan nunca.
-        return <View style={{ flex: 1, backgroundColor: SURFACE_BG }} />;
+        //
+        // Desde T2a se pinta la pantalla de arranque (12 · P1), la misma que enseña la portada
+        // mientras comprueba la sesión: dice qué está pasando y que la primera vez tarda unos
+        // segundos. Su texto lleva la pila del sistema de respaldo, así que se lee antes de que
+        // Nunito esté lista.
+        return <BootScreen />;
     }
 
     return (
         <SafeAreaProvider>
-            {/* Un solo registro de objetivos para toda la app (S7): las pantallas dan de alta lo
-                suyo con `useTourTarget` y el overlay mide desde el mismo sitio. Sin esto, cada
-                pantalla tendría su propio registro y el tour no vería nada.
+            {/* La banda de «Sin conexión» (12 · P4) se monta UNA vez aquí y va en el flujo de la
+                columna, no flotando: así empuja el contenido en vez de taparlo y no necesita
+                z-index ni guardias de `pointer-events`. Con conexión no pinta nada. */}
+            <View style={{ flex: 1 }}>
+                <OfflineBanner />
+                {/* Un solo registro de objetivos para toda la app (S7): las pantallas dan de alta lo
+                    suyo con `useTourTarget` y el overlay mide desde el mismo sitio. Sin esto, cada
+                    pantalla tendría su propio registro y el tour no vería nada.
 
-                El tour (T6) va **fuera** del `Stack` y una sola vez: así sobrevive a los cambios de
-                ruta —dos paradas viven en sub-rutas— y la portada puede preguntarle si está en
-                marcha antes de enseñar los datos de demostración. */}
-            <TourTargetProvider>
-                <TourHost>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                            contentStyle: { backgroundColor: SURFACE_BG },
-                        }}
-                    >
-                        <Stack.Screen
-                            name="index"
-                            options={{
-                                gestureEnabled: false,
+                    El tour (T6) va **fuera** del `Stack` y una sola vez: así sobrevive a los cambios de
+                    ruta —dos paradas viven en sub-rutas— y la portada puede preguntarle si está en
+                    marcha antes de enseñar los datos de demostración. */}
+                <TourTargetProvider>
+                    <TourHost>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                contentStyle: { backgroundColor: SURFACE_BG },
                             }}
-                        />
-                    </Stack>
-                </TourHost>
-            </TourTargetProvider>
+                        >
+                            <Stack.Screen
+                                name="index"
+                                options={{
+                                    gestureEnabled: false,
+                                }}
+                            />
+                        </Stack>
+                    </TourHost>
+                </TourTargetProvider>
+            </View>
         </SafeAreaProvider>
     );
 }
