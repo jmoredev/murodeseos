@@ -45,9 +45,11 @@ test.describe('Página de Inicio / Redirección de Login', () => {
         const loginLink = page.getByTestId('login-link');
         await loginLink.evaluate((el) => (el as HTMLElement).click());
 
-        await expect(page.getByTestId('email-input')).toBeVisible({ timeout: 15000 })
+        // El registro sigue montado debajo en la pila y también tiene `email-input`:
+        // se comprueba con lo que solo existe en el acceso.
         await expect(page.getByText('Entra para ver tu lista y la de tu gente.')).toBeVisible({
             timeout: 15000,
         })
+        await expect(page.getByTestId('login-button')).toBeVisible()
     })
 })
