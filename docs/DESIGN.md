@@ -83,6 +83,16 @@ Traditional drop shadows are often messy. This system uses **Ambient Light Physi
 ### Navigation (The Floating Dock)
 * **Style:** A centered, floating pill using Glassmorphism. `surface` at 80% opacity, `xl` corner radius, and a soft ambient shadow. Icons should be `outlined` with a `2px` stroke weight.
 
+### Estados globales (T2a, artboard 12)
+Una pieza por patrón; cambian el color y el texto, nunca la forma (`design/rediseno-muro/12-estados-globales.html`).
+* **Arranque (`components/BootScreen.tsx`)**: nombre, qué es la app y «Preparando tu muro. La primera vez suele tardar unos segundos.», con un `role="status"` que anuncia el arranque. Sustituye al fondo liso mientras cargan las fuentes y al «Cargando...» de la portada. Su texto lleva la pila del sistema de respaldo: existe justo mientras Nunito carga.
+* **Esqueleto (`components/ui/Skeleton.tsx`)**: `Skeleton`, `SkeletonRow` y `SkeletonCard` con las formas del artboard (línea 15, avatar 48, tile 56, pastilla 28, hero 186). Color del token `border` y `animate-pulse`; es **decorativo** (`aria-hidden`) y el «cargando» lo anuncia la pantalla una vez. En T2a no se conecta a ninguna pestaña (S9).
+* **Sin conexión (`components/OfflineBanner.tsx` + `lib/use-online.ts`)**: banda con `role="alert"`, icono, título «Sin conexión», detalle honesto y «Reintentar». Montada una vez en `app/_layout.tsx`, en el flujo de la columna (empuja, no tapa). Sin conexión no se promete nada guardado (S8): el detalle habla sólo de la conexión. En nativo el hook es inerte (siempre «en línea»).
+* **Error y 404 (`components/AppErrorBoundary.tsx`, `app/+not-found.tsx`)**: «Algo ha ido mal» dice que lo guardado sigue guardado y ofrece «Reintentar» + «Recargar la página»; la 404 dice qué pasa, ofrece «Ir a Inicio» y «Abrir Mi lista» (`/?tab=wishlist`) y explica lo de los enlaces de invitación.
+* **Brindis (`components/Toast.tsx`)**: burbuja de tinta (`bg-ink`, `--on-ink`), acción única («Deshacer»/«Reintentar») que **sustituye** a la ×, dos líneas en móvil cuando hay acción y **el de error no se va solo**. Sin acción se cierra a los 3 s; con acción, a los 10 s (propuesta de §13). La API es la misma para los cuatro llamadores actuales.
+* **Hoja y ventana (`components/ConfirmModal.tsx`)**: hoja inferior con asa y velo al 52 % en móvil; ventana centrada de 520 px y velo al 30 % en escritorio. Primero «Cancelar», después la acción; destructiva en `--danger`. La copy la sigue decidiendo cada pantalla (S9).
+* **Novedades (`components/WhatsNewModal.tsx`)**: cabecera sobre `--primary-soft` con destello en tile blanco, píldora `v<release>`, subtítulo «Lo que ha cambiado desde la última vez que entraste.» y etiqueta «En esta versión». El enlace al historial llega en T8.
+
 ---
 
 ## 6. Do's and Don'ts

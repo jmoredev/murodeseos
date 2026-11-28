@@ -18,6 +18,11 @@ test.describe('Novedades (What\'s New Modal)', () => {
         // Verificar que el modal aparece
         await expect(page.getByRole('dialog')).toBeVisible();
         await expect(page.getByText('Novedades')).toBeVisible();
+        // La cabecera del artboard 12 · P12: subtítulo y etiqueta de la lista.
+        await expect(
+            page.getByText('Lo que ha cambiado desde la última vez que entraste.'),
+        ).toBeVisible();
+        await expect(page.getByText('En esta versión')).toBeVisible();
         expect(latest).not.toBeNull();
         await expect(page.getByText(`v${latest?.release}`)).toBeVisible();
     });

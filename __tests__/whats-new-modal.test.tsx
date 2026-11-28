@@ -75,4 +75,20 @@ describe('WhatsNewModal', () => {
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
+
+    it('la cabecera es la del artboard: subtítulo nuevo y etiqueta «En esta versión»', () => {
+        render(<WhatsNewModal />);
+
+        const dialogo = screen.getByRole('dialog');
+        expect(dialogo).toHaveTextContent('Lo que ha cambiado desde la última vez que entraste.');
+        expect(dialogo).toHaveTextContent('En esta versión');
+        // La lista sigue siendo la de `lib/updates.ts`, sin recortar.
+        expect(dialogo).toHaveTextContent(latest?.changes[0] ?? '');
+    });
+
+    it('S9: todavía NO ofrece «Ver todo el historial en Avisos» (eso es T8)', () => {
+        render(<WhatsNewModal />);
+
+        expect(screen.queryByText(/Ver todo el historial/i)).not.toBeInTheDocument();
+    });
 });

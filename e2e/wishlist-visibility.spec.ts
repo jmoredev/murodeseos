@@ -98,7 +98,7 @@ test.describe('Visibilidad de Deseos por Grupo', () => {
         };
 
         await loginAsSecondaryUser();
-        await expect(page.locator('text=Cargando...')).not.toBeVisible({ timeout: 15000 });
+        await expect(page.getByText(/Cargando/i)).not.toBeVisible({ timeout: 15000 });
 
         // Manejar posible redirección a /profile/setup (común en primer login o pérdida de estado)
         if (page.url().includes('/profile/setup')) {
