@@ -1,130 +1,286 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import LoginPage from '@/app/(auth)/login/index'
-import { supabase } from '@/lib/supabase'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import LoginPage from '@/app/(auth)/login/index';
+import { supabase } from '@/lib/supabase';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { setViewportWidth } from './auth/viewport';
 
-// Mock de Suspense para evitar errores en tests
-vi.mock('react', async () => {
-    const actual = await vi.importActual('react')
-    return {
-        ...actual as any,
-        Suspense: ({ children }: { children: React.ReactNode }) => children,
-    }
-})
+// El mock global de expo-router crea un router nuevo en cada llamada; aquí se
+// sustituye por uno cuyas llamadas se pueden observar (y por unos parámetros de
+// URL que cada prueba puede fijar).
+const routerMocks = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }));
+const searchParams = vi.hoisted(() => ({ current: {} as Record<string, string> }));
 
+vi.mock('expo-router', () => ({
+    Link: ({ children }: any) => children,
+    useRouter: () => ({
+        push: routerMocks.push,
+        replace: routerMocks.replace,
+        back: routerMocks.back,
+        setParams: vi.fn(),
+    }),
+    useFocusEffect: vi.fn(),
+    useSegments: () => [],
+    usePathname: () => '/login',
+    useLocalSearchParams: () => searchParams.current,
+    useGlobalSearchParams: () => searchParams.current,
+}));
 
-vi.mock('next/link', () => {
-    const MockLink = ({ children, href }: any) => {
-        return <a href={href}>{children}</a>;
-    };
-    return MockLink;
-})
+const anchoOriginal = Object.getOwnPropertyDescriptor(window, 'innerWidth');
 
+const CREDENCIALES_OK = {
+    data: { user: { id: 'u1', email: 'lucia.martin@gmail.com' } },
+    error: null,
+};
 
-describe('LoginPage', () => {
-    it('renders login form', () => {
-        render(<LoginPage />)
+/** Rellena los dos campos con datos válidos. */
+function rellenar(email = 'lucia.martin@gmail.com', password = 'Muro2026lucia') {
+    fireEvent.change(screen.getByTestId('email-input'), { target: { value: email } });
+    fireEvent.change(screen.getByTestId('password-input'), { target: { value: password } });
+}
 
-        // Verificar que los elementos principales están presentes
-        expect(screen.getByText('Bienvenido de nuevo')).toBeInTheDocument()
-        expect(screen.getByText('Correo electrónico')).toBeInTheDocument()
-        expect(screen.getByText('Contraseña')).toBeInTheDocument()
-        expect(screen.getByText('Iniciar sesión')).toBeInTheDocument()
-    })
+beforeEach(() => {
+    vi.clearAllMocks();
+    searchParams.current = {};
+    // El alta de perfil se resuelve como «sin nombre» para poder observar la
+    // navegación de un acceso correcto: el resto de pruebas no llega ahí.
+    (supabase.auth as any).refreshSession = vi.fn(async () => ({ data: {}, error: null }));
+    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue(CREDENCIALES_OK as any);
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: null }, error: null } as any);
+});
 
-    it('shows link to signup page', () => {
-        render(<LoginPage />)
+afterEach(() => {
+    if (anchoOriginal) Object.defineProperty(window, 'innerWidth', anchoOriginal);
+});
 
-        // El componente tiene un Pressable/Text con el texto "Regístrate"
-        expect(screen.getByText('Regístrate')).toBeInTheDocument()
-    })
-})
+describe('acceso · iniciar sesión (11 · P1)', () => {
+    it('en el móvil: «Volver», la marca, el título y el pie con «Crear mi cuenta»', () => {
+        setViewportWidth(390);
 
-describe('LoginPage — recuperación de contraseña', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-        vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValue({ data: {}, error: null } as any)
-    })
+        render(<LoginPage />);
 
-    it('ofrece el enlace de recuperación sin revelar si la cuenta existe', async () => {
-        render(<LoginPage />)
+        expect(screen.getByText('Volver')).toBeInTheDocument();
+        expect(screen.getByText('Listas de deseos compartidas')).toBeInTheDocument();
+        expect(screen.getByText('Entra para ver tu lista y la de tu gente.')).toBeInTheDocument();
+        expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
+        expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+        expect(screen.getByTestId('login-button')).toHaveTextContent('Iniciar sesión');
+        expect(screen.getByText('¿No tienes cuenta?')).toBeInTheDocument();
+        expect(screen.getByTestId('register-link')).toHaveTextContent('Crear mi cuenta');
+        expect(
+            screen.getByText('Tus deseos y los de tu familia siguen donde los dejaste.'),
+        ).toBeInTheDocument();
+    });
 
-        fireEvent.click(screen.getByTestId('forgot-password-link'))
-        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+    it('en el escritorio reparte explicación y formulario en dos columnas', () => {
+        setViewportWidth(1280);
 
-        await waitFor(() => {
-            expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-                'alguien@ejemplo.com',
-                expect.objectContaining({ redirectTo: expect.stringMatching(/\/reset-password$/) }),
-            )
-        })
+        render(<LoginPage />);
 
-        expect(await screen.findByTestId('recovery-sent-message')).toBeInTheDocument()
-    })
+        expect(
+            screen.getByText('Regalos sin repetir para la gente que quieres'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText('Apunta lo que te gustaría recibir.'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText('Compártelo con tu familia o amigos en un grupo.'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Ellos reservan un regalo y nadie lo repite.')).toBeInTheDocument();
+        expect(screen.getByText('¿Primera vez aquí?')).toBeInTheDocument();
+        expect(screen.getByTestId('email-input')).toBeInTheDocument();
+        expect(screen.getByTestId('login-button')).toBeInTheDocument();
+        expect(
+            screen.getByText('Tus deseos y los de tu familia siguen donde los dejaste.'),
+        ).toBeInTheDocument();
+    });
 
-    it('no pide el enlace con un correo inválido', () => {
-        render(<LoginPage />)
+    it('lleva a «Crear mi cuenta» y a «¿Has olvidado tu contraseña?»', () => {
+        setViewportWidth(390);
 
-        fireEvent.click(screen.getByTestId('forgot-password-link'))
-        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'no-es-un-correo' } })
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        render(<LoginPage />);
 
-        expect(supabase.auth.resetPasswordForEmail).not.toHaveBeenCalled()
-        expect(screen.getByText('Por favor, introduce un correo electrónico válido')).toBeInTheDocument()
-    })
+        fireEvent.click(screen.getByTestId('register-link'));
+        expect(routerMocks.push).toHaveBeenCalledWith('/signup');
 
-    it('avisa si el envío lanza y libera el botón', async () => {
-        vi.mocked(supabase.auth.resetPasswordForEmail).mockRejectedValueOnce(new Error('sin red'))
+        fireEvent.click(screen.getByTestId('forgot-password-link'));
+        expect(routerMocks.push).toHaveBeenCalledWith('/forgot-password');
+    });
 
-        render(<LoginPage />)
+    it('«Volver» regresa a la portada', () => {
+        setViewportWidth(390);
 
-        fireEvent.click(screen.getByTestId('forgot-password-link'))
-        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        render(<LoginPage />);
 
-        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('conexión')
-        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
+        fireEvent.click(screen.getByTestId('back-link'));
 
-        // El botón vuelve a responder: un fallo lanzado no lo deja bloqueado. Se espera
-        // a que la etiqueta vuelva a la normalidad antes de pulsar: el error y la
-        // liberación del botón pueden llegar en dos renders distintos, y pulsar sobre
-        // un botón todavía ocupado no registra la segunda llamada.
-        const retryButton = screen.getByTestId('send-recovery-button')
-        await waitFor(() => expect(retryButton).toHaveTextContent('Enviar enlace'))
-        fireEvent.click(retryButton)
-        await waitFor(() => expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledTimes(2))
-    })
+        expect(routerMocks.replace).toHaveBeenCalledWith('/');
+    });
+});
 
-    it('distingue el límite de envíos de un fallo cualquiera', async () => {
-        vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
-            data: {},
-            error: { status: 429, code: 'over_email_send_rate_limit', message: 'rate limit' },
-        } as any)
+describe('acceso · campos vacíos (11 · P4)', () => {
+    it('dice qué falta junto a cada campo, sin borrar nada ni llamar al servidor', () => {
+        setViewportWidth(390);
 
-        render(<LoginPage />)
+        render(<LoginPage />);
 
-        fireEvent.click(screen.getByTestId('forgot-password-link'))
-        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        fireEvent.click(screen.getByTestId('login-button'));
 
-        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('demasiados enlaces')
-        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
-    })
+        expect(screen.getByText('Escribe tu correo electrónico')).toBeInTheDocument();
+        expect(screen.getByText('Escribe tu contraseña')).toBeInTheDocument();
+        expect(supabase.auth.signInWithPassword).not.toHaveBeenCalled();
 
-    it('avisa de un error devuelto que no es el límite de envíos', async () => {
-        vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValueOnce({
-            data: {},
-            error: { status: 500, code: 'unexpected_failure', message: 'boom' },
-        } as any)
+        const email = screen.getByTestId('email-input');
+        const password = screen.getByTestId('password-input');
+        expect(email).toHaveAttribute('aria-invalid', 'true');
+        expect(password).toHaveAttribute('aria-invalid', 'true');
+        expect(email.getAttribute('aria-describedby')).toContain('email-input-error');
+        expect(password.getAttribute('aria-describedby')).toContain('password-input-error');
+    });
 
-        render(<LoginPage />)
+    it('mantiene el mensaje de siempre para un correo mal escrito', () => {
+        setViewportWidth(390);
 
-        fireEvent.click(screen.getByTestId('forgot-password-link'))
-        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'alguien@ejemplo.com' } })
-        fireEvent.click(screen.getByTestId('send-recovery-button'))
+        render(<LoginPage />);
 
-        expect(await screen.findByTestId('recovery-error')).toHaveTextContent('No pudimos enviar el enlace')
-        expect(screen.queryByTestId('recovery-sent-message')).not.toBeInTheDocument()
-    })
-})
+        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'no-es-un-correo' } });
+        fireEvent.change(screen.getByTestId('password-input'), { target: { value: 'Muro2026lucia' } });
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        expect(
+            screen.getByText('Por favor, introduce un correo electrónico válido'),
+        ).toBeInTheDocument();
+        expect(supabase.auth.signInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it('el mensaje del campo desaparece al corregirlo', () => {
+        setViewportWidth(390);
+
+        render(<LoginPage />);
+
+        fireEvent.click(screen.getByTestId('login-button'));
+        expect(screen.getByText('Escribe tu correo electrónico')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByTestId('email-input'), { target: { value: 'lucia@ejemplo.com' } });
+
+        expect(screen.queryByText('Escribe tu correo electrónico')).not.toBeInTheDocument();
+    });
+});
+
+describe('acceso · credenciales incorrectas (11 · P2)', () => {
+    it('avisa con título y explicación, sin prefijo «Error:» y sin borrar lo escrito', async () => {
+        setViewportWidth(390);
+        vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+            data: { user: null },
+            error: { message: 'Invalid login credentials' },
+        } as any);
+
+        render(<LoginPage />);
+
+        rellenar();
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        const alerta = await screen.findByTestId('login-alert');
+        expect(alerta).toHaveAttribute('role', 'alert');
+        expect(alerta).toHaveTextContent('Correo electrónico o contraseña incorrectos');
+        expect(alerta).toHaveTextContent(
+            'Revisa los dos datos. Si no recuerdas la contraseña, pide un enlace para cambiarla.',
+        );
+        expect(alerta.textContent).not.toContain('Error:');
+        expect(screen.getByTestId('email-input')).toHaveValue('lucia.martin@gmail.com');
+        expect(screen.getByTestId('password-input')).toHaveValue('Muro2026lucia');
+        expect(routerMocks.replace).not.toHaveBeenCalled();
+    });
+});
+
+describe('acceso · mientras entra (11 · P3)', () => {
+    it('el botón dice «Iniciando sesión…», gira un anillo y el formulario queda ocupado', async () => {
+        setViewportWidth(390);
+        vi.mocked(supabase.auth.signInWithPassword).mockReturnValue(new Promise(() => {}) as any);
+
+        render(<LoginPage />);
+
+        rellenar();
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        expect(await screen.findByText('Iniciando sesión…')).toBeInTheDocument();
+        expect(screen.getByTestId('login-form')).toHaveAttribute('aria-busy', 'true');
+        expect(screen.getByTestId('login-spinner')).toBeInTheDocument();
+        expect(screen.getByTestId('login-status')).toHaveAttribute('role', 'status');
+        expect(
+            screen.getByText('Comprobando tu correo y tu contraseña. Esto tarda un segundo.'),
+        ).toBeInTheDocument();
+        // Lo escrito sigue ahí mientras se comprueba.
+        expect(screen.getByTestId('email-input')).toHaveValue('lucia.martin@gmail.com');
+        expect(screen.getByTestId('password-input')).toHaveValue('Muro2026lucia');
+    });
+});
+
+describe('acceso · sin conexión (11 · P5)', () => {
+    it('avisa «Sin conexión» y ofrece «Volver a intentarlo» sin perder lo escrito', async () => {
+        setViewportWidth(390);
+        vi.mocked(supabase.auth.signInWithPassword).mockRejectedValueOnce(
+            new TypeError('Failed to fetch'),
+        );
+
+        render(<LoginPage />);
+
+        rellenar();
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        const alerta = await screen.findByTestId('login-alert');
+        expect(alerta).toHaveTextContent('Sin conexión');
+        expect(alerta).toHaveTextContent(
+            'No hemos podido conectar. Comprueba tu conexión e inténtalo otra vez: lo que has escrito sigue aquí.',
+        );
+        expect(screen.getByTestId('login-button')).toHaveTextContent('Volver a intentarlo');
+        expect(screen.getByTestId('email-input')).toHaveValue('lucia.martin@gmail.com');
+
+        // Y el botón vuelve a responder: el segundo intento entra.
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        await waitFor(() => expect(supabase.auth.signInWithPassword).toHaveBeenCalledTimes(2));
+        await waitFor(() => expect(routerMocks.replace).toHaveBeenCalled());
+    });
+});
+
+describe('acceso · destinos de siempre (S7)', () => {
+    it('sin nombre en el perfil, al alta de perfil', async () => {
+        setViewportWidth(390);
+
+        render(<LoginPage />);
+
+        rellenar();
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith('/profile/setup'));
+    });
+
+    it('con nombre en el perfil, entra en la portada', async () => {
+        setViewportWidth(390);
+        vi.mocked(supabase.from).mockReturnValue({
+            select: () => ({
+                eq: () => ({
+                    single: async () => ({ data: { display_name: 'Lucía' }, error: null }),
+                }),
+            }),
+        } as any);
+
+        render(<LoginPage />);
+
+        rellenar();
+        fireEvent.click(screen.getByTestId('login-button'));
+
+        await waitFor(() => expect(routerMocks.replace).toHaveBeenCalledWith('/'));
+    });
+
+    it('conserva el aviso de «Cuenta creada» que llega desde el alta', () => {
+        setViewportWidth(390);
+        searchParams.current = { registered: 'true' };
+
+        render(<LoginPage />);
+
+        expect(screen.getByText('Cuenta creada. Inicia sesión.')).toBeInTheDocument();
+    });
+});

@@ -66,6 +66,24 @@ Traditional drop shadows are often messy. This system uses **Ambient Light Physi
 
 ## 5. Components
 
+### Acceso (T2b · artboard 11)
+
+- **Una sola contraseña con «Mostrar»**: `components/ui/PasswordInput.tsx` acepta `toggleMode="text"` (48 px dentro del
+  campo de 56). El alta conserva el ojo (`toggleMode` por defecto). Se retiraron el campo de repetición y la validación de
+  coincidencia en `app/(auth)/reset-password`; el mínimo sigue en 8 caracteres (`lib/password.ts`).
+- **Recuperar la contraseña es una pantalla propia** (`/forgot-password`) y su confirmación otra (`/recovery-sent`, con el
+  correo en un chip). La respuesta es la misma exista o no la cuenta, y el 429 («Se pidieron demasiados enlaces seguidos»)
+  deja «Enviar enlace» y «Enviar otra vez» sin efecto.
+- **Nueva contraseña** (`/reset-password`) confirma en «Contraseña cambiada» («Ir a mi lista» / «Cerrar sesión») en vez de
+  saltar a la lista; el enlace caducado tiene su propio estado con «Pedir un enlace nuevo».
+- **Errores junto al campo, nunca con prefijo «Error:»**: «Escribe tu correo electrónico», «Escribe tu contraseña», «Por
+  favor, introduce un correo electrónico válido» y «Correo electrónico o contraseña incorrectos» + explicación. Nada de lo
+  escrito se borra y el foco va al primer campo que falla. La conexión caída tiene su aviso «Sin conexión».
+- **Piezas compartidas** en `components/auth/` (marco, marca, campo con error y ayuda, aviso, botón con anillo de carga y
+  enlaces) construidas con los tokens de `sistema-nuevo.md`; `email-input` / `password-input` / `login-button` /
+  `register-link` / `forgot-password-link` / `new-password-input` / `save-password-button` se conservan, y el correo de la
+  recuperación es `forgot-email-input`.
+
 ### Buttons
 * **Primary:** fondo `--primary` **teja plano** (#B93D12), `full` roundedness, texto blanco 17 px/700 en `on-primary`, sombra `--sh-cta`. Sin degradado (`sistema-nuevo.md` §10.1).
 * **Secondary:** `surface` + contorno `--border-strong` y texto `--ink`; al pasar, `--hover-control` (§10.2).

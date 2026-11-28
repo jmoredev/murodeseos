@@ -31,11 +31,13 @@ test.describe('Recuperación de contraseña', () => {
         const previousMessageId = await latestMessageId(request, E2E_CONFIG.user.email);
 
         await page.goto('/login');
+        // Recuperar la contraseña es su propia pantalla desde el rediseño (11 · P7).
         await page.getByTestId('forgot-password-link').click();
-        await page.getByTestId('email-input').fill(E2E_CONFIG.user.email);
+        await expect(page.getByTestId('forgot-email-input')).toBeVisible({ timeout: 15000 });
+        await page.getByTestId('forgot-email-input').fill(E2E_CONFIG.user.email);
         await page.getByTestId('send-recovery-button').click();
 
-        // Mensaje neutro: no revela si el correo tiene cuenta.
+        // Mensaje neutro: no revela si el correo tiene cuenta (11 · P8).
         await expect(page.getByTestId('recovery-sent-message')).toBeVisible({ timeout: 15000 });
 
         // Que el enlace vuelva a `/reset-password` es lo que verifica de verdad el
@@ -78,7 +80,8 @@ test.describe('Recuperación de contraseña', () => {
         try {
             await page.goto('/login');
             await page.getByTestId('forgot-password-link').click();
-            await page.getByTestId('email-input').fill(email);
+            await expect(page.getByTestId('forgot-email-input')).toBeVisible({ timeout: 15000 });
+            await page.getByTestId('forgot-email-input').fill(email);
             await page.getByTestId('send-recovery-button').click();
             await expect(page.getByTestId('recovery-sent-message')).toBeVisible({ timeout: 15000 });
 
@@ -105,9 +108,14 @@ test.describe('Recuperación de contraseña', () => {
             await expect(page).toHaveURL(/\/reset-password/, { timeout: 20000 });
 
             // El cliente canjea el código al cargar: cuando hay sesión, aparece el formulario.
+            // Un solo campo con «Mostrar» (11 · P10, decisión del propietario en S4).
             await page.getByTestId('new-password-input').fill(newPassword);
-            await page.getByTestId('confirm-password-input').fill(newPassword);
             await page.getByTestId('save-password-button').click();
+
+            // Ya no se salta a la lista: primero confirma el cambio (11 · P11) y
+            // desde ahí se entra, así que el usuario ve lo que ha pasado.
+            await expect(page.getByTestId('password-changed')).toBeVisible({ timeout: 20000 });
+            await page.getByTestId('go-to-list-button').click();
 
             // La sesión de recuperación ya está iniciada, así que entra directamente.
             await expect(page).toHaveURL(/\/$/, { timeout: 20000 });
